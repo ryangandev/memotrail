@@ -58,7 +58,7 @@ before(async () => {
   await mkdir(join(project, "components/Cover"), { recursive: true });
   await writeFile(
     join(project, "components/Cover/preview.html"),
-    '<!-- @dsCard group="Foundations" height=400 -->\n<div id="root"></div>\n',
+    '<!-- @dsCard height=288 -->\n<div class="cover"></div>\n',
   );
   await mkdir(join(project, "components/Removed"), { recursive: true });
   await writeFile(join(project, "components/Removed/README.md"), "Stale.\n");
@@ -113,6 +113,14 @@ describe("tokens.json", () => {
     for (const [family, value] of extras) {
       assert.ok(value.tokens.length <= 60, `${family} has at most 60 tokens`);
     }
+  });
+
+  test("keeps one component's geometry apart from the shared size scale", () => {
+    const names = (family) => tokens[family].tokens.map(({ name }) => name);
+    assert.ok(names("size").includes("mt-size-icon-16"));
+    assert.ok(names("size").includes("mt-size-hit-target"));
+    assert.ok(names("componentSize").includes("mt-size-checkbox-small"));
+    assert.ok(!names("size").includes("mt-size-checkbox-small"));
   });
 
   test("names match the copy's pattern, the Web variables, and are unique", async () => {
@@ -540,6 +548,37 @@ test("no exported text uses the em dash", async () => {
 test("the exported project passes the format check", async () => {
   const { problems } = await validateProject(project);
   assert.deepEqual(problems, []);
+});
+
+test("the format check holds the cover to its own marker and height", async () => {
+  const cover = join(project, "components/Cover/preview.html");
+  const kept = await readFile(cover, "utf8");
+  const problemsWith = async (marker) => {
+    await writeFile(cover, `${marker}\n<div class="cover"></div>\n`);
+    return (await validateProject(project)).problems;
+  };
+  try {
+    for (const marker of [
+      "<!-- @dsCard height=240 -->",
+      "<!-- @dsCard height=360 -->",
+    ])
+      assert.deepEqual(await problemsWith(marker), [], marker);
+    for (const marker of [
+      '<!-- @dsCard group="Foundations" height=288 -->',
+      "<!-- @dsCard height=400 -->",
+      "<!-- @dsCard height=200 -->",
+      '<div class="cover"></div>',
+    ])
+      assert.deepEqual(
+        await problemsWith(marker),
+        [
+          "Cover/preview.html needs <!-- @dsCard height=N --> with N from 240 to 360.",
+        ],
+        marker,
+      );
+  } finally {
+    await writeFile(cover, kept);
+  }
 });
 
 describe("spec checks", () => {

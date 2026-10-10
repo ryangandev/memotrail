@@ -9,8 +9,7 @@
   gap: var(--mt-space-3);
 }
 
-.eyebrow,
-.cardEyebrow {
+.eyebrow {
   color: var(--mt-color-warm);
   font-size: var(--mt-type-page-eyebrow-font-size);
   font-weight: var(--mt-type-page-eyebrow-font-weight);
@@ -204,6 +203,14 @@
   gap: var(--mt-space-2) var(--mt-space-3);
 }
 
+/* Block components take the whole row, as they do on a page. */
+.specimenCaseBody > [data-ui-page-header],
+.specimenCaseBody > [data-ui-empty-state],
+.specimenCaseBody > [data-ui-rich-text] {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
 .badgeTruncationFrame {
   display: grid;
   width: 160px;
@@ -247,6 +254,11 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--mt-space-4);
+}
+
+/* Feedback specimens differ in height, so each keeps its own instead of stretching to its row. */
+.feedbackGrid {
+  align-items: start;
 }
 
 .toastPreviewActions {
@@ -520,29 +532,39 @@
   text-overflow: ellipsis;
 }
 
-.variantTable {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--mt-space-3);
+/* Each PageFrame at its real maximum width, so the track scrolls on narrower windows. */
+.pageFrameTrack {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
-.variantTable > div {
+.pageFrameTrack > div {
   display: grid;
+  width: calc(
+    var(--mt-layout-page-width-canvas) + 2 *
+      var(--mt-layout-page-gutter-regular)
+  );
+  gap: var(--mt-space-2);
+}
+
+.pageFrameTrack .pageFrameSample {
+  display: grid;
+  margin: 0;
   gap: var(--mt-space-1);
-  padding: var(--mt-space-4);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  padding: var(--mt-space-3) var(--mt-space-4);
+  border: var(--mt-size-stroke-thin) dashed var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface);
 }
 
-.variantTable span {
+.pageFrameSample span {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
 }
 
-.formGrid,
-.editorGrid {
+.formGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--mt-space-6);
@@ -573,36 +595,85 @@
 
 .cardSpecimen {
   display: grid;
-  max-width: 360px;
-  gap: var(--mt-space-2);
-}
-
-.cardSpecimen h3 {
-  margin-top: var(--mt-space-1);
-  font-family: var(--mt-font-family-serif);
-}
-
-.cardSpecimen [data-record-card] p:last-child {
-  margin-top: var(--mt-space-2);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
+  width: 360px;
+  max-width: 100%;
 }
 
 .imageStates {
   display: grid;
+  width: 100%;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--mt-space-3);
 }
 
-.imageStates > div {
+.imageStates figure {
   display: grid;
+  min-width: 0;
+  margin: 0;
   gap: var(--mt-space-2);
 }
 
-.imageStates > div > span:first-child {
+.imageStates figure > span:first-child {
+  position: relative;
+  display: block;
+  overflow: hidden;
   aspect-ratio: 16 / 9;
   border-radius: var(--mt-radius-medium);
+}
+
+.imageStates figcaption {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+}
+
+.uploadTile {
+  position: relative;
+  width: 132px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--mt-radius-medium);
+}
+
+.richTextField {
+  display: grid;
+  width: 100%;
+  max-width: 560px;
+  gap: var(--mt-space-2);
+}
+
+.richTextField > span {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.focusedRecordFrame {
+  display: grid;
+  width: 100%;
+  max-width: var(--mt-layout-page-width-compact);
+  gap: var(--mt-space-4);
+}
+
+.captureFrame {
+  width: 100%;
+  max-width: 640px;
+}
+
+/* The Quick Capture dialog's glass panel around its body, without its header and scrim. */
+.captureDialogFrame {
+  width: 100%;
+  max-width: 680px;
+  overflow: hidden;
+  border: var(--mt-size-stroke-thin) solid var(--mt-material-glass-panel-border);
+  border-radius: var(--mt-radius-large);
+  background:
+    linear-gradient(
+      135deg,
+      var(--mt-material-glass-panel-sheen),
+      transparent 45%
+    ),
+    var(--mt-material-glass-panel-tint);
+  box-shadow: var(--mt-material-glass-panel-shadow);
 }
 
 .separatedListFrames {
@@ -664,7 +735,13 @@
 
 .headerStack {
   display: grid;
+  width: 100%;
   gap: var(--mt-space-5);
+}
+
+.headerColumn {
+  width: 240px;
+  max-width: 100%;
 }
 
 .headerStack > div {
@@ -690,6 +767,7 @@
 
 .skeletonShapes {
   display: grid;
+  width: 100%;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--mt-space-4);
 }
@@ -713,19 +791,18 @@
   border-radius: var(--mt-radius-medium);
 }
 
-.skeletonCard {
+.skeletonStack {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: var(--mt-space-2);
+}
+
+.skeletonRow {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-3);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-}
-
-.skeletonCard > div {
-  display: grid;
-  gap: var(--mt-space-2);
 }
 
 .stateNote {
@@ -989,17 +1066,12 @@
   .foundationGrid,
   .feedbackGrid,
   .checkboxGrid,
-  .formGrid,
-  .editorGrid {
+  .formGrid {
     grid-template-columns: 1fr;
   }
 
   .iconGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .variantTable {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -1053,8 +1125,7 @@
   .radiusGrid,
   .shadowGrid,
   .imageStates,
-  .skeletonShapes,
-  .variantTable {
+  .skeletonShapes {
     grid-template-columns: 1fr;
   }
 

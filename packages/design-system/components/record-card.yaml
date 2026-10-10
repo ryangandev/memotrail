@@ -1,0 +1,104 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: RecordCard
+
+platforms:
+  web:
+    path: apps/web/src/components/record-card.tsx
+    symbols: [RecordCard, RecordCardVisual, RecordCardBody]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTCards.swift
+    symbols:
+      [
+        MTRecordCard,
+        MTRecordCardVisual,
+        MTRecordCardBody,
+        MTCardButtonStyle,
+        MTCollectionCard,
+      ]
+    files:
+      - path: apps/ios/MemoTrail/DesignSystem/Components/MTRecordArchive.swift
+        symbols: [MTEntityCard, MTRecordCardFooter]
+
+purpose: The clickable card that opens one record, with a media band on top and the record's dates, name, facts, and organization below.
+
+use:
+  - A Home, Vehicle, First Time, or Someday item in its workspace grid, opening the record's focused page.
+  - Any record result shown as a card, where a photo or map helps people recognize it.
+
+avoid:
+  - Rows in a list or search results. Use a list row.
+  - Grouped content that does not open anything. Use a plain surface, such as MTCard on iOS.
+  - A record that only needs its name and Kind. Use the record summary.
+
+anatomy:
+  container: The bordered, raised button that clips its parts to its rounded corners.
+  visual: The media band at the top, holding a cover photo, a map of the record's Location, or the record's mark, and any status badge.
+  body: The padded area under the visual with the record's dates, title, and facts.
+  footer: The last row of the body, with up to two tags and a chevron, under a hairline.
+
+props: {}
+
+states: [default, hover, pressed, focus]
+
+tokens:
+  - container:
+      background: "{color.surfaceRaised}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+      radius: "{radius.large}"
+      shadow: "{shadow.hairline}"
+      duration: "{motion.quick}"
+    visual:
+      height: "{size.recordCard.visualHeight}"
+      background: "{color.surfaceSubtle}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+    body:
+      paddingInline: "{space.5}"
+      paddingBlock: "{space.5}"
+    footer:
+      minHeight: "{size.recordCard.footerHeight}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+      color: "{color.inkFaint}"
+  - when: { state: hover }
+    container:
+      border: { web: "{color.borderStrong}" }
+      shadow: { web: "{shadow.raised}" }
+  - when: { state: pressed }
+    container:
+      border: { ios: "{color.borderStrong}" }
+      shadow: { ios: "{shadow.raised}" }
+  - when: { state: focus }
+    container:
+      border: { web: "{state.focus.ring}" }
+      borderWidth: { web: "{state.focus.ringWidth}" }
+      offset: { web: "{state.focus.ringOffset}" }
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: asWritten
+  length: The title is the record's own name, wrapping to two lines; facts are one short line each.
+  notes:
+    - Each record view lays out its own body inside the shared shell, so a Vehicle card and a Someday card can show different facts.
+    - The visual prefers a photo, then a map when the Location has coordinates, then the record's mark.
+
+accessibility:
+  role: One button that opens the record. Its parts are read as its content.
+  label: The caller's label, such as Open Blue Civic, or the card's text in reading order when it gives none.
+  focus: The card takes focus as one stop. Web draws the shared focus ring around it.
+  minimumHitTarget: notInteractive
+  dynamicType: Text in the body scales with Dynamic Type on iOS and browser zoom on Web; the visual keeps its 190 point height.
+
+platformDifferences:
+  - difference: Web lifts the card 2 px with the stronger border and raised shadow while the pointer is over it; iOS shows the same border and shadow while the card is pressed and scales it to 99 percent.
+    reason: A touch has no hover, and a slight press-in, the state.pressed.cardScale token, is the native feedback that a card responds.
+  - difference: iOS still draws Collections, as MTCollectionCard and as Collection badges in the footer; Web has no Collections and its footer shows only tags.
+    reason: docs/product.md turned every Collection into a tag. The iOS app still reads the retired schema, and its Collection views go when it moves to the current one.
+
+specimens:
+  - id: record-card-photo
+    description: A Home card with a cover photo and a Current badge, then its dates, name, a fact, and its organization.
+  - id: record-card-mark
+    description: A Vehicle card without a photo or map, showing its mark over a soft accent wash.

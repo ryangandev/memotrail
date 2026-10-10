@@ -43,7 +43,6 @@ export function SharedPrimitivesGallery() {
   const [busy, setBusy] = useState(false);
   const [date, setDate] = useState("2026-09-18");
   const [message, setMessage] = useState("No demo actions yet.");
-  const [filtered, setFiltered] = useState(true);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -338,75 +337,68 @@ export function SharedPrimitivesGallery() {
         title="PageHeader"
         api="eyebrow · title · description · optional actions · responsive"
       >
-        <div className={review.stack}>
-          <PageHeader
-            headingLevel={2}
-            eyebrow="Your life, remembered"
-            title="Memories"
-            description="The moments, people, and places that make up your story."
-            actions={
-              <>
-                <Button
-                  variant="secondary"
-                  onClick={() => setMessage("Header filter activated.")}
-                >
-                  Filter
-                </Button>
-                <Button onClick={() => setActive("standard")}>
-                  <Icon name="plus" size={16} />
-                  Add memory
-                </Button>
-              </>
-            }
-          />
-          <div className={review.separator} />
-          <PageHeader
-            headingLevel={2}
-            title="A lifetime of small moments and meaningful places"
-            description="A longer heading without actions, to review wrapping at narrow widths."
-          />
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="page-header-full">
+            <PageHeader
+              headingLevel={2}
+              eyebrow="Your life, remembered"
+              title="Memories"
+              description="The moments, people, and places that make up your story."
+              actions={
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setMessage("Header filter activated.")}
+                  >
+                    Filter
+                  </Button>
+                  <Button onClick={() => setActive("standard")}>
+                    <Icon name="plus" size={16} />
+                    Add memory
+                  </Button>
+                </>
+              }
+            />
+          </SpecimenCase>
+          <SpecimenCase id="page-header-title-only">
+            <PageHeader headingLevel={2} title="First sourdough loaf at home" />
+          </SpecimenCase>
         </div>
       </Sample>
 
       <Sample
         title="EmptyState"
-        api="initial · filtered · no action · optional icon"
+        api="title · description · icon · actions · onClick"
       >
-        <div className={review.stack}>
-          <EmptyState
-            headingLevel={3}
-            icon={<Icon name="plus" size={24} />}
-            title="Your story starts here"
-            description="Capture a memory to begin building your trail."
-            actions={
-              <Button onClick={() => setActive("standard")}>
-                Add your first memory
-              </Button>
-            }
-          />
-          <EmptyState
-            headingLevel={3}
-            icon={<Icon name="search" size={24} />}
-            title={filtered ? "No matching memories" : "Filters cleared"}
-            description={
-              filtered
-                ? "Try another search or clear your filters."
-                : "This gallery uses local demo state, so no records are fetched."
-            }
-            actions={
-              <Button
-                variant="secondary"
-                onClick={() => setFiltered(!filtered)}
-              >
-                {filtered ? "Clear filters" : "Reset demo filters"}
-              </Button>
-            }
-          />
-          <EmptyState
-            headingLevel={3}
-            title="Nothing here yet"
-            description="A quiet, informational state without an action or decorative icon."
-          />
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="empty-state-with-action">
+            <EmptyState
+              headingLevel={3}
+              icon={<Icon name="plus" size={24} />}
+              title="Your Life Wiki is empty"
+              description="Capture a memory to begin building your trail."
+              actions={
+                <Button onClick={() => setActive("standard")}>
+                  Add your first memory
+                </Button>
+              }
+            />
+          </SpecimenCase>
+          <SpecimenCase id="empty-state-informational">
+            <EmptyState
+              headingLevel={3}
+              title="No photos yet"
+              description="Photos you add to this Home appear here."
+            />
+          </SpecimenCase>
+          <SpecimenCase id="empty-state-button">
+            <EmptyState
+              icon={<Icon name="star" size={24} />}
+              title="Start with a first worth remembering"
+              description="Add the first time you did something new."
+              onClick={() => setMessage("Empty state action activated.")}
+            />
+          </SpecimenCase>
         </div>
       </Sample>
     </div>

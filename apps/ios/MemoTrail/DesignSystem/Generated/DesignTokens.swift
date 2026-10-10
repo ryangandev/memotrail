@@ -826,6 +826,45 @@ enum MTSize {
     static let minHeight: CGFloat = 22
   }
 
+  enum EmptyState {
+    static let icon: CGFloat = 48
+    static let messageWidth: CGFloat = 480
+  }
+
+  enum PageHeader {
+    static let descriptionWidth: CGFloat = 640
+    static let copyBasis: CGFloat = 260
+  }
+
+  enum Skeleton {
+    static let block: CGFloat = 96
+    static let line: CGFloat = 14
+    static let circle: CGFloat = 40
+  }
+
+  enum UploadProgress {
+    static let ring: CGFloat = 44
+    static let stroke: CGFloat = 5
+  }
+
+  enum RecordCard {
+    static let visualHeight: CGFloat = 190
+    static let footerHeight: CGFloat = 31
+  }
+
+  enum Capture {
+    static let spark: CGFloat = 32
+    static let statusHeight: CGFloat = 42
+    static let actionBarHeight: CGFloat = 58
+    static let quietAction: CGFloat = 36
+    static let thumbnail: CGFloat = 76
+    static let removeButton: CGFloat = 24
+  }
+
+  enum FocusedRecord {
+    static let photoColumn: CGFloat = 220
+  }
+
   enum Checkbox {
     static let small: CGFloat = 16
     static let medium: CGFloat = 20
@@ -847,11 +886,6 @@ enum MTLayout {
     static let regular: CGFloat = 32
     static let compact: CGFloat = 16
     static let narrow: CGFloat = 12
-  }
-
-  enum PageHeader {
-    static let descriptionWidth: CGFloat = 640
-    static let copyBasis: CGFloat = 260
   }
 
   enum Field {
@@ -880,10 +914,8 @@ enum MTLayout {
   }
 
   enum RecordCard {
-    static let visualHeight: CGFloat = 190
     static let entryVisualHeight: CGFloat = 210
     static let collectionMinHeight: CGFloat = 138
-    static let footerHeight: CGFloat = 31
     static let goalMinHeight: CGFloat = 220
     static let goalVisualHeight: CGFloat = 125
     static let goalVisualHeightRegular: CGFloat = 138
@@ -896,7 +928,6 @@ enum MTLayout {
   enum Grid {
     static let collection: CGFloat = 200
     static let record: CGFloat = 300
-    static let detail: CGFloat = 220
     static let photo: CGFloat = 104
   }
 
@@ -922,7 +953,6 @@ enum MTLayout {
     static let small: CGFloat = 36
     static let medium: CGFloat = 42
     static let large: CGFloat = 44
-    static let emptyState: CGFloat = 48
     static let compact: CGFloat = 34
   }
 
@@ -1015,25 +1045,14 @@ enum MTLayout {
     static let reviewMinHeight: CGFloat = 200
   }
 
-  enum UploadRing {
-    static let stroke: CGFloat = 5
-    static let inset: CGFloat = 2.5
-  }
-
   enum PhotoTile {
     static let removeButton: CGFloat = 26
     static let removeTarget: CGFloat = 38
-    static let captureThumb: CGFloat = 76
-    static let captureRemoveButton: CGFloat = 24
     static let captureRemoveTarget: CGFloat = 36
   }
 
   enum Capture {
-    static let statusHeight: CGFloat = 42
-    static let actionBarHeight: CGFloat = 58
-    static let spark: CGFloat = 32
     static let quietIconWidth: CGFloat = 40
-    static let quietIconHeight: CGFloat = 36
   }
 
   enum SignIn {
@@ -1050,10 +1069,6 @@ enum MTLayout {
 
   enum Library {
     static let emptyHeight: CGFloat = 164
-  }
-
-  enum EmptyState {
-    static let messageWidth: CGFloat = 480
   }
 
   enum Toast {

@@ -324,13 +324,22 @@ Pair it with the test file carrying the same feature name.
 - Generated Web CSS variables, the Web gallery catalog and typed `design-system.ts` in `apps/web/src/generated`, and Swift values are never edited directly.
 - Token changes run `pnpm design-system:generate` and `pnpm design-system:check`; the check also rejects invalid DTCG values, unresolved or circular references, themes that define different tokens, and contrast failures without an exception.
   `pnpm --filter @memotrail/design-system test` covers the generator.
-- `packages/design-system/components/*.yaml` specifies each shared component once for Web and iOS, starting with Badge and Button, and is where to look up which files implement a component.
+- `packages/design-system/components/*.yaml` specifies each shared component once for Web and iOS, and is where to look up which files implement a component.
   A spec names the implementing files and symbols on each platform, its purpose and when to use or avoid it, its anatomy, props, and states, the semantic tokens that draw each part, its content and accessibility rules, every intended platform difference with its reason, and the specimens both galleries show.
   `packages/design-system/schema/component-spec.schema.json` is its JSON Schema.
   The control and overlay specs map Web to native as follows: IconButton to `MTIconButton`, Icon to `MTIcon`, TextField, SearchField, and Checkbox to their `MTFields.swift` fields, SelectField to `MTSelectField` with `MTSelectGroup`, DateField to Web `DatePickerField` and `MTDateField`, and TimeZoneField to Web `TimezoneSelect` and `MTTimeZoneField`.
   One Dialog spec covers Web `Dialog` and `ConfirmationDialog` with `MTSheet` and `confirmationDialog`, and one Toast spec covers Web `AppToaster` with `MTToast` and `MTToastCenter`.
   CommandPalette, SyncStatus, and WorkspaceActionDock are Web-only, so their specs mark iOS `unavailable` and give the reason.
   `pnpm design-system:check` validates every spec against the schema, then checks what a schema cannot: that the files declare the symbols, that every token exists on the platforms that use it with the type its property needs, that token rules name only real props, values, parts, and states, and that specimen ids are unique.
+- Specs pair these Web components with their native counterparts, and a spec named differently from the Web component says so.
+  `badge.yaml` pairs Badge with `MTBadge`, and `button.yaml` pairs Button with `mtButtonStyle`.
+  `empty-state.yaml`, `page-header.yaml`, and `page-frame.yaml` pair EmptyState, PageHeader, and PageFrame with `MTEmptyState`, `MTPageHeader`, and `MTPage`.
+  `section-header.yaml` pairs SectionHeader with `MTSectionHeader`, whose `list` variant is the uppercase list heading on both platforms.
+  `image.yaml` pairs ProgressiveImage with `MTRemoteImage`, `skeleton.yaml` pairs Skeleton with `MTLoadingSkeleton`, and `upload-progress.yaml` pairs PhotoUploadProgress with `MTUploadProgress`.
+  `separated-list.yaml` pairs SeparatedList with `MTFlowLayout` and `MTFlowSeparator`.
+  `record-card.yaml` pairs RecordCard with `MTRecordCard`, `MTEntityCard`, and `MTCollectionCard`.
+  `capture-composer.yaml` pairs CaptureComposer with `CaptureCard`, `focused-record.yaml` pairs FocusedRecordDetail with `MTFocusedRecordPage`, and `photo-viewer.yaml` pairs PhotoPreviewDialog with `MTPhotoPreview`.
+  `rich-text.yaml` pairs EntryRichTextContent and RichTextEditor with `MTRichTextContent` and `MTRichTextEditor`.
 - The generator writes each spec's enum values as lists and union types, its prop defaults, and the specimen list into `apps/web/src/generated/design-system.ts`, and the same as Swift enums, `MT<Name>Defaults`, and `MTComponentSpecimen` into `apps/ios/MemoTrail/DesignSystem/Generated/ComponentVariants.swift`.
   Web props and native parameters take those types and defaults, so a value removed from a spec stops both platforms compiling; component unit tests catch the other direction, a value the spec adds that a Web stylesheet does not draw.
 - Both galleries show every specimen a spec lists: Web wraps each in `SpecimenCase`, marked `data-specimen="<id>"`, and iOS in `GalleryCase`, with the accessibility identifier `specimen-<id>`.
@@ -384,9 +393,9 @@ Pair it with the test file carrying the same feature name.
   Scripts read colors from `themeColors` in the generated `design-system.ts`; the checker's allow list keeps only the Google sign-in mark's brand colors.
 - Noninteractive status, type, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
   `packages/design-system/components/badge.yaml` specifies it with native `MTBadge`.
-- Checkbox, SectionHeader, and Skeleton are the Web counterparts of `MTCheckbox`, `MTSectionHeader` with `MTListHeader`, and `MTLoadingSkeleton`.
+- Checkbox, SectionHeader, and Skeleton are the Web counterparts of `MTCheckbox`, `MTSectionHeader`, and `MTLoadingSkeleton`.
   `components/checkbox.tsx` is a native `input type="checkbox"` that submits like any other, named by its label and described by an optional explanation, with a `small` and a `medium` size.
-  `components/section-header.tsx` is one component whose `variant` is `section` (a serif title, like `MTSectionHeader`) or `list` (the small uppercase heading above a list, like `MTListHeader`); both take a detail, a description, an action, and a heading level chosen by the caller, because the two differ only in typography.
+  `components/section-header.tsx` is one component whose `variant` is `section` (a serif title) or `list` (the small uppercase heading above a list), like `MTSectionHeader`; both take a detail, a description, an action, and a heading level chosen by the caller, because the two differ only in typography.
   `components/skeleton.tsx` is a decorative placeholder hidden from assistive technology that stops its shimmer for reduced motion; `ProgressiveImage` and the route loading fallback use it, and the surrounding region announces the loading state.
   Feature code does not hand-roll checkbox markup, uppercase list headings, or shimmer placeholders; the `/design-system` specimens `checkbox`, `section-header`, and `skeleton` show every variant and state.
 - Dot-separated summary and metadata rows use Web `components/separated-list.tsx` and native `MTFlowLayout` with `MTFlowSeparator`, or `MTWordFlow` for facts that read like a sentence.
@@ -402,7 +411,7 @@ Pair it with the test file carrying the same feature name.
   `MTFoundations.swift` holds the view helpers that apply them, such as `mtTextRole`, `mtIcon`, `mtShadow`, `mtMaterial`, `mtLineSpacing`, and the `MTIcon` image and label initializers.
   Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, SectionHeader, and EmptyState.
   `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library and People.
-  `MTListHeader` and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
+  `MTSectionHeader` with the `list` variant and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
   `MTSheet` is the Web Dialog: its eyebrow, serif title, close action, scrolling content, failure message, and footer actions.
   A form sheet opens at full height with room to push detail such as Version history, and a fitted sheet sizes itself to short content; `MTSheetOption` is the Web dialog's icon, title, and description choice.
   `confirmationDialog` stands in for the Web confirmation shell.

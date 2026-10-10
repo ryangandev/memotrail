@@ -23,6 +23,7 @@ struct MTFeedback: View {
 }
 
 /// A calm empty or filtered state. Supply actions, or `onTap` to make the whole state one action.
+/// Specified in packages/design-system/components/empty-state.yaml.
 struct MTEmptyState<Actions: View>: View {
   let title: String
   var message: String?
@@ -58,7 +59,7 @@ struct MTEmptyState<Actions: View>: View {
         Image(systemName: systemImage)
           .font(.mtIcon(MTSize.Icon.s22, weight: .medium))
           .foregroundStyle(MTColor.accent)
-          .frame(width: MTLayout.IconTile.emptyState, height: MTLayout.IconTile.emptyState)
+          .frame(width: MTSize.EmptyState.icon, height: MTSize.EmptyState.icon)
           .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
           .accessibilityHidden(true)
       }
@@ -71,7 +72,7 @@ struct MTEmptyState<Actions: View>: View {
           .font(MTFont.supporting)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body, textStyle: .footnote)
-          .frame(maxWidth: MTLayout.EmptyState.messageWidth)
+          .frame(maxWidth: MTSize.EmptyState.messageWidth)
       }
       HStack(spacing: MTSpacing.s2) { actions }
         .padding(.top, MTSpacing.s1)

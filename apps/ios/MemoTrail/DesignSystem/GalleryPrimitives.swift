@@ -6,7 +6,6 @@
     @State private var isSaving = false
     @State private var sheet: PresentedSheet?
     @State private var showingConfirmation = false
-    @State private var filtered = true
 
     private enum PresentedSheet: String, Identifiable {
       case form, compact, long
@@ -157,71 +156,50 @@
             "eyebrow · title · description · actions · compact title on phones · actions wrap below a 260 pt copy basis"
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
-            MTPageHeader(
-              eyebrow: "Your life, remembered", title: "Memories",
-              description: "The moments, people, and places that make up your story."
-            ) {
-              Button("Filter") { message = "Header filter activated." }
-                .mtButtonStyle(.secondary)
-              Button("Add memory", systemImage: MTIcon.plus.systemName) { sheet = .form }
-                .mtButtonStyle()
-            }
-            Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
-            MTPageHeader(eyebrow: "First Time", title: "First sourdough loaf at home") {
-              Button {
-                message = "Header edit activated."
-              } label: {
-                Label("Edit", icon: .edit)
+            GalleryCase(.pageHeaderFull) {
+              MTPageHeader(
+                eyebrow: "Your life, remembered", title: "Memories",
+                description: "The moments, people, and places that make up your story."
+              ) {
+                Button("Filter") { message = "Header filter activated." }
+                  .mtButtonStyle(.secondary)
+                Button("Add memory", systemImage: MTIcon.plus.systemName) { sheet = .form }
+                  .mtButtonStyle()
               }
-              .mtButtonStyle(.ghost, size: .small)
             }
-            Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
-            MTPageHeader(
-              title: "A lifetime of small moments and meaningful places",
-              description: "A longer heading without actions, to review wrapping at narrow widths.")
-          }
-        }
-
-        GallerySpecimen(
-          title: "SectionHeader",
-          api: "title · detail · trailing action"
-        ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            MTSectionHeader("Ready to organize") {
-              MTSectionLink(title: "Inbox · 3") { message = "Section link activated." }
+            GalleryCaseSeparator()
+            GalleryCase(.pageHeaderTitleOnly) {
+              MTPageHeader(title: "First sourdough loaf at home")
             }
-            MTSectionHeader("Recent Entries", detail: "The latest things added to your archive")
           }
         }
 
         GallerySpecimen(
           title: "EmptyState",
-          api: "initial · filtered · no action · onTap · optional icon"
+          api: "title · message · icon · actions · onTap"
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            MTEmptyState(
-              title: "Your story starts here",
-              message: "Capture a memory to begin building your trail.", icon: .plus
-            ) {
-              Button("Add your first memory") { sheet = .form }.mtButtonStyle()
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.emptyStateWithAction) {
+              MTEmptyState(
+                title: "Your Life Wiki is empty",
+                message: "Capture a memory to begin building your trail.", icon: .plus
+              ) {
+                Button("Add your first memory") { sheet = .form }.mtButtonStyle()
+              }
             }
-            MTEmptyState(
-              title: filtered ? "No matching memories" : "Filters cleared",
-              message: filtered
-                ? "Try another search or clear your filters."
-                : "This gallery uses local demo state, so no records are fetched.",
-              icon: .search
-            ) {
-              Button(filtered ? "Clear filters" : "Reset demo filters") { filtered.toggle() }
-                .mtButtonStyle(.secondary)
+            GalleryCaseSeparator()
+            GalleryCase(.emptyStateInformational) {
+              MTEmptyState(
+                title: "No photos yet",
+                message: "Photos you add to this Home appear here.")
             }
-            MTEmptyState(
-              title: "Nothing here yet",
-              message: "A quiet, informational state without an action or decorative icon.")
-            MTEmptyState(
-              title: "Start with a first worth remembering",
-              message: "The whole state is one action. Only a title is required.", icon: .star,
-              onTap: { message = "Empty state action activated." })
+            GalleryCaseSeparator()
+            GalleryCase(.emptyStateButton) {
+              MTEmptyState(
+                title: "Start with a first worth remembering",
+                message: "Add the first time you did something new.", icon: .star,
+                onTap: { message = "Empty state action activated." })
+            }
           }
         }
       }

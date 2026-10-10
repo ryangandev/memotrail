@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { skeletonShapes } from "@/generated/design-system";
 import { Skeleton } from "./skeleton";
 
 describe("Skeleton", () => {
@@ -16,7 +17,7 @@ describe("Skeleton", () => {
 
     expect(block).toContain('data-animated="true"');
     expect(block).toContain('data-shape="block"');
-    for (const shape of ["fill", "line", "circle"] as const) {
+    for (const shape of skeletonShapes) {
       expect(renderToStaticMarkup(<Skeleton shape={shape} />)).toContain(
         `data-shape="${shape}"`,
       );

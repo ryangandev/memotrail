@@ -1,0 +1,94 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: SectionHeader
+
+platforms:
+  web:
+    path: apps/web/src/components/section-header.tsx
+    symbols: [SectionHeader]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTHeaders.swift
+    symbols: [MTSectionHeader]
+
+purpose: Titles a region of a page, with an optional quiet detail, a description, and a trailing action.
+
+use:
+  - A region of a page, such as Recent Entries on the Home Dashboard or Story on a focused record, in the section variant.
+  - The heading above a list of rows or results, such as All items with its count, in the list variant.
+
+avoid:
+  - The page's own title. Use PageHeader.
+  - Field groups in a form. Use the form section legend.
+  - Labels on a card. Use Badge or the card's own title.
+
+anatomy:
+  container: The row that holds the copy and the trailing content, wrapping the trailing content below when it does not fit.
+  title: The heading text, a serif title in the section variant and small uppercase text in the list variant.
+  detail: An optional quiet count or note beside the title, or at the far edge.
+  description: An optional sentence under the title.
+  trailing: An optional link or button at the trailing edge, after an end-aligned detail.
+
+props:
+  variant:
+    description: The heading's weight. Section is a serif title for a region of content; list is the small uppercase heading above a list.
+    values: [section, list]
+    default: section
+  detailAlign:
+    description: Where the detail sits. Start keeps it beside the title, for a count; end moves it to the far edge, for a total that lines up with the list below.
+    values: [start, end]
+    default: start
+
+states: [default]
+
+tokens:
+  - container:
+      gap: "{space.2}"
+    title:
+      color: "{color.ink}"
+    detail:
+      fontSize: "{font.size.caption}"
+      fontWeight: "{font.weight.regular}"
+      color: "{color.inkFaint}"
+    description:
+      fontSize: "{font.size.caption}"
+      color: "{color.inkMuted}"
+  - when: { variant: section }
+    title: { type: "{type.cardTitle}" }
+  - when: { variant: list }
+    container: { minHeight: { ios: "{size.control.small}" } }
+    title: { type: "{type.listHeading}" }
+    description: { color: "{color.inkFaint}" }
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: A title of one to four words, a detail of a count or two or three words, and a description of one sentence.
+  notes:
+    - The list variant is set in uppercase visually, so pass the title in its normal case.
+    - Write counts with their noun, such as 9 items, so the detail reads on its own.
+
+accessibility:
+  role: A heading. Web renders an h2, h3, or h4 that the caller chooses for the page outline, and iOS marks the title as a header.
+  label: The title; the detail and description are read as text after it.
+  focus: The header never takes focus; its trailing action follows the title in the focus order.
+  minimumHitTarget: notInteractive
+  dynamicType: iOS scales every text role with Dynamic Type and wraps the title. Web grows with browser zoom and wraps the trailing content below the copy.
+
+platformDifferences:
+  - difference: The list variant reserves the 34 pt small control height on iOS; Web sizes it to its text.
+    reason: iOS list headers often hold a small button, and the reserved height keeps headers with and without one the same height in a scrolling list.
+  - difference: On iOS the trailing action stays beside a wrapping title; on Web it wraps below the copy when the row is too narrow.
+    reason: SwiftUI wraps the title inside the row instead of moving the action, which keeps a phone's row compact. Web follows flex wrapping.
+  - difference: Web lets the caller choose the heading level and an id for aria-labelledby; iOS marks the title as a header without a level.
+    reason: A Web page needs a heading outline, while VoiceOver moves between headers without levels in a SwiftUI screen.
+
+specimens:
+  - id: section-header-section
+    description: Section headers alone, with a count beside the title, with a description, and with a trailing action.
+    covers: { variant: [section] }
+  - id: section-header-list
+    description: List headers with a count beside the title and at the far edge, and with a trailing action.
+    covers: { variant: [list], detailAlign: all }
+  - id: section-header-long
+    description: A long section title and its trailing action in a narrow column.
+    covers: { variant: [section] }

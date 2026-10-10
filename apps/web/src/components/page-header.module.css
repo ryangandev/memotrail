@@ -9,7 +9,7 @@
 .copy {
   display: grid;
   min-width: 0;
-  flex: 1 1 260px;
+  flex: 1 1 var(--mt-size-page-header-copy-basis);
   gap: var(--mt-space-2);
 }
 
@@ -33,7 +33,7 @@
 }
 
 .description {
-  max-width: 640px;
+  max-width: var(--mt-size-page-header-description-width);
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-body);
   line-height: var(--mt-line-height-body);

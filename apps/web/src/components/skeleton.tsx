@@ -1,4 +1,8 @@
 import type { ComponentPropsWithoutRef, CSSProperties } from "react";
+import {
+  skeletonDefaults,
+  type SkeletonShape,
+} from "@/generated/design-system";
 import styles from "./skeleton.module.css";
 
 type SkeletonProps = Omit<
@@ -6,7 +10,7 @@ type SkeletonProps = Omit<
   "children" | "aria-hidden"
 > & {
   /** `fill` takes its whole container, like a photo that is still arriving. */
-  shape?: "fill" | "block" | "line" | "circle";
+  shape?: SkeletonShape;
   /** Any CSS length. A circle uses `width` for both sides. */
   width?: CSSProperties["width"];
   height?: CSSProperties["height"];
@@ -17,12 +21,13 @@ type SkeletonProps = Omit<
 /**
  * A decorative placeholder for content that is still loading.
  * It is hidden from assistive technology, so the surrounding region announces the loading state.
+ * Specified in packages/design-system/components/skeleton.yaml.
  */
 export function Skeleton({
-  animated = true,
+  animated = skeletonDefaults.animated,
   className,
   height,
-  shape = "block",
+  shape = skeletonDefaults.shape,
   style,
   width,
   ...props

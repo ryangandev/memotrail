@@ -11,8 +11,8 @@
   --upload-progress: 0deg;
   position: relative;
   display: grid;
-  width: 44px;
-  height: 44px;
+  width: var(--mt-size-upload-progress-ring);
+  height: var(--mt-size-upload-progress-ring);
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
@@ -25,7 +25,7 @@
 
 .ring::after {
   position: absolute;
-  inset: 5px;
+  inset: var(--mt-size-upload-progress-stroke);
   border-radius: 50%;
   background: var(--mt-color-surface-raised);
   content: "";

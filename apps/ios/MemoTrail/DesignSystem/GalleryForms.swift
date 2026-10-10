@@ -455,12 +455,6 @@
             VStack(alignment: .leading, spacing: MTSpacing.s2) {
               MTFieldLabel(title: "Note")
               MTRichTextEditor(text: $note, accessibilityIdentifier: "design-editor-note")
-                .background(MTColor.surface)
-                .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
-                .overlay {
-                  RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
-                    MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
-                }
             }
             OccurrenceEditor(value: $occurrence, defaultTimezone: "America/Los_Angeles")
             MTOrganizationEditor(

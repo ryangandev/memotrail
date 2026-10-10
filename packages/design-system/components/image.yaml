@@ -1,0 +1,78 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Image
+
+platforms:
+  web:
+    path: apps/web/src/components/progressive-image.tsx
+    symbols: [ProgressiveImage]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTMedia.swift
+    symbols: [MTRemoteImage]
+
+purpose: Shows a saved photo in the frame it is given, with a shimmer while it loads, a short fade when it arrives, and a quiet explanation when it cannot load.
+
+use:
+  - Every saved photo from MemoTrail's private media, such as a record card's cover, an Item page's photos, or the photo viewer.
+  - Any remote image whose loading and failure people should see instead of an empty box.
+
+avoid:
+  - Photos people just picked and have not saved. Use SelectedPhotoPreview on Web and the picked UIImage on iOS.
+  - Icons and illustrations. Use Icon or the brand mark.
+  - A placeholder with no image behind it. Use Skeleton.
+
+anatomy:
+  frame: The clipped box that fills the space it is given and holds the other parts.
+  placeholder: The shimmering skeleton under the photo while it loads.
+  image: The photo, faded in once it has loaded.
+  fallback: The centered message that replaces the photo when it cannot load or has no address.
+
+props:
+  fit:
+    description: How the photo fills the frame. Cover crops it to fill, for thumbnails and cards; contain shows it whole, for viewing a photo.
+    values: [cover, contain]
+    default: cover
+
+states: [default, loading]
+
+tokens:
+  - frame:
+      background: "{color.surfaceSubtle}"
+    image:
+      duration: "{motion.standard}"
+      easing: "{motion.easing.enter}"
+    fallback:
+      background: "{color.surfaceSubtle}"
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.caption}"
+      paddingInline: "{space.3}"
+      paddingBlock: "{space.3}"
+  - when: { state: loading }
+    placeholder:
+      background: "{color.surfaceSubtle}"
+      duration: "{motion.shimmer}"
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: The fallback is one short sentence, Photo unavailable by default, or two that say what to do, as the photo viewer's does.
+  notes:
+    - The alternative text names the photo, such as its file name or the record and its position, like Blue Civic photo 2.
+
+accessibility:
+  role: An image with the photo's name on Web and iOS. Without a name it is decorative, hidden from assistive technology.
+  label: The caller's alternative text. While the photo loads, Web marks the frame busy and iOS reads Loading photo; a failed photo reads its fallback, which Web announces as a status.
+  focus: Never focusable; a caller that makes a photo open something wraps it in a button.
+  minimumHitTarget: notInteractive
+  dynamicType: The photo keeps its frame. The fallback's caption text scales with Dynamic Type on iOS and browser zoom on Web.
+
+platformDifferences:
+  - difference: iOS callers can set the frame's background, which the photo viewer sets to the black photo backdrop; Web frames always use the subtle surface.
+    reason: The iOS viewer is a dark full-screen sheet where a light frame would flash around each photo. The Web viewer is a light dialog.
+
+specimens:
+  - id: image-states
+    description: A loaded photo, one still loading, and one that failed to load, side by side.
+  - id: image-fit
+    description: The same tall photo cropped to fill a wide frame and shown whole inside it.
+    covers: { fit: all }

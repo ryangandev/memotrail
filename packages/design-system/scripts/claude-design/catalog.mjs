@@ -104,7 +104,7 @@ export const bundled = [
     name: "Skeleton",
     source: "skeleton.tsx",
     group: "Feedback",
-    height: 200,
+    height: 740,
     summary:
       "Skeleton is a decorative shimmering placeholder for content that is still loading.",
   },
@@ -112,12 +112,13 @@ export const bundled = [
     name: "EmptyState",
     source: "empty-state.tsx",
     group: "Feedback",
-    height: 740,
+    height: 790,
     summary:
       "EmptyState explains why a region has nothing to show and, optionally, offers the next step.",
   },
   {
     name: "PhotoUploadProgress",
+    spec: "UploadProgress",
     source: "photo-upload-progress.tsx",
     group: "Feedback",
     height: 320,
@@ -128,7 +129,7 @@ export const bundled = [
     name: "PageFrame",
     source: "page-frame.tsx",
     group: "Layout",
-    height: 280,
+    height: 370,
     summary:
       "PageFrame sets a page's maximum width, centering, responsive gutters, and vertical rhythm.",
   },
@@ -144,7 +145,7 @@ export const bundled = [
     name: "SectionHeader",
     source: "section-header.tsx",
     group: "Layout",
-    height: 220,
+    height: 490,
     summary:
       "SectionHeader titles a region of a page, with an optional detail, description, and action.",
   },
@@ -160,15 +161,16 @@ export const bundled = [
     name: "SeparatedList",
     source: "separated-list.tsx",
     group: "Content",
-    height: 220,
+    height: 950,
     summary:
       "SeparatedList is a wrapping row of short facts with a dot between neighbors on the same line.",
   },
   {
     name: "ProgressiveImage",
+    spec: "Image",
     source: "progressive-image.tsx",
     group: "Content",
-    height: 260,
+    height: 420,
     summary:
       "ProgressiveImage shows a photo over a reserved skeleton, fades it in once decoded, and explains a failure.",
   },
@@ -176,7 +178,7 @@ export const bundled = [
     name: "RecordCard",
     source: "record-card.tsx",
     group: "Content",
-    height: 460,
+    height: 860,
     parts: [
       {
         name: "RecordCardVisual",
@@ -294,8 +296,12 @@ export const excluded = {
 // The card group of each component that has a spec but stays out of the bundle. Its card shows the
 // spec in place of the component, and a spec for a component missing here stops the export.
 export const specOnlyGroups = {
+  CaptureComposer: "Patterns",
   CommandPalette: "Patterns",
   Dialog: "Patterns",
+  FocusedRecord: "Patterns",
+  PhotoViewer: "Patterns",
+  RichText: "Content",
   SyncStatus: "Feedback",
   TimeZoneField: "Inputs",
   Toast: "Feedback",

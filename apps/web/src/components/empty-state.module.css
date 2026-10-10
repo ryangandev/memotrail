@@ -26,8 +26,8 @@
 
 .icon {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: var(--mt-size-empty-state-icon);
+  height: var(--mt-size-empty-state-icon);
   place-items: center;
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-accent);
@@ -45,7 +45,7 @@
 }
 
 .description {
-  max-width: 480px;
+  max-width: var(--mt-size-empty-state-message-width);
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-label);
   line-height: var(--mt-line-height-body);

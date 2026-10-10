@@ -20,7 +20,10 @@ export const propertyTypes = {
   gap: { type: "dimension" },
   size: { type: "dimension" },
   width: { type: "dimension" },
+  height: { type: "dimension" },
   minHeight: { type: "dimension" },
+  minWidth: { type: "dimension" },
+  maxWidth: { type: "dimension" },
   type: { type: "typography" },
   fontFamily: { type: "fontFamily" },
   fontSize: { type: "dimension" },
@@ -134,25 +137,19 @@ async function checkSpec(spec, { file, label, root, system }) {
     fail("needs an implementation on at least one platform.");
   }
   for (const platform of implemented) {
-    const { path, symbols } = spec.platforms[platform];
-    const expected = platform === "web" ? [".ts", ".tsx"] : [".swift"];
-    if (!expected.includes(extname(path))) {
-      fail(`platforms.${platform}.path ${path} is not a ${platform} source.`);
-    }
-    let source;
-    try {
-      source = await readFile(resolve(root, path), "utf8");
-    } catch {
-      fail(`platforms.${platform}.path ${path} does not exist.`);
-    }
-    for (const symbol of symbols) {
-      const declared = new RegExp(
-        `${declarations[extname(path)]}${symbol}\\b`,
-        "m",
-      );
-      if (!declared.test(source)) {
-        fail(`${path} does not declare ${symbol}.`);
-      }
+    const { path, symbols, files = [] } = spec.platforms[platform];
+    const sources = [
+      { path, symbols, where: `platforms.${platform}.path` },
+      ...files.map((file, index) => ({
+        ...file,
+        where: `platforms.${platform}.files[${index}].path`,
+      })),
+    ];
+    const seen = new Set();
+    for (const { path, symbols, where } of sources) {
+      if (seen.has(path)) fail(`${where} ${path} is already listed.`);
+      seen.add(path);
+      await checkSource({ path, symbols, where, platform, root, fail });
     }
   }
 
@@ -322,6 +319,29 @@ async function checkSpec(spec, { file, label, root, system }) {
     props,
     specimens,
   };
+}
+
+// A platform file must be that platform's source and declare each symbol the spec lists for it.
+async function checkSource({ path, symbols, where, platform, root, fail }) {
+  const expected = platform === "web" ? [".ts", ".tsx"] : [".swift"];
+  if (!expected.includes(extname(path))) {
+    fail(`${where} ${path} is not a ${platform} source.`);
+  }
+  let source;
+  try {
+    source = await readFile(resolve(root, path), "utf8");
+  } catch {
+    fail(`${where} ${path} does not exist.`);
+  }
+  for (const symbol of symbols) {
+    const declared = new RegExp(
+      `${declarations[extname(path)]}${symbol}\\b`,
+      "m",
+    );
+    if (!declared.test(source)) {
+      fail(`${path} does not declare ${symbol}.`);
+    }
+  }
 }
 
 function checkReference(reference, expected, { at, fail, platform, system }) {

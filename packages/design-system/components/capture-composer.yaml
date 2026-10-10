@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: CaptureComposer
+
+platforms:
+  web:
+    path: apps/web/src/components/capture-composer.tsx
+    symbols: [CaptureComposer]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/CaptureCard.swift
+    symbols: [CaptureCard, CaptureSpark]
+
+purpose: Captures one formatted note with an optional date, voice dictation, and photos, kept as a local draft until it is saved.
+
+use:
+  - The Home Dashboard's composer, as a raised card under the question What's on your mind?
+  - The body of Quick Capture, opened from the action dock, without a card of its own.
+
+avoid:
+  - Editing a saved Entry. Use the Entry editor, which has a title, organization, and more fields.
+  - Short single-line input. Use TextField.
+
+anatomy:
+  container: The raised card in the page variant, or the open body of the Quick Capture dialog.
+  header: The sparkle on a soft accent circle and the question What's on your mind?, in the page variant only.
+  editor: The rich-text writing area, embedded without a field border.
+  occurrence: The relevant date fields, opened in place under the note when people choose a date.
+  photos: The strip of selected photos, each with a remove button.
+  status: A tinted strip for a dictation message, a photo problem, or the draft note.
+  actions: The bar with quiet date, voice, and photo actions at the leading edge and the save action at the trailing edge.
+
+props:
+  variant:
+    description: Where the composer sits. Page is a raised card with its own question, on the Home Dashboard; dialog is the open body of Quick Capture, which titles it.
+    values: [page, dialog]
+    default: page
+    platformNames: { ios: style }
+
+states: [default, loading, disabled]
+
+tokens:
+  - header:
+      size: "{size.capture.spark}"
+      background: "{color.accentSubtle}"
+      color: "{color.accent}"
+      type: "{type.cardTitle}"
+    photos:
+      size: "{size.capture.thumbnail}"
+      radius: "{radius.medium}"
+      border: "{color.borderStrong}"
+      background: "{color.surfaceSubtle}"
+      gap: "{space.3}"
+    status:
+      minHeight: "{size.capture.statusHeight}"
+      fontSize: "{font.size.caption}"
+    actions:
+      minHeight: "{size.capture.actionBarHeight}"
+      background: "{color.surface}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+  - when: { variant: page }
+    container:
+      background: "{color.surfaceRaised}"
+      border: "{color.borderStrong}"
+      borderWidth: "{size.stroke.thin}"
+      radius: "{radius.large}"
+      shadow: "{shadow.raised}"
+      paddingInline: { web: "{space.6}", ios: "{space.5}" }
+  - when: { variant: dialog }
+    container:
+      paddingInline: { web: "{space.5}", ios: "{space.4}" }
+  - when: { state: loading }
+    actions:
+      color: "{color.inkMuted}"
+  - when: { state: disabled }
+    actions:
+      opacity: "{state.disabled.opacity.button}"
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: The note has no length limit beyond the Entry body limit; status messages are one short sentence.
+  notes:
+    - The placeholder asks What is on your mind?, and the page variant's question reads What's on your mind? in a serif title.
+    - The draft message says where the draft lives, such as Draft saved on this device.
+
+accessibility:
+  role: A form named Quick capture on Web and a container with the same label on iOS.
+  label: Each action names what it does, such as Add photos, Start voice capture, or Remove selected photo 2, and the editor is labeled Entry text.
+  focus: The editor comes first, then the date, voice, and photo actions, then the save action. The dialog variant focuses the editor when it opens; Command or Control and Return saves on Web.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Text scales with Dynamic Type on iOS and browser zoom on Web. The quiet actions keep their size, and the action bar wraps the save action below them when it cannot fit.
+
+platformDifferences:
+  - difference: iOS saves a capture to the Inbox and labels its action Save to Inbox; Web saves it straight to the Library and labels it Save to Library.
+    reason: docs/product.md retires the Inbox, and Web follows it. The iOS app still writes captures through the retired Inbox queue, so its label says what it does until it moves to the current schema.
+  - difference: Web pads the composer 24 px in the page variant and 20 px in the dialog variant above 720 px, and 16 px up to 390 px; iOS uses the 20 and 16 pt phone padding.
+    reason: The iOS app runs only on iPhone, so it never reaches the wider layout.
+  - difference: Web shows each quiet action's label beside its icon above 720 px and a short status beside the save action; iOS shows icons only and puts every status in the strip above the actions.
+    reason: An iPhone has no room for labels and a status in one bar. Web hides them the same way at phone widths.
+  - difference: The iOS quiet actions are 40 pt wide; Web's are 36 px wide at phone widths.
+    reason: The wider target is easier to tap with a thumb, and the bar still fits three actions and the save action on the narrowest iPhone.
+  - difference: Web shows photos in a draft at 88 px in a wide window; iOS shows them at the 76 pt phone size.
+    reason: The iOS app runs only on iPhone.
+  - difference: Web lists captures waiting to sync under the composer, as Pending sync, and shows photo upload progress beside the save action; the iOS composer shows neither.
+    reason: The iOS app still saves through the retired Inbox queue, which has no pending sync list or batch upload progress; both come to iOS with its move to the current schema.
+  - difference: Selecting a draft photo on Web opens it in a single-photo dialog; iOS shows the thumbnail without a viewer.
+    reason: docs/product.md asks for the dialog on Web, where hover and a large window make checking a photo before saving useful. On iPhone the thumbnail is the photo the person just picked from their library.
+  - difference: The draft message names this device on Web and this iPhone on iOS.
+    reason: Each names where the draft is kept in words people use on that platform.
+  - difference: Web's embedded composer on the Home Dashboard fits its tools to the card's own width; iOS always fits the phone width.
+    reason: The Web Dashboard places the composer in a column narrower than the window, while iOS shows it at the full width of the screen.
+
+specimens:
+  - id: capture-composer-page
+    description: The Dashboard composer as a raised card with its question, an empty note, and its actions.
+    covers: { variant: [page] }
+  - id: capture-composer-dialog
+    description: The Quick Capture body without a card or question, sharing the same draft.
+    covers: { variant: [dialog] }

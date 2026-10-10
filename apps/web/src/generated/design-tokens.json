@@ -637,6 +637,39 @@
       "paddingBlock": 3,
       "minHeight": 22
     },
+    "emptyState": {
+      "icon": 48,
+      "messageWidth": 480
+    },
+    "pageHeader": {
+      "descriptionWidth": 640,
+      "copyBasis": 260
+    },
+    "skeleton": {
+      "block": 96,
+      "line": 14,
+      "circle": 40
+    },
+    "uploadProgress": {
+      "ring": 44,
+      "stroke": 5
+    },
+    "recordCard": {
+      "visualHeight": 190,
+      "footerHeight": 31
+    },
+    "capture": {
+      "spark": 32,
+      "statusHeight": 42,
+      "actionBarHeight": 58,
+      "quietAction": 36,
+      "thumbnail": 76,
+      "thumbnailRegular": 88,
+      "removeButton": 24
+    },
+    "focusedRecord": {
+      "photoColumn": 220
+    },
     "checkbox": {
       "small": 16,
       "medium": 20
@@ -1552,6 +1585,25 @@
     "size.stroke.indicator": "Stroke width of the chevron a native select draws on Web.",
     "size.badge.paddingBlock": "Space above and below a badge's label.",
     "size.badge.minHeight": "Minimum height of a medium badge.",
+    "size.emptyState.icon": "The icon tile above an empty state's title.",
+    "size.emptyState.messageWidth": "The widest an empty state's description runs.",
+    "size.pageHeader.descriptionWidth": "The widest a page description runs before it wraps.",
+    "size.pageHeader.copyBasis": "The narrowest the title keeps beside its actions before they move below it.",
+    "size.skeleton.block": "The height of a block skeleton, such as a card or paragraph placeholder.",
+    "size.skeleton.line": "The height of a line skeleton, one line of text.",
+    "size.skeleton.circle": "The diameter of a circle skeleton, such as an avatar placeholder.",
+    "size.uploadProgress.ring": "The diameter of the upload ring.",
+    "size.uploadProgress.stroke": "The width of the ring's track and progress arc.",
+    "size.recordCard.visualHeight": "The photo or map band at the top of a record card.",
+    "size.recordCard.footerHeight": "The footer row of a record card, including its top padding.",
+    "size.capture.spark": "The sparkle circle beside the composer's question.",
+    "size.capture.statusHeight": "The shortest the voice and draft status strip above the actions gets.",
+    "size.capture.actionBarHeight": "The shortest the action bar gets.",
+    "size.capture.quietAction": "The height of an icon action in the action bar, and its width on phones.",
+    "size.capture.thumbnail": "A selected photo in the composer on phones.",
+    "size.capture.thumbnailRegular": "A selected photo in the composer in a wide window.",
+    "size.capture.removeButton": "The remove button on a selected photo.",
+    "size.focusedRecord.photoColumn": "The narrowest a column of a focused record's photos gets.",
     "size.checkbox.small": "The box of a small checkbox, for dense option rows.",
     "size.checkbox.medium": "The box of a medium checkbox.",
     "size.toast.width": "The widest a toast gets.",

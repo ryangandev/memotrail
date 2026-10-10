@@ -600,22 +600,24 @@
     var body: some View {
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
         GallerySpecimen(
-          title: "MTPage",
-          api: "width: compact | standard | wide | canvas · spacing",
+          title: "PageFrame",
+          api: "MTPage · width: compact | standard | wide | canvas · spacing",
           description:
             "The canonical outer geometry. Phones use the full width with page gutters; wider screens center the page at its variant width. This gallery uses canvas."
         ) {
-          VStack(spacing: 0) {
-            ForEach(MTPageWidth.allCases, id: \.self) { width in
-              HStack(alignment: .firstTextBaseline) {
-                Text(width.title.lowercased()).font(MTFont.label).foregroundStyle(MTColor.ink)
-                Spacer()
-                Text("\(Int(width.rawValue)) pt · \(width.purpose)").font(MTFont.caption)
-                  .foregroundStyle(MTColor.inkMuted).multilineTextAlignment(.trailing)
-              }
-              .padding(.vertical, MTSpacing.s3)
-              if width != MTPageWidth.allCases.last {
-                Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
+          GalleryCase(.pageFrameWidths) {
+            VStack(spacing: 0) {
+              ForEach(MTPageFrameWidth.allCases, id: \.self) { width in
+                HStack(alignment: .firstTextBaseline) {
+                  Text(width.rawValue).font(MTFont.label).foregroundStyle(MTColor.ink)
+                  Spacer()
+                  Text("\(Int(width.maxWidth)) pt · \(width.pageWidth.purpose)").font(MTFont.caption)
+                    .foregroundStyle(MTColor.inkMuted).multilineTextAlignment(.trailing)
+                }
+                .padding(.vertical, MTSpacing.s3)
+                if width != MTPageFrameWidth.allCases.last {
+                  Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
+                }
               }
             }
           }

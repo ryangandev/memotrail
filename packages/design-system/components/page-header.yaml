@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: PageHeader
+
+platforms:
+  web:
+    path: apps/web/src/components/page-header.tsx
+    symbols: [PageHeader]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTHeaders.swift
+    symbols: [MTPageHeader, MTEyebrow]
+
+purpose: Opens a page with an optional eyebrow, a serif title, a description, and the page's own actions.
+
+use:
+  - The first element of every workspace page, such as Library, Homes, or Settings.
+  - A focused record's page, with its Kind as the eyebrow and Edit as the action.
+
+avoid:
+  - Headings inside a page. Use SectionHeader.
+  - Dialog and sheet titles. Use the Dialog title on Web and the sheet's navigation title on iOS.
+
+anatomy:
+  container: The row that holds the copy and the actions, and wraps the actions below the copy when they do not fit beside it.
+  eyebrow: Optional uppercase warm context above the title, such as a Kind or an area name.
+  title: The page's serif title.
+  description: An optional explanation under the title, kept to a readable width.
+  actions: Optional controls at the trailing edge, such as Edit or New.
+
+props: {}
+
+states: [default]
+
+tokens:
+  - container:
+      gap: "{space.5}"
+    eyebrow:
+      type: "{type.pageEyebrow}"
+      color: "{color.warm}"
+    title:
+      type: { web: "{type.display}", ios: "{type.title}" }
+      color: "{color.ink}"
+      minWidth: "{size.pageHeader.copyBasis}"
+    description:
+      fontSize: "{font.size.body}"
+      lineHeight: "{lineHeight.body}"
+      color: "{color.inkMuted}"
+      maxWidth: "{size.pageHeader.descriptionWidth}"
+    actions:
+      gap: "{space.2}"
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: asWritten
+  length: A title of one to four words, or the record's own name; a description of one or two sentences.
+  notes:
+    - Area titles use title case because they name a place in the app, such as Life Wiki or First Times; a record keeps its own name.
+    - The eyebrow is set in uppercase visually, so pass it in its normal case.
+
+accessibility:
+  role: The title is the page's heading, an h1 by default on Web and a header on iOS.
+  label: The visible title; the eyebrow and description are read as text around it.
+  focus: The header itself never takes focus; its actions follow the title in the focus order.
+  minimumHitTarget: notInteractive
+  dynamicType: iOS scales every text role with Dynamic Type, and the actions move below the copy when the title cannot keep its 260 pt basis beside them. Web grows with browser zoom and wraps the same way.
+
+platformDifferences:
+  - difference: Web titles use the 42 px display size above 560 px and the 28 px title size below it; iOS uses the title size on iPhone.
+    reason: The iOS app runs only on iPhone, which is always the narrow layout. MTPageHeader still switches to display in a regular width.
+  - difference: Web lets the caller choose an h1 or h2 title; iOS marks the title as a header without a level.
+    reason: A Web page needs one h1 and a heading outline, while VoiceOver moves between headers without levels in a SwiftUI screen.
+
+specimens:
+  - id: page-header-full
+    description: An eyebrow, a title, a description, and two actions beside the copy.
+  - id: page-header-title-only
+    description: A title alone, as a focused page with nothing else to say opens.

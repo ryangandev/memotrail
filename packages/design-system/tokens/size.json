@@ -294,6 +294,165 @@
         }
       }
     },
+    "emptyState": {
+      "$description": "Empty state geometry: Web EmptyState and iOS MTEmptyState share it.",
+      "icon": {
+        "$description": "The icon tile above an empty state's title.",
+        "$value": {
+          "value": 48,
+          "unit": "px"
+        }
+      },
+      "messageWidth": {
+        "$description": "The widest an empty state's description runs.",
+        "$value": {
+          "value": 480,
+          "unit": "px"
+        }
+      }
+    },
+    "pageHeader": {
+      "$description": "Page header geometry: Web PageHeader and iOS MTPageHeader share it.",
+      "descriptionWidth": {
+        "$description": "The widest a page description runs before it wraps.",
+        "$value": {
+          "value": 640,
+          "unit": "px"
+        }
+      },
+      "copyBasis": {
+        "$description": "The narrowest the title keeps beside its actions before they move below it.",
+        "$value": {
+          "value": 260,
+          "unit": "px"
+        }
+      }
+    },
+    "skeleton": {
+      "$description": "Skeleton shapes: Web Skeleton and iOS MTLoadingSkeleton share them.",
+      "block": {
+        "$description": "The height of a block skeleton, such as a card or paragraph placeholder.",
+        "$value": {
+          "value": 96,
+          "unit": "px"
+        }
+      },
+      "line": {
+        "$description": "The height of a line skeleton, one line of text.",
+        "$value": {
+          "value": 14,
+          "unit": "px"
+        }
+      },
+      "circle": {
+        "$description": "The diameter of a circle skeleton, such as an avatar placeholder.",
+        "$value": {
+          "value": 40,
+          "unit": "px"
+        }
+      }
+    },
+    "uploadProgress": {
+      "$description": "Upload ring geometry: Web PhotoUploadProgress and iOS MTUploadProgress share it.",
+      "ring": {
+        "$description": "The diameter of the upload ring.",
+        "$value": {
+          "value": 44,
+          "unit": "px"
+        }
+      },
+      "stroke": {
+        "$description": "The width of the ring's track and progress arc.",
+        "$value": {
+          "value": 5,
+          "unit": "px"
+        }
+      }
+    },
+    "recordCard": {
+      "$description": "Record card geometry: Web RecordCard and iOS MTRecordCard share it.",
+      "visualHeight": {
+        "$description": "The photo or map band at the top of a record card.",
+        "$value": {
+          "value": 190,
+          "unit": "px"
+        }
+      },
+      "footerHeight": {
+        "$description": "The footer row of a record card, including its top padding.",
+        "$value": {
+          "value": 31,
+          "unit": "px"
+        }
+      }
+    },
+    "capture": {
+      "$description": "Capture composer geometry: Web CaptureComposer and iOS CaptureCard share it.",
+      "spark": {
+        "$description": "The sparkle circle beside the composer's question.",
+        "$value": {
+          "value": 32,
+          "unit": "px"
+        }
+      },
+      "statusHeight": {
+        "$description": "The shortest the voice and draft status strip above the actions gets.",
+        "$value": {
+          "value": 42,
+          "unit": "px"
+        }
+      },
+      "actionBarHeight": {
+        "$description": "The shortest the action bar gets.",
+        "$value": {
+          "value": 58,
+          "unit": "px"
+        }
+      },
+      "quietAction": {
+        "$description": "The height of an icon action in the action bar, and its width on phones.",
+        "$value": {
+          "value": 36,
+          "unit": "px"
+        }
+      },
+      "thumbnail": {
+        "$description": "A selected photo in the composer on phones.",
+        "$value": {
+          "value": 76,
+          "unit": "px"
+        }
+      },
+      "thumbnailRegular": {
+        "$description": "A selected photo in the composer in a wide window.",
+        "$value": {
+          "value": 88,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "removeButton": {
+        "$description": "The remove button on a selected photo.",
+        "$value": {
+          "value": 24,
+          "unit": "px"
+        }
+      }
+    },
+    "focusedRecord": {
+      "$description": "Focused record geometry: Web FocusedRecordDetail and iOS MTFocusedRecordPage share it.",
+      "photoColumn": {
+        "$description": "The narrowest a column of a focused record's photos gets.",
+        "$value": {
+          "value": 220,
+          "unit": "px"
+        }
+      }
+    },
     "checkbox": {
       "$description": "Checkbox squares: Web Checkbox and iOS MTCheckbox share them.",
       "small": {

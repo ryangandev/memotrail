@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/badge";
+import { Button } from "@/components/button";
 import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
+import { PhotoPreviewDialog } from "@/components/photo-preview-dialog";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { SectionHeader } from "@/components/section-header";
 import { HomeEditor } from "@/components/homes-workspace";
@@ -105,26 +107,148 @@ export function FocusedRecordDetail(props: Props) {
           />
         )
       ) : (
-        <>
-          <PageHeader
-            eyebrow={label}
-            title={record.title}
-            actions={
-              <button
-                aria-label={`Edit ${label}`}
-                className={styles.editAction}
-                type="button"
-                onClick={() => setEditing(true)}
-              >
-                <Icon name="edit" size={18} />
-                <span>Edit</span>
-              </button>
-            }
-          />
-          <RecordContent kind={props.kind} record={record} />
-        </>
+        <FocusedRecordView
+          facts={recordFacts(props.kind, record)}
+          kindLabel={label}
+          onEdit={() => setEditing(true)}
+          photos={recordPhotos(props.kind, record)}
+          story={record.body}
+          storyTitle={props.kind === "goal" ? "Notes" : "Story"}
+          tags={record.tagNames}
+          title={record.title}
+        >
+          {props.kind === "goal" ? (
+            <RelatedEntries goal={record as GoalRecord} />
+          ) : null}
+        </FocusedRecordView>
       )}
     </PageFrame>
+  );
+}
+
+export type FocusedRecordPhoto = { id: string; name: string; src: string };
+export type FocusedRecordFact = {
+  label: string;
+  value: string | number | null | undefined;
+};
+
+/**
+ * A record's own page: its Kind and title with Edit, its photos, facts, Story, and tags, then
+ * any sections that belong to one Kind. Specified in
+ * packages/design-system/components/focused-record.yaml.
+ */
+export function FocusedRecordView({
+  children,
+  facts,
+  headingLevel,
+  kindLabel,
+  onEdit,
+  photos,
+  story,
+  storyTitle = "Story",
+  tags,
+  title,
+}: {
+  children?: ReactNode;
+  facts: FocusedRecordFact[];
+  /** The page's own title is the h1; a preview inside another page passes 2. */
+  headingLevel?: 1 | 2;
+  kindLabel: string;
+  onEdit: () => void;
+  photos: FocusedRecordPhoto[];
+  story?: string | null;
+  storyTitle?: string;
+  tags: string[];
+  title: string;
+}) {
+  const visibleFacts = facts.filter(
+    ({ value }) => value !== null && value !== undefined && value !== "",
+  );
+  return (
+    <div className={styles.view} data-ui-focused-record>
+      <PageHeader
+        eyebrow={kindLabel}
+        headingLevel={headingLevel}
+        title={title}
+        actions={
+          <Button
+            aria-label={`Edit ${kindLabel}`}
+            onClick={onEdit}
+            size="small"
+            variant="ghost"
+          >
+            <Icon name="edit" size={14} />
+            Edit
+          </Button>
+        }
+      />
+      <article className={styles.content}>
+        {photos.length > 0 ? <RecordPhotos photos={photos} /> : null}
+        {visibleFacts.length > 0 ? (
+          <dl className={styles.facts}>
+            {visibleFacts.map((fact) => (
+              <div className={styles.fact} key={fact.label}>
+                <dt>{fact.label}</dt>
+                <dd>{fact.value}</dd>
+              </div>
+            ))}
+          </dl>
+        ) : null}
+        {story ? (
+          <section className={styles.section}>
+            <SectionHeader
+              className={styles.sectionHeader}
+              title={storyTitle}
+            />
+            <p className={styles.prose}>{story}</p>
+          </section>
+        ) : null}
+        {tags.length ? (
+          <section className={styles.section}>
+            <SectionHeader className={styles.sectionHeader} title="Organize" />
+            <div className={styles.chips}>
+              {tags.map((name) => (
+                <Badge key={`tag:${name}`} tone="neutral">
+                  #{name}
+                </Badge>
+              ))}
+            </div>
+          </section>
+        ) : null}
+        {children}
+      </article>
+    </div>
+  );
+}
+
+// Each photo opens the viewer, which pages through the others, like an Item page's photos.
+function RecordPhotos({ photos }: { photos: FocusedRecordPhoto[] }) {
+  const [selected, setSelected] = useState<number | null>(null);
+  const photo = selected === null ? null : photos[selected];
+  return (
+    <div className={styles.photos}>
+      {photos.map((item, index) => (
+        <button
+          aria-label={`Preview ${item.name}`}
+          className={styles.photo}
+          key={item.id}
+          onClick={() => setSelected(index)}
+          type="button"
+        >
+          <ProgressiveImage alt={item.name} loading="lazy" src={item.src} />
+        </button>
+      ))}
+      {photo ? (
+        <PhotoPreviewDialog
+          name={photo.name}
+          onClose={() => setSelected(null)}
+          onNext={() => setSelected((index) => (index ?? 0) + 1)}
+          onPrevious={() => setSelected((index) => (index ?? 0) - 1)}
+          position={{ index: selected!, total: photos.length }}
+          src={photo.src}
+        />
+      ) : null}
+    </div>
   );
 }
 
@@ -132,143 +256,76 @@ function optionalLocationLabel(location: LocationSelection | null | undefined) {
   return location ? locationDisplayLabel(location) : null;
 }
 
-function Fact({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | number | null | undefined;
-}) {
-  if (value === null || value === undefined || value === "") return null;
-  return (
-    <div className={styles.fact}>
-      <dt>{label}</dt>
-      <dd>{value}</dd>
-    </div>
+function recordPhotos(
+  kind: Props["kind"],
+  record: Props["record"],
+): FocusedRecordPhoto[] {
+  const originals = record.attachments.filter((photo) =>
+    "variant" in photo ? photo.variant === "original" : true,
+  );
+  return originals.flatMap((photo, index) =>
+    photo.imageUrl
+      ? [
+          {
+            id: photo.id,
+            name:
+              photo.originalFilename ?? `${labels[kind]} photo ${index + 1}`,
+            src: photo.imageUrl,
+          },
+        ]
+      : [],
   );
 }
 
-function RecordContent({
-  kind,
-  record,
-}: {
-  kind: Props["kind"];
-  record: Props["record"];
-}) {
-  const photos = record.attachments.filter((photo) =>
-    "variant" in photo ? photo.variant === "original" : true,
-  );
-  const body = record.body;
-  const tags = record.tagNames;
+function recordFacts(
+  kind: Props["kind"],
+  record: Props["record"],
+): FocusedRecordFact[] {
+  if (kind === "home") {
+    const home = record as HomeRecord;
+    return [
+      { label: "When", value: homeRangeLabel(home) },
+      { label: "Location", value: homeLocationLabel(home) },
+      { label: "Address", value: home.location?.address },
+      { label: "Why you moved in", value: home.moveInReason },
+      { label: "Why you left", value: home.moveOutReason },
+    ];
+  }
+  if (kind === "vehicle") {
+    const vehicle = record as VehicleRecord;
+    return [
+      { label: "When", value: vehicleRangeLabel(vehicle) },
+      { label: "Vehicle", value: vehicleFactsLabel(vehicle) },
+      { label: "Location", value: optionalLocationLabel(vehicle.location) },
+    ];
+  }
+  const goal = record as GoalRecord;
+  return [
+    { label: "Status", value: goalStatusLabels[goal.status] },
+    { label: "Target date", value: goalTargetDate(goal) },
+  ];
+}
+
+function RelatedEntries({ goal }: { goal: GoalRecord }) {
+  if (!goal.relatedEntries.length) return null;
   return (
-    <article className={styles.content}>
-      {photos.length > 0 ? (
-        <div className={styles.photos}>
-          {photos.map((photo, index) =>
-            photo.imageUrl ? (
-              <ProgressiveImage
-                key={photo.id}
-                src={photo.imageUrl}
-                alt={
-                  photo.originalFilename ?? `${labels[kind]} photo ${index + 1}`
-                }
-              />
-            ) : null,
-          )}
-        </div>
-      ) : null}
-      <dl className={styles.facts}>
-        {kind === "home" ? (
-          <>
-            <Fact label="When" value={homeRangeLabel(record as HomeRecord)} />
-            <Fact
-              label="Location"
-              value={homeLocationLabel(record as HomeRecord)}
-            />
-            <Fact
-              label="Address"
-              value={(record as HomeRecord).location?.address}
-            />
-            <Fact
-              label="Why you moved in"
-              value={(record as HomeRecord).moveInReason}
-            />
-            <Fact
-              label="Why you left"
-              value={(record as HomeRecord).moveOutReason}
-            />
-          </>
-        ) : null}
-        {kind === "vehicle" ? (
-          <>
-            <Fact
-              label="When"
-              value={vehicleRangeLabel(record as VehicleRecord)}
-            />
-            <Fact
-              label="Vehicle"
-              value={vehicleFactsLabel(record as VehicleRecord)}
-            />
-            <Fact
-              label="Location"
-              value={optionalLocationLabel((record as VehicleRecord).location)}
-            />
-          </>
-        ) : null}
-        {kind === "goal" ? (
-          <>
-            <Fact
-              label="Status"
-              value={goalStatusLabels[(record as GoalRecord).status]}
-            />
-            <Fact
-              label="Target date"
-              value={goalTargetDate(record as GoalRecord)}
-            />
-          </>
-        ) : null}
-      </dl>
-      {body ? (
-        <section className={styles.section}>
-          <SectionHeader
-            className={styles.sectionHeader}
-            title={kind === "goal" ? "Notes" : "Story"}
-          />
-          <p className={styles.prose}>{body}</p>
-        </section>
-      ) : null}
-      {tags.length ? (
-        <section className={styles.section}>
-          <SectionHeader className={styles.sectionHeader} title="Organize" />
-          <div className={styles.chips}>
-            {tags.map((name) => (
-              <Badge key={`tag:${name}`} tone="neutral">
-                #{name}
-              </Badge>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      {kind === "goal" && (record as GoalRecord).relatedEntries.length ? (
-        <section className={styles.section}>
-          <SectionHeader className={styles.sectionHeader} title="First Time" />
-          <ul>
-            {(record as GoalRecord).relatedEntries.map((entry) => (
-              <li key={entry.id}>
-                <a
-                  href={wikiEntryHref({
-                    id: entry.id,
-                    itemKind: entry.itemKind,
-                    itemSubtype: entry.itemSubtype,
-                  })}
-                >
-                  {entry.title}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-    </article>
+    <section className={styles.section}>
+      <SectionHeader className={styles.sectionHeader} title="First Time" />
+      <ul>
+        {goal.relatedEntries.map((entry) => (
+          <li key={entry.id}>
+            <a
+              href={wikiEntryHref({
+                id: entry.id,
+                itemKind: entry.itemKind,
+                itemSubtype: entry.itemSubtype,
+              })}
+            >
+              {entry.title}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }

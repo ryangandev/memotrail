@@ -1,0 +1,69 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: PageFrame
+
+platforms:
+  web:
+    path: apps/web/src/components/page-frame.tsx
+    symbols: [PageFrame]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTFoundations.swift
+    symbols: [MTPage]
+
+purpose: Sets a page's readable maximum width, centers it, and keeps responsive gutters and vertical rhythm around its content.
+
+use:
+  - The outer box of every workspace page, chosen by how the page reads, such as compact for a focused record and wide for a dashboard.
+
+avoid:
+  - Sections inside a page. Use the page's own grid or stack.
+  - Dialogs and sheets, which size themselves. Use Dialog on Web and a sheet on iOS.
+
+anatomy:
+  container: The centered column that holds the page's content, at most the variant's width and inset by the page gutter.
+
+props:
+  variant:
+    description: The page's maximum width. Compact suits forms and focused reading, standard lists and search, wide dashboards and card grids, and canvas dense spatial views.
+    values: [compact, standard, wide, canvas]
+    default: standard
+    platformNames: { ios: width }
+
+states: [default]
+
+tokens:
+  - container:
+      paddingInline: "{layout.pageGutter.compact}"
+  - when: { variant: compact }
+    container: { maxWidth: "{layout.pageWidth.compact}" }
+  - when: { variant: standard }
+    container: { maxWidth: "{layout.pageWidth.standard}" }
+  - when: { variant: wide }
+    container: { maxWidth: "{layout.pageWidth.wide}" }
+  - when: { variant: canvas }
+    container: { maxWidth: "{layout.pageWidth.canvas}" }
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: asWritten
+  length: A page frame has no text of its own.
+
+accessibility:
+  role: None. Web renders a plain div inside the page's main landmark, and iOS a scroll view that holds the page.
+  label: None.
+  focus: Never focusable; the content keeps its own order.
+  minimumHitTarget: notInteractive
+  dynamicType: The width and gutters stay fixed while the content scales with Dynamic Type on iOS and browser zoom on Web.
+
+platformDifferences:
+  - difference: Web insets the frame by the 32 px regular gutter above 720 px, the 16 px compact gutter up to 720 px, and the 12 px narrow gutter up to 390 px; iOS always uses the 16 pt compact gutter.
+    reason: The iOS app runs only on iPhone, where the compact gutter matches the safe area's own inset, so it never reaches the wider layouts.
+  - difference: Web pads the frame 48 px above and 64 px below, or 32 and 48 px up to 720 px; iOS pads 24 pt above and 48 pt below, and sets the spacing between children.
+    reason: iOS pages start under a navigation bar that already leaves room above the content, and SwiftUI stacks space their children, where Web pages set their own grid gaps.
+  - difference: MTPage is the page's scroll view and paints the canvas background; Web PageFrame sits inside the workspace's scrolling main area.
+    reason: Each iOS screen scrolls on its own in a navigation stack, while every Web page scrolls in the shared workspace shell.
+
+specimens:
+  - id: page-frame-widths
+    description: Every width variant with its maximum width and the pages it suits.
+    covers: { variant: all }

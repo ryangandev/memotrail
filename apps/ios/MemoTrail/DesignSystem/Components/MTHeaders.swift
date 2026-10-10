@@ -14,6 +14,7 @@ struct MTEyebrow: View {
 
 /// The page title block: optional eyebrow, serif title, description, and actions.
 /// Titles use the compact title size on phones, like the Web header below 560 px.
+/// Specified in packages/design-system/components/page-header.yaml.
 struct MTPageHeader<Actions: View>: View {
   let eyebrow: String?
   let title: String
@@ -51,7 +52,7 @@ struct MTPageHeader<Actions: View>: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body)
-          .frame(maxWidth: MTLayout.PageHeader.descriptionWidth, alignment: .leading)
+          .frame(maxWidth: MTSize.PageHeader.descriptionWidth, alignment: .leading)
       }
     }
     .fixedSize(horizontal: false, vertical: true)
@@ -64,11 +65,10 @@ struct MTPageHeader<Actions: View>: View {
 
 /// Web `PageHeader` wrapping: the copy keeps a 260 pt basis and its title wraps beside the
 /// actions while both fit, so a small Edit stays beside a long title; otherwise the actions
-/// move below the copy.
+/// move below the copy, the same 20 pt gap away.
 private struct MTPageHeaderLayout: Layout {
-  private static let copyBasis = MTLayout.PageHeader.copyBasis
+  private static let copyBasis = MTSize.PageHeader.copyBasis
   private let spacing = MTSpacing.s5
-  private let wrapSpacing = MTSpacing.s4
 
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
     let frames = arrange(width: proposal.width, subviews: subviews)
@@ -114,7 +114,7 @@ private struct MTPageHeaderLayout: Layout {
     let wrapped = subviews[1].sizeThatFits(ProposedViewSize(width: width, height: nil))
     return [
       CGRect(origin: .zero, size: CGSize(width: width, height: copySize.height)),
-      CGRect(origin: CGPoint(x: 0, y: copySize.height + wrapSpacing), size: wrapped),
+      CGRect(origin: CGPoint(x: 0, y: copySize.height + spacing), size: wrapped),
     ]
   }
 }
@@ -125,83 +125,89 @@ extension MTPageHeader where Actions == EmptyView {
   }
 }
 
-/// A section title with an optional count or detail and a trailing action.
+/// Web `SectionHeader`: the heading of a region of a page, with an optional quiet detail beside
+/// the title or at the far edge, a description under it, and a trailing action. The section
+/// variant is a serif title; the list variant is the small uppercase heading above a list.
+/// Specified in packages/design-system/components/section-header.yaml.
 struct MTSectionHeader<Trailing: View>: View {
   let title: String
+  var variant = MTSectionHeaderDefaults.variant
   var detail: String?
+  var detailAlign = MTSectionHeaderDefaults.detailAlign
+  var description: String?
   private let trailing: Trailing
 
-  init(_ title: String, detail: String? = nil, @ViewBuilder trailing: () -> Trailing) {
+  init(
+    _ title: String, variant: MTSectionHeaderVariant = MTSectionHeaderDefaults.variant,
+    detail: String? = nil, detailAlign: MTSectionHeaderDetailAlign = MTSectionHeaderDefaults.detailAlign,
+    description: String? = nil, @ViewBuilder trailing: () -> Trailing
+  ) {
     self.title = title
+    self.variant = variant
     self.detail = detail
+    self.detailAlign = detailAlign
+    self.description = description
     self.trailing = trailing()
   }
 
   var body: some View {
-    HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
-      VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
-        Text(title)
-          .font(MTFont.cardTitle)
-          .foregroundStyle(MTColor.ink)
-          .accessibilityAddTraits(.isHeader)
-        if let detail {
-          Text(detail).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+    HStack(alignment: rowAlignment, spacing: MTSpacing.s2) {
+      VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
+        HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
+          titleText
+          if detailAlign == .start, let detail { detailText(detail) }
+        }
+        if let description {
+          Text(description)
+            .font(MTFont.detail)
+            .foregroundStyle(variant == .list ? MTColor.inkFaint : MTColor.inkMuted)
+            .fixedSize(horizontal: false, vertical: true)
         }
       }
       Spacer(minLength: MTSpacing.s2)
+      if detailAlign == .end, let detail { detailText(detail) }
       trailing
     }
+    .frame(minHeight: variant == .list ? MTSize.Control.small : nil)
+  }
+
+  /// A list header centers its row in the reserved height, and a description centers the
+  /// trailing content on the whole block, like Web; otherwise the row shares the title's baseline.
+  private var rowAlignment: VerticalAlignment {
+    variant == .list || description != nil ? .center : .firstTextBaseline
+  }
+
+  @ViewBuilder private var titleText: some View {
+    switch variant {
+    case .section:
+      Text(title)
+        .font(MTFont.cardTitle)
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+    case .list:
+      Text(title.uppercased())
+        .mtTextRole(.listHeading)
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+    }
+  }
+
+  private func detailText(_ detail: String) -> some View {
+    Text(detail)
+      .font(MTFont.detail)
+      .foregroundStyle(MTColor.inkFaint)
   }
 }
 
 extension MTSectionHeader where Trailing == EmptyView {
-  init(_ title: String, detail: String? = nil) {
-    self.init(title, detail: detail) { EmptyView() }
-  }
-}
-
-/// The small uppercase heading above a list, like the Web Inbox and Library headings: a title,
-/// a quiet count beside it or at the far edge, and an optional trailing action.
-struct MTListHeader<Trailing: View>: View {
-  let title: String
-  var detail: String?
-  var alignsDetailTrailing = false
-  private let trailing: Trailing
-
   init(
-    _ title: String, detail: String? = nil, alignsDetailTrailing: Bool = false,
-    @ViewBuilder trailing: () -> Trailing
+    _ title: String, variant: MTSectionHeaderVariant = MTSectionHeaderDefaults.variant,
+    detail: String? = nil, detailAlign: MTSectionHeaderDetailAlign = MTSectionHeaderDefaults.detailAlign,
+    description: String? = nil
   ) {
-    self.title = title
-    self.detail = detail
-    self.alignsDetailTrailing = alignsDetailTrailing
-    self.trailing = trailing()
-  }
-
-  var body: some View {
-    HStack(alignment: .center, spacing: MTSpacing.s2) {
-      HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
-        Text(title.uppercased())
-          .mtTextRole(.listHeading)
-          .foregroundStyle(MTColor.ink)
-          .accessibilityAddTraits(.isHeader)
-        if alignsDetailTrailing { Spacer(minLength: MTSpacing.s2) }
-        if let detail {
-          Text(detail)
-            .font(MTFont.detail)
-            .foregroundStyle(MTColor.inkFaint)
-        }
-      }
-      if !alignsDetailTrailing { Spacer(minLength: MTSpacing.s2) }
-      trailing
-    }
-    .frame(minHeight: MTSize.Control.small)
-  }
-}
-
-extension MTListHeader where Trailing == EmptyView {
-  init(_ title: String, detail: String? = nil, alignsDetailTrailing: Bool = false) {
-    self.init(title, detail: detail, alignsDetailTrailing: alignsDetailTrailing) { EmptyView() }
+    self.init(
+      title, variant: variant, detail: detail, detailAlign: detailAlign, description: description
+    ) { EmptyView() }
   }
 }
 

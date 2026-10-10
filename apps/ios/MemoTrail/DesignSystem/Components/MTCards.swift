@@ -87,6 +87,7 @@ struct MTCardButtonStyle: ButtonStyle {
 }
 
 /// The Web RecordCard: one action over an optional `MTRecordCardVisual` and an `MTRecordCardBody`.
+/// Specified in packages/design-system/components/record-card.yaml.
 struct MTRecordCard<Content: View>: View {
   var accessibilityLabel: String?
   let action: () -> Void
@@ -107,7 +108,7 @@ struct MTRecordCard<Content: View>: View {
 
 /// The media band at the top of a record card.
 struct MTRecordCardVisual<Content: View>: View {
-  var height: CGFloat = MTLayout.RecordCard.visualHeight
+  var height: CGFloat = MTSize.RecordCard.visualHeight
   @ViewBuilder var content: Content
 
   var body: some View {

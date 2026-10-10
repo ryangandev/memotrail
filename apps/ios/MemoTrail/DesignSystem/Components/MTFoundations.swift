@@ -47,12 +47,12 @@ extension Font {
 
 /// The canonical scrolling page: canvas background, responsive gutters, and a readable width.
 struct MTPage<Content: View>: View {
-  private let width: MTPageWidth
+  private let width: MTPageFrameWidth
   private let spacing: CGFloat
   private let content: Content
 
   init(
-    width: MTPageWidth = .standard, spacing: CGFloat = MTSpacing.s8,
+    width: MTPageFrameWidth = MTPageFrameDefaults.width, spacing: CGFloat = MTSpacing.s8,
     @ViewBuilder content: () -> Content
   ) {
     self.width = width
@@ -63,21 +63,38 @@ struct MTPage<Content: View>: View {
   var body: some View {
     ScrollView {
       LazyVStack(alignment: .leading, spacing: spacing) { content }
-        .padding(.horizontal, MTSpacing.s4)
+        .padding(.horizontal, MTLayout.PageGutter.compact)
         .padding(.top, MTSpacing.s6)
         .padding(.bottom, MTSpacing.s12)
-        .frame(maxWidth: width.rawValue, alignment: .leading)
+        .frame(maxWidth: width.maxWidth, alignment: .leading)
         .frame(maxWidth: .infinity)
     }
     .background(MTColor.canvas)
   }
 }
 
+extension MTPageFrameWidth {
+  /// The widest the page gets, from the shared `layout.pageWidth` tokens.
+  var pageWidth: MTPageWidth {
+    switch self {
+    case .compact: .compact
+    case .standard: .standard
+    case .wide: .wide
+    case .canvas: .canvas
+    }
+  }
+
+  var maxWidth: CGFloat { pageWidth.rawValue }
+}
+
 /// Wraps children onto new lines like Web `flex-wrap`, for badges, chips, and compact actions.
 /// An `MTFlowSeparator` child shows only between two items on one line, like Web `SeparatedList`.
+/// Lines share the leading edge, or the trailing edge with `align: .end`.
+/// Specified in packages/design-system/components/separated-list.yaml.
 struct MTFlowLayout: Layout {
   var spacing: CGFloat = MTSpacing.s2
   var lineSpacing: CGFloat?
+  var align = MTSeparatedListDefaults.align
 
   /// A child as line breaking sees it.
   struct Item: Equatable {
@@ -106,7 +123,11 @@ struct MTFlowLayout: Layout {
     var collapsed = Set(subviews.indices)
     var y = bounds.minY
     for line in Self.lines(for: items, width: bounds.width, spacing: spacing) {
-      var x = bounds.minX
+      var x =
+        switch align {
+        case .start: bounds.minX
+        case .end: bounds.maxX - line.width
+        }
       for index in line.indices {
         let size = CGSize(
           width: min(items[index].size.width, bounds.width), height: items[index].size.height)
@@ -182,12 +203,17 @@ struct MTFlowSeparator: View {
 /// word spacing: one word space apart at `textStyle`, with wrapped lines as close as the text's.
 struct MTWordFlow<Content: View>: View {
   private let textStyle: UIFont.TextStyle
+  private let align: MTSeparatedListAlign
   private let content: Content
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   @Environment(\.lineSpacing) private var lineSpacing
 
-  init(_ textStyle: UIFont.TextStyle, @ViewBuilder content: () -> Content) {
+  init(
+    _ textStyle: UIFont.TextStyle, align: MTSeparatedListAlign = MTSeparatedListDefaults.align,
+    @ViewBuilder content: () -> Content
+  ) {
     self.textStyle = textStyle
+    self.align = align
     self.content = content()
   }
 
@@ -197,7 +223,7 @@ struct MTWordFlow<Content: View>: View {
     let font = UIFont.preferredFont(forTextStyle: textStyle, compatibleWith: traits)
     MTFlowLayout(
       spacing: (" " as NSString).size(withAttributes: [.font: font]).width,
-      lineSpacing: lineSpacing
+      lineSpacing: lineSpacing, align: align
     ) { content }
   }
 }
