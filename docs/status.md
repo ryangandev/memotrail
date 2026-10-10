@@ -65,26 +65,26 @@ Migration `202610030003` enforces this order on the server for every client, inc
 Pending captures now stop as Not accepted instead of retrying forever when Storage refuses a photo or the Entry is already in Trash, and a capture still waiting on a device can no longer create an Entry again after Delete forever, on Web and native.
 Migration `202610030004` records each Entry deleted forever and refuses to insert it again.
 Migrations `202610030001` through `202610030004` are applied to the hosted project, which the new Web and native clients require.
-The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, CI, and recovery evidence remain incomplete.
+The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, and recovery evidence remain incomplete.
 
 Use Git history for feature-level implementation and test evidence.
 
-| Area                                                                              | State                                                                                                                                                                                            |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox for Needs organizing in Library, while native still shows Inbox                                                                                    |
-| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Someday      | Implemented on Web and iOS; Web simplified Goals into Someday and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web                     |
-| Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                          |
-| Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                               |
-| Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                |
-| Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                            |
-| Web tags                                                                          | One Tags destination and shared Entry tag editor implemented; Collections are merged into tags                                                                                                   |
-| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                                                         |
-| Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                               |
-| Hosted Supabase contracts                                                         | Every repository migration through `202610040009` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` through `202610040009` were applied on 2026-10-05                                |
-| Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                                                   |
-| Web design system                                                                 | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending                             |
-| Backup and restore                                                                | Not ready                                                                                                                                                                                        |
-| Current GitHub CI                                                                 | Manually disabled; the previous jobs failed before starting because of account billing or spending limits. When enabled, it runs only the Linux Web and database jobs; native checks run locally |
+| Area                                                                              | State                                                                                                                                                                        |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox for Needs organizing in Library, while native still shows Inbox                                                                |
+| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Someday      | Implemented on Web and iOS; Web simplified Goals into Someday and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web |
+| Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                      |
+| Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                           |
+| Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                            |
+| Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, simplified AI, and account controls implemented                                                                        |
+| Web tags                                                                          | One Tags destination and shared Entry tag editor implemented; Collections are merged into tags                                                                               |
+| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                                     |
+| Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                           |
+| Hosted Supabase contracts                                                         | Every repository migration through `202610040009` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` through `202610040009` were applied on 2026-10-05            |
+| Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                               |
+| Web design system                                                                 | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending         |
+| Backup and restore                                                                | Not ready                                                                                                                                                                    |
+| Current GitHub CI                                                                 | Enabled; pull requests and pushes to `main` run the Linux Web and database jobs, which passed for `a8df108` on 2026-10-09. Native checks run locally                         |
 
 The latest hosted synthetic run verified JPEG, HEIC, and PNG display derivatives, metadata extraction, unchanged originals, and a complete ZIP with all canonical datasets.
 Its marked account and Storage objects were confirmed removed without accessing personal data or calling AI.
@@ -257,13 +257,7 @@ Migration `202610040006` already drops the `entry_relations` and `set_entry_rela
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 7. Restore current CI evidence
-
-- Resolve the GitHub account billing or spending-limit issue.
-- Re-enable the manually disabled CI workflow after the account issue is resolved.
-- Rerun all Web, iOS, and database jobs for current `main` and confirm they actually execute.
-
-### 8. Extend the design system before the UI redesign
+### 7. Extend the design system before the UI redesign
 
 Tokens are now DTCG 2025.10 files in `packages/design-system/tokens`, with private palette colors behind the semantic roles and generated outputs unchanged.
 The UI redesign waits for the remaining steps:
