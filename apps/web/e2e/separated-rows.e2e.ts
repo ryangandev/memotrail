@@ -44,7 +44,8 @@ test("Timeline summary keeps its separators between facts on phones", async ({
     .click();
   const summary = page.getByLabel("Timeline summary");
   await expect(summary).toContainText("1 item");
-  await expect(summary).toContainText("2017 to 2026");
+  // The range ends a little past today, so its last year depends on the date.
+  await expect(summary).toContainText(/2017 to \d{4}/);
   await expect(
     summary.getByRole("button", { name: "Set birth date" }),
   ).toBeVisible();
