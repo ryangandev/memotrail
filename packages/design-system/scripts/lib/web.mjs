@@ -5,6 +5,7 @@ import {
   hexString,
   indent,
   kebabCase,
+  pascalCase,
   setPath,
 } from "./util.mjs";
 
@@ -377,7 +378,7 @@ function catalogValue(token) {
 
 // TypeScript
 
-export function makeTypeScript(system, icons, sourceLabel) {
+export function makeTypeScript(system, icons, sourceLabel, components = []) {
   const web = webTokens(system);
   const webIcons = icons.icons.filter((icon) => icon.platforms.includes("web"));
   const children = (group) =>
@@ -454,11 +455,73 @@ ${tsConst("layers", numbers("layout.layer"))}
 
 /** Resolved semantic colors for code that cannot read CSS variables, such as server-rendered images. */
 ${tsConst("themeColors", colors)}
+${componentTypeScript(components, sourceLabel)}`;
+}
+
+// Each enum prop becomes a value list and a union type, each spec a defaults object, and every
+// spec's specimens join one list that the gallery and its e2e test share.
+function componentTypeScript(components, sourceLabel) {
+  if (components.length === 0) return "";
+  const blocks = components.map((spec) => {
+    const props = spec.props.filter((prop) => prop.platforms.includes("web"));
+    const lines = [
+      `// ${spec.name}, from ${sourceLabel}/components/${spec.file}.`,
+    ];
+    for (const prop of props.filter(({ kind }) => kind === "enum")) {
+      const name = prop.names.web;
+      const list = `${lowerFirst(spec.name)}${pascalCase(plural(name))}`;
+      lines.push(
+        "",
+        `/** ${prop.description} */`,
+        tsConst(list, prop.values),
+        "",
+        `export type ${spec.name}${pascalCase(name)} = (typeof ${list})[number];`,
+      );
+    }
+    lines.push(
+      "",
+      `/** ${spec.name} prop defaults. */`,
+      tsConst(
+        `${lowerFirst(spec.name)}Defaults`,
+        Object.fromEntries(props.map((prop) => [prop.names.web, prop.default])),
+      ),
+    );
+    return lines.join("\n");
+  });
+  const specimens = components.flatMap((spec) =>
+    spec.specimens.map((specimen) => ({
+      component: spec.name,
+      id: specimen.id,
+      description: specimen.description,
+      covers: specimen.covers,
+    })),
+  );
+  return `
+${blocks.join("\n\n")}
+
+/** Every spec's gallery specimens. The gallery marks each with data-specimen="<id>". */
+${tsConst("componentSpecimens", specimens)}
+
+export type ComponentSpecimen = (typeof componentSpecimens)[number];
+
+export type ComponentSpecimenId = ComponentSpecimen["id"];
 `;
 }
 
+function lowerFirst(value) {
+  return value[0].toLowerCase() + value.slice(1);
+}
+
+// English plurals for prop names: tone -> tones, status -> statuses, emphasis -> emphases.
+export function plural(word) {
+  if (/[^aeiou]is$/.test(word)) return word.replace(/is$/, "es");
+  if (/(s|x|z|ch|sh)$/.test(word)) return `${word}es`;
+  if (/[^aeiou]y$/.test(word)) return word.replace(/y$/, "ies");
+  return `${word}s`;
+}
+
 // Prints an exported constant, `as const` unless another suffix is given.
-function tsConst(declaration, value, suffix = " as const") {
+export function tsConst(declaration, value, suffix = " as const") {
   const prefix = `export const ${declaration} = `;
   return `${prefix}${tsValue(value, 0, prefix.length, suffix.length + 1)}${suffix};`;
 }
@@ -491,6 +554,7 @@ function tsValue(value, depth = 0, lead = 0, tail = 1) {
 function tsInline(value) {
   if (Array.isArray(value)) return `[${value.map(tsInline).join(", ")}]`;
   if (value !== null && typeof value === "object") {
+    if (Object.keys(value).length === 0) return "{}";
     return `{ ${Object.entries(value)
       .map(([key, item]) => `${tsKey(key)}: ${tsInline(item)}`)
       .join(", ")} }`;

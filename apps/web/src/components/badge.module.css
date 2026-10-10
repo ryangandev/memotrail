@@ -1,3 +1,5 @@
+/* Values follow packages/design-system/components/badge.yaml. */
+
 .badge {
   display: inline-block;
   box-sizing: border-box;
@@ -5,28 +7,66 @@
   min-width: 0;
   flex: none;
   overflow: hidden;
+  padding: var(--mt-size-badge-padding-block) var(--mt-space-2);
   border-radius: var(--mt-radius-pill);
-  font-family: var(--mt-font-family-sans);
-  line-height: 1.2;
   text-overflow: ellipsis;
   vertical-align: middle;
   white-space: nowrap;
 }
 
 .badge[data-size="micro"] {
-  padding: 3px var(--mt-space-2);
-  font-size: 9px;
+  font-family: var(--mt-type-badge-micro-font-family);
+  font-size: var(--mt-type-badge-micro-font-size);
+  font-weight: var(--mt-type-badge-micro-font-weight);
+  line-height: var(--mt-type-badge-micro-line-height);
+  letter-spacing: var(--mt-type-badge-micro-letter-spacing);
+  text-transform: var(--mt-type-badge-micro-text-transform);
 }
 
 .badge[data-size="small"] {
-  padding: 3px var(--mt-space-2);
-  font-size: 10px;
+  font-family: var(--mt-type-badge-small-font-family);
+  font-size: var(--mt-type-badge-small-font-size);
+  font-weight: var(--mt-type-badge-small-font-weight);
+  line-height: var(--mt-type-badge-small-line-height);
+  letter-spacing: var(--mt-type-badge-small-letter-spacing);
+  text-transform: var(--mt-type-badge-small-text-transform);
 }
 
 .badge[data-size="medium"] {
-  min-height: 22px;
-  padding: 3px var(--mt-space-2);
-  font-size: var(--mt-font-size-caption);
+  min-height: var(--mt-size-badge-min-height);
+  font-family: var(--mt-type-badge-medium-font-family);
+  font-size: var(--mt-type-badge-medium-font-size);
+  font-weight: var(--mt-type-badge-medium-font-weight);
+  line-height: var(--mt-type-badge-medium-line-height);
+  letter-spacing: var(--mt-type-badge-medium-letter-spacing);
+  text-transform: var(--mt-type-badge-medium-text-transform);
+}
+
+.badge[data-size="micro"][data-uppercase="true"] {
+  font-family: var(--mt-type-badge-micro-caps-font-family);
+  font-size: var(--mt-type-badge-micro-caps-font-size);
+  font-weight: var(--mt-type-badge-micro-caps-font-weight);
+  line-height: var(--mt-type-badge-micro-caps-line-height);
+  letter-spacing: var(--mt-type-badge-micro-caps-letter-spacing);
+  text-transform: var(--mt-type-badge-micro-caps-text-transform);
+}
+
+.badge[data-size="small"][data-uppercase="true"] {
+  font-family: var(--mt-type-badge-small-caps-font-family);
+  font-size: var(--mt-type-badge-small-caps-font-size);
+  font-weight: var(--mt-type-badge-small-caps-font-weight);
+  line-height: var(--mt-type-badge-small-caps-line-height);
+  letter-spacing: var(--mt-type-badge-small-caps-letter-spacing);
+  text-transform: var(--mt-type-badge-small-caps-text-transform);
+}
+
+.badge[data-size="medium"][data-uppercase="true"] {
+  font-family: var(--mt-type-badge-medium-caps-font-family);
+  font-size: var(--mt-type-badge-medium-caps-font-size);
+  font-weight: var(--mt-type-badge-medium-caps-font-weight);
+  line-height: var(--mt-type-badge-medium-caps-line-height);
+  letter-spacing: var(--mt-type-badge-medium-caps-letter-spacing);
+  text-transform: var(--mt-type-badge-medium-caps-text-transform);
 }
 
 .badge[data-tone="accent"] {
@@ -44,16 +84,26 @@
   background: var(--mt-color-warm-subtle);
 }
 
+.badge[data-tone="success"] {
+  color: var(--mt-color-success);
+  background: var(--mt-color-success-subtle);
+}
+
+.badge[data-tone="danger"] {
+  color: var(--mt-color-danger);
+  background: var(--mt-color-danger-subtle);
+}
+
 .badge[data-tone="outline"] {
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface);
 }
 
 .badge[data-tone="inverse"] {
-  color: white;
-  background: rgb(24 24 20 / 0.72);
-  backdrop-filter: blur(8px);
+  color: var(--mt-color-inverse-ink);
+  background: var(--mt-material-inverse-chip-tint);
+  backdrop-filter: var(--mt-material-inverse-chip-backdrop-filter);
 }
 
 .badge[data-tone="solidAccent"] {
@@ -63,12 +113,8 @@
 
 .badge[data-tone="glassAccent"],
 .badge[data-tone="glassNeutral"] {
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 86%,
-    transparent
-  );
-  backdrop-filter: blur(8px);
+  background: var(--mt-material-chip-tint);
+  backdrop-filter: var(--mt-material-chip-backdrop-filter);
 }
 
 .badge[data-tone="glassAccent"] {
@@ -77,10 +123,4 @@
 
 .badge[data-tone="glassNeutral"] {
   color: var(--mt-color-ink-muted);
-}
-
-.badge[data-uppercase="true"] {
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
 }

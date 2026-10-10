@@ -1,28 +1,28 @@
 import type { ComponentPropsWithoutRef, ReactNode } from "react";
+import {
+  badgeDefaults,
+  type BadgeSize,
+  type BadgeTone,
+} from "@/generated/design-system";
 import styles from "./badge.module.css";
 
 type BadgeProps = Omit<ComponentPropsWithoutRef<"span">, "children"> & {
   children: ReactNode;
-  size?: "micro" | "small" | "medium";
-  tone?:
-    | "accent"
-    | "neutral"
-    | "warm"
-    | "outline"
-    | "inverse"
-    | "solidAccent"
-    | "glassAccent"
-    | "glassNeutral";
+  size?: BadgeSize;
+  tone?: BadgeTone;
   uppercase?: boolean;
 };
 
-/** A noninteractive, single-line label. Long text truncates within its container. */
+/**
+ * A noninteractive, single-line label. Long text truncates within its container.
+ * Specified in packages/design-system/components/badge.yaml.
+ */
 export function Badge({
   children,
   className,
-  size = "small",
-  tone = "accent",
-  uppercase = false,
+  size = badgeDefaults.size,
+  tone = badgeDefaults.tone,
+  uppercase = badgeDefaults.uppercase,
   ...props
 }: BadgeProps) {
   return (

@@ -29,7 +29,9 @@ extension XCTestCase {
   @MainActor @discardableResult
   func revealWhole(_ element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
     let visible = clearArea(of: app)
-    for _ in 0..<20 {
+    // Each drag moves at most 300 points, and long gallery sections at accessibility text sizes
+    // put some elements more than 20 drags down.
+    for _ in 0..<48 {
       let frame = element.frame
       // How far the content should move up; negative moves it down.
       let distance: CGFloat

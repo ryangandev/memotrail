@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
@@ -26,6 +26,7 @@ import { SeparatedList } from "@/components/separated-list";
 import { Skeleton } from "@/components/skeleton";
 import { TextField } from "@/components/text-field";
 import { notify } from "@/components/app-toast";
+import { badgeSizes, badgeTones } from "@/generated/design-system";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
@@ -37,7 +38,7 @@ import {
   LayoutTokens,
   type TokenSet,
 } from "./foundations-gallery";
-import { Specimen } from "./specimen";
+import { Specimen, SpecimenCase } from "./specimen";
 
 const sampleRichText: EntryRichText = {
   document: {
@@ -419,40 +420,67 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
 
         <Specimen
           title="Badge"
-          api="micro | small | medium · semantic and photo tones · uppercase · one line · tags use # text"
+          api="tone · size · uppercase · one line · tags use # text"
         >
-          <div className={styles.badgeExamples}>
-            <Badge size="micro" uppercase>
-              Entry
-            </Badge>
-            <Badge size="small" tone="neutral" uppercase>
-              Home
-            </Badge>
-            <Badge size="medium">Keyword search</Badge>
-            <Badge size="small" tone="warm">
-              Needs organizing
-            </Badge>
-            <Badge size="small" tone="outline">
-              Vehicle
-            </Badge>
-            <Badge size="small" tone="inverse">
-              3 photos
-            </Badge>
-            <Badge title="A long label that stays on one line">
-              A long label that stays on one line
-            </Badge>
-            <Badge size="medium" title="#learning">
-              #learning
-            </Badge>
-            <Badge size="medium" title="#旅行">
-              #旅行
-            </Badge>
-            <Badge
-              size="medium"
-              title="#A long tag name that stays within the available width"
-            >
-              #A long tag name that stays within the available width
-            </Badge>
+          <div className={styles.specimenCases}>
+            <SpecimenCase id="badge-tones">
+              {badgeTones.map((tone) => (
+                <Badge key={tone} tone={tone}>
+                  {tone}
+                </Badge>
+              ))}
+            </SpecimenCase>
+            <SpecimenCase id="badge-sizes">
+              {badgeSizes.map((size) => (
+                <Fragment key={size}>
+                  <Badge size={size}>{size}</Badge>
+                  <Badge size={size} uppercase>
+                    {size}
+                  </Badge>
+                </Fragment>
+              ))}
+            </SpecimenCase>
+            <SpecimenCase id="badge-tags">
+              <Badge size="medium" title="#learning">
+                #learning
+              </Badge>
+              <Badge size="medium" title="#旅行">
+                #旅行
+              </Badge>
+              <Badge size="medium" tone="neutral" title="#family">
+                #family
+              </Badge>
+            </SpecimenCase>
+            <SpecimenCase id="badge-truncation">
+              <div className={styles.badgeTruncationFrame}>
+                <Badge title="A long label that stays on one line">
+                  A long label that stays on one line
+                </Badge>
+                <Badge
+                  size="medium"
+                  title="#A long tag name that stays within the available width"
+                >
+                  #A long tag name that stays within the available width
+                </Badge>
+              </div>
+            </SpecimenCase>
+            <SpecimenCase id="badge-photo-overlay">
+              {(["glassAccent", "glassNeutral"] as const).map((tone) => (
+                <div className={styles.badgePhoto} key={tone}>
+                  <ProgressiveImage alt="" src={loadedImage} />
+                  <span className={styles.badgePhotoTop}>
+                    <Badge size="micro" tone={tone} uppercase>
+                      {tone === "glassAccent" ? "Current" : "Earlier"}
+                    </Badge>
+                  </span>
+                  <span className={styles.badgePhotoBottom}>
+                    <Badge size="micro" tone="inverse" uppercase>
+                      3 photos
+                    </Badge>
+                  </span>
+                </div>
+              ))}
+            </SpecimenCase>
           </div>
         </Specimen>
 

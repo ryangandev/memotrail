@@ -601,6 +601,173 @@
           "textCase": "uppercase"
         }
       }
+    },
+    "badgeMicro": {
+      "$description": "Micro badge labels, such as tags in record card footers. iOS draws them at its 11 pt caption2 minimum.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 9,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "caption2",
+            "value": {
+              "fontSize": {
+                "value": 11,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "badgeSmall": {
+      "$description": "Small badge labels, the default size for statuses and tags. iOS draws them at its 11 pt caption2 minimum.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 10,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "caption2",
+            "value": {
+              "fontSize": {
+                "value": 11,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "badgeMedium": {
+      "$description": "Medium badge labels, such as Dashboard tags.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.caption}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": 1.2
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "caption"
+          }
+        }
+      }
+    },
+    "badgeMicroCaps": {
+      "$description": "Uppercase micro badge labels, such as record kinds over photos. Tracking is 0.06 em on both platforms.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 9,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.54,
+          "unit": "px"
+        },
+        "lineHeight": 1.2
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "caption2",
+            "value": {
+              "fontSize": {
+                "value": 11,
+                "unit": "px"
+              },
+              "letterSpacing": {
+                "value": 0.66,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "badgeSmallCaps": {
+      "$description": "Uppercase small badge labels. Tracking is 0.06 em on both platforms.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 10,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.6,
+          "unit": "px"
+        },
+        "lineHeight": 1.2
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "caption2",
+            "value": {
+              "fontSize": {
+                "value": 11,
+                "unit": "px"
+              },
+              "letterSpacing": {
+                "value": 0.66,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "badgeMediumCaps": {
+      "$description": "Uppercase medium badge labels. Tracking is 0.06 em on both platforms.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.caption}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.72,
+          "unit": "px"
+        },
+        "lineHeight": 1.2
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "caption"
+          }
+        }
+      }
     }
   }
 }

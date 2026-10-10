@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import { componentSpecimens } from "../src/generated/design-system";
 import tokens from "../src/generated/design-tokens.json";
 import {
   expectSeparatorsBetweenWords,
@@ -286,6 +287,48 @@ test("selected brand motion previews both panel directions and respects reduced 
     path: "/private/tmp/memotrail-brand-motion-mobile.png",
   });
   expect(hydrationWarnings).toEqual([]);
+});
+
+test("the gallery shows every specimen the component specs list", async ({
+  page,
+}) => {
+  const kebab = (value: string) =>
+    value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+  await page.goto("/design-system");
+
+  // Each listed specimen appears exactly once, and nothing claims an id no spec lists.
+  const shown = await page
+    .locator("[data-specimen]")
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("data-specimen")),
+    );
+  expect(shown.toSorted()).toEqual(
+    componentSpecimens.map(({ id }) => id).toSorted(),
+  );
+
+  for (const specimen of componentSpecimens) {
+    const section = page.locator(`[data-specimen="${specimen.id}"]`);
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).toBeVisible();
+    await expect(
+      section.getByRole("heading", { name: specimen.id, exact: true }),
+    ).toBeVisible();
+    await expect(section).toContainText(specimen.description);
+
+    // It draws the spec's component, in every value the spec says it covers.
+    const component = `[data-ui-${kebab(specimen.component)}]`;
+    await expect(section.locator(component).first()).toBeVisible();
+    for (const [prop, values] of Object.entries(specimen.covers)) {
+      for (const value of values as readonly string[]) {
+        await expect(
+          section
+            .locator(`${component}[data-${kebab(prop)}="${value}"]`)
+            .first(),
+          `${specimen.id} draws ${prop} ${value}`,
+        ).toBeVisible();
+      }
+    }
+  }
 });
 
 test("shared badges keep long labels on one line across sizes", async ({
@@ -729,18 +772,23 @@ test("Shared primitives support actions, modal focus, nested calendars, and busy
   await page.goto("/design-system");
   const review = page.locator("#shared-primitives");
   await review
-    .getByRole("button", { name: "Continue", exact: true })
-    .first()
+    .locator('[data-specimen="button-variants"]')
+    .getByRole("button", { name: "Danger", exact: true })
     .click();
   await expect(review.getByRole("status")).toHaveText(
-    "primary button activated.",
+    "danger button activated.",
   );
-  await expect(
-    review.getByRole("button", { name: "Disabled", exact: true }).first(),
-  ).toBeDisabled();
-  await expect(
-    review.getByRole("button", { name: "Saving", exact: true }).first(),
-  ).toBeDisabled();
+  for (const button of await review
+    .locator('[data-specimen="button-disabled"] button')
+    .all()) {
+    await expect(button).toBeDisabled();
+  }
+  for (const button of await review
+    .locator('[data-specimen="button-loading"] button')
+    .all()) {
+    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute("aria-busy", "true");
+  }
   await review
     .getByRole("button", { name: "Clear filters", exact: true })
     .click();

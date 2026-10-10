@@ -390,6 +390,36 @@ final class NativeWorkspaceUITests: XCTestCase {
     }
   }
 
+  /// Every specimen the component specs list appears, by its identifier, in the gallery section
+  /// that shows its component. The list is generated from packages/design-system/components, so
+  /// a specimen added to a spec fails here until the native gallery shows it.
+  func testGalleryShowsEveryComponentSpecimen() {
+    let sections = ["Badge": "forms", "Button": "primitives"]
+    let specimens = Dictionary(grouping: MTComponentSpecimen.allCases, by: \.component)
+    for component in specimens.keys.sorted() where sections[component] == nil {
+      XCTFail("Name the gallery section that shows \(component) specimens.")
+    }
+    let known = Set(MTComponentSpecimen.allCases.map(\.accessibilityIdentifier))
+    for (component, section) in sections.sorted(by: { $0.key < $1.key }) {
+      let expected = specimens[component] ?? []
+      XCTAssertFalse(expected.isEmpty, "\(component) lists no specimens.")
+      let app = launchSection(section)
+      // The gallery shows specimens in spec order, so revealing each one only scrolls down.
+      for specimen in expected {
+        let element = app.descendants(matching: .any)[specimen.accessibilityIdentifier]
+        XCTAssertTrue(
+          reveal(element, in: app).exists, "\(section) does not show \(specimen.rawValue).")
+        XCTAssertTrue(element.staticTexts[specimen.rawValue].exists)
+        XCTAssertTrue(element.staticTexts[specimen.summary].exists)
+      }
+      let shown = app.descendants(matching: .any)
+        .matching(NSPredicate(format: "identifier BEGINSWITH 'specimen-'"))
+        .allElementsBoundByIndex.map(\.identifier)
+      XCTAssertEqual(Set(shown).subtracting(known), [], "\(section) shows unlisted specimens.")
+      attach(app, "\(component) specimens")
+    }
+  }
+
   private func launchSection(_ section: String) -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments = ["--review-design-system", "--review-design-section", section]

@@ -862,3 +862,123 @@ function swiftIdentifier(name) {
 function swiftCase(name) {
   return swiftKeywords.has(name) ? `\`${name}\`` : name;
 }
+
+// Writes ComponentVariants.swift: an enum per enum prop, a defaults enum per spec, and the
+// specimens both galleries show. The app and its UI tests both compile it.
+export function makeComponentSwift(components, sourceLabel) {
+  const blocks = components.map((spec) => {
+    const props = spec.props.filter((prop) => prop.platforms.includes("ios"));
+    const lines = [
+      `// ${spec.name}, from ${sourceLabel}/components/${spec.file}.`,
+    ];
+    for (const prop of props.filter(({ kind }) => kind === "enum")) {
+      lines.push(
+        "",
+        ...docComment(prop.description, 0),
+        `enum ${enumName(spec, prop)}: String, CaseIterable, Sendable {`,
+        ...prop.values.map((value) => `  case ${swiftCase(value)}`),
+        "}",
+      );
+    }
+    lines.push(
+      "",
+      `/// ${spec.name} parameter defaults.`,
+      `enum MT${spec.name}Defaults {`,
+      ...props.map((prop) => {
+        const value =
+          prop.kind === "enum"
+            ? `${enumName(spec, prop)}.${swiftCase(prop.default)}`
+            : String(prop.default);
+        return `  static let ${swiftCase(prop.names.ios)} = ${value}`;
+      }),
+      "}",
+    );
+    return lines.join("\n");
+  });
+
+  const specimens = components.flatMap((spec) =>
+    spec.specimens.map((specimen) => ({
+      ...specimen,
+      component: spec.name,
+      name: specimen.id.replace(/-([a-z0-9])/g, (_, letter) =>
+        letter.toUpperCase(),
+      ),
+    })),
+  );
+  const switchLines = (property, value) => [
+    `  var ${property}: String {`,
+    "    switch self {",
+    ...specimens.flatMap((specimen) =>
+      switchCase(`.${swiftCase(specimen.name)}`, value(specimen)),
+    ),
+    "    }",
+    "  }",
+  ];
+
+  return `// Generated from ${sourceLabel}/components. Do not edit directly.
+
+${blocks.join("\n\n")}
+
+/// A gallery specimen from a component spec. The Web gallery marks it with data-specimen and
+/// the iOS gallery with \`accessibilityIdentifier\`, so UI tests find every specimen on both.
+enum MTComponentSpecimen: String, CaseIterable, Sendable {
+${specimens.map((specimen) => `  case ${swiftCase(specimen.name)} = "${specimen.id}"`).join("\n")}
+
+  /// The component the specimen shows.
+${switchLines("component", (specimen) => specimen.component).join("\n")}
+
+  /// What the specimen shows, from its spec's description.
+${switchLines("summary", (specimen) => specimen.description).join("\n")}
+
+  var accessibilityIdentifier: String { "specimen-\\(rawValue)" }
+}
+`;
+}
+
+// Writes a switch case returning text within swift-format's 100 columns: on the case line,
+// on its own line, or as a multiline literal whose lines a trailing backslash joins.
+function switchCase(pattern, text) {
+  if (/[\u0000-\u001f]/.test(text)) {
+    throw new Error(`Swift strings cannot hold control characters: ${text}`);
+  }
+  const escaped = text.replaceAll("\\", "\\\\");
+  const quoted = `"${escaped.replaceAll('"', '\\"')}"`;
+  const caseLine = `    case ${pattern}:`;
+  if (caseLine.length + 1 + quoted.length <= 100) {
+    return [`${caseLine} ${quoted}`];
+  }
+  if (6 + quoted.length <= 100) return [caseLine, `      ${quoted}`];
+  const lines = [];
+  let line = "";
+  for (const word of escaped.replaceAll('"""', '\\"""').split(" ")) {
+    // Leaves room for the trailing " \".
+    if (line && 6 + line.length + 1 + word.length + 2 > 100) {
+      lines.push(`      ${line} \\`);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  return [caseLine, '      """', ...lines, `      ${line}`, '      """'];
+}
+
+function enumName(spec, prop) {
+  return `MT${spec.name}${pascalCase(prop.names.ios)}`;
+}
+
+// Wraps text into /// lines that fit swift-format's 100 columns.
+function docComment(text, indentation) {
+  const prefix = `${" ".repeat(indentation)}/// `;
+  const lines = [];
+  let line = "";
+  for (const word of text.split(/\s+/)) {
+    if (line && prefix.length + line.length + 1 + word.length > 100) {
+      lines.push(`${prefix}${line}`);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  if (line) lines.push(`${prefix}${line}`);
+  return lines;
+}

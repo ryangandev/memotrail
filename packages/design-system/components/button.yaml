@@ -1,0 +1,165 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Button
+
+platforms:
+  web:
+    path: apps/web/src/components/button.tsx
+    symbols: [Button, ButtonLink]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTActions.swift
+    symbols: [MTButtonStyle, mtButtonStyle]
+
+purpose: A labeled action, or navigation drawn as one, in one of four emphasis variants and three sizes.
+
+use:
+  - The actions of a page header, form, dialog footer, sheet, or empty state.
+  - One primary action per surface, with secondary and ghost actions beside it.
+  - Danger for actions that delete, discard, or move something to Trash.
+  - On Web, ButtonLink for navigation that should look like an action, such as Back to Library.
+
+avoid:
+  - Icon-only actions. Use IconButton on Web and MTIconButton on iOS, which require a label.
+  - Choosing one of several options. Use a filter chip, a select field, or a checkbox.
+  - Links inside running text. Use a text link.
+  - Whole cards or rows that open a record. Use the card's or row's own link.
+
+anatomy:
+  container: The rounded control that carries the variant's fill and border and receives the press.
+  icon: An optional leading icon, drawn in the label's color.
+  spinner: The progress indicator that leads the label while loading.
+  label: The action's text.
+  focusRing: The Web keyboard focus outline around the container.
+
+props:
+  variant:
+    description: The action's emphasis. Primary is the main action, secondary an alternative, ghost a quiet one, and danger a destructive one.
+    values: [primary, secondary, ghost, danger]
+    default: primary
+  size:
+    description: The control's height, padding, and text size. Small fits dense rows and toolbars, and large stands alone.
+    values: [small, medium, large]
+    default: medium
+  loading:
+    description: Shows the spinner before the label and disables the action while it runs. ButtonLink has no loading state, because navigation keeps anchor semantics.
+    type: boolean
+    default: false
+    platformNames: { ios: isLoading }
+  fillsWidth:
+    description: Stretches the button across its container, as sheet and form footers do.
+    type: boolean
+    default: false
+    platforms: [ios]
+
+states: [default, hover, pressed, focus, disabled, loading]
+
+tokens:
+  - container:
+      radius: "{radius.medium}"
+      minHeight: "{size.control.medium}"
+      paddingInline: "{space.4}"
+      paddingBlock: { web: "{space.2}" }
+      gap: "{space.2}"
+      borderWidth: "{size.stroke.thin}"
+      duration: "{motion.quick}"
+      easing: "{motion.easing.standard}"
+    label:
+      fontFamily: "{font.family.sans}"
+      fontSize: "{font.size.label}"
+      fontWeight: "{font.weight.medium}"
+      lineHeight: { web: "{lineHeight.tight}" }
+    spinner:
+      size: { web: "{size.icon.14}" }
+      borderWidth: { web: "{size.stroke.medium}" }
+    focusRing:
+      color: { web: "{state.focus.ring}" }
+      borderWidth: { web: "{state.focus.ringWidth}" }
+      offset: { web: "{state.focus.ringOffset}" }
+  - when: { size: small }
+    container:
+      radius: "{radius.small}"
+      minHeight: "{size.control.small}"
+      paddingInline: "{space.3}"
+      paddingBlock: { web: "{space.1}" }
+    label: { fontSize: "{font.size.caption}" }
+  - when: { size: large }
+    container:
+      minHeight: "{size.control.large}"
+      paddingInline: "{space.5}"
+      paddingBlock: { web: "{space.3}" }
+    label: { fontSize: "{font.size.body}" }
+  - when: { variant: primary }
+    container: { background: "{color.accent}" }
+    label: { color: "{color.accentInk}" }
+  - when: { variant: primary, state: hover }
+    container: { background: "{state.hover.primary}" }
+  - when: { variant: secondary }
+    container:
+      background: "{color.surfaceRaised}"
+      border: "{color.borderStrong}"
+    label: { color: "{color.inkMuted}" }
+  - when: { variant: secondary, state: hover }
+    container:
+      background: "{state.hover.accentSurface}"
+      border: "{color.accent}"
+    label: { color: "{color.accent}" }
+  - when: { variant: ghost }
+    label: { color: "{color.inkMuted}" }
+  - when: { variant: ghost, state: hover }
+    container: { background: "{state.hover.surface}" }
+    label: { color: "{state.hover.ink}" }
+  - when: { variant: danger }
+    container:
+      background: "{color.dangerSubtle}"
+      border: "{color.dangerBorder}"
+    label: { color: "{color.danger}" }
+  - when: { variant: danger, state: hover }
+    container: { border: "{color.danger}" }
+  - when: { state: disabled }
+    container: { opacity: "{state.disabled.opacity.button}" }
+
+content:
+  lines: 1
+  overflow: perPlatform
+  casing: sentence
+  length: A verb and at most a few words, such as Save changes or Add memory. Name the object when the surface has more than one action.
+  notes:
+    - While loading, the label may say what is happening, such as Saving, but keeps the button's width close to its resting label.
+
+accessibility:
+  role: A button. Web Button is a button element that defaults to type button; ButtonLink is a link. On iOS mtButtonStyle styles a Button or NavigationLink, which VoiceOver announces as a button.
+  label: The visible label. A leading icon is decorative. While loading, Web sets aria-busy and iOS adds the value In progress.
+  focus: Web buttons follow document order, show the accent focus ring on keyboard focus, and leave the tab order while disabled or loading. iOS draws the system focus effect for keyboard and Switch Control focus.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS labels follow Dynamic Type through the label, caption, and body text roles and keep one line, so the control grows taller with the text. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Controls are 32, 40, and 48 px tall on Web and 34, 44, and 52 pt on iOS.
+    reason: The size.control tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: Web shows hover colors on pointer hover; iOS shows the same colors while pressed.
+    reason: Touch has no hover, so iOS gives the hover colors to the press; Web has no separate pressed style.
+  - difference: A label that does not fit wraps onto more lines on Web and truncates at the tail on iOS, which also has no vertical padding.
+    reason: SwiftUI centers one line in the control height, so footers and toolbars keep their height; Web buttons grow so a long translated label stays readable. Keep labels short enough for neither to happen.
+  - difference: Web draws the spinner and the focus ring from tokens; iOS uses the system ProgressView and focus effect.
+    reason: Native progress and focus indicators match the rest of each platform.
+  - difference: iOS has a fillsWidth parameter; Web stretches a button from its container's layout CSS.
+    reason: A SwiftUI button style sizes to its label unless it is told to fill; CSS layouts stretch children directly.
+  - difference: Web has ButtonLink for navigation; iOS applies mtButtonStyle to a NavigationLink.
+    reason: Web keeps anchor semantics, so links open in new tabs and never submit forms; iOS navigation is a NavigationLink.
+  - difference: The small size is 34 pt tall on iOS, below the 44 pt hit target.
+    reason: Small is for dense rows and toolbars where neighbors leave room around it; use medium or large anywhere else on iOS.
+
+specimens:
+  - id: button-variants
+    description: Every variant at the default medium size.
+    covers: { variant: all }
+  - id: button-disabled
+    description: Every variant disabled, faded to the disabled opacity.
+    covers: { variant: all }
+  - id: button-loading
+    description: Every variant loading, with the spinner before the label.
+    covers: { variant: all }
+  - id: button-sizes
+    description: Every size in the secondary variant, each with a leading icon.
+    covers: { size: all }
+  - id: button-link
+    description: Navigation drawn as a button, with Web ButtonLink and an iOS NavigationLink.

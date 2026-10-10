@@ -1,0 +1,148 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Badge
+
+platforms:
+  web:
+    path: apps/web/src/components/badge.tsx
+    symbols: [Badge]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTLabels.swift
+    symbols: [MTBadge]
+
+purpose: A single-line, noninteractive label for a record's kind, a status, or a tag.
+
+use:
+  - Record kinds, statuses, Collections, and tags on cards, rows, and page headers.
+  - Short labels laid over photos and maps, in a glass or inverse tone.
+  - A quiet marker beside a setting or heading, such as Beta or Connected.
+
+avoid:
+  - Anything people press or select. Use Button for actions and a filter chip for filters.
+  - Tags people add or remove. Use EntryOrganizationEditor on Web and MTOrganizationEditor on iOS.
+  - Messages or sentences. Use inline text, an empty state, or a toast.
+
+anatomy:
+  container: The pill that carries the tone's fill, border, or material and clips text that does not fit.
+  label: The single line of text.
+
+props:
+  tone:
+    description: The badge's color treatment. Glass and inverse tones are for photos and maps; success and danger are for outcomes.
+    values:
+      [
+        accent,
+        neutral,
+        warm,
+        success,
+        danger,
+        outline,
+        inverse,
+        solidAccent,
+        glassAccent,
+        glassNeutral,
+      ]
+    default: accent
+  size:
+    description: The badge's text size. Micro fits dense cards, small is the default, and medium sits beside 22 px controls.
+    values: [micro, small, medium]
+    default: small
+  uppercase:
+    description: Draws the label in uppercase at semibold weight with 0.06 em tracking, for kinds and one-word statuses.
+    type: boolean
+    default: false
+
+states: [default]
+
+tokens:
+  - container:
+      radius: "{radius.pill}"
+      paddingInline: "{space.2}"
+      paddingBlock: "{size.badge.paddingBlock}"
+  - when: { size: micro }
+    label: { type: "{type.badgeMicro}" }
+  - when: { size: small }
+    label: { type: "{type.badgeSmall}" }
+  - when: { size: medium }
+    container: { minHeight: "{size.badge.minHeight}" }
+    label: { type: "{type.badgeMedium}" }
+  - when: { size: micro, uppercase: true }
+    label: { type: "{type.badgeMicroCaps}" }
+  - when: { size: small, uppercase: true }
+    label: { type: "{type.badgeSmallCaps}" }
+  - when: { size: medium, uppercase: true }
+    label: { type: "{type.badgeMediumCaps}" }
+  - when: { tone: accent }
+    container: { background: "{color.accentSubtle}" }
+    label: { color: "{color.accent}" }
+  - when: { tone: neutral }
+    container: { background: "{color.surfaceSubtle}" }
+    label: { color: "{color.inkMuted}" }
+  - when: { tone: warm }
+    container: { background: "{color.warmSubtle}" }
+    label: { color: "{color.warm}" }
+  - when: { tone: success }
+    container: { background: "{color.successSubtle}" }
+    label: { color: "{color.success}" }
+  - when: { tone: danger }
+    container: { background: "{color.dangerSubtle}" }
+    label: { color: "{color.danger}" }
+  - when: { tone: outline }
+    container:
+      background: "{color.surface}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+    label: { color: "{color.inkMuted}" }
+  - when: { tone: inverse }
+    container:
+      material: { web: "{material.inverseChip}" }
+      background: { ios: "{color.inverseSurface}" }
+    label: { color: "{color.inverseInk}" }
+  - when: { tone: solidAccent }
+    container: { background: "{color.accent}" }
+    label: { color: "{color.accentInk}" }
+  - when: { tone: [glassAccent, glassNeutral] }
+    container: { material: "{material.chip}" }
+  - when: { tone: glassAccent }
+    label: { color: "{color.accent}" }
+  - when: { tone: glassNeutral }
+    label: { color: "{color.inkMuted}" }
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: asWritten
+  length: One to three words. A longer name, such as a Collection or tag, truncates at the tail; pass the full text as a tooltip on Web.
+  notes:
+    - Statuses use sentence case, such as Needs organizing; kinds, Collections, and tags keep their own names.
+    - "Write tags with a leading #, such as #travel."
+    - Use uppercase for short kinds and statuses only; it is a visual treatment, so pass the text in its normal case.
+
+accessibility:
+  role: Static text. Web renders a span in the surrounding text flow and iOS a Text that VoiceOver reads in place.
+  label: The visible text in its original case; uppercase is visual only. A container that shows several badges, such as MTOrganizationBadges, may combine them into one label.
+  focus: Never focusable; a badge adds no tab stop or VoiceOver element of its own beyond its text.
+  minimumHitTarget: notInteractive
+  dynamicType: iOS scales micro and small with caption2 and medium with caption, and still truncates on one line at accessibility sizes. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Micro and small labels are 9 and 10 px on Web but 11 pt on iOS, so micro and small look alike on iOS.
+    reason: 11 pt caption2 is the smallest Dynamic Type style iOS offers. Weight, tracking in em, and case still match.
+  - difference: Glass tones blur with backdrop-filter on Web and with the ultraThin system material on iOS, so blur strength differs.
+    reason: Each platform's native blur. The tint comes from the same material.chip tokens.
+  - difference: The inverse tone blurs what is behind it on Web but not on iOS.
+    reason: A system material under the 72 percent dark tint lightens the chip in light mode and lowers the contrast of its white text, while the tint alone keeps it legible over photos.
+
+specimens:
+  - id: badge-tones
+    description: Every tone at the default small size.
+    covers: { tone: all }
+  - id: badge-sizes
+    description: Every size in the default accent tone, beside the uppercase treatment at each size.
+    covers: { size: all }
+  - id: badge-tags
+    description: "Tags written with a leading # in Latin and CJK scripts, at the medium size Dashboard uses."
+  - id: badge-truncation
+    description: A long label and a long tag stay on one line and truncate at the tail inside a narrow container.
+  - id: badge-photo-overlay
+    description: Uppercase micro glass and inverse tones over a photo, where record cards place them.
+    covers: { tone: [glassAccent, glassNeutral, inverse] }

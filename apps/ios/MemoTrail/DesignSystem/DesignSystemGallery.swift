@@ -174,6 +174,40 @@
     }
   }
 
+  /// One specimen from a component spec in packages/design-system/components, titled with its id
+  /// like the Web gallery. The UI test finds every generated specimen by its identifier.
+  struct GalleryCase<Content: View>: View {
+    let specimen: MTComponentSpecimen
+    @ViewBuilder var content: Content
+
+    init(_ specimen: MTComponentSpecimen, @ViewBuilder content: () -> Content) {
+      self.specimen = specimen
+      self.content = content()
+    }
+
+    var body: some View {
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        VStack(alignment: .leading, spacing: MTSpacing.s1) {
+          Text(specimen.rawValue).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+            .accessibilityAddTraits(.isHeader)
+          Text(specimen.summary).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        content
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier(specimen.accessibilityIdentifier)
+    }
+  }
+
+  /// The hairline between specimen cases.
+  struct GalleryCaseSeparator: View {
+    var body: some View {
+      Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
+    }
+  }
+
   private struct DesignSystemSpecimens: View {
     let section: DesignSystemSection
 

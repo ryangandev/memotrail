@@ -17,28 +17,58 @@
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
         GallerySpecimen(
           title: "Button",
-          api: "MTButtonStyle · primary · secondary · ghost · danger · small / medium / large"
+          api: "mtButtonStyle · variant · size · isLoading · fillsWidth · MTIconButton"
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            ForEach(MTButtonVariant.allCases, id: \.self) { variant in
-              VStack(alignment: .leading, spacing: MTSpacing.s2) {
-                Text(variant.title).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
-                ViewThatFits(in: .horizontal) {
-                  HStack(spacing: MTSpacing.s2) { variantRow(variant) }
-                  VStack(alignment: .leading, spacing: MTSpacing.s2) { variantRow(variant) }
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.buttonVariants) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                ForEach(MTButtonVariant.allCases, id: \.self) { variant in
+                  Button(variant.rawValue.capitalized) {
+                    message = "\(variant.rawValue) button activated."
+                  }
+                  .mtButtonStyle(variant)
                 }
               }
             }
-            Text("sizes").font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
-            HStack(spacing: MTSpacing.s2) {
-              ForEach(MTButtonSize.allCases, id: \.self) { size in
-                Button(size.title, systemImage: MTIcon.plus.systemName) {
-                  message = "\(size.title) button activated."
+            GalleryCaseSeparator()
+            GalleryCase(.buttonDisabled) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                ForEach(MTButtonVariant.allCases, id: \.self) { variant in
+                  Button(variant.rawValue.capitalized) {}.mtButtonStyle(variant).disabled(true)
                 }
-                .mtButtonStyle(.secondary, size: size)
               }
             }
-            Text("icon · full width").font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+            GalleryCaseSeparator()
+            GalleryCase(.buttonLoading) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                ForEach(MTButtonVariant.allCases, id: \.self) { variant in
+                  Button("Saving") {}.mtButtonStyle(variant, isLoading: true)
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.buttonSizes) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                ForEach(MTButtonSize.allCases, id: \.self) { size in
+                  Button(size.rawValue.capitalized, systemImage: MTIcon.plus.systemName) {
+                    message = "\(size.rawValue) button activated."
+                  }
+                  .mtButtonStyle(.secondary, size: size)
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.buttonLink) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                NavigationLink("View foundations", value: DesignSystemSection.foundations)
+                  .mtButtonStyle()
+                NavigationLink("Open containers", value: DesignSystemSection.containers)
+                  .mtButtonStyle(.secondary)
+              }
+            }
+            GalleryCaseSeparator()
+            Text("MTIconButton · fillsWidth").font(MTFont.caption.monospaced())
+              .foregroundStyle(MTColor.ink)
             HStack(spacing: MTSpacing.s2) {
               MTIconButton(label: "Add demo entry", icon: .plus, variant: .primary) {
                 message = "Add icon activated."
@@ -184,13 +214,6 @@
         case .long: GalleryLongSheet()
         }
       }
-    }
-
-    @ViewBuilder private func variantRow(_ variant: MTButtonVariant) -> some View {
-      Button("Continue") { message = "\(variant.title) button activated." }
-        .mtButtonStyle(variant)
-      Button("Disabled") {}.mtButtonStyle(variant).disabled(true)
-      Button("Saving") {}.mtButtonStyle(variant, isLoading: true)
     }
 
     @ViewBuilder private var presentationButtons: some View {

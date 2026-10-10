@@ -144,36 +144,75 @@
 
         GallerySpecimen(
           title: "Badge",
-          api:
-            "micro | small | medium · accent, neutral, warm, success, outline, solidAccent, inverse, glassAccent, glassNeutral · uppercase · one line"
+          api: "MTBadge · tone · size · uppercase · one line · tags use # text"
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTFlowLayout(spacing: MTSpacing.s2) {
-              MTBadge(title: "Entry", size: .micro, uppercase: true)
-              MTBadge(title: "Home", tone: .neutral, uppercase: true)
-              MTBadge(title: "Keyword search", size: .medium)
-              MTBadge(title: "In Inbox", tone: .warm)
-              MTBadge(title: "Vehicle", tone: .outline)
-              MTBadge(title: "Saved", tone: .success)
-              MTBadge(title: "3 photos", tone: .inverse)
-              MTBadge(title: "Current", tone: .solidAccent)
-              MTBadge(title: "#learning", size: .medium)
-              MTBadge(title: "#旅行", size: .medium)
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.badgeTones) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                ForEach(MTBadgeTone.allCases, id: \.self) { tone in
+                  MTBadge(title: tone.rawValue, tone: tone)
+                }
+              }
             }
-            MTBadge(title: "A long label that stays on one line within the available width")
-            MTBadge(title: "#值得记住的那些很长很长的日常片段，一行之内保持完整的形状", size: .medium)
+            GalleryCaseSeparator()
+            GalleryCase(.badgeSizes) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                ForEach(MTBadgeSize.allCases, id: \.self) { size in
+                  MTBadge(title: size.rawValue, size: size)
+                  MTBadge(title: size.rawValue, size: size, uppercase: true)
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.badgeTags) {
+              MTFlowLayout(spacing: MTSpacing.s2) {
+                MTBadge(title: "#learning", size: .medium)
+                MTBadge(title: "#旅行", size: .medium)
+                MTBadge(title: "#family", tone: .neutral, size: .medium)
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.badgeTruncation) {
+              VStack(alignment: .leading, spacing: MTSpacing.s2) {
+                MTBadge(title: "A long label that stays on one line")
+                MTBadge(
+                  title: "#A long tag name that stays within the available width", size: .medium)
+              }
+              .padding(MTSpacing.s2)
+              .frame(width: 160, alignment: .leading)
+              .overlay {
+                RoundedRectangle(cornerRadius: MTRadius.small)
+                  .strokeBorder(
+                    MTColor.borderStrong,
+                    style: StrokeStyle(lineWidth: MTSize.Stroke.thin, dash: [3, 3]))
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.badgePhotoOverlay) {
+              MTFlowLayout(spacing: MTSpacing.s3) {
+                ForEach([MTBadgeTone.glassAccent, .glassNeutral], id: \.self) { tone in
+                  GallerySampleArtwork()
+                    .frame(width: 240, height: 135)
+                    .overlay(alignment: .topLeading) {
+                      MTBadge(
+                        title: tone == .glassAccent ? "Current" : "Earlier", tone: tone,
+                        size: .micro, uppercase: true
+                      )
+                      .padding(MTSpacing.s3)
+                    }
+                    .overlay(alignment: .bottomTrailing) {
+                      MTBadge(title: "3 photos", tone: .inverse, size: .micro, uppercase: true)
+                        .padding(MTSpacing.s3)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            Text("MTOrganizationBadges").font(MTFont.caption.monospaced())
+              .foregroundStyle(MTColor.ink)
             MTOrganizationBadges(
               collectionNames: ["Early years"], tagNames: ["family", "travel", "milestone", "home"])
-            GallerySampleArtwork()
-              .frame(height: 72)
-              .overlay(alignment: .topLeading) {
-                HStack(spacing: MTSpacing.s2) {
-                  MTBadge(title: "Current", tone: .glassAccent, size: .micro, uppercase: true)
-                  MTBadge(title: "Earlier", tone: .glassNeutral, size: .micro, uppercase: true)
-                }
-                .padding(MTSpacing.s2)
-              }
-              .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
           }
         }
 
