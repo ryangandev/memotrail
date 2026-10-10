@@ -2,6 +2,7 @@ import type { Locator, Page } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { test, expect } from "./helpers/workspace-test";
+import { lineEnd } from "./helpers/keys";
 
 // The Dashboard composer and Quick Capture edit one draft: whatever one shows,
 // the other shows, and a save or discard in either clears it everywhere.
@@ -17,7 +18,7 @@ test("saving in Quick Capture clears the Dashboard composer, so the draft is cap
   await dashboardEditor.fill("Shared draft text");
   await expect(dashboard).toContainText("Draft saved on this device.");
   await dashboardEditor.blur();
-  await page.keyboard.press("Meta+j");
+  await page.keyboard.press("ControlOrMeta+j");
   await expect(dialogEditor).toBeFocused();
   await expect(dialogEditor).toHaveText("Shared draft text");
 
@@ -42,7 +43,7 @@ test("saving in Quick Capture clears the Dashboard composer, so the draft is cap
   await page.waitForLoadState("networkidle");
   expect(await entryCount(workspace.client, "Shared draft text")).toBe(1);
   // Typing again starts a new draft instead of writing the old text back.
-  await dashboardEditor.press("Meta+ArrowRight");
+  await dashboardEditor.press(lineEnd);
   await dashboardEditor.pressSequentially("Next");
   await expect
     .poll(() => storedDraft(page, workspace.owner))
@@ -59,7 +60,7 @@ test("typing in either composer shows in the other without moving the caret", as
 
   await dashboardEditor.fill("Hello world");
   // A shared update from the composer's own keystroke keeps its selection.
-  await dashboardEditor.press("Meta+ArrowRight");
+  await dashboardEditor.press(lineEnd);
   for (let step = 0; step < 5; step++) await dashboardEditor.press("ArrowLeft");
   await dashboardEditor.pressSequentially("big ");
   await expect(dashboardEditor).toHaveText("Hello big world");
@@ -67,14 +68,14 @@ test("typing in either composer shows in the other without moving the caret", as
   await trigger.click();
   await expect(dialogEditor).toBeFocused();
   await expect(dialogEditor).toHaveText("Hello big world");
-  await dialogEditor.press("Meta+ArrowRight");
+  await dialogEditor.press(lineEnd);
   await dialogEditor.pressSequentially(" and more");
   // Mid-line, because ProseMirror moves a caret placed at the very start of
   // the document within 200ms of focus back to where it was.
   for (let step = 0; step < 4; step++) await dialogEditor.press("ArrowLeft");
   await dialogEditor.pressSequentially("so much ");
   await expect(dialogEditor).toHaveText("Hello big world and so much more");
-  await dialogEditor.press("Meta+a");
+  await dialogEditor.press("ControlOrMeta+a");
   await dialog
     .getByRole("toolbar", { name: "Text formatting" })
     .getByRole("button", { name: "Bold", exact: true })
@@ -126,7 +127,7 @@ test("discarding a draft in one composer clears it in the other", async ({
     dialog.getByRole("group", { name: "Date", exact: true }),
   ).toBeVisible();
 
-  await dialogEditor.press("Meta+a");
+  await dialogEditor.press("ControlOrMeta+a");
   await dialogEditor.press("Backspace");
   await dialog
     .getByRole("button", { name: "Use capture time", exact: true })

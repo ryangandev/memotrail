@@ -143,7 +143,9 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
       .boundingBox())!;
     const { data, info } = await sharp(
       await page.screenshot({
-        path: `/private/tmp/memotrail-capture-glass-surface-${theme}.png`,
+        path: test
+          .info()
+          .outputPath(`memotrail-capture-glass-surface-${theme}.png`),
       }),
     )
       .raw()
@@ -179,11 +181,15 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
     await expect(hint).toBeVisible();
     await page.screenshot({
       animations: "disabled",
-      path: `/private/tmp/memotrail-capture-glass-unified-${theme}.png`,
+      path: test
+        .info()
+        .outputPath(`memotrail-capture-glass-unified-${theme}.png`),
     });
     await dialog.screenshot({
       animations: "disabled",
-      path: `/private/tmp/memotrail-capture-save-tooltip-${theme}.png`,
+      path: test
+        .info()
+        .outputPath(`memotrail-capture-save-tooltip-${theme}.png`),
     });
     await dialog.getByRole("button", { name: "Close quick capture" }).click();
     await expect(dialog).not.toBeVisible();
@@ -205,7 +211,7 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
   );
   await page.screenshot({
     animations: "disabled",
-    path: "/private/tmp/memotrail-capture-save-tooltip-mobile.png",
+    path: test.info().outputPath("memotrail-capture-save-tooltip-mobile.png"),
   });
 });
 

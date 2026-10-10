@@ -134,7 +134,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-library-default.png",
+      path: test.info().outputPath("memotrail-library-default.png"),
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(
@@ -158,7 +158,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-library-default-mobile.png",
+      path: test.info().outputPath("memotrail-library-default-mobile.png"),
     });
     await page.setViewportSize({ width: 1280, height: 720 });
     await expect(
@@ -236,7 +236,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-wiki-item-detail-desktop.png",
+      path: test.info().outputPath("memotrail-wiki-item-detail-desktop.png"),
     });
 
     // Old version history links open the Item page.
@@ -294,14 +294,14 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-wiki-library-desktop.png",
+      path: test.info().outputPath("memotrail-wiki-library-desktop.png"),
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-wiki-library-mobile.png",
+      path: test.info().outputPath("memotrail-wiki-library-mobile.png"),
     });
     expect(
       await page.evaluate(
@@ -333,7 +333,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-library-rows-desktop.png",
+      path: test.info().outputPath("memotrail-library-rows-desktop.png"),
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await expect
@@ -346,7 +346,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-library-rows-mobile.png",
+      path: test.info().outputPath("memotrail-library-rows-mobile.png"),
     });
     await page.goto("/library?page=3");
     await expect(page).toHaveURL(/\/library$/);

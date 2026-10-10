@@ -117,7 +117,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     expect(quickSearchRequests).toBe(1);
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-quick-search.png",
+      path: test.info().outputPath("memotrail-quick-search.png"),
     });
     await commandPalette
       .getByRole("button", { name: /Search all for “electric”/ })
@@ -145,7 +145,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       if (width === 1500 || width === 390) {
         await searchSurface.screenshot({
           animations: "disabled",
-          path: `/private/tmp/memotrail-search-filters-${width}.png`,
+          path: test.info().outputPath(`memotrail-search-filters-${width}.png`),
         });
       }
     }
@@ -170,7 +170,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
-      path: "/private/tmp/memotrail-evidence-source-mobile.png",
+      path: test.info().outputPath("memotrail-evidence-source-mobile.png"),
       fullPage: true,
       caret: "initial",
     });

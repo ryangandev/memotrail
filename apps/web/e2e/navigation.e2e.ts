@@ -230,7 +230,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(keyboardBrand).toBeFocused();
     await page.screenshot({
       clip: { x: 0, y: 0, width: 240, height: 110 },
-      path: "/private/tmp/memotrail-brand-focus.png",
+      path: test.info().outputPath("memotrail-brand-focus.png"),
     });
     await expect(keyboardBrand).toHaveCSS("outline-style", "none");
     await expect(keyboardBrand).toHaveCSS("box-shadow", /inset/);
@@ -269,7 +269,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(goBack).toHaveCSS("outline-style", "none");
     await expect(goBack).toHaveCSS("box-shadow", panelFocusShadow);
     await goBack.screenshot({
-      path: "/private/tmp/memotrail-history-focus.png",
+      path: test.info().outputPath("memotrail-history-focus.png"),
     });
     await goBack.click();
     await expect(page).toHaveURL(/\/$/);
@@ -405,7 +405,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(capture).toBeVisible();
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-sidebar-scroll.png",
+      path: test.info().outputPath("memotrail-sidebar-scroll.png"),
     });
     expect(
       await brand.evaluate((element) => element.getBoundingClientRect().top),
@@ -505,7 +505,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-sidebar-collapsed.png",
+      path: test.info().outputPath("memotrail-sidebar-collapsed.png"),
     });
     await page.mouse.move(800, 100);
     // Reach the link by keyboard so it shows its keyboard focus ring.
@@ -518,7 +518,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-sidebar-focus-collapsed.png",
+      path: test.info().outputPath("memotrail-sidebar-focus-collapsed.png"),
     });
     const previousTheme = await page.locator("html").getAttribute("data-theme");
     await page.evaluate(() =>
@@ -527,7 +527,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-sidebar-collapsed-dark.png",
+      path: test.info().outputPath("memotrail-sidebar-collapsed-dark.png"),
     });
     await page.evaluate((theme) => {
       if (theme) document.documentElement.setAttribute("data-theme", theme);
@@ -613,13 +613,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-sidebar-expanded.png",
+      path: test.info().outputPath("memotrail-sidebar-expanded.png"),
     });
     await shell.evaluate((element) => {
       element.setAttribute("data-shell-instance", "kept");
     });
 
-    await page.keyboard.press("Meta+k");
+    await page.keyboard.press("ControlOrMeta+k");
     const commandPalette = page.getByRole("dialog", {
       name: "Search MemoTrail",
     });
@@ -632,7 +632,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(commandPalette).toHaveCSS("opacity", "1");
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-command-palette.png",
+      path: test.info().outputPath("memotrail-command-palette.png"),
     });
     await expect(page).toHaveURL(/\/$/);
     await expect(commandPalette.getByRole("searchbox")).toBeFocused();
@@ -654,7 +654,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBeVisible();
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-navigation-loading.png",
+      path: test.info().outputPath("memotrail-navigation-loading.png"),
     });
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
     releaseMapNavigation();
@@ -715,7 +715,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         subtree: true,
       });
     });
-    await page.keyboard.press("Meta+j");
+    await page.keyboard.press("ControlOrMeta+j");
 
     const quickCapture = page.getByRole("dialog", {
       name: "What’s on your mind?",
@@ -799,7 +799,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(quickCapture).toBeVisible();
 
     await entryText.focus();
-    await entryText.press("Meta+k");
+    await entryText.press("ControlOrMeta+k");
     const linkEditor = quickCapture.getByRole("group", {
       name: "Link editor",
       exact: true,
@@ -837,7 +837,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
 
     await page.keyboard.press("Escape");
     await expect(quickCapture).not.toBeVisible();
-    await page.keyboard.press("Meta+j");
+    await page.keyboard.press("ControlOrMeta+j");
     await expect(quickCapture).toBeVisible();
     await expect(entryText).toBeFocused();
     await page.waitForTimeout(250);
@@ -928,13 +928,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(boldButton.getByRole("tooltip")).toHaveCSS("opacity", "1");
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-rich-text-tooltip.png",
+      path: test.info().outputPath("memotrail-rich-text-tooltip.png"),
     });
     const entryBody = "A small moment worth keeping.";
     await entryText.fill("List item");
-    await entryText.press("Meta+Shift+8");
+    await entryText.press("ControlOrMeta+Shift+8");
     await expect(entryText.locator("ul")).toContainText("List item");
-    await entryText.press("Meta+Shift+8");
+    await entryText.press("ControlOrMeta+Shift+8");
     await expect(entryText.locator("ul")).toHaveCount(0);
     await entryText.fill(entryBody);
     for (const [label, element] of [
@@ -944,7 +944,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       ["Strikethrough", "s"],
       ["Inline code", "code"],
     ] as const) {
-      await entryText.press("Meta+a");
+      await entryText.press("ControlOrMeta+a");
       const button = formatting.getByRole("button", {
         name: label,
         exact: true,
@@ -954,9 +954,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       await button.click();
       await expect(entryText.locator(element)).toHaveCount(0);
     }
-    await entryText.press("Meta+a");
+    await entryText.press("ControlOrMeta+a");
     await formatting.getByRole("button", { name: "Bold", exact: true }).click();
-    await entryText.press("Meta+k");
+    await entryText.press("ControlOrMeta+k");
     await expect(commandPalette).not.toBeVisible();
     await quickCapture
       .getByRole("textbox", { name: "Link URL" })
@@ -987,7 +987,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBeGreaterThanOrEqual(emptyTextMetrics.height);
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-quick-capture-typing.png",
+      path: test.info().outputPath("memotrail-quick-capture-typing.png"),
     });
     await quickCapture
       .getByRole("button", { name: "Save to Library", exact: true })

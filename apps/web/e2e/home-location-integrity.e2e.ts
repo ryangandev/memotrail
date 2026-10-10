@@ -134,7 +134,7 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
     expect(cardMap.status()).toBe(200);
     expect(await cardMap.text()).not.toContain("<text");
     await mappedCard.screenshot({
-      path: "/private/tmp/memotrail-home-map-card-desktop.png",
+      path: test.info().outputPath("memotrail-home-map-card-desktop.png"),
     });
 
     await mappedCard.click();
@@ -187,7 +187,7 @@ test("Home keeps Location optional and never pairs edited addresses with old coo
       "changed on another device",
     );
     await staleEdit.screenshot({
-      path: "/private/tmp/memotrail-home-save-error.png",
+      path: test.info().outputPath("memotrail-home-save-error.png"),
     });
     await staleEdit.getByRole("button", { name: "Cancel" }).click();
     await page.goto("/homes");

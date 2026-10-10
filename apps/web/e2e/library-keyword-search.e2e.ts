@@ -72,7 +72,7 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
       page.getByRole("link", { name: "Learning 学习 flat", exact: true }),
     ).toBeVisible();
     await page.screenshot({
-      path: "/private/tmp/memotrail-library-keyword-desktop.png",
+      path: test.info().outputPath("memotrail-library-keyword-desktop.png"),
       fullPage: true,
       caret: "initial",
     });
@@ -117,7 +117,7 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
-      path: "/private/tmp/memotrail-library-keyword-mobile.png",
+      path: test.info().outputPath("memotrail-library-keyword-mobile.png"),
       fullPage: true,
       caret: "initial",
     });

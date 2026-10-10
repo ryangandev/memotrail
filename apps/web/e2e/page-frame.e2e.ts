@@ -102,11 +102,12 @@ test("authenticated pages use the shared responsive page frame", async ({
         await expect(title).toHaveCSS("font-size", canonicalSize);
         await expect(title).toHaveCSS("margin-top", "0px");
       }
-      expect(
-        await frame.evaluate(
-          (element) => element.getBoundingClientRect().width,
-        ),
-      ).toBeCloseTo(family.width, 0);
+      // A route transition can measure the frame before layout settles.
+      await expect
+        .poll(() =>
+          frame.evaluate((element) => element.getBoundingClientRect().width),
+        )
+        .toBeCloseTo(family.width, 0);
       if (focusedViewPaths.has(family.path)) {
         await expectFocusedViewContentGap(frame, 32);
       }

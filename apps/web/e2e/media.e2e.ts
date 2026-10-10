@@ -188,7 +188,7 @@ test("Private photo previews preserve originals across Web, native bearer access
       .toBe(1600);
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-media-desktop.png",
+      path: test.info().outputPath("memotrail-media-desktop.png"),
       fullPage: true,
     });
     const variants = await client
@@ -313,7 +313,7 @@ test("Private photo previews preserve originals across Web, native bearer access
     ).toBeVisible();
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-media-mobile.png",
+      path: test.info().outputPath("memotrail-media-mobile.png"),
       fullPage: true,
     });
   } finally {

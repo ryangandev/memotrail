@@ -77,7 +77,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
     await goalPhotos.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-goal-photo-field.png",
+      path: test.info().outputPath("memotrail-goal-photo-field.png"),
     });
     await goalPhotos.locator('input[type="file"]').setInputFiles({
       name: "goal-preview.png",

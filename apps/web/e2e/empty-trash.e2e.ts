@@ -124,7 +124,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
-      path: "/private/tmp/memotrail-empty-trash-desktop.png",
+      path: test.info().outputPath("memotrail-empty-trash-desktop.png"),
     });
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(31);
@@ -154,7 +154,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
-      path: "/private/tmp/memotrail-empty-trash-mobile.png",
+      path: test.info().outputPath("memotrail-empty-trash-mobile.png"),
     });
     expect(
       await page.evaluate(

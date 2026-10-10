@@ -185,7 +185,7 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
     await occurrenceField(page).scrollIntoViewIfNeeded();
     await page.screenshot({
       animations: "disabled",
-      path: "/private/tmp/memotrail-occurrence-mobile.png",
+      path: test.info().outputPath("memotrail-occurrence-mobile.png"),
       fullPage: true,
       caret: "initial",
     });

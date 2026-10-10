@@ -194,7 +194,9 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
         await page.emulateMedia({ colorScheme: "dark" });
         await page.screenshot({
           caret: "initial",
-          path: "/private/tmp/memotrail-capture-precision-mobile.png",
+          path: test
+            .info()
+            .outputPath("memotrail-capture-precision-mobile.png"),
         });
         await page.waitForLoadState("networkidle");
         await context.setOffline(true);
@@ -202,7 +204,9 @@ test("Quick capture retains uncertain dates in drafts and offline replay", async
       if (index === 0)
         await page.screenshot({
           caret: "initial",
-          path: "/private/tmp/memotrail-capture-precision-desktop.png",
+          path: test
+            .info()
+            .outputPath("memotrail-capture-precision-desktop.png"),
         });
       let delayedSync = false;
       if (index === 0) {

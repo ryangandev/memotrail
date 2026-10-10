@@ -58,7 +58,7 @@ test("Timeline summary keeps its separators between facts on phones", async ({
       summary.getByRole("button", { name: "Set birth date" }),
     );
     await summary.screenshot({
-      path: `/private/tmp/memotrail-timeline-summary-${width}.png`,
+      path: test.info().outputPath(`memotrail-timeline-summary-${width}.png`),
     });
   }
   await page.setViewportSize({ width: 1280, height: 720 });

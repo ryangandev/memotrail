@@ -17,7 +17,7 @@ test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
     "Collapse sidebar (⌘ B / Ctrl+B)",
   );
   await toggle.focus();
-  await page.keyboard.press("Meta+b");
+  await page.keyboard.press("ControlOrMeta+b");
   await expect(
     page.getByRole("button", { name: "Expand sidebar" }),
   ).toBeVisible();
@@ -28,8 +28,8 @@ test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
   await expect(toggle).toBeVisible();
 
   await editor.fill("Keep this bold");
-  await editor.press("Meta+a");
-  await editor.press("Meta+b");
+  await editor.press("ControlOrMeta+a");
+  await editor.press("ControlOrMeta+b");
   await expect(editor.locator("strong")).toHaveText("Keep this bold");
   await expect(toggle).toBeVisible();
 
@@ -40,8 +40,8 @@ test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
     exact: true,
   });
   await expect(dialogEditor.locator("strong")).toHaveText("Keep this bold");
-  await dialogEditor.press("Meta+a");
-  await dialogEditor.press("Meta+b");
+  await dialogEditor.press("ControlOrMeta+a");
+  await dialogEditor.press("ControlOrMeta+b");
   await expect(dialogEditor.locator("strong")).toHaveCount(0);
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
   await expect(toggle).toBeVisible();
@@ -51,15 +51,15 @@ test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
     .click();
   await page
     .getByRole("searchbox", { name: "Search your archive" })
-    .press("Meta+b");
+    .press("ControlOrMeta+b");
   await page.keyboard.press("Escape");
   await expect(toggle).toBeVisible();
   await toggle.focus();
-  await page.keyboard.press("Meta+Shift+b");
+  await page.keyboard.press("ControlOrMeta+Shift+b");
   await expect(toggle).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("link", { name: "MemoTrail dashboard" }).last().focus();
-  await page.keyboard.press("Meta+b");
+  await page.keyboard.press("ControlOrMeta+b");
   await expect(page.locator("[data-sidebar-collapsed]")).toHaveAttribute(
     "data-sidebar-collapsed",
     "false",

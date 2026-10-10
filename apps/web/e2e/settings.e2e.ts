@@ -91,7 +91,9 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-settings-preferred-name-desktop.png",
+      path: test
+        .info()
+        .outputPath("memotrail-settings-preferred-name-desktop.png"),
     });
     await preferredName.fill("River");
     await main.getByRole("button", { name: "Save name" }).click();
@@ -183,7 +185,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-settings-appearance-dark.png",
+      path: test.info().outputPath("memotrail-settings-appearance-dark.png"),
     });
     await page.emulateMedia({ colorScheme: "light" });
     await expect
@@ -232,7 +234,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
-      path: "/private/tmp/memotrail-settings-desktop.png",
+      path: test.info().outputPath("memotrail-settings-desktop.png"),
     });
 
     await page.setViewportSize({ width: 390, height: 844 });
@@ -243,7 +245,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
-      path: "/private/tmp/memotrail-settings-mobile.png",
+      path: test.info().outputPath("memotrail-settings-mobile.png"),
     });
 
     await page.getByRole("button", { name: "Sign out", exact: true }).click();

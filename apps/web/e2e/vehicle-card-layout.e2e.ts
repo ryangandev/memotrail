@@ -125,7 +125,7 @@ test("Vehicle cards share one grid row and keep their visual flush to the border
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-vehicle-grid-desktop.png",
+      path: test.info().outputPath("memotrail-vehicle-grid-desktop.png"),
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await expect(current).toBeVisible();
@@ -142,7 +142,7 @@ test("Vehicle cards share one grid row and keep their visual flush to the border
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-vehicle-grid-mobile.png",
+      path: test.info().outputPath("memotrail-vehicle-grid-mobile.png"),
     });
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

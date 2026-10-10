@@ -148,7 +148,7 @@ test("An Item page shows its photos and pages through them without changing the 
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-image-loading.png",
+      path: test.info().outputPath("memotrail-image-loading.png"),
     });
     releaseImages();
     await expect(progressiveImage).toHaveAttribute(
@@ -161,7 +161,7 @@ test("An Item page shows its photos and pages through them without changing the 
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-item-photos-desktop-light.png",
+      path: test.info().outputPath("memotrail-item-photos-desktop-light.png"),
     });
     await firstPhoto.click();
     const viewer = page.getByRole("dialog", { name: "Photo 1.jpg" });
@@ -181,7 +181,7 @@ test("An Item page shows its photos and pages through them without changing the 
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-gallery-desktop-light.png",
+      path: test.info().outputPath("memotrail-gallery-desktop-light.png"),
     });
     await viewer.getByRole("button", { name: "Next", exact: true }).click();
     const secondViewer = page.getByRole("dialog", { name: "Photo 2.jpg" });
@@ -201,7 +201,7 @@ test("An Item page shows its photos and pages through them without changing the 
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-gallery-mobile-dark.png",
+      path: test.info().outputPath("memotrail-gallery-mobile-dark.png"),
     });
     await page.keyboard.press("Escape");
     await expect(secondViewer).toHaveCount(0);
@@ -209,7 +209,7 @@ test("An Item page shows its photos and pages through them without changing the 
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-item-photos-mobile-dark.png",
+      path: test.info().outputPath("memotrail-item-photos-mobile-dark.png"),
     });
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.emulateMedia({ colorScheme: "light" });

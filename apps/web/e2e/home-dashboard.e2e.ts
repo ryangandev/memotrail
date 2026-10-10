@@ -258,7 +258,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           expect(metricRows[3]).toBeGreaterThan(metricRows[0]);
           expect(metricRows[4]).toBe(metricRows[3]);
           await page.screenshot({
-            path: "/tmp/memotrail-home-dashboard-medium.png",
+            path: test.info().outputPath("memotrail-home-dashboard-medium.png"),
             animations: "disabled",
           });
         }
@@ -272,7 +272,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           ),
       );
       await page.screenshot({
-        path: `/tmp/memotrail-home-dashboard-desktop.png`,
+        path: test.info().outputPath(`memotrail-home-dashboard-desktop.png`),
         animations: "disabled",
       });
       for (const width of [834, 390]) {
@@ -302,7 +302,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         expect(box!.x + box!.width).toBeLessThanOrEqual(width);
         if (width === 390)
           await page.screenshot({
-            path: `/tmp/memotrail-home-dashboard-mobile.png`,
+            path: test.info().outputPath(`memotrail-home-dashboard-mobile.png`),
             animations: "disabled",
           });
       }

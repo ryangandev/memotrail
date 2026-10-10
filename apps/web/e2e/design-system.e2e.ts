@@ -224,11 +224,15 @@ test("Foundations draw every generated token in both themes", async ({
         await foundations.screenshot({
           animations: "disabled",
           caret: "initial",
-          path: `/private/tmp/memotrail-foundations-${theme}-${width}.png`,
+          path: test
+            .info()
+            .outputPath(`memotrail-foundations-${theme}-${width}.png`),
         });
         await page.locator("#layout").screenshot({
           animations: "disabled",
-          path: `/private/tmp/memotrail-layout-tokens-${theme}-${width}.png`,
+          path: test
+            .info()
+            .outputPath(`memotrail-layout-tokens-${theme}-${width}.png`),
         });
       });
     }
@@ -256,7 +260,7 @@ test("selected brand motion previews both panel directions and respects reduced 
   ).toBeVisible();
   await specimen.screenshot({
     caret: "initial",
-    path: "/private/tmp/memotrail-brand-motion-expanded.png",
+    path: test.info().outputPath("memotrail-brand-motion-expanded.png"),
   });
   await counter
     .getByRole("button", { name: "Collapse Counter rotation preview" })
@@ -280,7 +284,7 @@ test("selected brand motion previews both panel directions and respects reduced 
   }
   await specimen.screenshot({
     caret: "initial",
-    path: "/private/tmp/memotrail-brand-motion-collapsed.png",
+    path: test.info().outputPath("memotrail-brand-motion-collapsed.png"),
     animations: "disabled",
   });
   await counter
@@ -308,7 +312,7 @@ test("selected brand motion previews both panel directions and respects reduced 
   ).toBe(true);
   await specimen.screenshot({
     caret: "initial",
-    path: "/private/tmp/memotrail-brand-motion-mobile.png",
+    path: test.info().outputPath("memotrail-brand-motion-mobile.png"),
   });
   expect(hydrationWarnings).toEqual([]);
 });
@@ -416,7 +420,7 @@ test("SeparatedList keeps its separators between facts as its frame narrows", as
     }
   }
   await specimen.screenshot({
-    path: "/private/tmp/memotrail-separated-list-gallery.png",
+    path: test.info().outputPath("memotrail-separated-list-gallery.png"),
   });
 });
 
@@ -515,11 +519,11 @@ test("Photo field previews existing and selected images without removing them", 
     )
     .toBeGreaterThan(0);
   await selectedPreview.screenshot({
-    path: "/private/tmp/memotrail-photo-preview-desktop.png",
+    path: test.info().outputPath("memotrail-photo-preview-desktop.png"),
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await selectedPreview.screenshot({
-    path: "/private/tmp/memotrail-photo-preview-mobile.png",
+    path: test.info().outputPath("memotrail-photo-preview-mobile.png"),
   });
   await selectedPreview
     .getByRole("button", { name: "Close photo preview" })
@@ -571,7 +575,7 @@ test("OccurrenceEditor moves between Day, Month, Year, and Not sure without inve
       .screenshot({
         animations: "disabled",
         caret: "initial",
-        path: `/private/tmp/memotrail-date-${name}.png`,
+        path: test.info().outputPath(`memotrail-date-${name}.png`),
       });
   await page.goto("/design-system#forms");
   const editor = page.getByRole("group", { name: "Date" });
@@ -682,7 +686,7 @@ test("TextField previews the shared form typography and focus surface", async ({
   await expect(input).toHaveValue("Alex Morgan");
   await specimen.screenshot({
     caret: "initial",
-    path: "/private/tmp/memotrail-text-field-proposal-light.png",
+    path: test.info().outputPath("memotrail-text-field-proposal-light.png"),
   });
   const typography = await Promise.all(
     [input, search, select].map((field) =>
@@ -712,7 +716,9 @@ test("TextField previews the shared form typography and focus surface", async ({
   await expect(specimen).toBeVisible();
   await specimen.screenshot({
     caret: "initial",
-    path: "/private/tmp/memotrail-text-field-proposal-dark-mobile.png",
+    path: test
+      .info()
+      .outputPath("memotrail-text-field-proposal-dark-mobile.png"),
   });
   expect(
     await page.evaluate(
@@ -792,7 +798,9 @@ test("SearchField fits both themes at desktop and mobile widths", async ({
       await expect(specimen).toBeVisible();
       await specimen.screenshot({
         animations: "disabled",
-        path: `/private/tmp/memotrail-search-field-${theme}-${width}.png`,
+        path: test
+          .info()
+          .outputPath(`memotrail-search-field-${theme}-${width}.png`),
       });
       expect(
         await page.evaluate(
@@ -909,7 +917,9 @@ test("Shared primitives fit both themes at desktop and mobile widths", async ({
         }).toPass();
         await page.locator("#shared-primitives").screenshot({
           caret: "initial",
-          path: `/private/tmp/memotrail-primitives-${theme}-${width}.png`,
+          path: test
+            .info()
+            .outputPath(`memotrail-primitives-${theme}-${width}.png`),
         });
         expect(
           await page.evaluate(
@@ -933,7 +943,9 @@ test("Shared primitives fit both themes at desktop and mobile widths", async ({
         ).toBeInViewport();
         await page.screenshot({
           caret: "initial",
-          path: `/private/tmp/memotrail-dialog-${theme}-${width}.png`,
+          path: test
+            .info()
+            .outputPath(`memotrail-dialog-${theme}-${width}.png`),
         });
         await dialog.getByRole("button", { name: "Done reading" }).click();
         await expect(dialog).not.toBeVisible();
@@ -1021,7 +1033,7 @@ test("Checkbox is a native input with a name, a description, a focus ring, and f
     ).toBe(true);
     await specimen.screenshot({
       caret: "initial",
-      path: `/private/tmp/memotrail-checkbox-${theme}-${width}.png`,
+      path: test.info().outputPath(`memotrail-checkbox-${theme}-${width}.png`),
     });
   }
 });
@@ -1119,7 +1131,9 @@ test("SectionHeader renders section and list headings at the level the caller pi
     await page.emulateMedia({ colorScheme: theme });
     await specimen.screenshot({
       caret: "initial",
-      path: `/private/tmp/memotrail-section-header-${theme}-${width}.png`,
+      path: test
+        .info()
+        .outputPath(`memotrail-section-header-${theme}-${width}.png`),
     });
   }
 });
@@ -1176,7 +1190,7 @@ test("Skeleton is decorative, shimmers, and stands still for reduced motion", as
     await specimen.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: `/private/tmp/memotrail-skeleton-${theme}-${width}.png`,
+      path: test.info().outputPath(`memotrail-skeleton-${theme}-${width}.png`),
     });
   }
 });

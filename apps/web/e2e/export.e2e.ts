@@ -277,7 +277,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-export-desktop.png",
+      path: test.info().outputPath("memotrail-export-desktop.png"),
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
@@ -286,7 +286,7 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-export-mobile.png",
+      path: test.info().outputPath("memotrail-export-mobile.png"),
     });
     expect(
       await page.evaluate(

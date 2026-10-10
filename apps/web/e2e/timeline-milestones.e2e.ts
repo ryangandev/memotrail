@@ -242,7 +242,7 @@ test("Timeline shows Homes, Vehicles, and milestones in fixed lanes", async ({
   await page.screenshot({
     animations: "disabled",
     caret: "initial",
-    path: "/private/tmp/memotrail-timeline-lanes-desktop.png",
+    path: test.info().outputPath("memotrail-timeline-lanes-desktop.png"),
   });
 
   // A milestone opens as its Entry, and a Vehicle opens as a Vehicle.
@@ -323,14 +323,14 @@ test("Timeline shows Homes, Vehicles, and milestones in fixed lanes", async ({
   await page.screenshot({
     animations: "disabled",
     caret: "initial",
-    path: "/private/tmp/memotrail-milestone-editor-desktop.png",
+    path: test.info().outputPath("memotrail-milestone-editor-desktop.png"),
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ colorScheme: "dark" });
   await page.screenshot({
     animations: "disabled",
     caret: "initial",
-    path: "/private/tmp/memotrail-milestone-editor-mobile.png",
+    path: test.info().outputPath("memotrail-milestone-editor-mobile.png"),
   });
   await expectNoHorizontalScroll(page);
   await page.setViewportSize({ width: 1280, height: 720 });
@@ -367,7 +367,7 @@ test("Timeline shows Homes, Vehicles, and milestones in fixed lanes", async ({
     animations: "disabled",
     caret: "initial",
     fullPage: true,
-    path: "/private/tmp/memotrail-timeline-lanes-mobile.png",
+    path: test.info().outputPath("memotrail-timeline-lanes-mobile.png"),
   });
   await expectNoHorizontalScroll(page);
   await page.setViewportSize({ width: 1280, height: 720 });

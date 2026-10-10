@@ -98,7 +98,7 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     // Preserve SSR input styles while React finishes hydration.
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-ai-paused-desktop.png",
+      path: test.info().outputPath("memotrail-ai-paused-desktop.png"),
       fullPage: true,
     });
     await page.reload();
@@ -108,7 +108,7 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     await expect(toggle).not.toBeChecked();
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-ai-paused-mobile.png",
+      path: test.info().outputPath("memotrail-ai-paused-mobile.png"),
       fullPage: true,
     });
     expect(
