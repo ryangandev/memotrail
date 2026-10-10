@@ -82,7 +82,7 @@ Use Git history for feature-level implementation and test evidence.
 | Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                           |
 | Hosted Supabase contracts                                                         | Every repository migration through `202610040009` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` through `202610040009` were applied on 2026-10-05            |
 | Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                               |
-| Web design system                                                                 | Approved canonical components migrated across Web; component-owned CSS and token boundaries enforced; local regression passed; production browser acceptance pending         |
+| Web design system                                                                 | Every value comes from shared tokens and lint rejects hardcoded ones; 28 component specs shared with iOS; local regression passed; production browser acceptance pending     |
 | Backup and restore                                                                | Not ready                                                                                                                                                                    |
 | Current GitHub CI                                                                 | Enabled; pull requests and pushes to `main` run the Linux Web and database jobs, which passed for `a8df108` on 2026-10-09. Native checks run locally                         |
 
@@ -257,21 +257,28 @@ Migration `202610040006` already drops the `entry_relations` and `set_entry_rela
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 7. Extend the design system before the UI redesign
+### 7. Redesign the UI on the finished design system
 
-Tokens are now DTCG 2025.10 files in `packages/design-system/tokens`, with private palette colors behind the semantic roles and generated outputs unchanged.
-The UI redesign waits for the remaining steps:
+The design system the redesign builds on is complete.
+Web and iOS draw every visual value from the DTCG tokens in `packages/design-system/tokens`, and `pnpm lint` and `pnpm design-system:check` reject hardcoded values.
+All 28 shared components have a YAML spec that generates their variant types for both platforms, and both galleries show every specimen the specs list.
+The Claude Design copy is published from `pnpm design-system:export`; values tried there return through pull requests.
 
-- Add token groups for the values both platforms still hardcode: text roles with their Dynamic Type styles, danger and info colors, interaction states, control and icon sizes, one icon vocabulary, elevation and glass materials, page widths and breakpoints, and easing curves.
-  Then migrate code to them and have Web lint and native tests reject the hardcoded forms.
-- Give each shared component a YAML spec that generates its variant types for both platforms, starting with Badge and Button, and check that both galleries show every specimen it lists.
-- Add the missing Web Checkbox, SectionHeader, and Skeleton components.
-- Publish a Claude Design System generated from the repository; values tried there return through pull requests.
+The redesign itself waits for Ryan's direction.
+These open design decisions feed it:
+
+- The type, spacing, and radius scales are named by value, so a retuned scale renames tokens.
+- Six groups of contrast pairs are named exceptions until a palette change: inkFaint metadata, muted text on subtle panels, warm, danger, and warning text in light, and success text on its notice.
+- The brand mark's outer ring and arc use themed colors on iOS and fixed colors on Web, so the platforms differ in dark mode.
+- iOS `accentGroupBorder` looks the same as the shared `accentPanelBorder`, but merging them could shift a color by one rounding level.
+- Web `textSpace` is relative to the text size, so the paragraph gap is shared with iOS only once the Swift generator supports relative units.
+- Library filters mix two field styles: Record and Tag are hand-styled selects with uppercase labels, while From and To use the shared date field with sentence-case labels.
 
 ## Watch list
 
 - A valid hosted media session previously returned intermittent HTTP 401 responses before a later run passed. Do not attribute recurrence to the decoder repair without evidence.
 - Next.js may log a client-aborted React Server Components request while application assertions pass. Keep it distinct from a product failure until the stable upstream fix is adopted.
+- Two native UI tests have each failed once under load and passed on rerun: `testPhotoFieldSamplesUploadProgressAndRemoval`, whose upload progress shows for about 1.8 seconds, and the rich-text typing test's bold assertion.
 
 ## Updating this file
 
