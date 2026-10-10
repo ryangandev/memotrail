@@ -16,7 +16,7 @@
 
 .reviewForm label:not(:where([data-ui-field] *)) {
   display: grid;
-  gap: var(--mt-space-1);
+  gap: var(--mt-space-2);
 }
 
 .reviewForm label:not(:where([data-ui-field] *)) > span {
@@ -29,7 +29,7 @@
 .reviewForm textarea:not(:where([data-ui-field] *)),
 .reviewForm select:not(:where([data-ui-field] *)) {
   width: 100%;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   outline: 0;
   color: var(--mt-color-ink);
@@ -41,7 +41,7 @@
 
 .reviewForm input:not(:where([data-ui-field] *)),
 .reviewForm select:not(:where([data-ui-field] *)) {
-  height: 42px;
+  height: var(--mt-size-field-medium);
   padding-left: var(--mt-space-3);
 }
 
@@ -57,4 +57,16 @@
 .reviewForm select:not(:where([data-ui-field] *)):focus {
   border-color: var(--mt-color-accent);
   box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
+}
+
+.reviewForm input:not(:where([data-ui-field] *)):disabled,
+.reviewForm textarea:not(:where([data-ui-field] *)):disabled,
+.reviewForm select:not(:where([data-ui-field] *)):disabled {
+  background: var(--mt-color-surface-subtle);
+  opacity: var(--mt-state-disabled-opacity-field);
+}
+
+.reviewForm input:not(:where([data-ui-field] *))::placeholder,
+.reviewForm textarea:not(:where([data-ui-field] *))::placeholder {
+  color: var(--mt-color-ink-faint);
 }

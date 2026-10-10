@@ -20,7 +20,7 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
   gap: var(--mt-space-2);
-  margin-bottom: var(--mt-space-1);
+  margin-bottom: var(--mt-space-2);
 }
 
 .tile {
@@ -100,7 +100,6 @@
   align-items: center;
   justify-content: center;
   gap: var(--mt-space-2);
-  margin-top: var(--mt-space-1);
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);

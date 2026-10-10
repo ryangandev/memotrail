@@ -384,6 +384,7 @@ Pair it with the test file carrying the same feature name.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
+  Every hand-styled Web field draws the same surface as TextField, SelectField, and DateField: a `font.size.label` medium `color.inkMuted` label, a `space.2` label gap, a `size.field` height with its radius, and a `color.borderStrong` border, so mixed fields line up in one row.
 - `apps/web/scripts/check-design-system.mjs`, part of `pnpm lint`, rejects any visual value Web CSS or scripts write by hand instead of reading a generated token; the rules live in `design-system-rules.mjs` with unit tests beside it.
   It fails on literal font sizes, line heights, letter spacing, weights, and families; hex, `rgb()`, `hsl()`, and named colors other than `transparent` and `currentColor`, including colors inside data URLs; `color-mix()` outside the generated tokens; literal z-index, opacity, durations, easing curves, and backdrop filters; and literal spacing, radii, stroke widths, focus offsets, shadow lengths, and icon sizes.
   It also rejects a fallback inside `var(--mt-*, ...)`, which would hide a literal.

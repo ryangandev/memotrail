@@ -91,7 +91,9 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     for (const name of ["travel", "journeys", "unused"]) {
       await page.getByRole("button", { name: "New Tag" }).click();
       const tagDialog = page.getByRole("dialog", { name: "Create a Tag" });
-      await tagDialog.getByLabel("Name *").fill(name);
+      await tagDialog
+        .getByRole("textbox", { name: "Name", exact: true })
+        .fill(name);
       await tagDialog.getByRole("button", { name: "Create Tag" }).click();
       await expect(tagDialog).not.toBeVisible();
       await expect(

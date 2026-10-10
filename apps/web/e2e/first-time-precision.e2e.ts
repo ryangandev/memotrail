@@ -117,7 +117,7 @@ test("Editing a First Time keeps its original date range", async ({
             (control) => getComputedStyle(control.closest("label")!).rowGap,
           ),
       )
-      .toBe("4px");
+      .toBe("8px");
     await page.screenshot({
       animations: "disabled",
       caret: "initial",

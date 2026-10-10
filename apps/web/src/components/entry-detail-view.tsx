@@ -11,6 +11,7 @@ import { EntryPhotos } from "./entry-photos";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { Icon } from "./icon";
 import { DatePickerField } from "./date-picker-field";
+import { TextField } from "./text-field";
 import {
   extractGoalFromItem,
   loadEditableEntry,
@@ -315,18 +316,14 @@ function GoalExtraction({
         The source keeps its writing, dates, and photos.
       </p>
       <fieldset disabled={busy || disabled}>
-        <label>
-          <span>
-            What do you want to do? <span aria-hidden="true">*</span>
-          </span>
-          <input
-            aria-label="What do you want to do?"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            maxLength={200}
-            required
-          />
-        </label>
+        <TextField
+          disabled={busy || disabled}
+          label="What do you want to do?"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          maxLength={200}
+          required
+        />
         <DatePickerField
           disabled={busy}
           label="Target date"

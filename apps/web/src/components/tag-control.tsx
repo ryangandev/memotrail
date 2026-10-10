@@ -14,7 +14,9 @@ import {
   saveTag,
 } from "@/app/organization/actions";
 import { Icon } from "@/components/icon";
+import { SelectField } from "@/components/select-field";
 import { Skeleton } from "@/components/skeleton";
+import { TextField } from "@/components/text-field";
 import {
   tagNameLengthLimit,
   validTagInput,
@@ -230,20 +232,18 @@ export function TagControl({
             </div>
           }
         >
-          {" "}
           <div className={styles.editorContent}>
             <form id="tag-control-form" onSubmit={submit}>
               <fieldset disabled={busy}>
-                <label>
-                  <span>Name *</span>
-                  <input
-                    autoFocus
-                    maxLength={tagNameLengthLimit}
-                    onChange={(event) => setName(event.target.value)}
-                    required
-                    value={name}
-                  />
-                </label>
+                <TextField
+                  autoFocus
+                  disabled={busy}
+                  label="Name"
+                  maxLength={tagNameLengthLimit}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                  value={name}
+                />
               </fieldset>
             </form>
             {item && item.entry_count > 0 ? (
@@ -255,21 +255,19 @@ export function TagControl({
                     Merge it to preserve every assignment.
                   </p>
                 </div>
-                <label>
-                  <span>Destination tag</span>
-                  <select
-                    disabled={busy || mergeTargets.length === 0}
-                    onChange={(event) => setTargetId(event.target.value)}
-                    value={targetId}
-                  >
-                    <option value="">Choose a tag</option>
-                    {mergeTargets.map((candidate) => (
-                      <option key={candidate.id} value={candidate.id}>
-                        #{candidate.name} ({candidate.entry_count})
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <SelectField
+                  disabled={busy || mergeTargets.length === 0}
+                  label="Destination tag"
+                  onChange={(event) => setTargetId(event.target.value)}
+                  value={targetId}
+                >
+                  <option value="">Choose a tag</option>
+                  {mergeTargets.map((candidate) => (
+                    <option key={candidate.id} value={candidate.id}>
+                      #{candidate.name} ({candidate.entry_count})
+                    </option>
+                  ))}
+                </SelectField>
                 <Button
                   variant="secondary"
                   disabled={busy || !targetId}

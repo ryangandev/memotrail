@@ -357,7 +357,6 @@ export const typeRoles = [
   "eyebrow",
   "navigationLabel",
   "columnHeading",
-  "filterLabel",
   "statusLabel",
   "factLabel",
   "fine",
