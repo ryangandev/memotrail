@@ -31,7 +31,6 @@ When these disagree, verify the real behavior and update the stale source in the
 - Keep private data and credentials out of clients, fixtures, logs, docs, and commits.
 - Treat builds, automated tests, hosted APIs, browser UI, native UI, and recovery exercises as distinct evidence, and do not claim one from another.
 - Confirm the exact target and authorization before deployment, hosted migrations, DNS, billing, production-data, retention, or destructive actions.
-- Note unrelated defects you notice and raise them separately instead of widening the current change.
 
 ## Validation
 
