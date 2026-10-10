@@ -68,44 +68,8 @@
   clip-path: inset(50%);
 }
 
-.filters label {
-  display: grid;
-  gap: var(--mt-space-1-5);
-  min-width: 0;
-}
-
 .filters > * {
   min-width: 0;
-}
-
-.filters label > span {
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-type-filter-label-font-size);
-  font-weight: var(--mt-type-filter-label-font-weight);
-  letter-spacing: var(--mt-type-filter-label-letter-spacing);
-  text-transform: var(--mt-type-filter-label-text-transform);
-}
-
-.filters select {
-  width: 100%;
-  height: var(--mt-size-field-small);
-  min-width: 0;
-  padding: 0 var(--mt-space-3);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
-  outline: 0;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface);
-  font-size: var(--mt-font-size-label);
-}
-
-.filters select:focus {
-  border-color: var(--mt-color-accent);
-}
-
-.filters select:disabled {
-  color: var(--mt-color-ink-faint);
-  opacity: var(--mt-state-disabled-opacity-soft);
 }
 
 .filterNotice {

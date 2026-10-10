@@ -23,7 +23,7 @@
   display: grid;
   min-width: 0;
   align-content: start;
-  gap: var(--mt-space-1);
+  gap: var(--mt-space-2);
 }
 
 .occurrenceEditor label:not(:where([data-ui-checkbox] *)) > span {
@@ -38,9 +38,9 @@
 .occurrenceEditor .fieldRow > label > select {
   width: 100%;
   min-width: 0;
-  height: 42px;
+  height: var(--mt-size-field-medium);
   padding: 0 var(--mt-space-3);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   outline: 0;
   color: var(--mt-color-ink);
@@ -73,7 +73,7 @@
 .precision {
   display: grid;
   min-width: 0;
-  gap: var(--mt-space-1);
+  gap: var(--mt-space-2);
 }
 
 .precision > span {
@@ -89,7 +89,8 @@
   padding: var(--mt-space-1);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface);
-  box-shadow: inset 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-border);
+  box-shadow: inset 0 0 0 var(--mt-size-stroke-thin)
+    var(--mt-color-border-strong);
 }
 
 .precision button {
@@ -133,7 +134,7 @@
 .datePickerField {
   display: grid;
   align-content: start;
-  gap: var(--mt-space-1);
+  gap: var(--mt-space-2);
   min-width: 0;
 }
 
@@ -157,7 +158,7 @@
   min-width: 0;
   align-items: center;
   overflow: hidden;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface);
   transition:
@@ -177,6 +178,11 @@
 .datePickerControl:focus-within {
   border-color: var(--mt-color-accent);
   box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
+}
+
+.datePickerControl[data-disabled] {
+  background: var(--mt-color-surface-subtle);
+  opacity: var(--mt-state-disabled-opacity-field);
 }
 
 .datePickerField .datePickerControl > input {
@@ -359,7 +365,7 @@
   width: 100%;
   height: 38px;
   padding-left: var(--mt-space-2-25);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   outline: 0;
   color: var(--mt-color-ink);

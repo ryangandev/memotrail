@@ -776,25 +776,6 @@
         }
       }
     },
-    "filterLabel": {
-      "$description": "Uppercase labels above Library filters.",
-      "$value": {
-        "fontFamily": "{font.family.sans}",
-        "fontSize": "{font.size.fine}",
-        "fontWeight": "{font.weight.semibold}",
-        "letterSpacing": {
-          "value": 0.5,
-          "unit": "px"
-        },
-        "lineHeight": "{lineHeight.tight}"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["web"],
-          "textCase": "uppercase"
-        }
-      }
-    },
     "statusLabel": {
       "$description": "Uppercase connection status in Settings.",
       "$value": {

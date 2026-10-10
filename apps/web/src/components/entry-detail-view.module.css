@@ -83,29 +83,10 @@
   gap: var(--mt-space-3);
   padding-top: var(--mt-space-12);
 }
-.workspace input:not(:where([data-ui-field] *)),
-.workspace select:not(:where([data-ui-field] *)) {
-  background: var(--mt-color-surface);
-  color: var(--mt-color-ink);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  padding: var(--mt-space-3);
-  font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-regular);
-}
-.workspace label:not(:where([data-ui-field] *)) {
-  display: grid;
-  gap: var(--mt-space-2);
-}
 .controls {
   display: flex;
   align-items: end;
   gap: var(--mt-space-4);
-}
-.controls label {
-  flex: 1;
-  min-width: 0;
 }
 .conversion {
   padding: var(--mt-space-5-5);
@@ -128,14 +109,9 @@
 .conversion p {
   margin: 0 0 var(--mt-space-5);
 }
-.conversion label:first-child,
+.conversion fieldset > :first-child,
 .conversion .controls {
   grid-column: 1 / -1;
-}
-.conversion input:not(:where([data-date-picker-field] *)),
-.conversion select {
-  min-width: 0;
-  width: 100%;
 }
 @media (max-width: 700px) {
   .conversion fieldset {
@@ -144,9 +120,6 @@
   .controls {
     flex-direction: column;
     align-items: stretch;
-  }
-  .controls select {
-    width: 100%;
   }
   .currentFacts {
     grid-template-columns: minmax(0, 1fr);

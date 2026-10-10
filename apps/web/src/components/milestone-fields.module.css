@@ -25,7 +25,7 @@
 .shape {
   display: grid;
   min-width: 0;
-  gap: var(--mt-space-1);
+  gap: var(--mt-space-2);
 }
 
 .shape > span {
@@ -41,7 +41,8 @@
   padding: var(--mt-space-1);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface);
-  box-shadow: inset 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-border);
+  box-shadow: inset 0 0 0 var(--mt-size-stroke-thin)
+    var(--mt-color-border-strong);
 }
 
 .shape button {
@@ -67,7 +68,7 @@
 .lane {
   display: grid;
   min-width: 0;
-  gap: var(--mt-space-1);
+  gap: var(--mt-space-2);
 }
 
 .lane > span {
@@ -79,9 +80,9 @@
 .lane select {
   width: 100%;
   min-width: 0;
-  height: 42px;
+  height: var(--mt-size-field-medium);
   padding: 0 var(--mt-space-3);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   outline: 0;
   color: var(--mt-color-ink);

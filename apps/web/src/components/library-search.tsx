@@ -12,6 +12,7 @@ import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { SearchField } from "@/components/search-field";
 import { SectionHeader } from "@/components/section-header";
+import { SelectField } from "@/components/select-field";
 import { SeparatedList } from "@/components/separated-list";
 import {
   SEARCH_PAGE_SIZE,
@@ -85,40 +86,38 @@ export function LibrarySearch({
             <fieldset className={styles.filters}>
               <legend>Refine results</legend>
 
-              <label>
-                <span>Record</span>
-                <select
-                  defaultValue={request.itemClassifications[0] ?? ""}
-                  name="type"
-                >
-                  <option value="">All records</option>
-                  {wikiItemSearchGroups.map((group) => (
-                    <optgroup key={group.label} label={group.label}>
-                      {group.options.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </select>
-              </label>
+              <SelectField
+                defaultValue={request.itemClassifications[0] ?? ""}
+                label="Record"
+                name="type"
+                size="small"
+              >
+                <option value="">All records</option>
+                {wikiItemSearchGroups.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </SelectField>
 
-              <label>
-                <span>Tag</span>
-                <select
-                  defaultValue={request.tagNames[0] ?? ""}
-                  disabled={tagOptions.length === 0}
-                  name="tag"
-                >
-                  <option value="">All tags</option>
-                  {tagOptions.map((name) => (
-                    <option key={name.toLocaleLowerCase()} value={name}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SelectField
+                defaultValue={request.tagNames[0] ?? ""}
+                disabled={tagOptions.length === 0}
+                label="Tag"
+                name="tag"
+                size="small"
+              >
+                <option value="">All tags</option>
+                {tagOptions.map((name) => (
+                  <option key={name.toLocaleLowerCase()} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </SelectField>
 
               <DatePickerField
                 defaultValue={request.dateFrom ?? ""}

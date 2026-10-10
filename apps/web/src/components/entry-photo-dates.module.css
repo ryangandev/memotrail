@@ -41,42 +41,6 @@
   user-select: text;
   overflow-wrap: anywhere;
 }
-.panel fieldset {
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
-  padding: var(--mt-space-3);
-  margin-top: var(--mt-space-3);
-  min-width: 0;
-}
-.panel legend {
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-semibold);
-}
-
-.panel fieldset > [data-ui-button] {
-  margin-right: var(--mt-space-2);
-  margin-top: var(--mt-space-2);
-}
-.panel label {
-  display: block;
-  font-size: var(--mt-font-size-caption);
-  margin-block: var(--mt-space-2);
-}
-.panel input,
-.panel select {
-  display: block;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  background: var(--mt-color-surface);
-  color: var(--mt-color-ink);
-  border-radius: var(--mt-radius-small);
-  padding: var(--mt-space-2);
-  font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-regular);
-}
 @media (max-width: 480px) {
   .photo {
     flex-direction: column;

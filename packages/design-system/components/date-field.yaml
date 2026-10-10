@@ -76,7 +76,7 @@ tokens:
       minHeight: "{size.field.medium}"
       radius: "{radius.medium}"
       background: "{color.surface}"
-      border: { web: "{color.border}", ios: "{color.borderStrong}" }
+      border: "{color.borderStrong}"
       borderWidth: "{size.stroke.thin}"
       duration: "{motion.quick}"
     calendarIcon:
@@ -136,8 +136,6 @@ platformDifferences:
     reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
   - difference: Web lets people type the date unless editable is off and can hide its label; iOS always opens the picker and always shows its label.
     reason: Typing digits is fast with a keyboard and a mouse; on a phone the native wheel and graphical pickers are faster than the number pad, and every native date field sits in a labeled form.
-  - difference: The Web control draws its border in color.border, like the occurrence editor's other inputs; iOS uses the shared field surface and its borderStrong border.
-    reason: The Web occurrence editor still styles its time zone and description inputs itself, and the date fields there keep its lighter border until those inputs move to the shared fields.
   - difference: Web shows a calendar grid for every precision and closes it once a date is chosen; iOS shows the graphical calendar for days and wheels for months and years, above a Done button.
     reason: The native graphical picker has no month or year view, so iOS uses wheels for those precisions, and because every turn of a wheel commits at once, Done is what closes the popover.
   - difference: The Web calendar and clear buttons are 28 px, or 24 and 32 px at the small and large sizes; the iOS clear action is 32 pt at every size.
