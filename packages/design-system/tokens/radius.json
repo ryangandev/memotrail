@@ -19,15 +19,10 @@
       "$value": {
         "value": 4,
         "unit": "px"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["web"]
-        }
       }
     },
     "checkbox": {
-      "$description": "The checkbox square: the medium Web checkbox and every iOS checkbox.",
+      "$description": "The medium checkbox square.",
       "$value": {
         "value": 5,
         "unit": "px"

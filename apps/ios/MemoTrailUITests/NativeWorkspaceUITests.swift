@@ -231,7 +231,7 @@ final class NativeWorkspaceUITests: XCTestCase {
 
   func testFormFieldsPickersAndOrganizationEditing() {
     let app = launchSection("forms")
-    let record = reveal(app.buttons["Record"], in: app)
+    let record = reveal(app.buttons["Record, required"], in: app)
     record.tap()
     XCTAssertTrue(app.buttons["People"].waitForExistence(timeout: 3))
     attach(app, "Grouped select menu")
@@ -394,7 +394,12 @@ final class NativeWorkspaceUITests: XCTestCase {
   /// that shows its component. The list is generated from packages/design-system/components, so
   /// a specimen added to a spec fails here until the native gallery shows it.
   func testGalleryShowsEveryComponentSpecimen() {
-    let sections = ["Badge": "forms", "Button": "primitives"]
+    let sections = [
+      "Badge": "forms", "Button": "primitives", "Checkbox": "forms", "DateField": "forms",
+      "Dialog": "primitives", "Icon": "identity", "IconButton": "primitives",
+      "SearchField": "forms", "SelectField": "forms", "TextField": "forms",
+      "TimeZoneField": "forms", "Toast": "feedback",
+    ]
     let specimens = Dictionary(grouping: MTComponentSpecimen.allCases, by: \.component)
     for component in specimens.keys.sorted() where sections[component] == nil {
       XCTFail("Name the gallery section that shows \(component) specimens.")
@@ -410,7 +415,10 @@ final class NativeWorkspaceUITests: XCTestCase {
         XCTAssertTrue(
           reveal(element, in: app).exists, "\(section) does not show \(specimen.rawValue).")
         XCTAssertTrue(element.staticTexts[specimen.rawValue].exists)
-        XCTAssertTrue(element.staticTexts[specimen.summary].exists)
+        // A predicate, because a subscript rejects text longer than 128 characters.
+        XCTAssertTrue(
+          element.staticTexts.matching(NSPredicate(format: "label == %@", specimen.summary))
+            .firstMatch.exists, "\(specimen.rawValue) does not show its description.")
       }
       let shown = app.descendants(matching: .any)
         .matching(NSPredicate(format: "identifier BEGINSWITH 'specimen-'"))

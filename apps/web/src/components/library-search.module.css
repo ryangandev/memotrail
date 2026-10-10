@@ -50,6 +50,7 @@
 .filters {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
   gap: var(--mt-space-3);
   min-width: 0;
   margin: var(--mt-space-4) 0 0;
@@ -87,7 +88,7 @@
 
 .filters select {
   width: 100%;
-  height: 38px;
+  height: var(--mt-size-field-small);
   min-width: 0;
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border);

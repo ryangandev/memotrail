@@ -883,10 +883,16 @@ function swiftCase(name) {
 }
 
 // Writes ComponentVariants.swift: an enum per enum prop, a defaults enum per spec, and the
-// specimens both galleries show. The app and its UI tests both compile it.
-export function makeComponentSwift(components, sourceLabel) {
-  const blocks = components.map((spec) => {
+// specimens the iOS gallery shows. The app and its UI tests both compile it. A spec iOS does not
+// implement emits nothing, so its specimens never reach the native gallery's list.
+export function makeComponentSwift(allComponents, sourceLabel) {
+  const components = allComponents.filter((spec) =>
+    spec.implemented.includes("ios"),
+  );
+  // A spec without props on this platform has no types, only specimens.
+  const blocks = components.flatMap((spec) => {
     const props = spec.props.filter((prop) => prop.platforms.includes("ios"));
+    if (props.length === 0) return [];
     const lines = [
       `// ${spec.name}, from ${sourceLabel}/components/${spec.file}.`,
     ];

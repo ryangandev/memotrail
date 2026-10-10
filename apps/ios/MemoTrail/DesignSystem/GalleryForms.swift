@@ -2,27 +2,37 @@
   import SwiftUI
 
   struct FormSpecimens: View {
-    @State private var name = "Alex Morgan"
-    @State private var emptyName = ""
     @State private var notes = ""
+    @State private var city = ""
     @State private var search = ""
-    @State private var compactSearch = ""
-    @State private var searchMessage = "No demo search yet."
+    @State private var searchMessage = "Type a query to try this local-only preview."
+    @State private var tagQuery = ""
+    @State private var showRecords = "All records"
+    @State private var sortOrder = "Newest first"
+    @State private var defaultView = "Timeline"
     @State private var recordFilter = "All records"
     @State private var date = "2026-09-17"
-    @State private var emptyDate = ""
-    @State private var dateTime = "2026-09-17T14:30:00"
     @State private var month = "2026-09"
     @State private var year = "2026"
+    @State private var dateTime = "2026-09-17T14:30:00"
+    @State private var from = "2026-09-01"
+    @State private var start = "2026-09-17"
+    @State private var birthDate = "1990-04-12"
+    @State private var emptyDate = ""
+    @State private var dueDate = ""
     @State private var timezone = "America/Los_Angeles"
-    @State private var includesInbox = true
-    @State private var showsPhotoDates = false
+    @State private var checked = true
+    @State private var unchecked = false
+    @State private var smallChecked = true
+    @State private var smallUnchecked = false
+    @State private var reminders = false
+    @State private var withDescription = false
     @State private var tags = ["family", "travel"]
     @State private var collections = ["Early years"]
     @State private var occurrence = FormSpecimens.dayOccurrence
     @State private var showingEditor = false
     @State private var moveInReason = "Closer to work"
-    @State private var city = "Portland"
+    @State private var homeCity = "Portland"
 
     static var dayOccurrence: OccurrenceDraft {
       var draft = OccurrenceDraft(
@@ -37,38 +47,72 @@
         GallerySpecimen(
           title: "TextField",
           api:
-            "label · prompt · size: small | medium | large · required · note · maxLength · axis · lines",
+            "label · prompt · size: small | medium | large · isRequired · hidesLabel · error · note · maxLength · axis · lines",
           description:
-            "Plain text input with the same font, height, border, and focus surface as SearchField and SelectField."
+            "Its font, height, border, and focus surface match SearchField and SelectField. An error marks the field invalid and says how to fix it."
         ) {
-          MTFieldGrid {
-            MTTextField(label: "Preferred name", text: $name, isRequired: true)
-            MTTextField(label: "Empty text field", text: $emptyName, prompt: "Add a name")
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.textFieldSizes) {
+              MTFieldGrid {
+                MTTextField(label: "Nickname", text: .constant("Alex"), size: .small)
+                MTTextField(label: "Preferred name", text: .constant("Alex Morgan"))
+                MTTextField(label: "Full name", text: .constant("Alexandra Morgan"), size: .large)
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.textFieldStates) {
+              MTFieldGrid {
+                MTTextField(label: "Empty text field", text: .constant(""), prompt: "Add a name")
+                MTTextField(
+                  label: "Title", text: .constant("A moment worth keeping"), isRequired: true)
+                MTTextField(label: "Disabled text field", text: .constant(""), prompt: "Unavailable")
+                  .disabled(true)
+                MTTextField(
+                  label: "City", text: $city,
+                  error: city.trimmed.isEmpty ? "Add a city before saving." : nil)
+              }
+            }
+            GalleryCaseSeparator()
+            Text("axis: vertical · lines").font(MTFont.identifier).foregroundStyle(MTColor.ink)
             MTTextField(
-              label: "Disabled text field", text: .constant(""), prompt: "Unavailable", size: .small
-            )
-            .disabled(true)
+              label: "Notes", text: $notes, prompt: "What made this period or moment meaningful?",
+              axis: .vertical, lines: 5...12)
           }
-          MTTextField(
-            label: "Notes", text: $notes, prompt: "What made this period or moment meaningful?",
-            axis: .vertical, lines: 5...12)
         }
 
         GallerySpecimen(
           title: "SearchField",
-          api: "label · hidesLabel · prompt · size · trailing · clear · disabled",
+          api: "label · hidesLabel · prompt · size: small | medium | large · trailing · disabled",
           description:
             "One focus surface for the icon, text, and clear action. The search action stays composable, so each feature chooses its own submit behavior."
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            HStack(alignment: .bottom, spacing: MTSpacing.s2) {
-              MTSearchField("Search Locations", text: $search, prompt: "Search for an address")
-                .onSubmit(runSearch)
-              Button("Search", action: runSearch).mtButtonStyle(.secondary)
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.searchFieldSizes) {
+              VStack(alignment: .leading, spacing: MTSpacing.s4) {
+                MTSearchField(
+                  "Compact search", text: .constant(""), prompt: "Search your trail", size: .small)
+                HStack(alignment: .bottom, spacing: MTSpacing.s2) {
+                  MTSearchField("Search Locations", text: $search, prompt: "Search for an address")
+                    .onSubmit(runSearch)
+                  Button("Search", action: runSearch).mtButtonStyle(.secondary)
+                }
+                MTSearchField(
+                  "Search your Life Wiki", text: .constant(""),
+                  prompt: "A phrase, date, or question about your life...", size: .large)
+              }
             }
-            MTFieldGrid {
+            GalleryCaseSeparator()
+            GalleryCase(.searchFieldHiddenLabel) {
               MTSearchField(
-                "Compact search", text: $compactSearch, prompt: "Search your trail", size: .small)
+                "Find a tag", text: $tagQuery, prompt: "Search tag names", size: .large,
+                hidesLabel: true
+              ) {
+                Text("24 tags").font(MTFont.caption).foregroundStyle(MTColor.inkFaint)
+                  .accessibilityHidden(true)
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.searchFieldDisabled) {
               MTSearchField("Disabled search", text: .constant(""), prompt: "Search unavailable")
                 .disabled(true)
             }
@@ -79,41 +123,117 @@
 
         GallerySpecimen(
           title: "SelectField",
-          api: "label · selection · options | groups · title · size · required · disabled",
+          api:
+            "label · selection · options | groups · title · size: small | medium | large · isRequired · hidesLabel · disabled",
           description:
             "A labeled native menu with the same surface as SearchField. Groups title runs of options, like a Web optgroup."
         ) {
-          MTFieldGrid {
-            MTSelectField(
-              label: "Record", selection: $recordFilter,
-              groups: [
-                MTSelectGroup(options: ["All records"]),
-                MTSelectGroup(title: "Records", options: ["Entries", "Entities", "Goals"]),
-                MTSelectGroup(title: "Focused records", options: ["First Times", "People"]),
-              ], title: { $0 })
-            MTSelectField(
-              label: "Unavailable filter", selection: .constant("Unavailable"),
-              options: ["Unavailable"], title: { $0 }, size: .small
-            )
-            .disabled(true)
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.selectFieldSizes) {
+              MTFieldGrid {
+                MTSelectField(
+                  label: "Sort by", selection: $sortOrder, options: ["Newest first", "Oldest first"],
+                  title: { $0 }, size: .small)
+                MTSelectField(
+                  label: "Show records", selection: $showRecords,
+                  options: ["All records", "Entries", "Homes & vehicles"], title: { $0 })
+                MTSelectField(
+                  label: "Default view", selection: $defaultView,
+                  options: ["Dashboard", "Timeline", "Library"], title: { $0 }, size: .large)
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.selectFieldGroups) {
+              MTSelectField(
+                label: "Record", selection: $recordFilter,
+                groups: [
+                  MTSelectGroup(options: ["All records"]),
+                  MTSelectGroup(title: "Records", options: ["Entries", "Entities", "Goals"]),
+                  MTSelectGroup(title: "Focused records", options: ["First Times", "People"]),
+                ], title: { $0 }, isRequired: true)
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.selectFieldDisabled) {
+              MTSelectField(
+                label: "Unavailable filter", selection: .constant("Unavailable"),
+                options: ["Unavailable"], title: { $0 }, size: .small
+              )
+              .disabled(true)
+            }
+          }
+        }
+
+        GallerySpecimen(
+          title: "Checkbox",
+          api: "title · detail · isOn · size: small | medium · disabled",
+          description:
+            "The whole row toggles the option. The title names it, and VoiceOver reads the detail after it."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.checkboxSizes) {
+              VStack(alignment: .leading, spacing: 0) {
+                MTCheckbox(title: "Unchecked", isOn: $unchecked)
+                MTCheckbox(title: "Checked", detail: "Shown on the Timeline", isOn: $checked)
+                MTCheckbox(title: "Small unchecked", isOn: $smallUnchecked, size: .small)
+                MTCheckbox(
+                  title: "Small checked", detail: "Still going on", isOn: $smallChecked,
+                  size: .small)
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.checkboxStates) {
+              VStack(alignment: .leading, spacing: 0) {
+                MTCheckbox(title: "Remind me", detail: "Controlled by this page", isOn: $reminders)
+                MTCheckbox(
+                  title: "With description",
+                  detail:
+                    "A longer explanation wraps below the label until it needs another line, and never runs past its container.",
+                  isOn: $withDescription)
+                MTCheckbox(title: "Disabled", isOn: .constant(false)).disabled(true)
+                MTCheckbox(title: "Disabled checked", detail: "Cannot change", isOn: .constant(true))
+                  .disabled(true)
+              }
+            }
+            Text(reminders ? "Remind me is on." : "Remind me is off.")
+              .font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
           }
         }
 
         GallerySpecimen(
           title: "DateField",
           api:
-            "size · granularity: day | month | year · includesTime · required · timeZone · disabled",
+            "granularity: day | month | year · size: small | medium | large · includesTime · isRequired · timeZone · disabled",
           description:
             "Optional calendar values stored as wall-time text. The picker commits each change, and the clear button empties the field."
         ) {
-          MTFieldGrid {
-            MTDateField(label: "Filled date", value: $date, size: .small)
-            MTDateField(label: "Empty date", value: $emptyDate)
-            MTDateField(
-              label: "Exact date and time", value: $dateTime, includesTime: true, size: .large)
-            MTDateField(label: "Month precision", value: $month, granularity: .month)
-            MTDateField(label: "Year precision", value: $year, granularity: .year)
-            MTDateField(label: "Disabled", value: .constant("2026-09-17")).disabled(true)
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.dateFieldPrecision) {
+              MTFieldGrid {
+                MTDateField(label: "Filled date", value: $date)
+                MTDateField(label: "Month precision", value: $month, granularity: .month)
+                MTDateField(label: "Year precision", value: $year, granularity: .year)
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.dateFieldWithTime) {
+              MTDateField(label: "Exact date and time", value: $dateTime, includesTime: true)
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.dateFieldSizes) {
+              MTFieldGrid {
+                MTDateField(label: "From", value: $from, size: .small)
+                MTDateField(label: "Start date", value: $start)
+                MTDateField(label: "Birth date", value: $birthDate, size: .large)
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.dateFieldStates) {
+              MTFieldGrid {
+                MTDateField(label: "Empty date", value: $emptyDate)
+                MTDateField(label: "Due date", value: $dueDate, isRequired: true)
+                MTDateField(label: "Disabled", value: .constant("2026-09-17")).disabled(true)
+              }
+            }
           }
         }
 
@@ -123,22 +243,15 @@
           description:
             "Offsets follow the reference date, so daylight-saving time shows the offset that applied then."
         ) {
-          MTFieldGrid {
-            MTTimeZoneField(
-              label: "Default time zone", selection: $timezone, referenceDate: "2026-01-15",
-              note: "Winter offset")
-            MTTimeZoneField(
-              label: "Same zone in summer", selection: $timezone, referenceDate: "2026-07-15")
-          }
-        }
-
-        GallerySpecimen(title: "Checkbox", api: "title · detail · isOn · disabled") {
-          VStack(alignment: .leading, spacing: 0) {
-            MTCheckbox(
-              title: "Include Inbox captures", detail: "Show captures that are not organized yet",
-              isOn: $includesInbox)
-            MTCheckbox(title: "Show photo dates", isOn: $showsPhotoDates)
-            MTCheckbox(title: "Unavailable option", isOn: .constant(true)).disabled(true)
+          GalleryCase(.timeZoneFieldOffsets) {
+            MTFieldGrid {
+              MTTimeZoneField(
+                label: "Default time zone", selection: $timezone, referenceDate: "2026-01-15",
+                note: "Winter offset")
+              MTTimeZoneField(
+                label: "Same zone in summer", selection: $timezone, referenceDate: "2026-07-15",
+                note: "Summer offset")
+            }
           }
         }
 
@@ -272,7 +385,7 @@
               MTFormNote(
                 "Save an address or position for this Home. It can appear on a future map alongside memories and events from the same area."
               )
-              MTTextField(label: "City", text: $city)
+              MTTextField(label: "City", text: $homeCity)
             }
             MTFormSection("Bucket List milestone", tone: .accent) {
               MTFormNote(

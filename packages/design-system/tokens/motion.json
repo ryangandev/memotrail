@@ -120,6 +120,20 @@
         "unit": "ms"
       }
     },
+    "toast": {
+      "$description": "How long a success or info toast stays before it dismisses itself.",
+      "$value": {
+        "value": 4500,
+        "unit": "ms"
+      }
+    },
+    "toastError": {
+      "$description": "How long an error toast stays, long enough to read what went wrong.",
+      "$value": {
+        "value": 8000,
+        "unit": "ms"
+      }
+    },
     "easing": {
       "$type": "cubicBezier",
       "standard": {

@@ -363,14 +363,6 @@
           "platforms": ["ios"]
         }
       },
-      "box": {
-        "$description": "The checkbox square.",
-        "$type": "dimension",
-        "$value": {
-          "value": 20,
-          "unit": "px"
-        }
-      },
       "baselineOffset": {
         "$description": "How far below its center the box aligns with the label's first baseline.",
         "$type": "dimension",
@@ -1455,38 +1447,6 @@
         }
       },
       "$description": "Toasts above the tab bar or a sheet's footer.",
-      "width": {
-        "$description": "The widest a toast gets.",
-        "$type": "dimension",
-        "$value": {
-          "value": 420,
-          "unit": "px"
-        }
-      },
-      "minHeight": {
-        "$description": "The shortest a toast gets.",
-        "$type": "dimension",
-        "$value": {
-          "value": 52,
-          "unit": "px"
-        }
-      },
-      "icon": {
-        "$description": "The tone icon column.",
-        "$type": "dimension",
-        "$value": {
-          "value": 18,
-          "unit": "px"
-        }
-      },
-      "stripe": {
-        "$description": "The tone stripe at the leading edge.",
-        "$type": "dimension",
-        "$value": {
-          "value": 3,
-          "unit": "px"
-        }
-      },
       "bottomClearance": {
         "$description": "The space kept below toasts, clear of the tab bar and a sheet's action footer.",
         "$type": "dimension",
@@ -1530,14 +1490,6 @@
       "$extensions": {
         "com.memotrail": {
           "platforms": ["ios"]
-        }
-      },
-      "width": {
-        "$description": "The calendar and month pickers.",
-        "$type": "dimension",
-        "$value": {
-          "value": 320,
-          "unit": "px"
         }
       },
       "yearWidth": {

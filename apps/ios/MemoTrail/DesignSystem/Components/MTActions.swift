@@ -106,13 +106,37 @@ extension View {
   }
 }
 
-/// A square icon action with a required accessibility label.
+// MTIconButtonVariant, MTIconButtonSize, and MTIconButtonDefaults are generated from
+// packages/design-system/components/icon-button.yaml. Each draws as the Button value it names.
+extension MTButtonVariant {
+  fileprivate init(_ variant: MTIconButtonVariant) {
+    switch variant {
+    case .primary: self = .primary
+    case .secondary: self = .secondary
+    case .ghost: self = .ghost
+    case .danger: self = .danger
+    }
+  }
+}
+
+extension MTButtonSize {
+  fileprivate init(_ size: MTIconButtonSize) {
+    switch size {
+    case .small: self = .small
+    case .medium: self = .medium
+    case .large: self = .large
+    }
+  }
+}
+
+/// A square icon action with a required accessibility label, ghost unless a variant is given.
+/// Specified in packages/design-system/components/icon-button.yaml.
 struct MTIconButton: View {
   let label: String
   let icon: MTIcon
-  var variant: MTButtonVariant = .ghost
-  var size: MTButtonSize = MTButtonDefaults.size
-  var isLoading = MTButtonDefaults.isLoading
+  var variant: MTIconButtonVariant = MTIconButtonDefaults.variant
+  var size: MTIconButtonSize = MTIconButtonDefaults.size
+  var isLoading = MTIconButtonDefaults.isLoading
   let action: () -> Void
 
   var body: some View {
@@ -120,7 +144,9 @@ struct MTIconButton: View {
       Image(icon).font(.mtIcon(size == .small ? MTSize.Icon.s14 : MTSize.Icon.s17, weight: .medium))
     }
     .buttonStyle(
-      MTButtonStyle(variant: variant, size: size, isLoading: isLoading, isIconOnly: true)
+      MTButtonStyle(
+        variant: MTButtonVariant(variant), size: MTButtonSize(size), isLoading: isLoading,
+        isIconOnly: true)
     )
     .disabled(isLoading)
     .accessibilityLabel(label)

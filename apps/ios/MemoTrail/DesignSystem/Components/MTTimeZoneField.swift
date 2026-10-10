@@ -2,19 +2,18 @@ import SwiftUI
 
 /// A labeled IANA time zone choice. Options show the offset on `referenceDate`, grouped like
 /// the Web select: the current value when unlisted, common time zones, then all time zones.
+/// A time zone always has a value, so the field has no required mark, and it always shows its
+/// label. Specified in packages/design-system/components/time-zone-field.yaml.
 struct MTTimeZoneField: View {
   let label: String
   @Binding var selection: String
   var referenceDate = ""
-  var size: MTFieldSize = .medium
-  var isRequired = false
   var note: String?
-  var hidesLabel = false
   @State private var isChoosing = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      if !hidesLabel { MTFieldLabel(title: label, isRequired: isRequired, note: note) }
+      MTFieldLabel(title: label, note: note)
       Button {
         isChoosing = true
       } label: {
@@ -29,10 +28,10 @@ struct MTTimeZoneField: View {
             .rotationEffect(.degrees(90))
             .foregroundStyle(MTColor.inkFaint)
         }
-        .mtFieldSurface(size: size, isFocused: isChoosing)
+        .mtFieldSurface(isFocused: isChoosing)
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(isRequired ? "\(label), required" : label)
+      .accessibilityLabel(label)
       .accessibilityValue(TimeZoneOptions.optionLabel(selection, reference: referenceDate))
       .sheet(isPresented: $isChoosing) {
         MTTimeZonePicker(title: label, selection: $selection, referenceDate: referenceDate)

@@ -6,15 +6,15 @@ import SwiftUI
 /// A `.form` sheet opens at full height with its close action in the navigation bar, so it can
 /// push detail such as Version history. A `.fitted` sheet sizes itself to short content, like a
 /// compact Web dialog, and scrolls only when the content outgrows the screen.
+/// Specified, with Web Dialog, in packages/design-system/components/dialog.yaml, which generates
+/// `MTDialogSize` and `MTDialogDefaults`.
 struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
-  enum Size: Sendable { case form, fitted }
-
   let eyebrow: String?
   let title: String
   let description: String?
   let closeLabel: String
   let closeIdentifier: String
-  let size: Size
+  let size: MTDialogSize
   let isBusy: Bool
   /// A failure shown above the footer actions, like Web's form alert.
   let message: String?
@@ -28,7 +28,8 @@ struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
 
   init(
     eyebrow: String? = nil, title: String, description: String? = nil, closeLabel: String,
-    closeIdentifier: String = "sheet-close", size: Size = .form, isBusy: Bool = false,
+    closeIdentifier: String = "sheet-close", size: MTDialogSize = MTDialogDefaults.size,
+    isBusy: Bool = MTDialogDefaults.isBusy,
     message: String? = nil, @ViewBuilder content: () -> Content,
     @ViewBuilder accessory: () -> Accessory, @ViewBuilder footer: () -> Footer
   ) {
@@ -167,7 +168,8 @@ struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
 extension MTSheet where Accessory == EmptyView {
   init(
     eyebrow: String? = nil, title: String, description: String? = nil, closeLabel: String,
-    closeIdentifier: String = "sheet-close", size: Size = .form, isBusy: Bool = false,
+    closeIdentifier: String = "sheet-close", size: MTDialogSize = MTDialogDefaults.size,
+    isBusy: Bool = MTDialogDefaults.isBusy,
     message: String? = nil, @ViewBuilder content: () -> Content,
     @ViewBuilder footer: () -> Footer
   ) {
@@ -181,7 +183,7 @@ extension MTSheet where Accessory == EmptyView {
 extension MTSheet where Accessory == EmptyView, Footer == EmptyView {
   init(
     eyebrow: String? = nil, title: String, description: String? = nil, closeLabel: String,
-    closeIdentifier: String = "sheet-close", size: Size = .form,
+    closeIdentifier: String = "sheet-close", size: MTDialogSize = MTDialogDefaults.size,
     @ViewBuilder content: () -> Content
   ) {
     self.init(

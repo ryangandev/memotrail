@@ -636,6 +636,18 @@
     "badge": {
       "paddingBlock": 3,
       "minHeight": 22
+    },
+    "checkbox": {
+      "small": 16,
+      "medium": 20
+    },
+    "toast": {
+      "width": 360,
+      "minHeight": 52,
+      "icon": 18
+    },
+    "datePicker": {
+      "width": 320
     }
   },
   "radius": {
@@ -726,6 +738,8 @@
     "progressSweep": 850,
     "pulse": 1100,
     "shimmer": 1250,
+    "toast": 4500,
+    "toastError": 8000,
     "easing": {
       "standard": "cubic-bezier(0.25, 0.1, 0.25, 1)",
       "enter": "cubic-bezier(0, 0, 0.58, 1)",
@@ -1538,9 +1552,15 @@
     "size.stroke.indicator": "Stroke width of the chevron a native select draws on Web.",
     "size.badge.paddingBlock": "Space above and below a badge's label.",
     "size.badge.minHeight": "Minimum height of a medium badge.",
+    "size.checkbox.small": "The box of a small checkbox, for dense option rows.",
+    "size.checkbox.medium": "The box of a medium checkbox.",
+    "size.toast.width": "The widest a toast gets.",
+    "size.toast.minHeight": "The shortest a toast gets.",
+    "size.toast.icon": "The tone icon column.",
+    "size.datePicker.width": "The calendar's width, narrowed to fit small screens.",
     "radius.brandMarkTail": "The tail corner of the phone brand mark tile.",
     "radius.xxsmall": "Key caps, inline code, and the small checkbox.",
-    "radius.checkbox": "The checkbox square: the medium Web checkbox and every iOS checkbox.",
+    "radius.checkbox": "The medium checkbox square.",
     "radius.xsmall": "Editor toolbar buttons, tooltips, and compact inputs.",
     "radius.small": "Small buttons and fields, segmented choices, and calendar days.",
     "radius.tile": "34px icon tiles and segmented options.",
@@ -1579,6 +1599,8 @@
     "motion.progressSweep": "One sweep of the navigation progress bar.",
     "motion.pulse": "One pulse of the syncing indicator.",
     "motion.shimmer": "One sweep of the loading placeholder shimmer.",
+    "motion.toast": "How long a success or info toast stays before it dismisses itself.",
+    "motion.toastError": "How long an error toast stays, long enough to read what went wrong.",
     "motion.easing.standard": "The CSS ease curve, the Web transition default.",
     "motion.easing.enter": "Ease out, for elements that appear. The native default.",
     "motion.easing.exit": "Ease in, for elements that leave.",

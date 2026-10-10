@@ -409,6 +409,24 @@ export const breakpoints = {
 /** Container query widths in px. */
 export const containerWidths = { 440: 440, 620: 620, 1000: 1000 } as const;
 
+/** Durations in ms, for code that times itself rather than reading a CSS variable, such as a toast. */
+export const durations = {
+  labelFade: 100,
+  quick: 120,
+  composerEnter: 160,
+  standard: 180,
+  sidebar: 240,
+  deliberate: 280,
+  markTurn: 320,
+  loadingSpin: 700,
+  spin: 800,
+  progressSweep: 850,
+  pulse: 1100,
+  shimmer: 1250,
+  toast: 4500,
+  toastError: 8000,
+} as const;
+
 /** Stacking order (z-index) by layer. */
 export const layers = {
   local1: 1,
@@ -631,6 +649,123 @@ export const buttonDefaults = {
   loading: false,
 } as const;
 
+// Checkbox, from packages/design-system/components/checkbox.yaml.
+
+/** The box and text size. Small fits dense option rows under a field, and medium stands on its own. */
+export const checkboxSizes = ["small", "medium"] as const;
+
+export type CheckboxSize = (typeof checkboxSizes)[number];
+
+/** Checkbox prop defaults. */
+export const checkboxDefaults = { size: "medium" } as const;
+
+// DateField, from packages/design-system/components/date-field.yaml.
+
+/** The precision of the value. Day stores yyyy-MM-dd, month yyyy-MM, and year yyyy, and the calendar opens at that view. */
+export const dateFieldGranularities = ["day", "month", "year"] as const;
+
+export type DateFieldGranularity = (typeof dateFieldGranularities)[number];
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter rows, and large stands alone, as the birth date does. */
+export const dateFieldSizes = ["small", "medium", "large"] as const;
+
+export type DateFieldSize = (typeof dateFieldSizes)[number];
+
+/** DateField prop defaults. */
+export const dateFieldDefaults = {
+  granularity: "day",
+  size: "medium",
+  includeTime: false,
+  required: false,
+  editable: true,
+  hideLabel: false,
+} as const;
+
+// Dialog, from packages/design-system/components/dialog.yaml.
+
+/** The Web dialog's width. Compact holds confirmations and short choices, standard holds forms, and wide holds long reading or side-by-side content. */
+export const dialogSizes = ["compact", "standard", "wide"] as const;
+
+export type DialogSize = (typeof dialogSizes)[number];
+
+/** Dialog prop defaults. */
+export const dialogDefaults = { size: "standard", busy: false } as const;
+
+// IconButton, from packages/design-system/components/icon-button.yaml.
+
+/** The action's emphasis, with Button's variants. Ghost is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one. */
+export const iconButtonVariants = [
+  "primary",
+  "secondary",
+  "ghost",
+  "danger",
+] as const;
+
+export type IconButtonVariant = (typeof iconButtonVariants)[number];
+
+/** The square's side. Small fits dense rows and composer headers, and large stands alone. */
+export const iconButtonSizes = ["small", "medium", "large"] as const;
+
+export type IconButtonSize = (typeof iconButtonSizes)[number];
+
+/** IconButton prop defaults. */
+export const iconButtonDefaults = {
+  variant: "ghost",
+  size: "medium",
+  loading: false,
+} as const;
+
+// SearchField, from packages/design-system/components/search-field.yaml.
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter panels, and large leads a page or the command palette. */
+export const searchFieldSizes = ["small", "medium", "large"] as const;
+
+export type SearchFieldSize = (typeof searchFieldSizes)[number];
+
+/** SearchField prop defaults. */
+export const searchFieldDefaults = {
+  size: "medium",
+  hideLabel: false,
+} as const;
+
+// SelectField, from packages/design-system/components/select-field.yaml.
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter rows, and large stands alone. */
+export const selectFieldSizes = ["small", "medium", "large"] as const;
+
+export type SelectFieldSize = (typeof selectFieldSizes)[number];
+
+/** SelectField prop defaults. */
+export const selectFieldDefaults = {
+  size: "medium",
+  required: false,
+  hideLabel: false,
+} as const;
+
+// TextField, from packages/design-system/components/text-field.yaml.
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter rows and compact panels, and large stands alone. */
+export const textFieldSizes = ["small", "medium", "large"] as const;
+
+export type TextFieldSize = (typeof textFieldSizes)[number];
+
+/** TextField prop defaults. */
+export const textFieldDefaults = {
+  size: "medium",
+  required: false,
+  hideLabel: false,
+} as const;
+
+// Toast, from packages/design-system/components/toast.yaml.
+
+/** What happened. Success confirms a change, info reports a neutral outcome, and error reports a failure, in the warm color and for longer. */
+export const toastTones = ["success", "info", "error"] as const;
+
+export type ToastTone = (typeof toastTones)[number];
+
+/** Toast prop defaults. */
+export const toastDefaults = { tone: "info" } as const;
+
 /** Every spec's gallery specimens. The gallery marks each with data-specimen="<id>". */
 export const componentSpecimens = [
   {
@@ -704,6 +839,186 @@ export const componentSpecimens = [
     component: "Button",
     id: "button-link",
     description: "Navigation drawn as a button, with Web ButtonLink and an iOS NavigationLink.",
+    covers: {},
+  },
+  {
+    component: "Checkbox",
+    id: "checkbox-sizes",
+    description: "Both sizes, unchecked and checked, with a description on each checked one.",
+    covers: { size: ["small", "medium"] },
+  },
+  {
+    component: "Checkbox",
+    id: "checkbox-states",
+    description: "A controlled option, a long description that wraps, disabled, and disabled while checked.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "CommandPalette",
+    id: "command-palette-destinations",
+    description: "The palette as it opens, with the search field and every destination before a query is typed.",
+    covers: {},
+  },
+  {
+    component: "DateField",
+    id: "date-field-precision",
+    description: "Day, month, and year precision, each with a value from the same September.",
+    covers: { granularity: ["day", "month", "year"] },
+  },
+  {
+    component: "DateField",
+    id: "date-field-with-time",
+    description: "A date with its time of day, which opens a separate time picker.",
+    covers: { granularity: ["day"] },
+  },
+  {
+    component: "DateField",
+    id: "date-field-sizes",
+    description: "Every size, from the small filter date to the large birth date.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "DateField",
+    id: "date-field-states",
+    description: "Empty with its placeholder, required, and disabled, and on Web a picker-only field that opens the calendar instead of taking typing.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-confirmation",
+    description: "A compact confirmation to remove a memory that says where it goes, with Cancel and a danger action.",
+    covers: { size: ["compact"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-form",
+    description: "A form dialog to edit a memory, with a title and a date field, and a save that keeps the dialog busy for a moment.",
+    covers: { size: ["standard"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-short-choice",
+    description: "A short choice of what to add, sized to its two options.",
+    covers: { size: ["compact"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-long-content",
+    description: "A wide dialog whose long story scrolls while its footer stays in reach.",
+    covers: { size: ["wide"] },
+  },
+  {
+    component: "IconButton",
+    id: "icon-button-variants",
+    description: "Every variant at the default medium size, with add, edit, more, and remove icons.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "IconButton",
+    id: "icon-button-sizes",
+    description: "Every size in the ghost variant, with the close icon a dialog header uses.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "IconButton",
+    id: "icon-button-states",
+    description: "A ghost action at rest, disabled, and loading, where the spinner replaces the icon.",
+    covers: { variant: ["ghost"] },
+  },
+  {
+    component: "Icon",
+    id: "icon-set",
+    description: "Every icon the platform draws, at 20, each with its name and a mark on those that draw on only one platform.",
+    covers: {},
+  },
+  {
+    component: "Icon",
+    id: "icon-sizes",
+    description: "The calendar icon at 14, 16, 18, and 24 on the size.icon scale.",
+    covers: {},
+  },
+  {
+    component: "Icon",
+    id: "icon-color",
+    description: "Icons take the color of their text, shown beside ink, muted, accent, and warm labels.",
+    covers: {},
+  },
+  {
+    component: "SearchField",
+    id: "search-field-sizes",
+    description: "Every size, from the compact filter search to the large page search.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "SearchField",
+    id: "search-field-hidden-label",
+    description: "A large search whose label is hidden because the page title names it, with trailing content after the query, a shortcut hint on Web and a count on iOS.",
+    covers: { size: ["large"] },
+  },
+  {
+    component: "SearchField",
+    id: "search-field-disabled",
+    description: "A disabled search, faded to the field opacity.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "SelectField",
+    id: "select-field-sizes",
+    description: "Every size, from a compact sort order to a standalone default view.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "SelectField",
+    id: "select-field-groups",
+    description: "A required choice whose options sit in titled groups, after an All records option outside any group.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "SelectField",
+    id: "select-field-disabled",
+    description: "A disabled small select, faded to the field opacity.",
+    covers: { size: ["small"] },
+  },
+  {
+    component: "SyncStatus",
+    id: "sync-status-counts",
+    description: "Waiting captures, a refused capture beside waiting ones, and a sync in progress.",
+    covers: {},
+  },
+  {
+    component: "TextField",
+    id: "text-field-sizes",
+    description: "Every size, holding a nickname, a preferred name, and a full name.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "TextField",
+    id: "text-field-states",
+    description: "Empty with a placeholder, required, disabled, and invalid with its message.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "TimeZoneField",
+    id: "time-zone-field-offsets",
+    description: "The same zone on a winter and a summer reference date, each showing the offset that applied that day.",
+    covers: {},
+  },
+  {
+    component: "Toast",
+    id: "toast-tones",
+    description: "Success, info, and error, each with its icon and stripe.",
+    covers: { tone: ["success", "info", "error"] },
+  },
+  {
+    component: "Toast",
+    id: "toast-long-message",
+    description: "An error long enough to wrap onto a second line.",
+    covers: { tone: ["error"] },
+  },
+  {
+    component: "WorkspaceActionDock",
+    id: "workspace-action-dock-search",
+    description: "The dock with a capture control beside the search shortcut and its Command K hint.",
     covers: {},
   },
 ] as const;

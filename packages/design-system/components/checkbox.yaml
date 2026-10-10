@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Checkbox
+
+platforms:
+  web:
+    path: apps/web/src/components/checkbox.tsx
+    symbols: [Checkbox]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTFields.swift
+    symbols: [MTCheckbox]
+
+purpose: An on or off choice with a visible label and an optional explanation.
+
+use:
+  - Independent options in a form, such as Present, Add time, or Hide from Timeline.
+  - Filters that each turn on or off, such as including Trash in an export.
+  - Small in dense option rows under a field, as the date toggles in the occurrence editor are on Web.
+
+avoid:
+  - One choice among several. Use SelectField or filter chips.
+  - A setting that applies the moment it changes, such as appearance. Use the platform's switch or a segmented choice.
+  - Actions. Use a Button.
+
+anatomy:
+  box: The square that draws the checked state, filled with the accent when checked.
+  check: The checkmark inside a checked box.
+  label: The option's name, beside the box.
+  description: An optional explanation after the label.
+  focusRing: The Web keyboard focus outline around the box.
+
+props:
+  size:
+    description: The box and text size. Small fits dense option rows under a field, and medium stands on its own.
+    values: [small, medium]
+    default: medium
+
+states: [default, hover, focus, disabled, selected]
+
+tokens:
+  - box:
+      size: "{size.checkbox.medium}"
+      radius: "{radius.checkbox}"
+      background: "{color.surface}"
+      border: "{color.borderStrong}"
+      borderWidth: "{size.stroke.thin}"
+      duration: { web: "{motion.quick}" }
+    check:
+      color: "{state.selected.onFill}"
+      size: { web: "{size.icon.14}", ios: "{size.icon.12}" }
+      borderWidth: { web: "{size.stroke.thick}" }
+    label:
+      color: "{color.ink}"
+      type: { ios: "{type.label}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.medium}" }
+      gap: { web: "{space.2}", ios: "{space.3}" }
+    description:
+      color: { web: "{color.inkFaint}", ios: "{color.inkMuted}" }
+      type: { ios: "{type.caption}" }
+      fontSize: { web: "{font.size.caption}" }
+    focusRing:
+      color: { web: "{state.focus.ring}" }
+      borderWidth: { web: "{state.focus.ringWidth}" }
+      offset: { web: "{state.focus.ringOffsetSnug}" }
+  - when: { size: small }
+    box:
+      size: "{size.checkbox.small}"
+      radius: "{radius.xxsmall}"
+    check:
+      size: { web: "{size.icon.12}", ios: "{size.icon.10}" }
+    label:
+      type: { ios: "{type.caption}" }
+      fontSize: { web: "{font.size.caption}" }
+    description:
+      type: "{type.fine}"
+  - when: { state: hover }
+    box: { border: { web: "{color.accent}" } }
+  - when: { state: selected }
+    box:
+      background: "{state.selected.fill}"
+      border: "{state.selected.fill}"
+  - when: { state: disabled }
+    box: { opacity: "{state.disabled.opacity.choice}" }
+    label: { opacity: "{state.disabled.opacity.choice}" }
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: The label names the option in a few words, such as Add end date. The description adds one short phrase, such as Still going on.
+  notes:
+    - Name what turning the option on does, so the checked state reads as yes.
+
+accessibility:
+  role: A checkbox. Web renders a native input of type checkbox, so it submits with its form; iOS renders a Button with the toggle trait.
+  label: The label. Web reads the description after it through aria-describedby; iOS reads Label, description. The value is checked or not checked on Web and On or Off on iOS.
+  focus: Web shows the accent ring around the box on keyboard focus. iOS draws the system focus effect around the whole row.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS text follows Dynamic Type through the label and caption roles and wraps; the box keeps its size and aligns with the label's first baseline. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: The checkmark is the 14 px, or 12 px when small, Web check icon with a thick stroke, and a bold 12 pt, or 10 pt, SF Symbol on iOS.
+    reason: An SF Symbol fills more of its point size than the stroked SVG fills its box, so one step smaller draws the same checkmark.
+  - difference: The description is faint on Web and muted on iOS, and iOS puts it below the label where Web keeps it on the label's line until it wraps.
+    reason: iOS rows are narrower and its caption role is smaller, so the explanation reads better on its own line in the muted color.
+  - difference: The gap between box and label is 8 px on Web and 12 pt on iOS, and the iOS row is at least 44 pt tall.
+    reason: The whole native row is the touch target, so it keeps the box clear of the text and the row tall enough to tap.
+  - difference: Web shows an accent border on hover; iOS has no hover state.
+    reason: Touch has no hover.
+  - difference: The Web occurrence editor uses the small size for its date toggles; the native one uses medium.
+    reason: Native option rows already fill a 44 pt touch target, so the medium box reads better there.
+
+specimens:
+  - id: checkbox-sizes
+    description: Both sizes, unchecked and checked, with a description on each checked one.
+    covers: { size: all }
+  - id: checkbox-states
+    description: A controlled option, a long description that wraps, disabled, and disabled while checked.
+    covers: { size: [medium] }

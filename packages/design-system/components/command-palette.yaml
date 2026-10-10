@@ -1,0 +1,97 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: CommandPalette
+
+platforms:
+  web:
+    path: apps/web/src/components/command-palette.tsx
+    symbols: [CommandPalette]
+  ios:
+    unavailable: iOS reaches search through the Search your trail action in each primary tab's header, which opens the Library's search, and moves between destinations with the tab bar, so a keyboard palette has nothing to add on a phone.
+
+purpose: A keyboard-first search over the archive and the workspace's destinations, opened from anywhere with Command or Control K.
+
+use:
+  - Jumping to a destination, such as Timeline or Settings, without the sidebar.
+  - Finding an Entry by its title or text and opening it.
+  - Handing a query to the Library's full search with its filters.
+
+avoid:
+  - Actions that change data. The palette only navigates.
+  - Filtering a list in place. Use SearchField beside the list.
+
+anatomy:
+  scrim: The tinted, blurred layer behind the palette.
+  container: The raised panel near the top of the window, or at the bottom on a phone.
+  search: The large SearchField with its Escape hint.
+  sectionLabel: The small uppercase heading above each group of results.
+  row: A result or destination, with its icon tile, label, description, and chevron.
+  iconTile: The square behind a row's icon.
+  footer: The keyboard hints along the bottom edge.
+
+props: {}
+
+states: [default, hover, loading]
+
+tokens:
+  - scrim:
+      material: "{material.paletteScrim}"
+    container:
+      background: "{color.surfaceRaised}"
+      border: "{color.paletteBorder}"
+      borderWidth: "{size.stroke.thin}"
+      radius: "{radius.large}"
+      shadow: "{shadow.floating}"
+      duration: "{motion.standard}"
+      easing: "{motion.easing.emphasized}"
+    search:
+      paddingInline: "{space.3}"
+      paddingBlock: "{space.2}"
+      border: "{color.border}"
+    sectionLabel:
+      color: "{color.inkFaint}"
+      type: "{type.eyebrow}"
+    row:
+      radius: "{radius.medium}"
+      color: "{color.ink}"
+      gap: "{space.3}"
+      fontSize: "{font.size.label}"
+      fontWeight: "{font.weight.medium}"
+    iconTile:
+      radius: "{radius.tile}"
+      color: "{color.inkMuted}"
+      background: "{color.surfaceSubtle}"
+    footer:
+      color: "{color.inkFaint}"
+      background: "{color.surfaceSubtle}"
+      border: "{color.border}"
+      fontSize: "{font.size.micro}"
+  - when: { state: hover }
+    row:
+      background: "{color.accentSubtle}"
+    iconTile:
+      color: "{color.accent}"
+      background: "{color.surfaceRaised}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: Destination labels are their page names, such as Timeline. Descriptions say what the page is for in a few words, such as Move through your story over time.
+  notes:
+    - The full-search row repeats the query, as Search all for followed by the quoted query.
+    - A failed search says so in the warm color and keeps the destinations below it.
+
+accessibility:
+  role: A modal dialog labeled Search MemoTrail, with a search field and buttons for each row. The highlighted row carries aria-current.
+  label: Each row's label, followed by its description. The section label above archive results is a polite live region, so Searching your trail and Archive results are announced.
+  focus: The search field takes focus when the palette opens. Up and Down move the highlighted row, Enter opens it, and Escape or a click outside closes the palette.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Web uses fixed pixel sizes that grow with browser zoom. Below 720 px the palette moves to the bottom of the screen and hides its keyboard hints.
+
+platformDifferences:
+  - difference: Web only. iOS has no command palette.
+    reason: Native screens reach search through the Search your trail action in each primary tab's header, and the tab bar already reaches every destination, so the palette's keyboard shortcut has no counterpart on a phone.
+
+specimens:
+  - id: command-palette-destinations
+    description: The palette as it opens, with the search field and every destination before a query is typed.

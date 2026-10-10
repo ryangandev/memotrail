@@ -19,6 +19,7 @@ export const propertyTypes = {
   paddingBlock: { type: "dimension" },
   gap: { type: "dimension" },
   size: { type: "dimension" },
+  width: { type: "dimension" },
   minHeight: { type: "dimension" },
   type: { type: "typography" },
   fontFamily: { type: "fontFamily" },
@@ -40,7 +41,7 @@ const declarations = {
   ".tsx":
     "^export\\s+(?:async\\s+)?(?:function|const|class|type|interface)\\s+",
   ".swift":
-    "^\\s*(?:(?:public|internal|fileprivate|private)\\s+)?(?:struct|enum|class|protocol|actor|typealias|func|extension)\\s+",
+    "^\\s*(?:(?:public|internal|fileprivate|private)\\s+)?(?:final\\s+)?(?:struct|enum|class|protocol|actor|typealias|func|extension)\\s+",
 };
 
 /**

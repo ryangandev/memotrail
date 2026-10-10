@@ -1,0 +1,82 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: TimeZoneField
+
+platforms:
+  web:
+    path: apps/web/src/components/timezone-select.tsx
+    symbols: [TimezoneSelect]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTTimeZoneField.swift
+    symbols: [MTTimeZoneField]
+
+purpose: A choice of IANA time zone whose options show the UTC offset that applied on a reference date, grouped as the current zone, common zones, and all zones.
+
+use:
+  - The default time zone in Settings.
+  - An exact time's zone in the occurrence editor, with the date as its reference so the offset matches that day.
+
+avoid:
+  - Any other list of options. Use SelectField.
+  - Showing a time in another zone. Format the time with its zone instead.
+
+anatomy:
+  label: The visible name above the control, which Web callers draw around the select.
+  control: The surface that shows the selected zone and opens the list.
+  value: The selected zone, written as its offset, city, and region, such as (UTC-08:00) Los Angeles - America.
+  chevron: The quarter-turned chevron at the trailing edge.
+  group: A titled section of the list. Current time zone appears only when the value is not listed; Common time zones and All time zones always do.
+  search: The iOS search field above the list that filters zones by city or region.
+
+props: {}
+
+states: [default, focus, disabled]
+
+tokens:
+  - control:
+      minHeight: { ios: "{size.field.medium}" }
+      radius: { ios: "{radius.medium}" }
+      background: { ios: "{color.surface}" }
+      border: { ios: "{color.borderStrong}" }
+      borderWidth: { ios: "{size.stroke.thin}" }
+    value:
+      color: "{color.ink}"
+      type: { ios: "{type.body}" }
+      fontFamily: { web: "{font.family.sans}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.regular}" }
+    chevron:
+      color: { ios: "{color.inkFaint}" }
+      size: { web: "{size.icon.16}", ios: "{size.icon.11}" }
+  - when: { state: focus }
+    control:
+      border: { ios: "{color.accent}" }
+  - when: { state: disabled }
+    control:
+      opacity: { ios: "{state.disabled.opacity.field}" }
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: asWritten
+  length: Labels are a few words, such as Time zone or Default time zone. Zone names come from the platform's IANA list and are written as they are.
+  notes:
+    - Offsets follow the reference date, so a summer date shows the daylight-saving offset that applied then.
+
+accessibility:
+  role: A pop-up button. Web renders a required native select with optgroups; iOS renders a button that opens a searchable sheet of sections.
+  label: The visible label on iOS and the caller's ariaLabel on Web. The value is the selected zone with its offset. Neither shows a required mark, because a time zone always has a value.
+  focus: Web shows the enclosing editor's focus treatment on the select. iOS draws the accent border while the sheet is open and the system focus effect for keyboard focus.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS text follows Dynamic Type through the body role. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Web TimezoneSelect is a bare select that the enclosing editor labels and styles, so it takes an ariaLabel and a className; iOS MTTimeZoneField draws its own label and the shared field surface.
+    reason: The Web Settings card and occurrence editor each style their inputs as one form, and the time zone select joins them; every native form uses the shared field surface.
+  - difference: Web opens the browser's native select list; iOS opens a sheet with a search field above the sections.
+    reason: Hundreds of zones are quick to scan with a keyboard in a native select, but on a phone people find a zone by typing its city.
+  - difference: iOS MTTimeZoneField takes a note beside its label, such as Default from Settings; Web callers write that note inside their own label.
+    reason: The note belongs to the label, which Web callers draw and iOS draws itself.
+
+specimens:
+  - id: time-zone-field-offsets
+    description: The same zone on a winter and a summer reference date, each showing the offset that applied that day.

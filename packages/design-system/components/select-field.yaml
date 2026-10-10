@@ -1,0 +1,131 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: SelectField
+
+platforms:
+  web:
+    path: apps/web/src/components/select-field.tsx
+    symbols: [SelectField]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTFields.swift
+    symbols: [MTSelectField, MTSelectGroup]
+
+purpose: A labeled single choice from a list of options, optionally in titled groups, on the shared field surface.
+
+use:
+  - Choosing one of a known list, such as a record kind, a sort order, or a linked Goal.
+  - Long option lists that read better in titled groups, such as kinds of records.
+
+avoid:
+  - Two to five options that should stay visible. Use filter chips or a segmented choice.
+  - Several independent choices. Use checkboxes.
+  - Time zones. Use TimeZoneField, which labels offsets and searches every zone.
+  - Dates. Use DateField.
+
+anatomy:
+  label: The visible name above the control.
+  requiredMark: The warm asterisk after a required field's label.
+  control: The bordered surface that shows the selected option and opens the list.
+  focusHalo: The soft accent halo outside the control while it has focus.
+  value: The selected option's title.
+  chevron: The quarter-turned chevron at the trailing edge.
+  group: A titled run of options in the list, like a Web optgroup.
+  option: One choice in the list, checked when selected.
+
+props:
+  size:
+    description: The control's height and corner radius, from the size.field scale. Small fits filter rows, and large stands alone.
+    values: [small, medium, large]
+    default: medium
+  required:
+    description: Marks the label with a warm asterisk and tells assistive technology a choice is required.
+    type: boolean
+    default: false
+    platformNames: { ios: isRequired }
+  hideLabel:
+    description: Hides the visible label and keeps it as the accessible name, for a choice whose purpose its surroundings already show.
+    type: boolean
+    default: false
+    platformNames: { ios: hidesLabel }
+
+states: [default, focus, disabled]
+
+tokens:
+  - label:
+      color: "{color.inkMuted}"
+      type: { ios: "{type.label}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.medium}" }
+    requiredMark:
+      color: "{color.warm}"
+    control:
+      minHeight: "{size.field.medium}"
+      radius: "{radius.medium}"
+      paddingInline: "{space.3}"
+      background: "{color.surface}"
+      border: "{color.borderStrong}"
+      borderWidth: "{size.stroke.thin}"
+      duration: "{motion.quick}"
+    value:
+      color: "{color.ink}"
+      type: { ios: "{type.body}" }
+      fontFamily: { web: "{font.family.sans}" }
+      fontSize: { web: "{font.size.label}" }
+      fontWeight: { web: "{font.weight.regular}" }
+    chevron:
+      color: "{color.inkFaint}"
+      size: { web: "{size.icon.15}", ios: "{size.icon.11}" }
+  - when: { size: small }
+    control:
+      minHeight: "{size.field.small}"
+      radius: "{radius.small}"
+  - when: { size: large }
+    control:
+      minHeight: "{size.field.large}"
+  - when: { state: focus }
+    control:
+      border: { web: "{color.accent}" }
+    focusHalo:
+      color: { web: "{state.focus.halo}" }
+      borderWidth: { web: "{state.focus.haloWidth}" }
+  - when: { state: disabled }
+    control:
+      background: "{color.surfaceSubtle}"
+      opacity: "{state.disabled.opacity.field}"
+
+content:
+  lines: 2
+  overflow: perPlatform
+  casing: sentence
+  length: Labels name the choice in one to three words, such as Show records. Option titles are a few words each, and group titles name what their options share, such as Focused records.
+  notes:
+    - Put an option that applies to everything, such as All records, first and outside any group.
+
+accessibility:
+  role: A pop-up button. Web renders a native select, so each browser draws its own list; iOS renders a Menu of checkable items in titled sections.
+  label: The visible label, which stays the accessible name when hidden; the selected option is the value. Required fields add required.
+  focus: Web draws the accent border and halo while the select has focus. iOS opens the menu on tap and draws the system focus effect for keyboard focus.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS follows Dynamic Type through the body and label roles, and a long choice wraps onto a second line. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Controls are 34, 42, and 48 px tall on Web and 36, 44, and 50 pt on iOS.
+    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: Web callers pass option and optgroup elements as children; iOS takes options or MTSelectGroup values and a title function.
+    reason: A native select reads its list from markup; a SwiftUI Menu builds its sections from data.
+  - difference: A long selected title keeps one line on Web and wraps onto a second line on iOS.
+    reason: A native select draws one line; the native menu label wraps once so larger text sizes do not hide the end of a choice.
+  - difference: The chevron is the 15 px Web icon and an 11 pt semibold SF Symbol on iOS, and iOS draws no focus border or halo.
+    reason: The SF Symbol fills its point size where the SVG keeps padding in its box, and a native Menu shows the system focus effect and its open list instead of a focused surface.
+  - difference: The value is 13 px on Web and the 15 pt body role on iOS.
+    reason: As with TextField, Web fields share the dense desktop form typography and native fields follow Dynamic Type.
+
+specimens:
+  - id: select-field-sizes
+    description: Every size, from a compact sort order to a standalone default view.
+    covers: { size: all }
+  - id: select-field-groups
+    description: A required choice whose options sit in titled groups, after an All records option outside any group.
+    covers: { size: [medium] }
+  - id: select-field-disabled
+    description: A disabled small select, faded to the field opacity.
+    covers: { size: [small] }

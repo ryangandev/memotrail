@@ -18,6 +18,20 @@ const cell = {
   textAlign: "center",
 };
 
+const caption = {
+  color: "var(--mt-color-ink-muted)",
+  fontFamily: "var(--mt-font-family-mono)",
+  fontSize: "var(--mt-font-size-fine)",
+};
+
+const label = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "var(--mt-space-2)",
+  fontSize: "var(--mt-font-size-label)",
+  fontWeight: "var(--mt-font-weight-medium)",
+};
+
 export const specimens = {
   "icon-set": {
     title: "Every Web icon at 20px",
@@ -35,9 +49,33 @@ export const specimens = {
   "icon-sizes": {
     title: "14, 16, 18, and 24px",
     render: () => (
-      <Row>
+      <Row align="end">
         {[14, 16, 18, 24].map((size) => (
-          <Icon key={size} name="calendar" size={size} />
+          <span
+            key={size}
+            style={{ ...cell, color: "var(--mt-color-ink-muted)" }}
+          >
+            <Icon name="calendar" size={size} />
+            <span style={caption}>{size}</span>
+          </span>
+        ))}
+      </Row>
+    ),
+  },
+  "icon-color": {
+    title: "Ink, muted, accent, and warm text",
+    render: () => (
+      <Row>
+        {[
+          ["timeline", "Timeline", "var(--mt-color-ink)"],
+          ["archive", "Library", "var(--mt-color-ink-muted)"],
+          ["plus", "Add entry", "var(--mt-color-accent)"],
+          ["refresh", "Retry sync", "var(--mt-color-warm)"],
+        ].map(([name, text, color]) => (
+          <span key={name} style={{ ...label, color }}>
+            <Icon name={name} size={16} />
+            {text}
+          </span>
         ))}
       </Row>
     ),

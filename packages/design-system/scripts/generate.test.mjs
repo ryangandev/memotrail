@@ -1,5 +1,12 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { after, before, describe, test } from "node:test";
@@ -501,10 +508,14 @@ describe("the component specs", async () => {
   const typescript = makeTypeScript(system, icons, "package", components);
   const swift = makeComponentSwift(components, "package");
 
-  test("validate, sorted by file name", () => {
+  test("validate every spec, sorted by file name", async () => {
+    const files = (await readdir(componentDirectory))
+      .filter((file) => file.endsWith(".yaml"))
+      .toSorted();
+    assert.ok(files.includes("badge.yaml") && files.includes("dialog.yaml"));
     assert.deepEqual(
       components.map(({ file }) => file),
-      ["badge.yaml", "button.yaml"],
+      files,
     );
   });
 
@@ -542,19 +553,29 @@ describe("the component specs", async () => {
     assert.match(swift, /static let tone = MTBadgeTone\.accent/);
   });
 
-  test("list every specimen on both platforms in spec order", () => {
-    const ids = components.flatMap(({ specimens }) =>
-      specimens.map(({ id }) => id),
-    );
-    assert.ok(ids.length > 0);
+  test("list each platform's specimens in spec order", () => {
+    const ids = (platform) =>
+      components
+        .filter(({ implemented }) => implemented.includes(platform))
+        .flatMap(({ specimens }) => specimens.map(({ id }) => id));
+    assert.ok(ids("web").length > 0);
+    assert.ok(ids("ios").length > 0);
     const webIds = [...typescript.matchAll(/^ {4}id: "([a-z-]+)",$/gm)].map(
       ([, id]) => id,
     );
     const swiftIds = [...swift.matchAll(/^ {2}case \w+ = "([a-z-]+)"$/gm)].map(
       ([, id]) => id,
     );
-    assert.deepEqual(webIds, ids);
-    assert.deepEqual(swiftIds, ids);
+    assert.deepEqual(webIds, ids("web"));
+    assert.deepEqual(swiftIds, ids("ios"));
+  });
+
+  test("export token durations in milliseconds", () => {
+    assert.match(typescript, /export const durations = \{[^}]*quick: 120,/);
+    assert.doesNotMatch(
+      typescript.match(/export const durations = \{[^}]*\}/)[0],
+      /easing/,
+    );
   });
 
   test("keep Swift summaries whole within swift-format's 100 columns", () => {
@@ -631,7 +652,7 @@ describe("the component specs", async () => {
 });
 
 describe("component spec validation", async () => {
-  const { system } = await realSystem();
+  const { system, icons } = await realSystem();
   let root;
 
   before(async () => {
@@ -642,7 +663,10 @@ describe("component spec validation", async () => {
       join(root, "apps/web/chip.tsx"),
       "// Chip renders inside a ChipList.\nexport function Chip() {}\n",
     );
-    await writeFile(join(root, "apps/ios/Chip.swift"), "struct MTChip {}\n");
+    await writeFile(
+      join(root, "apps/ios/Chip.swift"),
+      "struct MTChip {}\n\n@MainActor\nfinal class MTChipCenter {}\n",
+    );
   });
   after(() => rm(root, { recursive: true, force: true }));
 
@@ -862,6 +886,76 @@ describe("component spec validation", async () => {
       loadSpecs({ "chip.yaml": first, "chip-group.yaml": second }),
       /chip\.yaml: specimen chip-group-tones is already used by .*chip-group\.yaml/,
     );
+  });
+
+  test("accepts the invalid state for a field that failed validation", async () => {
+    const [spec] = await loadChip((spec) => {
+      spec.states.push("invalid");
+      spec.tokens.push({
+        when: { state: "invalid" },
+        container: { border: "{color.warm}" },
+      });
+    });
+    assert.deepEqual(spec.states, ["default", "pressed", "invalid"]);
+  });
+
+  test("accepts a final class as a declared symbol", async () => {
+    const [spec] = await loadChip((spec) => {
+      spec.platforms.ios.symbols = ["MTChip", "MTChipCenter"];
+    });
+    assert.deepEqual(spec.platforms.ios.symbols, ["MTChip", "MTChipCenter"]);
+  });
+
+  test("accepts a reference to a token named with a hyphen", async () => {
+    const [spec] = await loadChip((spec) => {
+      spec.tokens[0].container.gap = "{space.1-5}";
+    });
+    assert.equal(spec.tokens[0].container.gap, "{space.1-5}");
+  });
+
+  test("generate a spec only for the platforms that implement it", async () => {
+    const [spec] = await loadChip((spec) => {
+      spec.platforms.ios = {
+        unavailable: "Native screens use a list row instead.",
+      };
+    });
+    const typescript = makeTypeScript(system, icons, "test", [spec]);
+    const swift = makeComponentSwift([spec], "test");
+    assert.match(typescript, /export type ChipTone = /);
+    assert.match(typescript, /id: "chip-tones",/);
+    assert.doesNotMatch(swift, /MTChip|chip-tones/);
+  });
+
+  test("leave other platforms' props out of a specimen's Web covers", async () => {
+    const [spec] = await loadChip((spec) => {
+      spec.props.density = {
+        description: "How tightly native rows pack.",
+        values: ["regular", "compact"],
+        default: "regular",
+        platforms: ["ios"],
+      };
+      spec.specimens[0].covers = { tone: "all", density: "all" };
+    });
+    const typescript = makeTypeScript(system, icons, "test", [spec]);
+    assert.match(typescript, /covers: \{ tone: \["accent", "neutral"\] \}/);
+    assert.match(
+      makeComponentSwift([spec], "test"),
+      /enum MTChipDensity: String/,
+    );
+  });
+
+  test("emit only specimens for a spec without props", async () => {
+    const [spec] = await loadChip((spec) => {
+      spec.props = {};
+      spec.tokens = [{ container: { radius: "{radius.pill}" } }];
+      delete spec.specimens[0].covers;
+    });
+    const typescript = makeTypeScript(system, icons, "test", [spec]);
+    const swift = makeComponentSwift([spec], "test");
+    assert.doesNotMatch(typescript, /\/\/ Chip, from|chipDefaults/);
+    assert.doesNotMatch(swift, /\/\/ Chip, from|MTChipDefaults/);
+    assert.match(typescript, /id: "chip-tones",/);
+    assert.match(swift, /case chipTones = "chip-tones"/);
   });
 
   test("rejects YAML that does not parse", () =>

@@ -339,6 +339,11 @@ test("the gallery shows every specimen the component specs list", async ({
     ).toBeVisible();
     await expect(section).toContainText(specimen.description);
 
+    // An overlay specimen draws its component once its opener is pressed.
+    const opener = section.locator("[data-specimen-open]");
+    const opens = (await opener.count()) > 0;
+    if (opens) await opener.click();
+
     // It draws the spec's component, in every value the spec says it covers.
     const component = `[data-ui-${kebab(specimen.component)}]`;
     await expect(section.locator(component).first()).toBeVisible();
@@ -351,6 +356,10 @@ test("the gallery shows every specimen the component specs list", async ({
           `${specimen.id} draws ${prop} ${value}`,
         ).toBeVisible();
       }
+    }
+    if (opens) {
+      await page.keyboard.press("Escape");
+      await expect(section.locator(component)).toHaveCount(0);
     }
   }
 });
@@ -416,13 +425,18 @@ test("Toast uses the shared feedback surface without an inline message", async (
   await page.goto("/design-system#feedback");
   const feedback = page.locator("#feedback");
   await feedback.getByRole("button", { name: "Show success" }).click();
-  const success = page.locator('[data-sonner-toast][data-type="success"]');
+  // The gallery also draws static toasts, so find the live ones by their messages.
+  const success = page
+    .locator('[data-sonner-toast][data-type="success"]')
+    .filter({ hasText: "Changes saved." });
   await expect(success).toContainText("Changes saved.");
   await expect(success).toHaveCSS("border-left-width", "3px");
   await success.getByRole("button", { name: "Close toast" }).click();
   await expect(success).toHaveCount(0);
   await feedback.getByRole("button", { name: "Show error" }).click();
-  const error = page.locator('[data-sonner-toast][data-type="error"]');
+  const error = page
+    .locator('[data-sonner-toast][data-type="error"]')
+    .filter({ hasText: "Could not save. Try again." });
   await expect(error).toContainText("Could not save. Try again.");
   await expect(error).toHaveCSS("border-left-width", "3px");
   await page.setViewportSize({ width: 390, height: 844 });

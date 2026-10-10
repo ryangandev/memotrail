@@ -21,8 +21,8 @@
   position: absolute;
   top: 50%;
   left: 0;
-  width: 20px;
-  height: 20px;
+  width: var(--mt-size-checkbox-medium);
+  height: var(--mt-size-checkbox-medium);
   margin: 0;
   padding: 0;
   z-index: var(--mt-layout-layer-local1);
@@ -33,8 +33,8 @@
 
 .box {
   display: grid;
-  width: 20px;
-  height: 20px;
+  width: var(--mt-size-checkbox-medium);
+  height: var(--mt-size-checkbox-medium);
   flex: none;
   place-items: center;
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
@@ -96,8 +96,8 @@
 
 .checkbox[data-size="small"] .input,
 .checkbox[data-size="small"] .box {
-  width: 16px;
-  height: 16px;
+  width: var(--mt-size-checkbox-small);
+  height: var(--mt-size-checkbox-small);
 }
 
 .checkbox[data-size="small"] .box {

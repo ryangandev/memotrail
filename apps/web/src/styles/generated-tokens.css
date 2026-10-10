@@ -377,6 +377,12 @@
   --mt-size-stroke-indicator: 1.8px;
   --mt-size-badge-padding-block: 3px;
   --mt-size-badge-min-height: 22px;
+  --mt-size-checkbox-small: 16px;
+  --mt-size-checkbox-medium: 20px;
+  --mt-size-toast-width: 360px;
+  --mt-size-toast-min-height: 52px;
+  --mt-size-toast-icon: 18px;
+  --mt-size-date-picker-width: 320px;
   --mt-radius-brand-mark-tail: 3px;
   --mt-radius-xxsmall: 4px;
   --mt-radius-checkbox: 5px;
@@ -448,6 +454,8 @@
   --mt-motion-progress-sweep: 850ms;
   --mt-motion-pulse: 1100ms;
   --mt-motion-shimmer: 1250ms;
+  --mt-motion-toast: 4500ms;
+  --mt-motion-toast-error: 8000ms;
   --mt-motion-easing-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
   --mt-motion-easing-enter: cubic-bezier(0, 0, 0.58, 1);
   --mt-motion-easing-exit: cubic-bezier(0.42, 0, 1, 1);

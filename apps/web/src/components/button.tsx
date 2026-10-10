@@ -2,8 +2,11 @@ import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import {
   buttonDefaults,
+  iconButtonDefaults,
   type ButtonSize,
   type ButtonVariant,
+  type IconButtonSize,
+  type IconButtonVariant,
 } from "@/generated/design-system";
 import styles from "./button.module.css";
 
@@ -46,22 +49,35 @@ export function Button({
   );
 }
 
+/**
+ * An icon-only action, drawn as a square Button and named by its required label. Ghost unless a
+ * variant is given. Specified in packages/design-system/components/icon-button.yaml.
+ */
 export function IconButton({
   children,
   className,
   label,
+  loading = iconButtonDefaults.loading,
+  size = iconButtonDefaults.size,
+  variant = iconButtonDefaults.variant,
   ...props
-}: Omit<ButtonProps, "children" | "aria-label"> & {
+}: Omit<ButtonProps, "children" | "aria-label" | "size" | "variant"> & {
   children: ReactNode;
   label: string;
+  size?: IconButtonSize;
+  variant?: IconButtonVariant;
 }) {
   return (
     <Button
       {...props}
       aria-label={label}
       className={[styles.iconButton, className].filter(Boolean).join(" ")}
+      data-ui-icon-button
+      loading={loading}
+      size={size}
+      variant={variant}
     >
-      {props.loading ? null : children}
+      {loading ? null : children}
     </Button>
   );
 }

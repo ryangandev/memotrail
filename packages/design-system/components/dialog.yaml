@@ -1,0 +1,142 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Dialog
+
+platforms:
+  web:
+    path: apps/web/src/components/dialog.tsx
+    symbols: [Dialog]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTSheet.swift
+    symbols: [MTSheet, MTSheetFooter]
+
+purpose: A focused task over the page, with an eyebrow, a serif title, an optional description, a close action, scrolling content, and a footer of actions that stays in reach.
+
+use:
+  - Creating or editing a record in a form, such as an Entry, a Home, or a Goal.
+  - A short choice that leads somewhere, such as what kind of record to add.
+  - Confirming an action that deletes, discards, or moves something to Trash. Web uses ConfirmationDialog, a compact Dialog; iOS uses the system confirmation dialog.
+  - Reading or reviewing longer content without leaving the page, such as pending captures.
+
+avoid:
+  - Messages that need no decision. Use a toast or inline feedback.
+  - Content people return to or link to. Give it a page.
+  - Choosing one value for a field. Use SelectField, DateField, or TimeZoneField, which bring their own lists.
+  - Dialogs over dialogs. Close the first, or put the second step inside it.
+
+anatomy:
+  scrim: The tinted, blurred layer that dims the page behind a Web dialog.
+  container: The raised surface that holds the dialog, a centered card on Web and a sheet on iOS.
+  eyebrow: An optional short line above the title that names the context, such as New memory or Please confirm.
+  title: The serif title that names the task.
+  description: An optional sentence below the title that explains the task or its consequence.
+  close: The ghost IconButton that closes the dialog, disabled while busy.
+  body: The scrolling content.
+  message: A failure shown above the iOS footer actions, such as Add a title before saving.
+  footer: The actions, with a destructive action leading and Cancel before the primary action.
+
+props:
+  size:
+    description: The Web dialog's width. Compact holds confirmations and short choices, standard holds forms, and wide holds long reading or side-by-side content.
+    values: [compact, standard, wide]
+    default: standard
+    platforms: [web]
+  presentation:
+    description: How the iOS sheet sizes itself. A form sheet opens at full height with its close action in the navigation bar, and a fitted sheet sizes to short content and scrolls only when it outgrows the screen.
+    values: [form, fitted]
+    default: form
+    platforms: [ios]
+    platformNames: { ios: size }
+  busy:
+    description: Marks the dialog busy while its action runs, disabling the close action, the content, and dismissal by Escape, outside click, or swipe.
+    type: boolean
+    default: false
+    platformNames: { ios: isBusy }
+
+states: [default, loading]
+
+tokens:
+  - scrim:
+      material: { web: "{material.dialogScrim}" }
+    container:
+      background: "{color.surfaceRaised}"
+      radius: { web: "{radius.large}" }
+      border: { web: "{color.borderStrong}" }
+      borderWidth: { web: "{size.stroke.thin}" }
+      shadow: { web: "{shadow.floating}" }
+      duration: { web: "{motion.standard}" }
+      easing: { web: "{motion.easing.enter}" }
+    eyebrow:
+      color: "{color.warm}"
+      type: { ios: "{type.listHeading}" }
+      fontSize: { web: "{font.size.caption}" }
+      fontWeight: { web: "{font.weight.semibold}" }
+    title:
+      color: "{color.ink}"
+      type: { ios: "{type.sheetTitle}" }
+      fontFamily: { web: "{font.family.serif}" }
+      fontSize: { web: "{font.size.title}" }
+      fontWeight: { web: "{font.weight.medium}" }
+      lineHeight: { web: "{lineHeight.tight}" }
+    description:
+      color: "{color.inkMuted}"
+      type: { ios: "{type.body}" }
+      fontSize: { web: "{font.size.label}" }
+      lineHeight: "{lineHeight.body}"
+    body:
+      paddingInline: "{space.5}"
+      paddingBlock: { web: "{space.5}" }
+      gap: { ios: "{space.5}" }
+    message:
+      color: { ios: "{color.warm}" }
+      background: { ios: "{color.warmSubtle}" }
+      radius: { ios: "{radius.small}" }
+      type: { ios: "{type.caption}" }
+    footer:
+      gap: "{space.2}"
+      paddingInline: "{space.5}"
+      paddingBlock: { web: "{space.4}", ios: "{space.3}" }
+      border: "{color.border}"
+  - when: { busy: true }
+    close: { opacity: "{state.disabled.opacity.button}" }
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: Titles name the task or ask the question in a few words, such as Edit a memory or Remove this memory?. Descriptions are one or two sentences, and a confirmation says what happens next, such as where a removed memory goes.
+  notes:
+    - A confirmation's action repeats its verb, such as Remove memory, and Cancel stays the safe default.
+    - The close action's label names the dialog, such as Close memory editor.
+
+accessibility:
+  role: A modal dialog. Web renders a dialog with aria-modal that traps focus and labels itself with its title and description; iOS presents a sheet, which VoiceOver treats as a modal layer.
+  label: The title, with the description as its description. The close action names the dialog. While busy, Web sets aria-busy on the dialog.
+  focus: Web moves focus to the first field, or to an autofocus action such as a confirmation's Cancel, keeps it inside until the dialog closes, and then returns it to the trigger. iOS follows the system sheet focus order.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS text follows Dynamic Type, and a fitted sheet grows with its content. On Web the title drops to the small title size below 560 px, and text grows with browser zoom.
+
+platformDifferences:
+  - difference: Web is a centered card over a blurred scrim, sized compact, standard, or wide; iOS is a sheet from the bottom, presented as a full-height form or a fitted sheet.
+    reason: Each is the platform's own modal surface. Width is what changes between Web tasks, and height is what changes between native sheets.
+  - difference: Web confirmations are a compact Dialog from ConfirmationDialog, with Cancel focused first; iOS confirmations use the system confirmationDialog.
+    reason: The system confirmation dialog is where people expect destructive choices on iOS and comes with its own Cancel; Web has no native equivalent that matches the product's style.
+  - difference: A form sheet puts its close action in the navigation bar and can push detail inside it; Web keeps the close action in the header.
+    reason: A native navigation bar is where a sheet's close action belongs, and it lets an editor push a detail such as version history.
+  - difference: iOS takes a message that it draws above the footer actions; Web callers draw form alerts inside the body.
+    reason: A sheet's footer stays above the keyboard, so a native failure reads best beside the action that failed; Web forms place alerts next to the fields they explain.
+  - difference: Web draws the radius, border, shadow, and scrim from tokens; iOS uses the system sheet's corners, grabber, and dimming.
+    reason: Native sheets match the rest of the system, including interactive dismissal and detents.
+
+specimens:
+  - id: dialog-confirmation
+    description: A compact confirmation to remove a memory that says where it goes, with Cancel and a danger action.
+    covers: { size: [compact] }
+  - id: dialog-form
+    description: A form dialog to edit a memory, with a title and a date field, and a save that keeps the dialog busy for a moment.
+    covers: { size: [standard], presentation: [form] }
+  - id: dialog-short-choice
+    description: A short choice of what to add, sized to its two options.
+    covers: { size: [compact], presentation: [fitted] }
+  - id: dialog-long-content
+    description: A wide dialog whose long story scrolls while its footer stays in reach.
+    covers: { size: [wide], presentation: [form] }

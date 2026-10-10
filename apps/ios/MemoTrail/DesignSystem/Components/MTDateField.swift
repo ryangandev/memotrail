@@ -1,21 +1,12 @@
 import SwiftUI
 
-enum MTDateGranularity: CaseIterable, Sendable {
-  case day, month, year
-
-  var title: String {
-    switch self {
-    case .day: "day"
-    case .month: "month"
-    case .year: "year"
-    }
-  }
-}
+// MTDateFieldGranularity, MTDateFieldSize, and MTDateFieldDefaults are generated from
+// packages/design-system/components/date-field.yaml.
 
 /// Converts the wall-time text used by drafts ("yyyy", "yyyy-MM", "yyyy-MM-dd", or
 /// "yyyy-MM-dd'T'HH:mm:ss") to and from dates read in UTC, so no time zone shifts the value.
 enum MTDateText {
-  static func date(_ text: String, granularity: MTDateGranularity, includesTime: Bool) -> Date? {
+  static func date(_ text: String, granularity: MTDateFieldGranularity, includesTime: Bool) -> Date? {
     let formats =
       switch granularity {
       case .year: ["yyyy"]
@@ -34,7 +25,7 @@ enum MTDateText {
     return nil
   }
 
-  static func text(_ date: Date, granularity: MTDateGranularity, includesTime: Bool) -> String {
+  static func text(_ date: Date, granularity: MTDateFieldGranularity, includesTime: Bool) -> String {
     let format =
       switch granularity {
       case .year: "yyyy"
@@ -55,7 +46,7 @@ enum MTDateText {
     return calendar
   }
 
-  static func display(_ date: Date, granularity: MTDateGranularity) -> String {
+  static func display(_ date: Date, granularity: MTDateFieldGranularity) -> String {
     let style = Date.FormatStyle(calendar: calendar, timeZone: .gmt)
     return switch granularity {
     case .day: date.formatted(style.month(.abbreviated).day().year())
@@ -81,13 +72,14 @@ enum MTDateText {
 
 /// A labeled, optional calendar value at day, month, or year granularity, with an optional time.
 /// The picker commits each change immediately, like the native compact date picker.
+/// Specified in packages/design-system/components/date-field.yaml.
 struct MTDateField: View {
   let label: String
   @Binding var value: String
-  var granularity: MTDateGranularity = .day
-  var includesTime = false
-  var size: MTFieldSize = .medium
-  var isRequired = false
+  var granularity: MTDateFieldGranularity = MTDateFieldDefaults.granularity
+  var includesTime = MTDateFieldDefaults.includesTime
+  var size: MTDateFieldSize = MTDateFieldDefaults.size
+  var isRequired = MTDateFieldDefaults.isRequired
   var note: String?
   var timeZone: TimeZone = .current
   @State private var isPicking = false
@@ -121,7 +113,7 @@ struct MTDateField: View {
         .buttonStyle(.plain)
         .accessibilityLabel(isRequired ? "\(label), required" : label)
         .accessibilityValue(accessibilityValue)
-        .accessibilityHint("Opens a \(includesTime ? "date and time" : granularity.title) picker")
+        .accessibilityHint("Opens a \(includesTime ? "date and time" : granularity.rawValue) picker")
         if !value.isEmpty {
           Button {
             value = ""
@@ -136,7 +128,7 @@ struct MTDateField: View {
         }
       }
       .font(MTFont.body)
-      .mtFieldSurface(size: size, isFocused: isPicking)
+      .mtFieldSurface(size: MTFieldSize(size), isFocused: isPicking)
       .popover(isPresented: $isPicking) {
         MTDatePicker(
           title: label, value: $value, granularity: granularity, includesTime: includesTime,
@@ -171,14 +163,14 @@ struct MTDateField: View {
 private struct MTDatePicker: View {
   let title: String
   @Binding var value: String
-  let granularity: MTDateGranularity
+  let granularity: MTDateFieldGranularity
   let includesTime: Bool
   let timeZone: TimeZone
   @State private var date: Date
   @Environment(\.dismiss) private var dismiss
 
   init(
-    title: String, value: Binding<String>, granularity: MTDateGranularity, includesTime: Bool,
+    title: String, value: Binding<String>, granularity: MTDateFieldGranularity, includesTime: Bool,
     timeZone: TimeZone
   ) {
     self.title = title
@@ -202,7 +194,7 @@ private struct MTDatePicker: View {
             displayedComponents: includesTime ? [.date, .hourAndMinute] : [.date]
           )
           .datePickerStyle(.graphical)
-          .frame(minWidth: MTLayout.DatePicker.width)
+          .frame(minWidth: MTSize.DatePicker.width)
         case .month:
           HStack(spacing: 0) {
             wheel("Month", component: .month, values: Array(1...12)) {
@@ -210,7 +202,7 @@ private struct MTDatePicker: View {
             }
             wheel("Year", component: .year, values: years) { String($0) }
           }
-          .frame(width: MTLayout.DatePicker.width)
+          .frame(width: MTSize.DatePicker.width)
         case .year:
           wheel("Year", component: .year, values: years) { String($0) }.frame(
             width: MTLayout.DatePicker.yearWidth)

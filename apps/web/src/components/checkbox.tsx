@@ -1,4 +1,5 @@
 import { useId, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import { checkboxDefaults, type CheckboxSize } from "@/generated/design-system";
 import { Icon } from "./icon";
 import styles from "./checkbox.module.css";
 
@@ -8,13 +9,14 @@ export type CheckboxProps = Omit<
 > & {
   label: ReactNode;
   description?: ReactNode;
-  size?: "small" | "medium";
+  size?: CheckboxSize;
 };
 
 /**
  * A native checkbox with a visible label and an optional explanation.
  * Props go to the input, so name, value, defaultChecked, and form behavior are unchanged;
  * `className` goes to the wrapper for placement.
+ * Specified in packages/design-system/components/checkbox.yaml.
  */
 export function Checkbox({
   "aria-describedby": describedBy,
@@ -22,7 +24,7 @@ export function Checkbox({
   description,
   id,
   label,
-  size = "medium",
+  size = checkboxDefaults.size,
   ...inputProps
 }: CheckboxProps) {
   const generatedId = useId();

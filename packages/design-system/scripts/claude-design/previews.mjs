@@ -46,7 +46,8 @@ const jsxOptions = {
 };
 
 // Reads the specimen ids and titles without rendering anything.
-export async function readSpecimens(name) {
+// Specimen ids start with the spec's name, which `prefixName` gives when it differs from the file's.
+export async function readSpecimens(name, prefixName = name) {
   const result = await esbuild.build({
     ...jsxOptions,
     entryPoints: [specimenFile(name)],
@@ -65,9 +66,9 @@ export async function readSpecimens(name) {
     throw new Error(`specimens/${name}.jsx must export a specimens object.`);
   }
   return Object.entries(specimens).map(([id, specimen]) => {
-    if (!specimenId.test(id) || !id.startsWith(specimenPrefix(name))) {
+    if (!specimenId.test(id) || !id.startsWith(specimenPrefix(prefixName))) {
       throw new Error(
-        `specimens/${name}.jsx: the specimen id ${id} must be kebab-case and start with ${specimenPrefix(name)}.`,
+        `specimens/${name}.jsx: the specimen id ${id} must be kebab-case and start with ${specimenPrefix(prefixName)}.`,
       );
     }
     if (
@@ -185,8 +186,25 @@ export function buildSpecPreview({ spec, group, reason }) {
   );
 })();
 `;
-  const height = 160 + 24 * spec.specimens.length;
-  return previewDocument({ name: spec.name, group, height }, script);
+  return previewDocument(
+    { name: spec.name, group, height: specPreviewHeight(data) },
+    script,
+  );
+}
+
+// Estimates a spec-only card's height from how many lines its text wraps to at the 640px preview
+// width: the padding, title, and gaps, then body lines for the purpose and caption lines for the
+// reason and each specimen. Each line holds slightly fewer characters than it fits, so the estimate
+// leans tall, within the slack the preview test allows.
+export function specPreviewHeight({ purpose, reason, specimens }) {
+  const lines = (text, perLine) =>
+    Math.max(1, Math.ceil(text.length / perLine));
+  const frame = 40 + 28 + 3 * 12 + 8;
+  const body = 22 * lines(purpose, 78);
+  const captions =
+    lines(reason, 90) +
+    specimens.reduce((sum, { description }) => sum + lines(description, 86), 0);
+  return frame + body + 18 * captions;
 }
 
 function previewDocument(component, script) {

@@ -4,11 +4,16 @@ import { Dialog as ArkDialog } from "@ark-ui/react/dialog";
 import { Portal } from "@ark-ui/react/portal";
 import { ClientOnly } from "@ark-ui/react/client-only";
 import { useRef, type ReactNode, type RefObject } from "react";
+import { dialogDefaults, type DialogSize } from "@/generated/design-system";
 import { OverlayContainerContext } from "./overlay-container";
 import { IconButton } from "./button";
 import { Icon } from "./icon";
 import styles from "./dialog.module.css";
 
+/**
+ * A modal task over the page, with a title, an optional description, scrolling content, and a
+ * footer that stays in reach. Specified in packages/design-system/components/dialog.yaml.
+ */
 export function Dialog({
   children,
   title,
@@ -21,8 +26,8 @@ export function Dialog({
   trigger,
   open,
   onOpenChange,
-  busy = false,
-  size = "standard",
+  busy = dialogDefaults.busy,
+  size = dialogDefaults.size,
   closeOnInteractOutside = true,
   portalContainer,
 }: {
@@ -38,7 +43,7 @@ export function Dialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   busy?: boolean;
-  size?: "compact" | "standard" | "wide";
+  size?: DialogSize;
   closeOnInteractOutside?: boolean;
   portalContainer?: RefObject<HTMLElement | null>;
 }) {
@@ -83,6 +88,7 @@ export function Dialog({
               ref={container}
               className={styles.dialog}
               data-size={size}
+              data-ui-dialog
               aria-busy={busy}
             >
               <header className={styles.header}>

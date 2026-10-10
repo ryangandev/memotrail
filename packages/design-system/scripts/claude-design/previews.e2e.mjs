@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
-import { bundled } from "./catalog.mjs";
+import { bundled, specName } from "./catalog.mjs";
 import { compileTokens } from "./compile-tokens.mjs";
 import { loadSpecs } from "./docs.mjs";
 import { kebabCase } from "../lib/util.mjs";
@@ -167,9 +167,10 @@ for (const card of cards) {
       });
 
       // A spec-only card describes the spec instead of rendering the component.
-      const spec = specs.get(card.name);
+      const component = bundled.find(({ name }) => name === card.name);
+      const spec = specs.get(component ? specName(component) : card.name);
       if (spec && rendered.has(card.name)) {
-        const component = `[data-ui-${kebabCase(spec.name)}]`;
+        const marker = `[data-ui-${kebabCase(spec.name)}]`;
         for (const specimen of spec.specimens) {
           const section = page.locator(`[data-specimen="${specimen.id}"]`);
           await expect(section, `${specimen.id} is on the card`).toHaveCount(1);
@@ -178,7 +179,7 @@ for (const card of cards) {
             for (const value of values) {
               await expect(
                 section
-                  .locator(`${component}[data-${kebabCase(prop)}="${value}"]`)
+                  .locator(`${marker}[data-${kebabCase(prop)}="${value}"]`)
                   .first(),
                 `${specimen.id} draws ${prop} ${value}`,
               ).toBeVisible();

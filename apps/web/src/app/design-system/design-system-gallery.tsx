@@ -4,8 +4,6 @@ import { Fragment, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
-import { Checkbox } from "@/components/checkbox";
-import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
@@ -19,18 +17,16 @@ import {
   RecordCardVisual,
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
-import { SearchField } from "@/components/search-field";
 import { SectionHeader } from "@/components/section-header";
-import { SelectField } from "@/components/select-field";
 import { SeparatedList } from "@/components/separated-list";
 import { Skeleton } from "@/components/skeleton";
-import { TextField } from "@/components/text-field";
-import { notify } from "@/components/app-toast";
 import { badgeSizes, badgeTones } from "@/generated/design-system";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
 import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
+import { ToastSpecimen, WorkspaceSpecimens } from "./controls-gallery";
+import { FormControlSpecimens } from "./form-controls-gallery";
 import { BrandMotionPreview } from "./brand-motion-preview";
 import {
   FoundationTokens,
@@ -82,19 +78,10 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   const [galleryTheme, setGalleryTheme] = useState<"system" | "light" | "dark">(
     "system",
   );
-  const [date, setDate] = useState("2026-09-17");
-  const [emptyDate, setEmptyDate] = useState("");
-  const [dateTime, setDateTime] = useState("2026-09-17T14:30");
-  const [month, setMonth] = useState("2026-09");
-  const [year, setYear] = useState("2026");
   const [editorValue, setEditorValue] = useState<EntryRichText | null>(null);
   const [editorText, setEditorText] = useState("");
   const [tags, setTags] = useState(["family", "travel"]);
   const [tagInput, setTagInput] = useState("");
-  const [searchSample, setSearchSample] = useState("");
-  const [searchMessage, setSearchMessage] = useState(
-    "Type a query to try this local-only preview.",
-  );
   const [existingPhotos, setExistingPhotos] = useState([
     {
       id: "design-system-photo",
@@ -114,8 +101,6 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   const [recordMessage, setRecordMessage] = useState(
     "Interactive state has not been activated.",
   );
-  const [reminders, setReminders] = useState(false);
-  const [submitted, setSubmitted] = useState("Nothing submitted yet.");
 
   return (
     <div
@@ -193,200 +178,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         index="04"
         title="Forms"
       >
-        <Specimen
-          api="label · size: small | medium | large · disabled · native text input props"
-          description="Proposed plain text input for review. Its font, height, border, and focus surface match SearchField and SelectField. The Settings page still uses its existing field."
-          id="text-field"
-          title="TextField"
-        >
-          <div className={styles.formGrid}>
-            <TextField defaultValue="Alex Morgan" label="Preferred name" />
-            <TextField label="Empty text field" placeholder="Add a name" />
-            <TextField
-              disabled
-              label="Disabled text field"
-              placeholder="Unavailable"
-              size="small"
-            />
-          </div>
-        </Specimen>
-        <Specimen
-          api="label · hideLabel · size: small | medium | large · disabled · native input props"
-          description="One focus surface for the icon and text. The search action stays composable, so each feature can choose its own submit behavior."
-          id="search-field"
-          title="SearchField"
-        >
-          <form
-            className={styles.searchFieldDemo}
-            onSubmit={(event) => {
-              event.preventDefault();
-              setSearchMessage(
-                searchSample.trim()
-                  ? `Demo search: ${searchSample.trim()}. No request was sent.`
-                  : "Enter a search term first.",
-              );
-            }}
-          >
-            <SearchField
-              label="Search Locations"
-              onChange={(event) => setSearchSample(event.target.value)}
-              placeholder="Search for an address"
-              value={searchSample}
-            />
-            <Button type="submit" variant="secondary">
-              Search
-            </Button>
-          </form>
-          <div className={styles.searchFieldVariants}>
-            <SearchField
-              label="Compact search"
-              placeholder="Search your trail"
-              size="small"
-            />
-            <SearchField
-              disabled
-              label="Disabled search"
-              placeholder="Search unavailable"
-            />
-          </div>
-          <p className={styles.stateNote} role="status">
-            {searchMessage}
-          </p>
-        </Specimen>
-        <Specimen
-          api="label · size: small | medium | large · disabled · native select props"
-          description="A labeled native select with the same surface and focus treatment as SearchField."
-          title="SelectField"
-        >
-          <div className={styles.formGrid}>
-            <SelectField defaultValue="all" label="Show records">
-              <option value="all">All records</option>
-              <option value="entries">Entries</option>
-              <option value="entities">Homes & vehicles</option>
-            </SelectField>
-            <SelectField disabled label="Unavailable filter" size="small">
-              <option>Unavailable</option>
-            </SelectField>
-          </div>
-        </Specimen>
-        <Specimen
-          api="label · description · size: small | medium · disabled · native checkbox props (name, value, defaultChecked, required)"
-          description="A native checkbox, so it submits with its form like any other. The label names it; the description is read after it."
-          id="checkbox"
-          title="Checkbox"
-        >
-          <div className={styles.checkboxGrid}>
-            <div className={styles.checkboxColumn}>
-              <Checkbox label="Unchecked" />
-              <Checkbox defaultChecked label="Checked" />
-              <Checkbox
-                checked={reminders}
-                description="Controlled by this page"
-                label="Remind me"
-                onChange={(event) => setReminders(event.target.checked)}
-              />
-              <Checkbox
-                description="A longer explanation wraps beside the label until it needs another line, and never runs past its container."
-                label="With description"
-              />
-            </div>
-            <div className={styles.checkboxColumn}>
-              <Checkbox disabled label="Disabled" />
-              <Checkbox
-                defaultChecked
-                description="Cannot change"
-                disabled
-                label="Disabled checked"
-              />
-              <Checkbox label="Small unchecked" size="small" />
-              <Checkbox
-                defaultChecked
-                description="Still going on"
-                label="Small checked"
-                size="small"
-              />
-            </div>
-          </div>
-          <form
-            className={styles.checkboxForm}
-            onSubmit={(event) => {
-              event.preventDefault();
-              const data = new FormData(event.currentTarget);
-              setSubmitted(
-                `Submitted: ${JSON.stringify(
-                  Object.fromEntries(data.entries()),
-                )}. No request was sent.`,
-              );
-            }}
-          >
-            <Checkbox
-              defaultChecked
-              label="Include photos"
-              name="photos"
-              value="yes"
-            />
-            <Checkbox label="Include Trash" name="trash" value="yes" />
-            <Button type="submit" variant="secondary">
-              Submit form
-            </Button>
-          </form>
-          <p className={styles.stateNote} role="status">
-            {reminders ? "Remind me is on. " : "Remind me is off. "}
-            {submitted}
-          </p>
-        </Specimen>
-
-        <Specimen
-          api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"
-          description="Date values, time controls, and calendar text use the shared form typography."
-          title="DatePickerField"
-        >
-          <div className={styles.formGrid}>
-            <DatePickerField
-              label="Filled date"
-              onChange={setDate}
-              size="small"
-              value={date}
-            />
-            <DatePickerField
-              label="Empty date"
-              onChange={setEmptyDate}
-              size="medium"
-              value={emptyDate}
-            />
-            <DatePickerField
-              editable={false}
-              label="Picker only"
-              onChange={setEmptyDate}
-              size="large"
-              value={emptyDate}
-            />
-            <DatePickerField
-              includeTime
-              label="Exact date and time"
-              onChange={setDateTime}
-              value={dateTime}
-            />
-            <DatePickerField
-              granularity="month"
-              label="Month precision"
-              onChange={setMonth}
-              value={month}
-            />
-            <DatePickerField
-              granularity="year"
-              label="Year precision"
-              onChange={setYear}
-              value={year}
-            />
-            <DatePickerField
-              disabled
-              label="Disabled"
-              onChange={() => undefined}
-              value="2026-09-17"
-            />
-          </div>
-        </Specimen>
+        <FormControlSpecimens />
 
         <Specimen
           api="variant: dialog | form | page · disabled · autoFocus · maxLength"
@@ -729,28 +521,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         title="Feedback and media states"
       >
         <div className={styles.feedbackGrid}>
-          <Specimen
-            api="notify.success · notify.error · notify.info"
-            title="Toast"
-          >
-            <div className={styles.toastPreviewActions}>
-              <Button onClick={() => notify.success("Changes saved.")}>
-                Show success
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => notify.info("Moved to Trash.")}
-              >
-                Show info
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => notify.error("Could not save. Try again.")}
-              >
-                Show error
-              </Button>
-            </div>
-          </Specimen>
+          <ToastSpecimen />
           <Specimen api="completed · total" title="PhotoUploadProgress">
             <PhotoUploadProgress progress={{ completed: 3, total: 5 }} />
           </Specimen>
@@ -825,6 +596,15 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             </p>
           </Specimen>
         </div>
+      </GallerySection>
+
+      <GallerySection
+        description="Web-only workspace chrome. Each spec says what iOS uses instead."
+        id="workspace"
+        index="07"
+        title="Workspace"
+      >
+        <WorkspaceSpecimens />
       </GallerySection>
     </div>
   );
