@@ -99,6 +99,19 @@
           "value": 3,
           "unit": "px"
         }
+      },
+      "haloStroke": {
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["ios"]
+          }
+        },
+        "$description": "A stroke centered on a field's edge that draws the halo width outside it.",
+        "$type": "dimension",
+        "$value": {
+          "value": 6,
+          "unit": "px"
+        }
       }
     },
     "hover": {
@@ -191,6 +204,19 @@
         "calendarDay": {
           "$value": 0.35
         }
+      }
+    },
+    "pressed": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Feedback while a finger is down.",
+      "cardScale": {
+        "$description": "How far a pressed card shrinks.",
+        "$type": "number",
+        "$value": 0.99
       }
     }
   }

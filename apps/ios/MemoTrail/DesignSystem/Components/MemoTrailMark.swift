@@ -24,7 +24,9 @@ struct MemoTrailMark: View {
           )
           .frame(width: size * 0.605_469, height: size * 0.605_469)
           .rotationEffect(.degrees(turn))
-          .animation(reduceMotion ? nil : .easeInOut(duration: 0.58), value: revealed)
+          .animation(
+            reduceMotion ? nil : MTEasing.inOut.animation(duration: MTMotion.markRing),
+            value: revealed)
 
         Circle()
           .trim(from: 290 / 360, to: revealed ? 340 / 360 : 290 / 360)
@@ -34,17 +36,25 @@ struct MemoTrailMark: View {
           )
           .frame(width: size * 0.605_469, height: size * 0.605_469)
           .rotationEffect(.degrees(turn))
-          .animation(reduceMotion ? nil : .easeOut(duration: 0.34).delay(0.22), value: revealed)
+          .animation(
+            reduceMotion
+              ? nil
+              : MTEasing.enter.animation(duration: MTMotion.markTrail)
+                .delay(MTMotion.markTrailDelay), value: revealed)
 
         Circle()
           .trim(from: 35 / 360, to: revealed ? 255 / 360 : 35 / 360)
           .stroke(
-            Color(red: 130 / 255, green: 173 / 255, blue: 152 / 255),
+            MTColor.markRing,
             style: StrokeStyle(lineWidth: size * 0.066_406, lineCap: .round)
           )
           .frame(width: size * 0.361_328, height: size * 0.361_328)
           .rotationEffect(.degrees(-turn))
-          .animation(reduceMotion ? nil : .easeInOut(duration: 0.5).delay(0.12), value: revealed)
+          .animation(
+            reduceMotion
+              ? nil
+              : MTEasing.inOut.animation(duration: MTMotion.markInnerRing)
+                .delay(MTMotion.quick), value: revealed)
       }
       .frame(width: proxy.size.width, height: proxy.size.height)
     }

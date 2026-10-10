@@ -103,11 +103,10 @@ struct WikiItemCurrentCard: View {
         ForEach(facts, id: \.label) { fact in
           VStack(alignment: .leading, spacing: MTSpacing.s1) {
             Text(fact.label.uppercased())
-              .font(.caption2)
-              .tracking(0.6)
+              .mtTextRole(.factLabel)
               .foregroundStyle(MTColor.inkFaint)
             Text(fact.value)
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
           }
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -117,7 +116,7 @@ struct WikiItemCurrentCard: View {
       .padding(.top, MTSpacing.s5)
       .overlay(alignment: .top) { MTListDivider() }
     }
-    .padding(horizontalSizeClass == .regular ? 44 : MTSpacing.s6)
+    .padding(horizontalSizeClass == .regular ? MTLayout.ItemPanel.paddingRegular : MTSpacing.s6)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
@@ -180,15 +179,15 @@ struct HistorySnapshotCard: View {
         row("Date", HistoryPresentation.date(snapshot))
         row("Time zone", snapshot["occurred_timezone"]?.text ?? "Unknown")
       }
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       ForEach(HistoryPresentation.relationshipGroups + ["attachments"], id: \.self) { key in
         if let values = snapshot[key]?.array {
           VStack(alignment: .leading, spacing: MTSpacing.s1) {
             Text(key.replacingOccurrences(of: "_", with: " ").capitalized)
-              .font(MTFont.caption.weight(.semibold))
+              .font(MTFont.pageEyebrow)
               .foregroundStyle(MTColor.ink)
             Text(HistoryPresentation.names(values).nonEmpty ?? "None")
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
           }
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -201,7 +200,7 @@ struct HistorySnapshotCard: View {
         if let detail = detail(key) {
           DisclosureGroup("\(key.capitalized) details") {
             Text(detail)
-              .font(.system(size: 11, design: .monospaced))
+              .font(MTFont.code)
               .foregroundStyle(MTColor.inkMuted)
               .textSelection(.enabled)
               .frame(maxWidth: .infinity, alignment: .leading)
@@ -213,7 +212,7 @@ struct HistorySnapshotCard: View {
         }
       }
     }
-    .padding(22)
+    .padding(MTLayout.ItemPanel.padding)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
@@ -232,7 +231,7 @@ struct HistorySnapshotCard: View {
     GridRow(alignment: .firstTextBaseline) {
       Text(label)
         .foregroundStyle(MTColor.inkMuted)
-        .frame(width: 80, alignment: .leading)
+        .frame(width: MTLayout.FactList.labelWidth, alignment: .leading)
       Text(value)
         .foregroundStyle(MTColor.ink)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -271,7 +270,9 @@ struct HistoryNotice: View {
       .background(tone == .caution ? MTColor.warmSubtle : MTColor.accentSubtle, in: shape)
       .overlay {
         // Drawn inside the padding so both tones keep the same text alignment.
-        if tone == .caution { shape.strokeBorder(MTColor.warning.opacity(0.35), lineWidth: 1) }
+        if tone == .caution {
+          shape.strokeBorder(MTColor.warningBorder, lineWidth: MTSize.Stroke.thin)
+        }
       }
   }
 }

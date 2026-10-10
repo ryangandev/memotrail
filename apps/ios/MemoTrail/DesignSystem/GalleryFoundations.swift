@@ -24,7 +24,7 @@
             ForEach(MTTextRole.catalog, id: \.name) { role in
               VStack(alignment: .leading, spacing: MTSpacing.s1) {
                 Text("A life in progress").mtTextRole(role).foregroundStyle(MTColor.ink)
-                Text("\(role.name) · \(role.detail)").font(MTFont.caption.monospaced())
+                Text("\(role.name) · \(role.detail)").font(MTFont.identifier)
                   .foregroundStyle(MTColor.inkMuted)
               }
             }
@@ -34,7 +34,7 @@
           VStack(alignment: .leading, spacing: MTSpacing.s2) {
             ForEach(MTSpacing.catalog, id: \.name) { token in
               HStack(spacing: MTSpacing.s3) {
-                Text("space.\(token.name)").font(MTFont.caption.monospaced())
+                Text("space.\(token.name)").font(MTFont.identifier)
                   .frame(width: 72, alignment: .leading)
                 RoundedRectangle(cornerRadius: 2).fill(MTColor.accent)
                   .frame(width: token.value, height: 8)
@@ -52,7 +52,7 @@
                 RoundedRectangle(cornerRadius: token.value).fill(MTColor.accentSubtle)
                   .overlay { RoundedRectangle(cornerRadius: token.value).stroke(MTColor.accent) }
                   .frame(width: 64, height: 48)
-                Text(token.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+                Text(token.name).font(MTFont.identifier).foregroundStyle(MTColor.ink)
                 Text("\(Int(token.value)) pt").font(MTFont.caption).foregroundStyle(
                   MTColor.inkMuted)
               }
@@ -70,7 +70,7 @@
                 RoundedRectangle(cornerRadius: MTRadius.medium).fill(MTColor.surfaceRaised)
                   .frame(height: 64)
                   .mtShadow(token.layers)
-                Text(token.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+                Text(token.name).font(MTFont.identifier).foregroundStyle(MTColor.ink)
                 Text(token.css).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
               }
             }
@@ -87,7 +87,7 @@
             ForEach(MTMotion.catalog, id: \.name) { token in
               MotionRow(name: token.name, seconds: token.seconds, curve: MTEasing.inOut)
             }
-            Rectangle().fill(MTColor.border).frame(height: 1)
+            Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
             ForEach(MTEasing.catalog, id: \.name) { curve in
               MotionRow(name: curve.name, seconds: MTMotion.deliberate * 4, curve: curve)
             }
@@ -108,7 +108,7 @@
                 .font(MTFont.body).foregroundStyle(MTColor.ink)
                 .mtLineSpacing(multiplier)
                 Text("\(name) · \(String(format: "%.2f", multiplier))").font(
-                  MTFont.caption.monospaced()
+                  MTFont.identifier
                 ).foregroundStyle(MTColor.inkMuted)
               }
             }
@@ -158,7 +158,7 @@
               VStack(alignment: .leading, spacing: 0) {
                 Text(token.name).font(MTFont.caption).foregroundStyle(MTColor.ink)
                 Text(value(of: token))
-                  .font(MTFont.caption.monospaced()).foregroundStyle(MTColor.inkMuted)
+                  .font(MTFont.identifier).foregroundStyle(MTColor.inkMuted)
               }
               .lineLimit(1)
               .minimumScaleFactor(0.8)
@@ -190,7 +190,7 @@
 
     var body: some View {
       HStack(spacing: MTSpacing.s3) {
-        Text(name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+        Text(name).font(MTFont.identifier).foregroundStyle(MTColor.ink)
           .frame(width: 80, alignment: .leading)
         GeometryReader { proxy in
           ZStack(alignment: .leading) {
@@ -251,7 +251,7 @@
                     RoundedRectangle(cornerRadius: MTRadius.small).stroke(MTColor.borderStrong)
                   }
                   .frame(height: token.value)
-                Text(token.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+                Text(token.name).font(MTFont.identifier).foregroundStyle(MTColor.ink)
                 Text("\(Int(token.value)) pt").font(MTFont.caption).foregroundStyle(
                   MTColor.inkMuted)
               }
@@ -259,9 +259,11 @@
             }
             VStack(spacing: MTSpacing.s1) {
               RoundedRectangle(cornerRadius: MTRadius.small)
-                .strokeBorder(MTColor.accent, style: StrokeStyle(lineWidth: 1, dash: [3]))
+                .strokeBorder(
+                  MTColor.accent, style: StrokeStyle(lineWidth: MTSize.Stroke.thin, dash: [3])
+                )
                 .frame(width: MTSize.hitTarget, height: MTSize.hitTarget)
-              Text("hitTarget").font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+              Text("hitTarget").font(MTFont.identifier).foregroundStyle(MTColor.ink)
               Text("\(Int(MTSize.hitTarget)) pt").font(MTFont.caption).foregroundStyle(
                 MTColor.inkMuted)
             }
@@ -273,9 +275,9 @@
           ) {
             ForEach(icons, id: \.self) { size in
               VStack(spacing: MTSpacing.s1) {
-                Image(MTIcon.star).font(.system(size: size)).foregroundStyle(MTColor.ink)
+                Image(MTIcon.star).font(.mtIcon(size)).foregroundStyle(MTColor.ink)
                   .frame(height: MTSize.Icon.s30)
-                Text("s\(Int(size))").font(MTFont.caption.monospaced()).foregroundStyle(
+                Text("s\(Int(size))").font(MTFont.identifier).foregroundStyle(
                   MTColor.inkMuted)
               }
               .accessibilityElement(children: .combine)
@@ -284,7 +286,7 @@
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
             ForEach(strokes, id: \.name) { stroke in
               HStack(spacing: MTSpacing.s3) {
-                Text("stroke.\(stroke.name)").font(MTFont.caption.monospaced())
+                Text("stroke.\(stroke.name)").font(MTFont.identifier)
                   .foregroundStyle(MTColor.ink).frame(width: 104, alignment: .leading)
                 Capsule().fill(MTColor.ink).frame(height: stroke.value)
                 Text("\(stroke.value.formatted()) pt").font(MTFont.caption).foregroundStyle(
@@ -375,7 +377,7 @@
                   .frame(maxWidth: .infinity).padding(.vertical, MTSpacing.s2)
                   .background(MTColor.accent, in: RoundedRectangle(cornerRadius: MTRadius.small))
                   .opacity(token.value)
-                Text(token.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.ink)
+                Text(token.name).font(MTFont.identifier).foregroundStyle(MTColor.ink)
                 Text(token.value.formatted()).font(MTFont.caption).foregroundStyle(
                   MTColor.inkMuted)
               }
@@ -397,7 +399,7 @@
       ) {
         VStack(spacing: MTSpacing.s3) {
           ForEach(MTElevation.catalog, id: \.name) { level in
-            Text(level.name).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.inkMuted)
+            Text(level.name).font(MTFont.identifier).foregroundStyle(MTColor.inkMuted)
               .frame(maxWidth: .infinity, minHeight: 56)
               .background(level.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
               .overlay {
@@ -425,7 +427,7 @@
         VStack(spacing: MTSpacing.s3) {
           ForEach(MTMaterial.catalog, id: \.name) { material in
             VStack(alignment: .leading, spacing: MTSpacing.s1) {
-              Text(material.name).font(MTFont.caption.monospaced())
+              Text(material.name).font(MTFont.identifier)
               Text(
                 material.systemMaterial.map { "\(String(describing: $0)) material" } ?? "tint only"
               )
@@ -512,7 +514,9 @@
             Button("Preview motion") {
               guard !reduceMotion else { return }
               // 320 ms matches the Web sidebar collapse.
-              withAnimation(.easeInOut(duration: 0.32)) { markRotated.toggle() }
+              withAnimation(MTEasing.inOut.animation(duration: MTMotion.markTurn)) {
+                markRotated.toggle()
+              }
             }.mtButtonStyle(.secondary)
             Text(
               reduceMotion
@@ -531,9 +535,9 @@
           LazyVGrid(columns: [GridItem(.adaptive(minimum: 96), spacing: MTSpacing.s2)]) {
             ForEach(MTIcon.allCases, id: \.self) { icon in
               VStack(spacing: MTSpacing.s2) {
-                Image(icon).font(.system(size: MTSize.Icon.s20)).foregroundStyle(MTColor.ink)
+                Image(icon).font(.mtIcon(MTSize.Icon.s20)).foregroundStyle(MTColor.ink)
                   .frame(height: MTSize.Icon.s24)
-                Text(String(describing: icon)).font(MTFont.caption.monospaced())
+                Text(String(describing: icon)).font(MTFont.identifier)
                   .foregroundStyle(MTColor.inkMuted).lineLimit(1).minimumScaleFactor(0.7)
                 // Every cell reserves the marker line so the grid rows stay even.
                 Text("iOS only").font(MTFont.micro).foregroundStyle(MTColor.warm)
@@ -574,7 +578,7 @@
               }
               .padding(.vertical, MTSpacing.s3)
               if width != MTPageWidth.allCases.last {
-                Rectangle().fill(MTColor.border).frame(height: 1)
+                Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
               }
             }
           }

@@ -773,6 +773,157 @@
         "$description": "Pin borders and counts.",
         "$value": "{palette.white}"
       }
+    },
+    "accentGroupBorder": {
+      "$description": "The border of an accent record detail group.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.38
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.38
+          }
+        }
+      }
+    },
+    "accentPrompt": {
+      "$description": "Placeholder text in the tag search field.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/green/400/$value/components"
+        },
+        "alpha": 0.6
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.accent}"],
+            "weight": 0.6
+          }
+        }
+      }
+    },
+    "warmPrompt": {
+      "$description": "Placeholder text in the Collection search field.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/400/$value/components"
+        },
+        "alpha": 0.6
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.warm}"],
+            "weight": 0.6
+          }
+        }
+      }
+    },
+    "labelSheen": {
+      "$description": "The light at the top of a Collection chip.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/night/850/$value/components"
+        },
+        "alpha": 0.34
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.surfaceRaised}"],
+            "weight": 0.34
+          }
+        }
+      }
+    },
+    "labelShade": {
+      "$description": "The shade at the bottom of a Collection chip, and its glow.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/400/$value/components"
+        },
+        "alpha": 0.12
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.warm}"],
+            "weight": 0.12
+          }
+        }
+      }
+    },
+    "labelEdge": {
+      "$description": "The ruled edges of a Collection chip.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/400/$value/components"
+        },
+        "alpha": 0.48
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.warm}"],
+            "weight": 0.48
+          }
+        }
+      }
+    },
+    "labelDash": {
+      "$description": "The dashed outline of Add Collection.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/clay/400/$value/components"
+        },
+        "alpha": 0.54
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "mix": {
+            "colors": ["{color.warm}"],
+            "weight": 0.54
+          }
+        }
+      }
+    },
+    "markRing": {
+      "$description": "The brand mark's inner ring, the same in both themes.",
+      "$value": "{palette.green.400}",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      }
+    },
+    "photoBackdrop": {
+      "$description": "Behind photos in the full-screen viewer, in both themes.",
+      "$value": "{palette.black}",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      }
     }
   },
   "state": {

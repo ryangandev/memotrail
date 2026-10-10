@@ -55,6 +55,114 @@
         "$description": "Constant speed, for progress and shimmer.",
         "$value": [0, 0, 1, 1]
       }
+    },
+    "photoPage": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Paging between photos in the viewer.",
+      "$value": {
+        "value": 200,
+        "unit": "ms"
+      }
+    },
+    "markRing": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The brand mark's outer ring drawing in.",
+      "$value": {
+        "value": 580,
+        "unit": "ms"
+      }
+    },
+    "markTrail": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The brand mark's trail drawing in.",
+      "$value": {
+        "value": 340,
+        "unit": "ms"
+      }
+    },
+    "markTrailDelay": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The wait before the trail draws.",
+      "$value": {
+        "value": 220,
+        "unit": "ms"
+      }
+    },
+    "markInnerRing": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The brand mark's inner ring drawing in.",
+      "$value": {
+        "value": 500,
+        "unit": "ms"
+      }
+    },
+    "markTurn": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The brand mark's quarter turn, matching the Web sidebar collapse.",
+      "$value": {
+        "value": 320,
+        "unit": "ms"
+      }
+    },
+    "splashFade": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The splash screen fading into the app.",
+      "$value": {
+        "value": 300,
+        "unit": "ms"
+      }
+    },
+    "wordmarkReveal": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The splash wordmark fading and rising in.",
+      "$value": {
+        "value": 400,
+        "unit": "ms"
+      }
+    },
+    "wordmarkDelay": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The wait before the splash wordmark appears.",
+      "$value": {
+        "value": 420,
+        "unit": "ms"
+      }
     }
   }
 }

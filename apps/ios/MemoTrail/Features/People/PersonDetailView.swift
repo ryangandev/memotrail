@@ -43,7 +43,7 @@ struct PersonDetailView: View {
             ProgressView().tint(MTColor.accent)
             Text("Loading this Person...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
           }
-          .frame(maxWidth: .infinity, minHeight: 180)
+          .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
         }
       } else if loadState == .failed {
         MTPage(width: .compact) {

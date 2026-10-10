@@ -57,7 +57,7 @@ struct FirstTimesView: View {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
     }
-    .font(MTFont.caption.weight(.regular))
+    .font(MTFont.detail)
     .foregroundStyle(MTColor.inkFaint)
     .accessibilityElement(children: .contain)
     .accessibilityLabel("First Times summary")
@@ -72,7 +72,7 @@ struct FirstTimesView: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage {
       MTEmptyState(title: "First Times unavailable", message: message, icon: .star) {
         Button("Try again") { Task { await controller.load() } }
@@ -90,7 +90,7 @@ struct FirstTimesView: View {
       .padding(.top, MTSpacing.s4)
     } else {
       LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 300), spacing: MTSpacing.s5)],
+        columns: [GridItem(.adaptive(minimum: MTLayout.Grid.record), spacing: MTSpacing.s5)],
         spacing: MTSpacing.s3
       ) {
         ForEach(Array(controller.entries.enumerated()), id: \.element.id) { index, entry in
@@ -134,29 +134,24 @@ private struct FirstTimeCard: View {
       }
       MTRecordCardBody {
         Text(entry.displayDate.uppercased())
-          .font(.caption2.monospaced())
-          .tracking(0.35)
+          .mtTextRole(.firstTimeDate)
           .foregroundStyle(MTColor.warm)
         Text(entry.title)
-          .font(
-            .system(horizontalSizeClass == .regular ? .title2 : .title3, design: .serif)
-              .weight(.medium)
-          )
-          .tracking(-0.4)
+          .mtTextRole(horizontalSizeClass == .regular ? .recordName : .recordNameCompact)
           .foregroundStyle(MTColor.ink)
           .multilineTextAlignment(.leading)
           .padding(.top, MTSpacing.s1)
         if let location = entry.location {
           Label(location.name, icon: .map)
             .labelStyle(MTInlineIconLabelStyle())
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s2)
         }
         if let body = entry.body.trimmed.nonEmpty {
           Text(body)
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body)
             .lineLimit(2)
@@ -173,7 +168,7 @@ private struct FirstTimeCard: View {
   /// Web `cardIndexFallback`: the card's place in the archive on a warm wash.
   private var indexMark: some View {
     Text(String(format: "%02d", index + 1))
-      .font(.system(.title3, design: .monospaced))
+      .font(MTFont.listIndex)
       .foregroundStyle(MTColor.warm)
       .padding(.horizontal, MTSpacing.s5)
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)

@@ -20,7 +20,7 @@ private struct WorkspaceToolbar: ViewModifier {
           Button {
             navigator.show(.home)
           } label: {
-            MemoTrailMark().frame(width: 28, height: 28)
+            MemoTrailMark().frame(width: MTLayout.Toolbar.mark, height: MTLayout.Toolbar.mark)
           }
           .accessibilityLabel("MemoTrail dashboard")
           .accessibilityIdentifier("workspace-brand")
@@ -83,11 +83,11 @@ private struct WorkspaceToolbar: ViewModifier {
       isShowingSettings = true
     } label: {
       Text(user.initial)
-        .font(MTFont.caption.weight(.semibold))
+        .font(MTFont.pageEyebrow)
         .foregroundStyle(MTColor.accentInk)
-        .frame(width: 32, height: 32)
+        .frame(width: MTLayout.Avatar.toolbar, height: MTLayout.Avatar.toolbar)
         .background(MTColor.accent, in: Circle())
-        .frame(width: 44, height: 44)
+        .frame(width: MTSize.hitTarget, height: MTSize.hitTarget)
         .contentShape(Circle())
     }
     .buttonStyle(.plain)

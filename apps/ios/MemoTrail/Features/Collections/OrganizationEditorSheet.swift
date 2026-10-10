@@ -82,7 +82,7 @@ struct OrganizationEditorSheet: View {
     } accessory: {
       if let item, kind == .tag {
         Text("Used by \(countLabel(item.entryCount, "Entry"))")
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
       }
     } footer: {
@@ -170,29 +170,29 @@ struct OrganizationEditorSheet: View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
         Text("Entries using this tag")
-          .font(MTFont.label.weight(.semibold))
+          .font(MTFont.listHeading)
           .foregroundStyle(MTColor.ink)
           .accessibilityAddTraits(.isHeader)
         Text(countLabel(item.entryCount, "Entry"))
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
         Spacer(minLength: 0)
         if item.entryCount > 5 {
           Text("Showing 5")
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkFaint)
         }
       }
       if item.entryCount == 0 {
         Text("No Entries use this tag yet.")
-          .font(MTFont.label.weight(.regular))
+          .font(MTFont.supporting)
           .foregroundStyle(MTColor.inkMuted)
       } else {
         switch preview {
         case nil:
           VStack(spacing: MTSpacing.s2) {
             ForEach(0..<3, id: \.self) { _ in
-              MTLoadingSkeleton().frame(height: 44)
+              MTLoadingSkeleton().frame(height: MTSize.Control.medium)
                 .clipShape(RoundedRectangle(cornerRadius: MTRadius.small))
             }
           }
@@ -200,7 +200,7 @@ struct OrganizationEditorSheet: View {
           .accessibilityLabel("Loading tagged Entries")
         case .failure(let failure):
           Text(failure.message)
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.warm)
         case .success(let entries):
           VStack(spacing: 0) {
@@ -209,12 +209,12 @@ struct OrganizationEditorSheet: View {
                 dismiss()
                 openEntry?(entry)
               } label: {
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
                   Text(entry.displayTitle)
-                    .font(MTFont.label.weight(.semibold))
+                    .font(MTFont.listHeading)
                     .foregroundStyle(MTColor.ink)
                   Text("\(entry.identityLabel) · \(entry.displayDate)")
-                    .font(MTFont.caption.weight(.regular))
+                    .font(MTFont.detail)
                     .foregroundStyle(MTColor.inkMuted)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -234,11 +234,11 @@ struct OrganizationEditorSheet: View {
           HStack(spacing: MTSpacing.s2) {
             Text("View all Entries for this tag")
             Spacer(minLength: 0)
-            Image(.chevron).font(.system(size: 13, weight: .semibold))
+            Image(.chevron).font(.mtIcon(MTSize.Icon.s13, weight: .semibold))
           }
         }
         .buttonStyle(.plain)
-        .font(MTFont.label.weight(.medium))
+        .font(MTFont.label)
         .foregroundStyle(MTColor.accent)
         .accessibilityIdentifier("view-tag-entries")
       }

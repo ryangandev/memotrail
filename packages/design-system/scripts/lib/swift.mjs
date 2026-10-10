@@ -136,28 +136,13 @@ export function makeSwift(system, icons, sourceLabel) {
     ]);
   });
 
-  // Fixed typography sizes and text roles
-  const fontSize = (name) => {
-    const path = `font.size.${name}`;
-    if (!light.has(path))
-      throw new Error(`Swift typography needs the token {${path}}.`);
-    return token(path).value;
-  };
-  const typographyLines = [
-    `  static let display = Font.system(size: ${fontSize("display")}, weight: .medium, design: .serif)`,
-    `  static let title = Font.system(size: ${fontSize("title")}, weight: .medium, design: .serif)`,
-    `  static let titleSmall = Font.system(size: ${fontSize("titleSmall")}, weight: .semibold)`,
-    `  static let bodyLarge = Font.system(size: ${fontSize("bodyLarge")})`,
-    `  static let body = Font.system(size: ${fontSize("body")})`,
-    `  static let label = Font.system(size: ${fontSize("label")}, weight: .medium)`,
-    `  static let caption = Font.system(size: ${fontSize("caption")}, weight: .medium)`,
-  ];
+  // Text roles
   for (const path of [
     ...under("font.size"),
     ...under("font.family"),
     ...under("font.weight"),
   ]) {
-    // Text roles consume families and weights; MTTypography keeps the size scale.
+    // Text roles consume the font families, sizes, and weights.
     emitted.add(path);
   }
 
@@ -175,6 +160,7 @@ export function makeSwift(system, icons, sourceLabel) {
         `tracking: ${formatNumber(role.tracking)}`,
         `isUppercase: ${role.isUppercase}`,
         `textStyle: ${role.textStyle ? `.${role.textStyle}` : "nil"}`,
+        `font: ${role.font ? `MTFont.${role.name}` : "nil"}`,
       ],
       "",
     ),
@@ -376,10 +362,6 @@ ${colorCatalogLines.join("\n")}
   ]
 }
 
-enum MTTypography {
-${typographyLines.join("\n")}
-}
-
 /// A text role: the font, tracking, and case shared with the Web --mt-type-* variables.
 struct MTTextRole: Sendable {
   let name: String
@@ -391,6 +373,8 @@ struct MTTextRole: Sendable {
   let isUppercase: Bool
   /// The Dynamic Type style the size scales with, or nil for a fixed size.
   let textStyle: Font.TextStyle?
+  /// The role's static MTFont, or nil when it scales a custom size with its text style.
+  let font: Font?
 
 ${roleLines.join("\n")}
 
@@ -759,7 +743,7 @@ function nestedEnum(name, entries, value, depth = 0) {
   return lines;
 }
 
-function textRole(token) {
+export function textRole(token) {
   const { value, extension } = token;
   const familyAlias = value.aliases.fontFamily;
   const family = familyAlias?.match(/^font\.family\.(\w+)$/)?.[1];
@@ -852,6 +836,40 @@ function swiftNumberTokens(entries) {
     ([name, value]) =>
       `  static let ${swiftIdentifier(name)}: CGFloat = ${value}`,
   );
+}
+
+const swiftGroups = {
+  color: "MTColor",
+  elevation: "MTElevation",
+  layout: "MTLayout",
+  lineHeight: "MTLineHeight",
+  material: "MTMaterial",
+  radius: "MTRadius",
+  shadow: "MTShadow",
+  size: "MTSize",
+  space: "MTSpacing",
+  state: "MTState",
+  type: "MTFont",
+};
+
+// The Swift expression that reads a token's value, the way DesignTokens.swift names it.
+export function swiftReference(path) {
+  const [group, ...rest] = path.split(".");
+  if (group === "color") return `MTColor.${camelCase(rest)}`;
+  if (group === "motion") {
+    return rest[0] === "easing"
+      ? `MTEasing.${swiftIdentifier(rest[1])}`
+      : `MTMotion.${swiftIdentifier(rest[0])}`;
+  }
+  if (group === "layout" && rest[0] === "pageWidth") {
+    return `MTPageWidth.${swiftCase(rest[1])}.rawValue`;
+  }
+  if (["material", "elevation"].includes(group)) {
+    return `${swiftGroups[group]}.${rest[0]}`;
+  }
+  if (!swiftGroups[group]) return null;
+  const enums = rest.slice(0, -1).map(pascalCase);
+  return [swiftGroups[group], ...enums, swiftIdentifier(rest.at(-1))].join(".");
 }
 
 // Names that start with a digit get an s prefix, like MTSpacing.s4 and MTSize.Icon.s18.

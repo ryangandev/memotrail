@@ -315,9 +315,8 @@ private struct QuickCaptureView: View {
     }
     .padding(.horizontal, MTSpacing.s4)
     .padding(.vertical, MTSpacing.s4)
-    .frame(minHeight: 64)
-    .background(MTColor.surfaceRaised.opacity(0.94))
-    .background(.ultraThinMaterial)
+    .frame(minHeight: MTLayout.QuickCapture.barHeight)
+    .mtMaterial(MTMaterial.glassPanel)
   }
 
   @MainActor

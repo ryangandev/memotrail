@@ -62,13 +62,13 @@ struct TrashView: View {
   /// Web's header badge: the retention window, with each item's own dates below.
   private var retentionBadge: some View {
     HStack(spacing: MTSpacing.s3) {
-      Image(.clock).font(.system(size: 17, weight: .medium))
-      VStack(alignment: .leading, spacing: 2) {
+      Image(.clock).font(.mtIcon(MTSize.Icon.s17, weight: .medium))
+      VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
         Text("30-day retention")
-          .font(MTFont.caption.weight(.medium))
+          .font(MTFont.caption)
           .foregroundStyle(MTColor.ink)
         Text("Dates are shown per item")
-          .font(.caption2)
+          .font(MTFont.note)
           .foregroundStyle(MTColor.inkFaint)
       }
     }
@@ -86,13 +86,13 @@ struct TrashView: View {
   private var retentionNote: some View {
     HStack(alignment: .top, spacing: MTSpacing.s3) {
       Image(.archive)
-        .font(.system(size: 17))
+        .font(.mtIcon(MTSize.Icon.s17))
         .foregroundStyle(MTColor.warm)
         .accessibilityHidden(true)
       Text(
         "Items remain recoverable during their retention window. Reaching the shown date makes an item eligible for cleanup, but this screen does not claim it was automatically deleted."
       )
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
     }
@@ -110,7 +110,7 @@ struct TrashView: View {
         ProgressView().tint(MTColor.accent)
         Text("Loading Trash...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage, controller.items.isEmpty {
       MTEmptyState(title: "Trash is unavailable", message: message, icon: .refresh) {
         Button("Try again") { Task { await controller.load() } }
@@ -131,7 +131,7 @@ struct TrashView: View {
           Text("Newest removals first")
             .foregroundStyle(MTColor.inkFaint)
         }
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         ForEach(controller.items) { item in
           TrashItemCard(
             item: item, isDisabled: controller.isBusy || confirmation != nil,
@@ -173,7 +173,7 @@ private struct TrashItemCard: View {
     VStack(spacing: 0) {
       HStack(alignment: .top, spacing: 0) {
         visual
-          .frame(width: 88)
+          .frame(width: MTLayout.RecordCard.trashVisualWidth)
           .frame(maxHeight: .infinity)
           .clipped()
           .accessibilityHidden(true)
@@ -181,7 +181,7 @@ private struct TrashItemCard: View {
           MTFlowLayout(spacing: MTSpacing.s2) {
             MTBadge(title: item.displayKind, tone: .warm)
             Text("Removed \(item.deletionDateLabel)")
-              .font(.caption2)
+              .font(MTFont.note)
               .foregroundStyle(MTColor.inkFaint)
           }
           Text(item.title)
@@ -192,16 +192,18 @@ private struct TrashItemCard: View {
             .padding(.top, MTSpacing.s3)
           if let detail = item.displayDetail {
             Text(detail)
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
               .lineLimit(2)
-              .padding(.top, 5)
+              .padding(.top, MTSpacing.detailGap)
           }
           retention
             .padding(.top, MTSpacing.s3)
         }
         .padding(MTSpacing.s3)
-        .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+        .frame(
+          maxWidth: .infinity, minHeight: MTLayout.RecordCard.trashMinHeight, alignment: .topLeading
+        )
       }
       .fixedSize(horizontal: false, vertical: true)
       HStack(spacing: MTSpacing.s2) {
@@ -229,13 +231,13 @@ private struct TrashItemCard: View {
       Rectangle().fill(MTColor.surfaceSubtle)
       Rectangle().fill(
         LinearGradient(
-          colors: [MTColor.warmSubtle.opacity(0.65), .clear], startPoint: .topLeading,
+          colors: [MTColor.warmWash, .clear], startPoint: .topLeading,
           endPoint: UnitPoint(x: 0.75, y: 0.9)))
       if let url = item.signedURL {
         MTRemoteImage(url: url, accessibilityLabel: "")
       } else {
         Image(item.kind == .attachment ? .photo : .timeline)
-          .font(.system(size: 23))
+          .font(.mtIcon(MTSize.Icon.s23))
           .foregroundStyle(MTColor.warm)
       }
     }
@@ -245,14 +247,14 @@ private struct TrashItemCard: View {
   private var retention: some View {
     let retention = item.retention()
     return HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
-      Image(.clock).font(.system(size: 11))
+      Image(.clock).font(.mtIcon(MTSize.Icon.s11))
       if let date = retention.date {
         Text("\(retention.status) \(Text(date).foregroundStyle(MTColor.inkMuted))")
       } else {
         Text(retention.status)
       }
     }
-    .font(.caption2)
+    .font(MTFont.note)
     .foregroundStyle(MTColor.inkFaint)
   }
 }
@@ -320,7 +322,7 @@ private struct EmptyTrashSheet: View {
           Text(
             "\(controller.emptyProgress) of \(controller.emptyTotal) confirmed deleted. Keep this page open."
           )
-          .font(MTFont.caption.weight(.medium))
+          .font(MTFont.caption)
           .foregroundStyle(MTColor.ink)
           .accessibilityAddTraits(.updatesFrequently)
         }

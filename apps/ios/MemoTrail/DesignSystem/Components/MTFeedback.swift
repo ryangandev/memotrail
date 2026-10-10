@@ -46,7 +46,7 @@ struct MTEmptyState<Actions: View>: View {
       Button(action: onTap) { content }
         .buttonStyle(MTEmptyStateButtonStyle())
     } else {
-      content.overlay { shape.stroke(MTColor.border, lineWidth: 1) }
+      content.overlay { shape.stroke(MTColor.border, lineWidth: MTSize.Stroke.thin) }
     }
   }
 
@@ -56,9 +56,9 @@ struct MTEmptyState<Actions: View>: View {
     VStack(spacing: MTSpacing.s3) {
       if let systemImage {
         Image(systemName: systemImage)
-          .font(.system(size: 22, weight: .medium))
+          .font(.mtIcon(MTSize.Icon.s22, weight: .medium))
           .foregroundStyle(MTColor.accent)
-          .frame(width: 48, height: 48)
+          .frame(width: MTLayout.IconTile.emptyState, height: MTLayout.IconTile.emptyState)
           .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
           .accessibilityHidden(true)
       }
@@ -68,10 +68,10 @@ struct MTEmptyState<Actions: View>: View {
         .accessibilityAddTraits(onTap == nil ? .isHeader : [])
       if let message {
         Text(message)
-          .font(MTFont.label.weight(.regular))
+          .font(MTFont.supporting)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body, textStyle: .footnote)
-          .frame(maxWidth: 480)
+          .frame(maxWidth: MTLayout.EmptyState.messageWidth)
       }
       HStack(spacing: MTSpacing.s2) { actions }
         .padding(.top, MTSpacing.s1)
@@ -102,9 +102,11 @@ private struct MTEmptyStateButtonStyle: ButtonStyle {
     configuration.label
       .overlay {
         RoundedRectangle(cornerRadius: MTRadius.large)
-          .stroke(configuration.isPressed ? MTColor.accent : MTColor.border, lineWidth: 1)
+          .stroke(
+            configuration.isPressed ? MTColor.accent : MTColor.border, lineWidth: MTSize.Stroke.thin
+          )
       }
-      .animation(.easeOut(duration: MTMotion.quick), value: configuration.isPressed)
+      .animation(MTEasing.enter.animation(duration: MTMotion.quick), value: configuration.isPressed)
   }
 }
 
@@ -127,7 +129,7 @@ struct MTLoadMore: View {
     } else {
       ProgressView()
         .tint(MTColor.accent)
-        .frame(maxWidth: .infinity, minHeight: 44)
+        .frame(maxWidth: .infinity, minHeight: MTSize.hitTarget)
         .onAppear { Task { await load() } }
         .accessibilityLabel("Loading more")
     }

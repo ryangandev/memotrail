@@ -25,7 +25,7 @@ struct MTTimeZoneField: View {
             .lineLimit(1)
           Spacer(minLength: 0)
           Image(.chevron)
-            .font(.system(size: 11, weight: .semibold))
+            .font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
             .rotationEffect(.degrees(90))
             .foregroundStyle(MTColor.inkFaint)
         }
@@ -103,7 +103,8 @@ private struct MTTimeZonePicker: View {
           .foregroundStyle(MTColor.ink)
         Spacer(minLength: 0)
         if identifier == selection {
-          Image(.check).font(.system(size: 14, weight: .semibold)).foregroundStyle(MTColor.accent)
+          Image(.check).font(.mtIcon(MTSize.Icon.s14, weight: .semibold)).foregroundStyle(
+            MTColor.accent)
         }
       }
       .contentShape(Rectangle())

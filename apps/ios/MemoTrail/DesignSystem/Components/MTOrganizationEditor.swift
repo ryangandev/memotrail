@@ -33,25 +33,27 @@ struct MTOrganizationEditor: View {
       // Collection bookends and remove buttons extend above their chips.
       .padding(.top, kind == .collection ? MTSpacing.s2 : 0)
       Text("\(names.count) of \(kind.countLimit)")
-        .font(.caption2)
+        .font(MTFont.note)
         .foregroundStyle(MTColor.inkFaint)
         .frame(maxWidth: .infinity, alignment: .trailing)
         .accessibilityLabel("\(names.count) of \(kind.countLimit) \(kind.title)")
     }
-    .opacity(isEnabled ? 1 : 0.56)
+    .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.choice)
     .sheet(isPresented: $isPicking) {
       MTOrganizationPicker(kind: kind, names: $names, options: options)
     }
   }
 
   private func tagChip(_ name: String) -> some View {
-    HStack(spacing: 3) {
+    HStack(spacing: MTLayout.Organization.tagGap) {
       Text("#\(name)").lineLimit(1)
       Button {
         remove(name)
       } label: {
-        Image(.close).font(.system(size: 10, weight: .semibold))
-          .frame(width: 22, height: 22)
+        Image(.close).font(.mtIcon(MTSize.Icon.s10, weight: .semibold))
+          .frame(
+            width: MTLayout.Organization.removeButton, height: MTLayout.Organization.removeButton
+          )
           .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
@@ -60,39 +62,41 @@ struct MTOrganizationEditor: View {
     }
     .font(MTFont.caption)
     .foregroundStyle(MTColor.accent)
-    .padding(.leading, 10)
-    .padding(.trailing, 3)
-    .frame(minHeight: 32)
+    .padding(.leading, MTLayout.Organization.tagLeading)
+    .padding(.trailing, MTLayout.Organization.tagTrailing)
+    .frame(minHeight: MTLayout.InlineAction.height)
     .background(MTColor.accentSubtle, in: Capsule())
-    .overlay { Capsule().strokeBorder(MTColor.accent.opacity(0.34), lineWidth: 1) }
+    .overlay { Capsule().strokeBorder(MTColor.accentBorder, lineWidth: MTSize.Stroke.thin) }
   }
 
   private func collectionChip(_ name: String) -> some View {
     Text(name)
-      .font(.system(.footnote, design: .serif))
+      .font(MTFont.collectionName)
       .foregroundStyle(MTColor.ink)
       .lineLimit(1)
-      .padding(.vertical, 7)
+      .padding(.vertical, MTLayout.Organization.labelInset)
       .padding(.horizontal, MTSpacing.s6)
-      .frame(minHeight: 40)
+      .frame(minHeight: MTLayout.Organization.labelHeight)
       .background {
         ZStack {
           MTColor.warmSubtle
           LinearGradient(
             stops: [
-              .init(color: MTColor.surfaceRaised.opacity(0.34), location: 0),
+              .init(color: MTColor.labelSheen, location: 0),
               .init(color: .clear, location: 0.44),
               .init(color: .clear, location: 0.58),
-              .init(color: MTColor.warm.opacity(0.12), location: 1),
+              .init(color: MTColor.labelShade, location: 1),
             ], startPoint: .top, endPoint: .bottom)
         }
-        .shadow(color: MTColor.warm.opacity(0.12), radius: 4, y: 3)
+        .shadow(
+          color: MTColor.labelShade, radius: MTLayout.Organization.glowRadius,
+          y: MTLayout.Organization.glowOffset)
       }
       .overlay {
         VStack {
-          Rectangle().fill(MTColor.warm.opacity(0.48)).frame(height: 1)
+          Rectangle().fill(MTColor.labelEdge).frame(height: MTSize.Stroke.thin)
           Spacer()
-          Rectangle().fill(MTColor.warm.opacity(0.48)).frame(height: 1)
+          Rectangle().fill(MTColor.labelEdge).frame(height: MTSize.Stroke.thin)
         }
       }
       .overlay {
@@ -106,17 +110,19 @@ struct MTOrganizationEditor: View {
         Button {
           remove(name)
         } label: {
-          Image(.close).font(.system(size: 10, weight: .semibold))
+          Image(.close).font(.mtIcon(MTSize.Icon.s10, weight: .semibold))
             .foregroundStyle(MTColor.inkMuted)
-            .frame(width: 22, height: 22)
+            .frame(
+              width: MTLayout.Organization.removeButton, height: MTLayout.Organization.removeButton
+            )
             .background(MTColor.surfaceRaised, in: Circle())
-            .overlay { Circle().strokeBorder(MTColor.borderStrong, lineWidth: 1) }
+            .overlay { Circle().strokeBorder(MTColor.borderStrong, lineWidth: MTSize.Stroke.thin) }
             .mtShadow(MTShadow.raised)
-            .frame(width: 32, height: 32)
+            .frame(width: MTLayout.InlineAction.height, height: MTLayout.InlineAction.height)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .offset(x: 13, y: -13)
+        .offset(x: MTLayout.Organization.removeOffset, y: -MTLayout.Organization.removeOffset)
         .accessibilityLabel("Remove \(name) from \(kind.title)")
       }
       .padding(.trailing, MTSpacing.s2)
@@ -126,9 +132,9 @@ struct MTOrganizationEditor: View {
   private var bookend: some View {
     Rectangle()
       .fill(MTColor.warmSubtle)
-      .overlay { Rectangle().strokeBorder(MTColor.warm, lineWidth: 2) }
-      .frame(width: 8)
-      .padding(.vertical, -3)
+      .overlay { Rectangle().strokeBorder(MTColor.warm, lineWidth: MTSize.Stroke.medium) }
+      .frame(width: MTLayout.Organization.bookendWidth)
+      .padding(.vertical, -MTLayout.Organization.bookendOverhang)
   }
 
   private var addButton: some View {
@@ -139,17 +145,28 @@ struct MTOrganizationEditor: View {
         .labelStyle(MTInlineIconLabelStyle())
         .font(MTFont.caption)
         .foregroundStyle(MTColor.inkMuted)
-        .padding(.leading, kind == .collection ? 11 : 8)
+        .padding(.leading, kind == .collection ? MTLayout.Organization.addInset : MTSpacing.s2)
         .padding(.trailing, MTSpacing.s3)
-        .frame(minHeight: kind == .collection ? 38 : 32)
+        .frame(
+          minHeight: kind == .collection
+            ? MTLayout.Organization.addHeight : MTLayout.InlineAction.height
+        )
         .background {
           if kind == .collection {
             Rectangle()
-              .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-              .foregroundStyle(MTColor.warm.opacity(0.54))
+              .strokeBorder(
+                style: StrokeStyle(
+                  lineWidth: MTSize.Stroke.thin,
+                  dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap])
+              )
+              .foregroundStyle(MTColor.labelDash)
           } else {
             Capsule()
-              .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+              .strokeBorder(
+                style: StrokeStyle(
+                  lineWidth: MTSize.Stroke.thin,
+                  dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap])
+              )
               .foregroundStyle(MTColor.borderStrong)
           }
         }
@@ -203,7 +220,8 @@ private struct MTOrganizationPicker: View {
             addText()
           } label: {
             HStack(spacing: MTSpacing.s2) {
-              Image(.plus).font(.system(size: 14, weight: .medium)).frame(width: 20)
+              Image(.plus).font(.mtIcon(MTSize.Icon.s14, weight: .medium)).frame(
+                width: MTLayout.Organization.rowIcon)
               Text("Create \(kind.singular.lowercased())")
               Spacer(minLength: MTSpacing.s2)
               Text(text)
@@ -267,13 +285,15 @@ private struct MTOrganizationPicker: View {
 
   private var searchField: some View {
     let tone = kind == .tag ? MTColor.accent : MTColor.warm
-    let shape = RoundedRectangle(cornerRadius: kind == .tag ? 22 : 2)
+    let shape = RoundedRectangle(
+      cornerRadius: kind == .tag
+        ? MTLayout.Organization.tagSearchRadius : MTLayout.Organization.labelSearchRadius)
     return HStack(spacing: MTSpacing.s2) {
-      Image(.search).font(.system(size: 15, weight: .medium))
+      Image(.search).font(.mtIcon(MTSize.Icon.s15, weight: .medium))
       TextField(
         "Search or create a \(kind.singular)", text: $query,
         prompt: Text("Find or create \(kind.singular.lowercased())").foregroundStyle(
-          tone.opacity(0.6))
+          kind == .tag ? MTColor.accentPrompt : MTColor.warmPrompt)
       )
       .font(MTFont.body)
       .foregroundStyle(MTColor.ink)
@@ -298,23 +318,24 @@ private struct MTOrganizationPicker: View {
     .foregroundStyle(tone)
     .padding(.leading, kind == .collection ? MTSpacing.s4 : MTSpacing.s3)
     .padding(.trailing, MTSpacing.s3)
-    .frame(height: 44)
+    .frame(height: MTSize.Field.medium)
     .background(MTColor.surfaceRaised, in: shape)
     .overlay {
       if kind == .collection {
         HStack {
-          Rectangle().fill(tone).frame(width: 4)
+          Rectangle().fill(tone).frame(width: MTLayout.Organization.searchSpine)
           Spacer()
         }
         .clipShape(shape)
       }
     }
-    .overlay { shape.strokeBorder(tone, lineWidth: 1) }
+    .overlay { shape.strokeBorder(tone, lineWidth: MTSize.Stroke.thin) }
     .background {
       if kind == .tag {
-        shape.stroke(MTColor.accentSubtle, lineWidth: 6)
+        shape.stroke(MTState.Focus.halo, lineWidth: MTState.Focus.haloStroke)
       } else {
-        shape.fill(MTColor.borderStrong).offset(x: 3, y: 3)
+        shape.fill(MTColor.borderStrong).offset(
+          x: MTLayout.Organization.searchShadowOffset, y: MTLayout.Organization.searchShadowOffset)
       }
     }
   }
@@ -325,12 +346,15 @@ private struct MTOrganizationPicker: View {
       toggle(name)
     } label: {
       HStack(spacing: MTSpacing.s2) {
-        Image(kind.icon).font(.system(size: 14, weight: .medium)).frame(width: 20)
-          .foregroundStyle(MTColor.inkMuted)
+        Image(kind.icon).font(.mtIcon(MTSize.Icon.s14, weight: .medium)).frame(
+          width: MTLayout.Organization.rowIcon
+        )
+        .foregroundStyle(MTColor.inkMuted)
         Text(name).foregroundStyle(MTColor.ink).lineLimit(1)
         Spacer(minLength: MTSpacing.s2)
         if selected {
-          Image(.check).font(.system(size: 14, weight: .semibold)).foregroundStyle(MTColor.accent)
+          Image(.check).font(.mtIcon(MTSize.Icon.s14, weight: .semibold)).foregroundStyle(
+            MTColor.accent)
         }
       }
       .font(MTFont.body)
@@ -369,7 +393,7 @@ private struct MTOrganizationPicker: View {
 struct MTInlineIconLabelStyle: LabelStyle {
   func makeBody(configuration: Configuration) -> some View {
     HStack(spacing: MTSpacing.s1) {
-      configuration.icon.font(.system(size: 13, weight: .medium))
+      configuration.icon.font(.mtIcon(MTSize.Icon.s13, weight: .medium))
       configuration.title
     }
   }

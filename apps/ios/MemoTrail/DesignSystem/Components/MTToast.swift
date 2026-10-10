@@ -32,7 +32,7 @@ final class MTToastCenter {
 
   /// Space kept below toasts above the home indicator or keyboard, which clears the tab bar
   /// and a sheet's action footer.
-  static let bottomClearance: CGFloat = 76
+  static let bottomClearance = MTLayout.Toast.bottomClearance
 
   /// The distance from the window's bottom edge to the lowest toast: above the home indicator
   /// or the keyboard, whichever reaches higher, plus `bottomClearance`.
@@ -160,7 +160,7 @@ private struct MTToastStack: View {
           .transition(.move(edge: .bottom).combined(with: .opacity))
       }
     }
-    .frame(maxWidth: 420)
+    .frame(maxWidth: MTLayout.Toast.width)
     .padding(.horizontal, MTSpacing.s4)
   }
 }
@@ -173,9 +173,9 @@ private struct MTToastView: View {
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
       Image(systemName: toast.tone.systemImage)
-        .font(.system(size: 15))
+        .font(.mtIcon(MTSize.Icon.s15))
         .foregroundStyle(toast.tone.color)
-        .frame(width: 18)
+        .frame(width: MTLayout.Toast.icon)
         .accessibilityHidden(true)
       Text(toast.message)
         .font(MTFont.label)
@@ -184,9 +184,9 @@ private struct MTToastView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
       Button(action: dismiss) {
-        Image(.close).font(.system(size: 11, weight: .semibold))
+        Image(.close).font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
           .foregroundStyle(MTColor.inkMuted)
-          .frame(width: 32, height: 32)
+          .frame(width: MTLayout.InlineAction.height, height: MTLayout.InlineAction.height)
           .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
@@ -196,18 +196,18 @@ private struct MTToastView: View {
     .padding(.leading, MTSpacing.s4)
     .padding(.trailing, MTSpacing.s2)
     .padding(.vertical, MTSpacing.s3)
-    .frame(minHeight: 52)
+    .frame(minHeight: MTLayout.Toast.minHeight)
     .background {
       // The Web toast's 3 point tone border on the leading edge, inside the rounded card.
       ZStack(alignment: .leading) {
         MTColor.surfaceRaised
-        toast.tone.color.frame(width: 3)
+        toast.tone.color.frame(width: MTLayout.Toast.stripe)
       }
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
     }
     .overlay {
       RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
-        MTColor.borderStrong, lineWidth: 1)
+        MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
     }
     .mtShadow(MTShadow.floating)
     .offset(y: max(0, drag))

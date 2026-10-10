@@ -265,6 +265,1404 @@
         "$description": "Overlays above the map library's own panes.",
         "$value": 500
       }
+    },
+    "pageHeader": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The page title block.",
+      "descriptionWidth": {
+        "$description": "The widest a page description runs before it wraps.",
+        "$type": "dimension",
+        "$value": {
+          "value": 640,
+          "unit": "px"
+        }
+      },
+      "copyBasis": {
+        "$description": "The narrowest the title keeps beside its actions before they move below it.",
+        "$type": "dimension",
+        "$value": {
+          "value": 260,
+          "unit": "px"
+        }
+      }
+    },
+    "field": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Text fields and their parts.",
+      "textareaInset": {
+        "$description": "Vertical padding inside a multi-line field, so its first line sits where a single-line field's does.",
+        "$type": "dimension",
+        "$value": {
+          "value": 11,
+          "unit": "px"
+        }
+      },
+      "accessory": {
+        "$description": "Inline buttons inside a field, such as Clear.",
+        "$type": "dimension",
+        "$value": {
+          "value": 28,
+          "unit": "px"
+        }
+      }
+    },
+    "fieldGrid": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "minimumColumnWidth": {
+        "$description": "The narrowest a field column gets before the grid stacks it.",
+        "$type": "dimension",
+        "$value": {
+          "value": 240,
+          "unit": "px"
+        }
+      }
+    },
+    "checkbox": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "box": {
+        "$description": "The checkbox square.",
+        "$type": "dimension",
+        "$value": {
+          "value": 20,
+          "unit": "px"
+        }
+      },
+      "radius": {
+        "$description": "The checkbox square's corner radius.",
+        "$type": "dimension",
+        "$value": {
+          "value": 5,
+          "unit": "px"
+        }
+      },
+      "baselineOffset": {
+        "$description": "How far below its center the box aligns with the label's first baseline.",
+        "$type": "dimension",
+        "$value": {
+          "value": 5,
+          "unit": "px"
+        }
+      }
+    },
+    "loading": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The space a loading indicator holds before its content arrives.",
+      "page": {
+        "$description": "A whole page or item.",
+        "$type": "dimension",
+        "$value": {
+          "value": 180,
+          "unit": "px"
+        }
+      },
+      "dashboard": {
+        "$description": "The Dashboard.",
+        "$type": "dimension",
+        "$value": {
+          "value": 150,
+          "unit": "px"
+        }
+      },
+      "list": {
+        "$description": "A list inside a page, such as the Inbox.",
+        "$type": "dimension",
+        "$value": {
+          "value": 140,
+          "unit": "px"
+        }
+      },
+      "section": {
+        "$description": "One section of a page.",
+        "$type": "dimension",
+        "$value": {
+          "value": 120,
+          "unit": "px"
+        }
+      }
+    },
+    "inlineAction": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "height": {
+        "$description": "The tap height of a text action or chip inside a row or card.",
+        "$type": "dimension",
+        "$value": {
+          "value": 32,
+          "unit": "px"
+        }
+      },
+      "disclosureHeight": {
+        "$description": "The tap height of a disclosure that shows or hides a group, such as Library filters.",
+        "$type": "dimension",
+        "$value": {
+          "value": 36,
+          "unit": "px"
+        }
+      }
+    },
+    "recordCard": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Record, Collection, and archive cards.",
+      "visualHeight": {
+        "$description": "The photo or map band at the top of a record card.",
+        "$type": "dimension",
+        "$value": {
+          "value": 190,
+          "unit": "px"
+        }
+      },
+      "entryVisualHeight": {
+        "$description": "The photo band at the top of an Entry card in a Collection.",
+        "$type": "dimension",
+        "$value": {
+          "value": 210,
+          "unit": "px"
+        }
+      },
+      "collectionMinHeight": {
+        "$description": "The shortest a Collection card's content gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 138,
+          "unit": "px"
+        }
+      },
+      "footerHeight": {
+        "$description": "The footer row of a record card, including its top padding.",
+        "$type": "dimension",
+        "$value": {
+          "value": 31,
+          "unit": "px"
+        }
+      },
+      "goalMinHeight": {
+        "$description": "The shortest a Goal card gets on phones.",
+        "$type": "dimension",
+        "$value": {
+          "value": 220,
+          "unit": "px"
+        }
+      },
+      "goalVisualHeight": {
+        "$description": "A Goal card's cover on phones.",
+        "$type": "dimension",
+        "$value": {
+          "value": 125,
+          "unit": "px"
+        }
+      },
+      "goalVisualHeightRegular": {
+        "$description": "A Goal card's cover on wider screens.",
+        "$type": "dimension",
+        "$value": {
+          "value": 138,
+          "unit": "px"
+        }
+      },
+      "goalMinHeightRegular": {
+        "$description": "The shortest a Goal card gets in regular width.",
+        "$type": "dimension",
+        "$value": {
+          "value": 245,
+          "unit": "px"
+        }
+      },
+      "personMinHeight": {
+        "$description": "The shortest a Person card gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 260,
+          "unit": "px"
+        }
+      },
+      "trashVisualWidth": {
+        "$description": "The photo or mark beside a Trash card.",
+        "$type": "dimension",
+        "$value": {
+          "value": 88,
+          "unit": "px"
+        }
+      },
+      "trashMinHeight": {
+        "$description": "The shortest a Trash card's text gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 112,
+          "unit": "px"
+        }
+      }
+    },
+    "grid": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The narrowest a column in an adaptive card grid gets.",
+      "collection": {
+        "$description": "Collection cards.",
+        "$type": "dimension",
+        "$value": {
+          "value": 200,
+          "unit": "px"
+        }
+      },
+      "record": {
+        "$description": "Person, First Time, and archive cards.",
+        "$type": "dimension",
+        "$value": {
+          "value": 300,
+          "unit": "px"
+        }
+      },
+      "detail": {
+        "$description": "Record detail groups.",
+        "$type": "dimension",
+        "$value": {
+          "value": 220,
+          "unit": "px"
+        }
+      },
+      "photo": {
+        "$description": "Photo tiles in a photo field.",
+        "$type": "dimension",
+        "$value": {
+          "value": 104,
+          "unit": "px"
+        }
+      }
+    },
+    "photoDate": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "thumbWidth": {
+        "$description": "A photo thumbnail beside its date choices.",
+        "$type": "dimension",
+        "$value": {
+          "value": 80,
+          "unit": "px"
+        }
+      },
+      "thumbHeight": {
+        "$description": "A photo thumbnail beside its date choices.",
+        "$type": "dimension",
+        "$value": {
+          "value": 100,
+          "unit": "px"
+        }
+      }
+    },
+    "timeline": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Timeline rows and their markers.",
+      "rowHeight": {
+        "$description": "The shortest Timeline track or moment row.",
+        "$type": "dimension",
+        "$value": {
+          "value": 62,
+          "unit": "px"
+        }
+      },
+      "stageWidth": {
+        "$description": "A stage marker's width, and the marker column.",
+        "$type": "dimension",
+        "$value": {
+          "value": 14,
+          "unit": "px"
+        }
+      },
+      "stageHeight": {
+        "$description": "A stage marker's height.",
+        "$type": "dimension",
+        "$value": {
+          "value": 7,
+          "unit": "px"
+        }
+      },
+      "moment": {
+        "$description": "A moment's dot.",
+        "$type": "dimension",
+        "$value": {
+          "value": 10,
+          "unit": "px"
+        }
+      },
+      "orderField": {
+        "$description": "The Order field beside a track name.",
+        "$type": "dimension",
+        "$value": {
+          "value": 118,
+          "unit": "px"
+        }
+      }
+    },
+    "avatar": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "size": {
+        "$description": "A Person's or the account's initial in a circle.",
+        "$type": "dimension",
+        "$value": {
+          "value": 48,
+          "unit": "px"
+        }
+      },
+      "toolbar": {
+        "$description": "The account initial in the toolbar.",
+        "$type": "dimension",
+        "$value": {
+          "value": 32,
+          "unit": "px"
+        }
+      }
+    },
+    "iconTile": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "A rounded square or circle that holds one icon.",
+      "small": {
+        "$description": "Inside a card's call to action.",
+        "$type": "dimension",
+        "$value": {
+          "value": 36,
+          "unit": "px"
+        }
+      },
+      "medium": {
+        "$description": "Beside a Settings link.",
+        "$type": "dimension",
+        "$value": {
+          "value": 42,
+          "unit": "px"
+        }
+      },
+      "large": {
+        "$description": "Beside a Settings section title.",
+        "$type": "dimension",
+        "$value": {
+          "value": 44,
+          "unit": "px"
+        }
+      },
+      "emptyState": {
+        "$description": "Above an empty state's title.",
+        "$type": "dimension",
+        "$value": {
+          "value": 48,
+          "unit": "px"
+        }
+      },
+      "compact": {
+        "$description": "Beside a Location's name.",
+        "$type": "dimension",
+        "$value": {
+          "value": 34,
+          "unit": "px"
+        }
+      },
+      "compactRadius": {
+        "$description": "The corner radius of a compact icon tile.",
+        "$type": "dimension",
+        "$value": {
+          "value": 10,
+          "unit": "px"
+        }
+      }
+    },
+    "optionRow": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "minHeight": {
+        "$description": "The shortest row with an icon tile, a title, and a detail line.",
+        "$type": "dimension",
+        "$value": {
+          "value": 76,
+          "unit": "px"
+        }
+      }
+    },
+    "dashboard": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Dashboard ribbon rows and cards.",
+      "rowHeight": {
+        "$description": "The shortest Dashboard ribbon row.",
+        "$type": "dimension",
+        "$value": {
+          "value": 56,
+          "unit": "px"
+        }
+      },
+      "dateColumn": {
+        "$description": "The date column of an Inbox preview row.",
+        "$type": "dimension",
+        "$value": {
+          "value": 46,
+          "unit": "px"
+        }
+      },
+      "coverHeight": {
+        "$description": "A resurfaced memory's photo.",
+        "$type": "dimension",
+        "$value": {
+          "value": 230,
+          "unit": "px"
+        }
+      },
+      "thumbWidth": {
+        "$description": "A Dashboard row's photo thumbnail.",
+        "$type": "dimension",
+        "$value": {
+          "value": 64,
+          "unit": "px"
+        }
+      },
+      "thumbHeight": {
+        "$description": "A Dashboard row's photo thumbnail.",
+        "$type": "dimension",
+        "$value": {
+          "value": 72,
+          "unit": "px"
+        }
+      }
+    },
+    "factList": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "labelWidth": {
+        "$description": "The label column of a version's fact list.",
+        "$type": "dimension",
+        "$value": {
+          "value": 80,
+          "unit": "px"
+        }
+      }
+    },
+    "itemPanel": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The panels on an item page.",
+      "padding": {
+        "$description": "Inside a version panel.",
+        "$type": "dimension",
+        "$value": {
+          "value": 22,
+          "unit": "px"
+        }
+      },
+      "paddingRegular": {
+        "$description": "Inside the item body in regular width.",
+        "$type": "dimension",
+        "$value": {
+          "value": 44,
+          "unit": "px"
+        }
+      }
+    },
+    "more": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "icon": {
+        "$description": "The icon column of a More destination.",
+        "$type": "dimension",
+        "$value": {
+          "value": 22,
+          "unit": "px"
+        }
+      }
+    },
+    "quickCapture": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "barHeight": {
+        "$description": "The shortest the quick capture bar gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 64,
+          "unit": "px"
+        }
+      }
+    },
+    "toolbar": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "mark": {
+        "$description": "The MemoTrail mark in the workspace toolbar.",
+        "$type": "dimension",
+        "$value": {
+          "value": 28,
+          "unit": "px"
+        }
+      }
+    },
+    "splash": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "mark": {
+        "$description": "The animated mark on the splash screen.",
+        "$type": "dimension",
+        "$value": {
+          "value": 132,
+          "unit": "px"
+        }
+      },
+      "wordmarkRise": {
+        "$description": "How far the wordmark rises as it fades in.",
+        "$type": "dimension",
+        "$value": {
+          "value": 7,
+          "unit": "px"
+        }
+      }
+    },
+    "map": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The space kept clear around pins when the map fits them.",
+      "edgeTop": {
+        "$description": "Below the map's top controls.",
+        "$type": "dimension",
+        "$value": {
+          "value": 64,
+          "unit": "px"
+        }
+      },
+      "edgeSide": {
+        "$description": "At the map's leading and trailing edges.",
+        "$type": "dimension",
+        "$value": {
+          "value": 72,
+          "unit": "px"
+        }
+      },
+      "edgeBottom": {
+        "$description": "Above the map's bottom controls.",
+        "$type": "dimension",
+        "$value": {
+          "value": 80,
+          "unit": "px"
+        }
+      }
+    },
+    "tagChip": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "A tag on the Tags page.",
+      "height": {
+        "$description": "The shortest a tag chip gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 42,
+          "unit": "px"
+        }
+      },
+      "count": {
+        "$description": "The smallest the Entry count pill gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 22,
+          "unit": "px"
+        }
+      }
+    },
+    "organization": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Tag pills and Collection ledger chips in the organization editor.",
+      "tagGap": {
+        "$description": "Between a tag's name and its remove button.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "tagLeading": {
+        "$description": "Before a tag's name.",
+        "$type": "dimension",
+        "$value": {
+          "value": 10,
+          "unit": "px"
+        }
+      },
+      "tagTrailing": {
+        "$description": "After a tag's remove button.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "removeButton": {
+        "$description": "The remove button on a tag or Collection chip.",
+        "$type": "dimension",
+        "$value": {
+          "value": 22,
+          "unit": "px"
+        }
+      },
+      "removeOffset": {
+        "$description": "How far a Collection chip's remove button sits outside its corner.",
+        "$type": "dimension",
+        "$value": {
+          "value": 13,
+          "unit": "px"
+        }
+      },
+      "labelInset": {
+        "$description": "Above and below a Collection's name.",
+        "$type": "dimension",
+        "$value": {
+          "value": 7,
+          "unit": "px"
+        }
+      },
+      "labelHeight": {
+        "$description": "The shortest a Collection chip gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 40,
+          "unit": "px"
+        }
+      },
+      "bookendWidth": {
+        "$description": "The bookends at each end of a Collection chip.",
+        "$type": "dimension",
+        "$value": {
+          "value": 8,
+          "unit": "px"
+        }
+      },
+      "bookendOverhang": {
+        "$description": "How far the bookends reach above and below the chip.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "glowRadius": {
+        "$description": "The blur of a Collection chip's warm glow.",
+        "$type": "dimension",
+        "$value": {
+          "value": 4,
+          "unit": "px"
+        }
+      },
+      "glowOffset": {
+        "$description": "How far a Collection chip's warm glow drops.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "addInset": {
+        "$description": "Before the label of Add Collection.",
+        "$type": "dimension",
+        "$value": {
+          "value": 11,
+          "unit": "px"
+        }
+      },
+      "addHeight": {
+        "$description": "The shortest Add Collection gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 38,
+          "unit": "px"
+        }
+      },
+      "rowIcon": {
+        "$description": "The icon column of a picker row.",
+        "$type": "dimension",
+        "$value": {
+          "value": 20,
+          "unit": "px"
+        }
+      },
+      "tagSearchRadius": {
+        "$description": "The corner radius of the tag search field.",
+        "$type": "dimension",
+        "$value": {
+          "value": 22,
+          "unit": "px"
+        }
+      },
+      "labelSearchRadius": {
+        "$description": "The corner radius of the Collection search field.",
+        "$type": "dimension",
+        "$value": {
+          "value": 2,
+          "unit": "px"
+        }
+      },
+      "searchSpine": {
+        "$description": "The colored spine at the start of the Collection search field.",
+        "$type": "dimension",
+        "$value": {
+          "value": 4,
+          "unit": "px"
+        }
+      },
+      "searchShadowOffset": {
+        "$description": "The hard shadow under the Collection search field.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      }
+    },
+    "dashedBorder": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Dashed outlines for empty states and Add actions.",
+      "dash": {
+        "$description": "The dash of an empty state's outline.",
+        "$type": "dimension",
+        "$value": {
+          "value": 4,
+          "unit": "px"
+        }
+      },
+      "dot": {
+        "$description": "The short dash of an Add action's outline.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "gap": {
+        "$description": "The gap between dashes.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      }
+    },
+    "richText": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The rich text editor and saved rich text.",
+      "maxHeight": {
+        "$description": "The tallest the editor grows before it scrolls.",
+        "$type": "dimension",
+        "$value": {
+          "value": 300,
+          "unit": "px"
+        }
+      },
+      "verticalInset": {
+        "$description": "Above and below the editor's text.",
+        "$type": "dimension",
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        }
+      },
+      "horizontalInset": {
+        "$description": "Beside the editor's text container.",
+        "$type": "dimension",
+        "$value": {
+          "value": 8,
+          "unit": "px"
+        }
+      },
+      "placeholderInset": {
+        "$description": "Before the placeholder, so it lines up with typed text.",
+        "$type": "dimension",
+        "$value": {
+          "value": 12,
+          "unit": "px"
+        }
+      },
+      "toolbarDivider": {
+        "$description": "The divider between formatting buttons.",
+        "$type": "dimension",
+        "$value": {
+          "value": 24,
+          "unit": "px"
+        }
+      },
+      "blockGap": {
+        "$description": "Between paragraphs, quotes, and lists in saved text.",
+        "$type": "dimension",
+        "$value": {
+          "value": 11,
+          "unit": "px"
+        }
+      },
+      "listMarker": {
+        "$description": "The narrowest the number or bullet column of a list gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        }
+      },
+      "minHeight": {
+        "$description": "The shortest the editor gets by default, such as in an Entry editor.",
+        "$type": "dimension",
+        "$value": {
+          "value": 180,
+          "unit": "px"
+        }
+      },
+      "captureMinHeight": {
+        "$description": "The shortest the editor gets inside the capture composer.",
+        "$type": "dimension",
+        "$value": {
+          "value": 120,
+          "unit": "px"
+        }
+      },
+      "reviewMinHeight": {
+        "$description": "The shortest the editor gets in the Inbox review sheet.",
+        "$type": "dimension",
+        "$value": {
+          "value": 200,
+          "unit": "px"
+        }
+      }
+    },
+    "uploadRing": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "stroke": {
+        "$description": "The track and progress stroke of a photo upload ring.",
+        "$type": "dimension",
+        "$value": {
+          "value": 5,
+          "unit": "px"
+        }
+      },
+      "inset": {
+        "$description": "Half the stroke, so the ring stays inside its frame.",
+        "$type": "dimension",
+        "$value": {
+          "value": 2.5,
+          "unit": "px"
+        }
+      }
+    },
+    "photoTile": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Photo tiles in photo fields and the composer.",
+      "removeButton": {
+        "$description": "The remove button on a photo tile.",
+        "$type": "dimension",
+        "$value": {
+          "value": 26,
+          "unit": "px"
+        }
+      },
+      "removeTarget": {
+        "$description": "The tap area of a photo tile's remove button.",
+        "$type": "dimension",
+        "$value": {
+          "value": 38,
+          "unit": "px"
+        }
+      },
+      "captureThumb": {
+        "$description": "A selected photo in the composer.",
+        "$type": "dimension",
+        "$value": {
+          "value": 76,
+          "unit": "px"
+        }
+      },
+      "captureRemoveButton": {
+        "$description": "The remove button on a composer photo.",
+        "$type": "dimension",
+        "$value": {
+          "value": 24,
+          "unit": "px"
+        }
+      },
+      "captureRemoveTarget": {
+        "$description": "The tap area of a composer photo's remove button.",
+        "$type": "dimension",
+        "$value": {
+          "value": 36,
+          "unit": "px"
+        }
+      }
+    },
+    "capture": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The quick capture composer.",
+      "statusHeight": {
+        "$description": "The voice status strip above the actions.",
+        "$type": "dimension",
+        "$value": {
+          "value": 42,
+          "unit": "px"
+        }
+      },
+      "actionBarHeight": {
+        "$description": "The shortest the action bar gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 58,
+          "unit": "px"
+        }
+      },
+      "spark": {
+        "$description": "The sparkle circle beside the composer's question.",
+        "$type": "dimension",
+        "$value": {
+          "value": 32,
+          "unit": "px"
+        }
+      },
+      "quietIconWidth": {
+        "$description": "An icon action in the action bar.",
+        "$type": "dimension",
+        "$value": {
+          "value": 40,
+          "unit": "px"
+        }
+      },
+      "quietIconHeight": {
+        "$description": "An icon action in the action bar.",
+        "$type": "dimension",
+        "$value": {
+          "value": 36,
+          "unit": "px"
+        }
+      }
+    },
+    "signIn": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The signed-out welcome.",
+      "width": {
+        "$description": "The widest the welcome gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 460,
+          "unit": "px"
+        }
+      },
+      "top": {
+        "$description": "Above the story, below the header.",
+        "$type": "dimension",
+        "$value": {
+          "value": 44,
+          "unit": "px"
+        }
+      },
+      "headerHeight": {
+        "$description": "The header with the mark and wordmark.",
+        "$type": "dimension",
+        "$value": {
+          "value": 68,
+          "unit": "px"
+        }
+      },
+      "headerMark": {
+        "$description": "The mark in the header.",
+        "$type": "dimension",
+        "$value": {
+          "value": 31,
+          "unit": "px"
+        }
+      },
+      "markGap": {
+        "$description": "Between the header mark and the wordmark.",
+        "$type": "dimension",
+        "$value": {
+          "value": 11,
+          "unit": "px"
+        }
+      },
+      "cardMark": {
+        "$description": "The mark at the top of the sign-in card.",
+        "$type": "dimension",
+        "$value": {
+          "value": 42,
+          "unit": "px"
+        }
+      },
+      "titleGap": {
+        "$description": "Above the welcome title.",
+        "$type": "dimension",
+        "$value": {
+          "value": 10,
+          "unit": "px"
+        }
+      },
+      "controlHeight": {
+        "$description": "The Google button and the checking state.",
+        "$type": "dimension",
+        "$value": {
+          "value": 48,
+          "unit": "px"
+        }
+      },
+      "googleMark": {
+        "$description": "The Google G beside its label.",
+        "$type": "dimension",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        }
+      }
+    },
+    "library": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "emptyHeight": {
+        "$description": "The shortest the Library empty state gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 164,
+          "unit": "px"
+        }
+      }
+    },
+    "emptyState": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "messageWidth": {
+        "$description": "The widest an empty state's message runs.",
+        "$type": "dimension",
+        "$value": {
+          "value": 480,
+          "unit": "px"
+        }
+      }
+    },
+    "toast": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Toasts above the tab bar or a sheet's footer.",
+      "width": {
+        "$description": "The widest a toast gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 420,
+          "unit": "px"
+        }
+      },
+      "minHeight": {
+        "$description": "The shortest a toast gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 52,
+          "unit": "px"
+        }
+      },
+      "icon": {
+        "$description": "The tone icon column.",
+        "$type": "dimension",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        }
+      },
+      "stripe": {
+        "$description": "The tone stripe at the leading edge.",
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "bottomClearance": {
+        "$description": "The space kept below toasts, clear of the tab bar and a sheet's action footer.",
+        "$type": "dimension",
+        "$value": {
+          "value": 76,
+          "unit": "px"
+        }
+      }
+    },
+    "exportPanel": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "padding": {
+        "$description": "Inside a panel on the Export page.",
+        "$type": "dimension",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        }
+      }
+    },
+    "locationMap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "height": {
+        "$description": "The map preview in a Location detail.",
+        "$type": "dimension",
+        "$value": {
+          "value": 160,
+          "unit": "px"
+        }
+      }
+    },
+    "datePicker": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "width": {
+        "$description": "The calendar and month pickers.",
+        "$type": "dimension",
+        "$value": {
+          "value": 320,
+          "unit": "px"
+        }
+      },
+      "yearWidth": {
+        "$description": "The year wheel.",
+        "$type": "dimension",
+        "$value": {
+          "value": 240,
+          "unit": "px"
+        }
+      }
+    },
+    "gallery": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The Design System gallery's own chrome.",
+      "mark": {
+        "$description": "The mark beside the gallery title.",
+        "$type": "dimension",
+        "$value": {
+          "value": 40,
+          "unit": "px"
+        }
+      },
+      "index": {
+        "$description": "The section number column.",
+        "$type": "dimension",
+        "$value": {
+          "value": 22,
+          "unit": "px"
+        }
+      },
+      "sampleVisual": {
+        "$description": "The visual of a sample record card.",
+        "$type": "dimension",
+        "$value": {
+          "value": 148,
+          "unit": "px"
+        }
+      },
+      "sampleTile": {
+        "$description": "A square sample photo, such as the upload overlay specimen.",
+        "$type": "dimension",
+        "$value": {
+          "value": 132,
+          "unit": "px"
+        }
+      },
+      "photoSampleWidth": {
+        "$description": "The sample photo behind the Badge photo overlay specimens.",
+        "$type": "dimension",
+        "$value": {
+          "value": 240,
+          "unit": "px"
+        }
+      },
+      "photoSampleHeight": {
+        "$description": "The sample photo behind the Badge photo overlay specimens.",
+        "$type": "dimension",
+        "$value": {
+          "value": 135,
+          "unit": "px"
+        }
+      },
+      "truncationFrame": {
+        "$description": "The narrow frame that shows a Badge truncating its label.",
+        "$type": "dimension",
+        "$value": {
+          "value": 160,
+          "unit": "px"
+        }
+      },
+      "sampleGrid": {
+        "$description": "The narrowest card column in a card specimen grid.",
+        "$type": "dimension",
+        "$value": {
+          "value": 220,
+          "unit": "px"
+        }
+      },
+      "artworkWidth": {
+        "$description": "The sample photo rendered for remote image specimens.",
+        "$type": "dimension",
+        "$value": {
+          "value": 640,
+          "unit": "px"
+        }
+      },
+      "artworkHeight": {
+        "$description": "The sample photo rendered for remote image specimens.",
+        "$type": "dimension",
+        "$value": {
+          "value": 360,
+          "unit": "px"
+        }
+      }
+    },
+    "exploration": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The AI exploration workspace.",
+      "questionHeight": {
+        "$description": "The shortest the question editor gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 100,
+          "unit": "px"
+        }
+      },
+      "conclusionHeight": {
+        "$description": "The shortest the conclusion editor gets.",
+        "$type": "dimension",
+        "$value": {
+          "value": 200,
+          "unit": "px"
+        }
+      }
+    },
+    "disclosure": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "indent": {
+        "$description": "The indent of a disclosure's text, so it lines up after the chevron.",
+        "$type": "dimension",
+        "$value": {
+          "value": 19,
+          "unit": "px"
+        }
+      }
     }
   }
 }

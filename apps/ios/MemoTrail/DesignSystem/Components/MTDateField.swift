@@ -126,11 +126,11 @@ struct MTDateField: View {
           Button {
             value = ""
           } label: {
-            Image(.close).font(.system(size: 12, weight: .semibold))
+            Image(.close).font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
           }
           .buttonStyle(.plain)
           .foregroundStyle(MTColor.inkMuted)
-          .frame(width: 32, height: 32)
+          .frame(width: MTLayout.InlineAction.height, height: MTLayout.InlineAction.height)
           .contentShape(Rectangle())
           .accessibilityLabel("Clear \(label.lowercased())")
         }
@@ -202,7 +202,7 @@ private struct MTDatePicker: View {
             displayedComponents: includesTime ? [.date, .hourAndMinute] : [.date]
           )
           .datePickerStyle(.graphical)
-          .frame(minWidth: 320)
+          .frame(minWidth: MTLayout.DatePicker.width)
         case .month:
           HStack(spacing: 0) {
             wheel("Month", component: .month, values: Array(1...12)) {
@@ -210,9 +210,10 @@ private struct MTDatePicker: View {
             }
             wheel("Year", component: .year, values: years) { String($0) }
           }
-          .frame(width: 320)
+          .frame(width: MTLayout.DatePicker.width)
         case .year:
-          wheel("Year", component: .year, values: years) { String($0) }.frame(width: 240)
+          wheel("Year", component: .year, values: years) { String($0) }.frame(
+            width: MTLayout.DatePicker.yearWidth)
         }
       }
       .environment(\.timeZone, .gmt)

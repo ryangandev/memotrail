@@ -121,7 +121,7 @@ struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       if let eyebrow {
         Text(eyebrow)
-          .font(MTFont.label.weight(.semibold))
+          .font(MTFont.listHeading)
           .foregroundStyle(MTColor.warm)
       }
       Text(title)
@@ -238,30 +238,30 @@ struct MTSheetOption: View {
     Button(action: action) {
       HStack(spacing: MTSpacing.s3) {
         Image(icon)
-          .font(.system(size: 18, weight: .medium))
+          .font(.mtIcon(MTSize.Icon.s18, weight: .medium))
           .foregroundStyle(MTColor.accent)
-          .frame(width: 42, height: 42)
+          .frame(width: MTLayout.IconTile.medium, height: MTLayout.IconTile.medium)
           .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.small))
           .accessibilityHidden(true)
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
           Text(title)
-            .font(MTFont.body.weight(.semibold))
+            .font(MTFont.bodyStrong)
             .foregroundStyle(MTColor.ink)
           Text(detail)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
         }
         .fixedSize(horizontal: false, vertical: true)
         Spacer(minLength: 0)
         Image(.chevron)
-          .font(.system(size: 13, weight: .semibold))
+          .font(.mtIcon(MTSize.Icon.s13, weight: .semibold))
           .foregroundStyle(MTColor.inkMuted)
           .accessibilityHidden(true)
       }
       .padding(.horizontal, MTSpacing.s4)
       .padding(.vertical, MTSpacing.s3)
-      .frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.OptionRow.minHeight, alignment: .leading)
       .contentShape(RoundedRectangle(cornerRadius: MTRadius.medium))
     }
     .buttonStyle(MTSheetOptionButtonStyle())
@@ -277,7 +277,7 @@ private struct MTSheetOptionButtonStyle: ButtonStyle {
       .background(configuration.isPressed ? MTColor.accentSubtle : MTColor.surface, in: shape)
       .overlay {
         shape.strokeBorder(
-          configuration.isPressed ? MTColor.accent : MTColor.border, lineWidth: 1)
+          configuration.isPressed ? MTColor.accent : MTColor.border, lineWidth: MTSize.Stroke.thin)
       }
   }
 }

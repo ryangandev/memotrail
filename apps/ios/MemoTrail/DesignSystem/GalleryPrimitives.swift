@@ -67,7 +67,7 @@
               }
             }
             GalleryCaseSeparator()
-            Text("MTIconButton · fillsWidth").font(MTFont.caption.monospaced())
+            Text("MTIconButton · fillsWidth").font(MTFont.identifier)
               .foregroundStyle(MTColor.ink)
             HStack(spacing: MTSpacing.s2) {
               MTIconButton(label: "Add demo entry", icon: .plus, variant: .primary) {
@@ -122,7 +122,7 @@
               Button("Add memory", systemImage: MTIcon.plus.systemName) { sheet = .form }
                 .mtButtonStyle()
             }
-            Rectangle().fill(MTColor.border).frame(height: 1)
+            Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
             MTPageHeader(eyebrow: "First Time", title: "First sourdough loaf at home") {
               Button {
                 message = "Header edit activated."
@@ -131,7 +131,7 @@
               }
               .mtButtonStyle(.ghost, size: .small)
             }
-            Rectangle().fill(MTColor.border).frame(height: 1)
+            Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
             MTPageHeader(
               title: "A lifetime of small moments and meaningful places",
               description: "A longer heading without actions, to review wrapping at narrow widths.")

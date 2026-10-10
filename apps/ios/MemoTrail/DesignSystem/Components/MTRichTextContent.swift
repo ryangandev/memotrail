@@ -12,7 +12,7 @@ struct MTRichTextContent: View {
   var textStyle: UIFont.TextStyle = .body
   var color: Color = MTColor.ink
   var lineLimit: Int?
-  @ScaledMetric(relativeTo: .body) private var blockSpacing = 11
+  @ScaledMetric(relativeTo: .body) private var blockSpacing = MTLayout.RichText.blockGap
 
   var body: some View {
     Group {
@@ -70,7 +70,7 @@ struct MTRichTextContent: View {
       paragraph(Text(inline(node.content ?? [])), color: color)
     case "blockquote":
       HStack(alignment: .top, spacing: MTSpacing.s3) {
-        Rectangle().fill(MTColor.accent).frame(width: 2)
+        Rectangle().fill(MTColor.accent).frame(width: MTSize.Stroke.medium)
         blocks(node.content ?? [], color: MTColor.inkMuted)
       }
       .fixedSize(horizontal: false, vertical: true)
@@ -83,7 +83,7 @@ struct MTRichTextContent: View {
               .font(font)
               .monospacedDigit()
               .foregroundStyle(MTColor.inkMuted)
-              .frame(minWidth: 18, alignment: .trailing)
+              .frame(minWidth: MTLayout.RichText.listMarker, alignment: .trailing)
               .accessibilityHidden(true)
             blocks(item.content ?? [], color: color)
           }

@@ -60,7 +60,7 @@ struct HomesView: View {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
     }
-    .font(MTFont.caption.weight(.regular))
+    .font(MTFont.detail)
     .foregroundStyle(MTColor.inkFaint)
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Homes summary")
@@ -75,7 +75,7 @@ struct HomesView: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage {
       MTEmptyState(title: "Homes unavailable", message: message, icon: .home) {
         Button("Try again") { Task { await controller.load() } }
