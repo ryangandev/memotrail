@@ -33,7 +33,13 @@ export function SelectField({
     >
       <label htmlFor={id ?? generatedId}>{label}</label>
       <div className={styles.control}>
-        <select {...selectProps} disabled={disabled} id={id ?? generatedId}>
+        {/* data-ui-select opts out of the global select chevron; the Icon below draws this one. */}
+        <select
+          {...selectProps}
+          data-ui-select
+          disabled={disabled}
+          id={id ?? generatedId}
+        >
           {children}
         </select>
         <Icon name="chevron" size={15} />
