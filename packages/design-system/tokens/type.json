@@ -1,0 +1,606 @@
+{
+  "type": {
+    "$type": "typography",
+    "$description": "Text roles. Web receives one variable per property; iOS maps each role to the Dynamic Type style in $extensions.",
+    "hero": {
+      "$description": "Sign-in story headline.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": {
+          "value": 70,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": -3.15,
+          "unit": "px"
+        },
+        "lineHeight": 1.02
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "web": {
+            "fluid": {
+              "minimum": {
+                "value": 46,
+                "unit": "px"
+              },
+              "viewportWidth": 5.5
+            }
+          },
+          "ios": {
+            "textStyle": "largeTitle",
+            "value": {
+              "fontSize": {
+                "value": 50,
+                "unit": "px"
+              },
+              "letterSpacing": {
+                "value": -2.25,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "heroCompact": {
+      "$description": "Sign-in story headline on narrow screens.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": {
+          "value": 54,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": -2.43,
+          "unit": "px"
+        },
+        "lineHeight": 1.02
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "web": {
+            "fluid": {
+              "minimum": {
+                "value": 40,
+                "unit": "px"
+              },
+              "viewportWidth": 13
+            }
+          }
+        }
+      }
+    },
+    "display": {
+      "$description": "Page titles.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": "{font.size.display}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "largeTitle",
+            "value": {
+              "fontSize": {
+                "value": 34,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "title": {
+      "$description": "Section and onboarding titles.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": "{font.size.title}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "title"
+          }
+        }
+      }
+    },
+    "sheetTitle": {
+      "$description": "Sheet and dialog titles.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": "{font.size.title}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "title2",
+            "value": {
+              "fontSize": {
+                "value": 22,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "recordTitle": {
+      "$description": "Record detail titles.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": {
+          "value": 26,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.bold}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "none",
+            "value": {
+              "fontWeight": "{font.weight.medium}"
+            }
+          }
+        }
+      }
+    },
+    "wordmarkLarge": {
+      "$description": "The splash screen wordmark.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": {
+          "value": 32,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "ios": {
+            "textStyle": "none"
+          }
+        }
+      }
+    },
+    "titleSmall": {
+      "$description": "Card and panel titles.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.titleSmall}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "title3"
+          }
+        }
+      }
+    },
+    "cardTitle": {
+      "$description": "Serif record, Collection, and empty-state titles.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": "{font.size.titleSmall}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "title3"
+          }
+        }
+      }
+    },
+    "wordmark": {
+      "$description": "The MemoTrail wordmark beside the brand mark.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": {
+          "value": 19,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": -0.38,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "none",
+            "value": {
+              "letterSpacing": {
+                "value": -0.4,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "sectionTitle": {
+      "$description": "Settings section headings.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 18,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.bold}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "heading": {
+      "$description": "Compact list and card headings.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.bodyLarge}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "headline"
+          }
+        }
+      }
+    },
+    "bodyLarge": {
+      "$description": "Reading text and primary inputs.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.bodyLarge}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.body}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "body"
+          }
+        }
+      }
+    },
+    "subsectionTitle": {
+      "$description": "Settings subsection headings.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 16,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.bold}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "body": {
+      "$description": "Default interface text.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.body}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.body}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "subheadline"
+          }
+        }
+      }
+    },
+    "bodySmall": {
+      "$description": "Secondary paragraphs and compact editors.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 14,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.body}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "label": {
+      "$description": "Field labels, buttons, and navigation.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.label}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "footnote"
+          }
+        }
+      }
+    },
+    "listHeading": {
+      "$description": "Small uppercase headings above lists.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.label}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.65,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "footnote",
+            "value": {
+              "letterSpacing": {
+                "value": 0.5,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "caption": {
+      "$description": "Metadata and helper text.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.caption}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.body}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "caption"
+          }
+        }
+      }
+    },
+    "micro": {
+      "$description": "Dense badges and tooltips.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 11,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "caption2"
+          }
+        }
+      }
+    },
+    "code": {
+      "$description": "Inline values in history diffs.",
+      "$value": {
+        "fontFamily": "{font.family.mono}",
+        "fontSize": {
+          "value": 11,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"],
+          "ios": {
+            "textStyle": "none"
+          }
+        }
+      }
+    },
+    "eyebrow": {
+      "$description": "Uppercase eyebrows above titles.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 10,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 1,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "none"
+          }
+        }
+      }
+    },
+    "fine": {
+      "$description": "The smallest readable text, such as map attribution and inline actions.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 10,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.body}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "textStyle": "none"
+          }
+        }
+      }
+    },
+    "stamp": {
+      "$description": "Monospaced counts and dates.",
+      "$value": {
+        "fontFamily": "{font.family.mono}",
+        "fontSize": {
+          "value": 10,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0.25,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "none",
+            "textCase": "none",
+            "value": {
+              "letterSpacing": {
+                "value": 0,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "nano": {
+      "$description": "Tiny uppercase markers, such as the timeline today label and micro badges.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": {
+          "value": 9,
+          "unit": "px"
+        },
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.36,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
+        }
+      }
+    }
+  }
+}

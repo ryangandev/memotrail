@@ -1,9 +1,215 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import tokens from "../src/generated/design-tokens.json";
 import {
   expectSeparatorsBetweenWords,
   expectUnclippedFocusRing,
 } from "./helpers/separators";
+
+/** Flattens nested token groups into dotted names, as the gallery labels them. */
+function leaves(group: object, prefix = ""): [string, string | number][] {
+  return Object.entries(group).flatMap(([key, value]) =>
+    value !== null && typeof value === "object"
+      ? leaves(value, `${prefix}${key}.`)
+      : [[`${prefix}${key}`, value] as [string, string | number]],
+  );
+}
+
+/** Converts a catalog color to the form getComputedStyle reports. */
+// Reads a catalog or computed color as 0-255 channels and an alpha. Mixed tokens are
+// color-mix() values that compute to color(srgb ...), while the catalog lists them rounded.
+function colorKey(value: string | number) {
+  const text = String(value);
+  const alpha = (raw?: string) => Number(Number(raw ?? 1).toFixed(3));
+  const hex = /^#([0-9A-F]{6})$/i.exec(text);
+  if (hex) {
+    const n = Number.parseInt(hex[1], 16);
+    return `${n >> 16} ${(n >> 8) & 255} ${n & 255} / 1`;
+  }
+  const rgb =
+    /^rgba?\((\d+)[, ]+(\d+)[, ]+(\d+)(?:\s*[,/]\s*([\d.]+))?\)$/.exec(text);
+  if (rgb) return `${rgb[1]} ${rgb[2]} ${rgb[3]} / ${alpha(rgb[4])}`;
+  const srgb =
+    /^color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.]+))?\)$/.exec(
+      text,
+    );
+  if (srgb) {
+    const channels = [srgb[1], srgb[2], srgb[3]].map((channel) =>
+      Math.round(Number(channel) * 255),
+    );
+    return `${channels.join(" ")} / ${alpha(srgb[4])}`;
+  }
+  throw new Error(`Unexpected color ${text}`);
+}
+
+const descriptions: Record<string, string | undefined> = tokens.descriptions;
+
+const colorMap = (group: object) =>
+  Object.fromEntries(
+    leaves(group)
+      .filter(([, value]) => typeof value === "string")
+      .map(([name, value]) => [name, colorKey(value)]),
+  );
+
+const drawnColors = (drawn: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(drawn).map(([name, value]) => [name, colorKey(value)]),
+  );
+
+test("Foundations draw every generated token in both themes", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto("/design-system#foundations");
+  const foundations = page.locator("#foundations");
+
+  // Each nested theme preview draws its own resolved colors.
+  for (const theme of ["light", "dark"] as const) {
+    const drawn = await foundations
+      .locator(`#colors [data-theme="${theme}"] [data-color]`)
+      .evaluateAll((swatches) =>
+        Object.fromEntries(
+          swatches.map((swatch) => [
+            swatch.getAttribute("data-color"),
+            getComputedStyle(swatch.querySelector("span")!).backgroundColor,
+          ]),
+        ),
+      );
+    expect(drawnColors(drawn)).toEqual(colorMap(tokens.color[theme]));
+  }
+
+  // Text roles resolve their whole typography through the role variables.
+  const roles = await foundations
+    .locator("[data-type-role]")
+    .evaluateAll((rows) =>
+      rows.map((row) => {
+        const style = getComputedStyle(row.querySelector("p")!);
+        return {
+          name: row.getAttribute("data-type-role")!,
+          fontSize: Number.parseFloat(style.fontSize),
+          fontWeight: Number(style.fontWeight),
+          letterSpacing: Number.parseFloat(style.letterSpacing) || 0,
+          lineHeight: Number.parseFloat(style.lineHeight),
+          textTransform: style.textTransform,
+        };
+      }),
+    );
+  expect(roles.map((role) => role.name)).toEqual(Object.keys(tokens.type));
+  for (const drawn of roles) {
+    const role = tokens.type[drawn.name as keyof typeof tokens.type];
+    expect(drawn.fontSize, drawn.name).toBe(role.fontSize);
+    expect(drawn.fontWeight, drawn.name).toBe(role.fontWeight);
+    expect(drawn.letterSpacing, drawn.name).toBeCloseTo(role.letterSpacing, 2);
+    expect(drawn.lineHeight, drawn.name).toBeCloseTo(
+      role.fontSize * role.lineHeight,
+      1,
+    );
+    expect(drawn.textTransform, drawn.name).toBe(
+      role.textCase === "uppercase" ? "uppercase" : "none",
+    );
+  }
+
+  // Every Web icon is drawn; single-platform icons are marked as such.
+  const icons = Object.entries(tokens.icon);
+  const webIcons = icons.filter(([, icon]) => icon.platforms.includes("web"));
+  await expect(page.locator("#identity [data-icon] svg")).toHaveCount(
+    webIcons.length,
+  );
+  await expect(
+    page.locator("#identity [data-icon]").filter({ hasText: "Web only" }),
+  ).toHaveText(
+    webIcons
+      .filter(([, icon]) => !icon.platforms.includes("ios"))
+      .map(([name]) => new RegExp(`^${name}`)),
+  );
+  await expect(page.locator("#native-icons code")).toHaveText(
+    icons
+      .filter(([, icon]) => !icon.platforms.includes("web"))
+      .map(([name]) => name),
+  );
+
+  // Layout reads page widths and layers from the tokens.
+  for (const [name, width] of Object.entries(tokens.layout.pageWidth)) {
+    await expect(
+      page.locator(`#layout [data-page-width="${name}"]`),
+    ).toContainText(`${width}px · ${descriptions[`layout.pageWidth.${name}`]}`);
+  }
+  await expect(page.locator("#layers code")).toHaveText(
+    Object.keys(tokens.layout.layer),
+  );
+  // Every focus offset draws a ring at its own gap.
+  const offsets = Object.entries(tokens.state.light.focus).filter(([name]) =>
+    name.startsWith("ringOffset"),
+  );
+  expect(
+    await page
+      .locator("#state [data-focus-offset]")
+      .evaluateAll((samples) =>
+        samples.map((sample) => [
+          sample.getAttribute("data-focus-offset"),
+          getComputedStyle(sample).outlineOffset,
+        ]),
+      ),
+  ).toEqual(offsets.map(([name, value]) => [name, `${value}px`]));
+  await expect(page.locator("#breakpoints [data-breakpoint]")).toHaveCount(
+    Object.keys(tokens.layout.breakpoint).length,
+  );
+
+  for (const theme of ["light", "dark"] as const) {
+    for (const width of [1280, 390, 320]) {
+      await test.step(`${theme} at ${width}px`, async () => {
+        await page.setViewportSize({ width, height: 900 });
+        await expect(async () => {
+          await page.getByLabel("Gallery theme").selectOption(theme);
+          await expect(
+            page.locator("[data-theme]").filter({ has: foundations }),
+          ).toHaveAttribute("data-theme", theme);
+        }).toPass();
+        const states = await page
+          .locator("#state [data-state]")
+          .evaluateAll((swatches) =>
+            Object.fromEntries(
+              swatches.map((swatch) => [
+                swatch.getAttribute("data-state"),
+                getComputedStyle(swatch.querySelector("span")!).backgroundColor,
+              ]),
+            ),
+          );
+        expect(drawnColors(states)).toEqual(colorMap(tokens.state[theme]));
+        expect(
+          colorKey(
+            await page
+              .locator('#elevation [data-elevation="overlay"]')
+              .evaluate((element) => getComputedStyle(element).backgroundColor),
+          ),
+        ).toBe(colorKey(tokens.elevation[theme].overlay.scrim));
+        for (const material of await page
+          .locator("#material [data-material]")
+          .all()) {
+          await expect(material).not.toHaveCSS("backdrop-filter", "none");
+        }
+        expect(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+        ).toBe(true);
+        await foundations.screenshot({
+          animations: "disabled",
+          caret: "initial",
+          path: `/private/tmp/memotrail-foundations-${theme}-${width}.png`,
+        });
+        await page.locator("#layout").screenshot({
+          animations: "disabled",
+          path: `/private/tmp/memotrail-layout-tokens-${theme}-${width}.png`,
+        });
+      });
+    }
+  }
+  expect(errors).toEqual([]);
+});
 
 test("selected brand motion previews both panel directions and respects reduced motion", async ({
   page,

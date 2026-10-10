@@ -1,0 +1,195 @@
+{
+  "state": {
+    "focus": {
+      "ring": {
+        "$type": "color",
+        "$description": "Keyboard focus outline.",
+        "$value": "{color.accent}"
+      },
+      "halo": {
+        "$type": "color",
+        "$description": "Soft focus halo around fields.",
+        "$value": "{color.accentSubtle}"
+      },
+      "ringWidth": {
+        "$type": "dimension",
+        "$value": {
+          "value": 2,
+          "unit": "px"
+        }
+      },
+      "ringOffset": {
+        "$type": "dimension",
+        "$description": "Gap between a control and its focus outline.",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "ringOffsetSnug": {
+        "$type": "dimension",
+        "$description": "Focus gap for links, photo tiles, checkboxes, and small choice controls.",
+        "$value": {
+          "value": 2,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetLoose": {
+        "$type": "dimension",
+        "$description": "Focus gap around Home dashboard links.",
+        "$value": {
+          "value": 4,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetHairline": {
+        "$type": "dimension",
+        "$description": "Focus gap for map attribution links.",
+        "$value": {
+          "value": 1,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetInset": {
+        "$type": "dimension",
+        "$description": "Focus outline inside list links, dock controls, and mobile navigation buttons.",
+        "$value": {
+          "value": -2,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetInsetDeep": {
+        "$type": "dimension",
+        "$description": "Focus outline inside photo preview triggers.",
+        "$value": {
+          "value": -3,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "haloWidth": {
+        "$type": "dimension",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      }
+    },
+    "hover": {
+      "$type": "color",
+      "surface": {
+        "$description": "Hovered quiet buttons and rows.",
+        "$value": "{color.surfaceSubtle}"
+      },
+      "ink": {
+        "$description": "Text of hovered quiet controls.",
+        "$value": "{color.ink}"
+      },
+      "accentSurface": {
+        "$description": "Hovered accent chips.",
+        "$value": "{color.accentSubtle}"
+      },
+      "primary": {
+        "$description": "Hovered primary buttons.",
+        "$value": "{color.accentHover}"
+      },
+      "mediaControl": {
+        "$description": "Hovered controls over a selected photo.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/black/$value/components"
+          },
+          "alpha": 0.78
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"],
+            "mix": {
+              "colors": ["{palette.black}"],
+              "weight": 0.78
+            }
+          }
+        }
+      }
+    },
+    "selected": {
+      "$type": "color",
+      "surface": {
+        "$description": "Selected segments and tabs.",
+        "$value": "{color.surfaceRaised}"
+      },
+      "ink": {
+        "$description": "Text of selected quiet controls.",
+        "$value": "{color.accent}"
+      },
+      "fill": {
+        "$description": "Selected checkboxes, days, and switches.",
+        "$value": "{color.accent}"
+      },
+      "onFill": {
+        "$description": "Marks drawn on a selected fill.",
+        "$value": "{color.accentInk}"
+      }
+    },
+    "disabled": {
+      "opacity": {
+        "$type": "number",
+        "$description": "Opacity of disabled controls, by control family.",
+        "button": {
+          "$value": 0.5
+        },
+        "field": {
+          "$value": 0.65
+        },
+        "choice": {
+          "$description": "Pickers, editors, and choice chips.",
+          "$value": 0.56
+        },
+        "quiet": {
+          "$description": "Quiet and remove buttons.",
+          "$value": 0.58
+        },
+        "navigation": {
+          "$description": "History navigation and switches.",
+          "$value": 0.45
+        },
+        "soft": {
+          "$description": "Provider sign-in and filter selects.",
+          "$value": 0.7
+        },
+        "toolbar": {
+          "$description": "Editor toolbar buttons.",
+          "$value": 0.38
+        },
+        "calendarDay": {
+          "$value": 0.35
+        }
+      }
+    }
+  }
+}

@@ -140,6 +140,7 @@
 		E1000000000000000000002D /* GoalDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002D /* GoalDetailView.swift */; };
 		E1000000000000000000002E /* GoalEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002E /* GoalEditorSheet.swift */; };
 		E1000000000000000000002F /* ConnectedItemsSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2000000000000000000002F /* ConnectedItemsSection.swift */; };
+		DA0000000000000000000001 /* DesignTokenTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB0000000000000000000001 /* DesignTokenTests.swift */; };
 		E10000000000000000000030 /* ToastPlacementTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000030 /* ToastPlacementTests.swift */; };
 		FA0000000000000000000001 /* MTFlowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB0000000000000000000001 /* MTFlowLayoutTests.swift */; };
 		E10000000000000000000031 /* PeopleController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20000000000000000000031 /* PeopleController.swift */; };
@@ -308,6 +309,7 @@
 		E2000000000000000000002D /* GoalDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalDetailView.swift; sourceTree = "<group>"; };
 		E2000000000000000000002E /* GoalEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditorSheet.swift; sourceTree = "<group>"; };
 		E2000000000000000000002F /* ConnectedItemsSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectedItemsSection.swift; sourceTree = "<group>"; };
+		DB0000000000000000000001 /* DesignTokenTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokenTests.swift; sourceTree = "<group>"; };
 		E20000000000000000000030 /* ToastPlacementTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastPlacementTests.swift; sourceTree = "<group>"; };
 		FB0000000000000000000001 /* MTFlowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTFlowLayoutTests.swift; sourceTree = "<group>"; };
 		E20000000000000000000031 /* PeopleController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleController.swift; sourceTree = "<group>"; };
@@ -556,6 +558,7 @@
 		A10000000000000000000014 /* MemoTrailTests */ = {
 			isa = PBXGroup;
 			children = (
+				DB0000000000000000000001 /* DesignTokenTests.swift */,
 				E20000000000000000000030 /* ToastPlacementTests.swift */,
 				FB0000000000000000000001 /* MTFlowLayoutTests.swift */,
 				E20000000000000000000020 /* ProfileSettingsTests.swift */,
@@ -957,6 +960,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DA0000000000000000000001 /* DesignTokenTests.swift in Sources */,
 				E10000000000000000000030 /* ToastPlacementTests.swift in Sources */,
 				FA0000000000000000000001 /* MTFlowLayoutTests.swift in Sources */,
 				E10000000000000000000020 /* ProfileSettingsTests.swift in Sources */,

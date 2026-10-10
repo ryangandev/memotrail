@@ -39,10 +39,10 @@
 }
 
 .header[data-variant="list"] .title {
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-list-heading-font-size);
+  font-weight: var(--mt-type-list-heading-font-weight);
+  letter-spacing: var(--mt-type-list-heading-letter-spacing);
+  text-transform: var(--mt-type-list-heading-text-transform);
 }
 
 .detail {

@@ -1,77 +1,7 @@
 import SwiftUI
 import UIKit
 
-// Native text roles mirror the Web token roles and follow Dynamic Type.
-// Each role maps to the iOS text style whose default size matches the Web token.
-enum MTFont {
-  static let display = Font.system(.largeTitle, design: .serif).weight(.medium)
-  static let title = Font.system(.title, design: .serif).weight(.medium)
-  static let titleSmall = Font.title3.weight(.semibold)
-  static let bodyLarge = Font.body
-  static let body = Font.subheadline
-  static let label = Font.footnote.weight(.medium)
-  static let caption = Font.caption.weight(.medium)
-  /// Compact list and card headings.
-  static let heading = Font.headline
-  /// Serif record, Collection, and empty-state titles at the title-small size.
-  static let cardTitle = Font.system(.title3, design: .serif).weight(.medium)
-  /// Serif sheet and dialog titles.
-  static let sheetTitle = Font.system(.title2, design: .serif).weight(.medium)
-  /// Uppercase eyebrows, metadata, and dense badges.
-  static let micro = Font.caption2.weight(.semibold)
-}
-
-// Semantic icons share the Web icon vocabulary and resolve to SF Symbols.
-enum MTIcon: String, CaseIterable, Sendable {
-  case archive = "archivebox"
-  case arrowLeft = "arrow.left"
-  case arrowRight = "arrow.right"
-  case bold = "bold"
-  case bulletList = "list.bullet"
-  case calendar = "calendar"
-  case car = "car"
-  case check = "checkmark"
-  case chevron = "chevron.right"
-  case close = "xmark"
-  case clock = "clock"
-  case code = "chevron.left.forwardslash.chevron.right"
-  case codeBlock = "curlybraces.square"
-  case collection = "square.stack"
-  case copy = "doc.on.doc"
-  case dashboard = "square.grid.2x2"
-  case edit = "square.and.pencil"
-  case export = "square.and.arrow.up"
-  case history = "clock.arrow.circlepath"
-  case home = "house"
-  case inbox = "tray"
-  case italic = "italic"
-  case link = "link"
-  case library = "books.vertical"
-  case map = "map"
-  case mic = "mic"
-  case more = "ellipsis"
-  case orderedList = "list.number"
-  case people = "person.2"
-  case person = "person"
-  case photo = "photo"
-  case plus = "plus"
-  case quote = "text.quote"
-  case refresh = "arrow.clockwise"
-  case search = "magnifyingglass"
-  case settings = "gearshape"
-  case sparkle = "sparkles"
-  case star = "star"
-  case stop = "stop.fill"
-  case strike = "strikethrough"
-  case tag = "tag"
-  case target = "target"
-  case timeline = "point.bottomleft.forward.to.point.topright.scurvepath"
-  case trash = "trash"
-  case underline = "underline"
-  case warning = "exclamationmark.triangle"
-
-  var systemName: String { rawValue }
-}
+// MTFont, MTTextRole, MTIcon, and MTPageWidth are generated in DesignTokens.swift.
 
 extension Image {
   init(_ icon: MTIcon) { self.init(systemName: icon.systemName) }
@@ -81,29 +11,23 @@ extension Label where Title == Text, Icon == Image {
   init(_ title: String, icon: MTIcon) { self.init(title, systemImage: icon.systemName) }
 }
 
-// Page widths match the Web PageFrame variants; phones use the full width with 16 pt gutters.
-enum MTPageWidth: CGFloat, CaseIterable, Sendable {
-  case compact = 880
-  case standard = 960
-  case wide = 1080
-  case canvas = 1180
+/// Applies a text role's font, tracking, and case. Roles with a Dynamic Type style scale their
+/// size with it, including custom sizes that have no static `MTFont`, such as `MTTextRole.hero`.
+private struct MTTextRoleModifier: ViewModifier {
+  let role: MTTextRole
+  @ScaledMetric private var scaledSize: CGFloat
 
-  var title: String {
-    switch self {
-    case .compact: "Compact"
-    case .standard: "Standard"
-    case .wide: "Wide"
-    case .canvas: "Canvas"
-    }
+  init(role: MTTextRole) {
+    self.role = role
+    _scaledSize = ScaledMetric(wrappedValue: role.size, relativeTo: role.textStyle ?? .body)
   }
 
-  var purpose: String {
-    switch self {
-    case .compact: "Forms and focused reading"
-    case .standard: "Lists and search"
-    case .wide: "Dashboards and card grids"
-    case .canvas: "Dense spatial views"
-    }
+  func body(content: Content) -> some View {
+    let size = role.textStyle == nil ? role.size : scaledSize
+    content
+      .font(.system(size: size, weight: role.weight, design: role.design))
+      .tracking(role.tracking * size / role.size)
+      .textCase(role.isUppercase ? .uppercase : nil)
   }
 }
 
@@ -294,6 +218,11 @@ private struct MTShadowModifier: ViewModifier {
 }
 
 extension View {
+  /// Applies a generated text role such as `MTTextRole.hero`.
+  func mtTextRole(_ role: MTTextRole) -> some View {
+    modifier(MTTextRoleModifier(role: role))
+  }
+
   /// Applies a generated multi-layer shadow token such as `MTShadow.raised`.
   func mtShadow(_ layers: [MTShadowLayer]) -> some View {
     modifier(MTShadowModifier(layers: layers))

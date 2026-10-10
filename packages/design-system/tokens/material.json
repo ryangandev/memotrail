@@ -1,0 +1,266 @@
+{
+  "material": {
+    "$description": "Translucent surfaces. Web blurs the backdrop; iOS uses the system material named in $extensions.",
+    "glass": {
+      "$description": "Floating glass controls, such as the workspace action dock.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        }
+      },
+      "saturation": {
+        "$type": "number",
+        "$description": "Backdrop saturation multiplier.",
+        "$value": 1.6
+      },
+      "sheen": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/white/$value/components"
+          },
+          "alpha": 0.05
+        }
+      }
+    },
+    "glassPanel": {
+      "$description": "The quick capture panel.",
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "material": "ultraThin"
+          }
+        }
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 18,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "saturation": {
+        "$type": "number",
+        "$description": "Backdrop saturation multiplier.",
+        "$value": 1.4,
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "sheen": {
+        "$type": "color",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/white/$value/components"
+          },
+          "alpha": 0.06
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "shadow": {
+        "$type": "shadow",
+        "$value": [
+          {
+            "color": {
+              "colorSpace": "srgb",
+              "components": {
+                "$ref": "#/palette/white/$value/components"
+              },
+              "alpha": 0.2
+            },
+            "offsetX": {
+              "value": 0,
+              "unit": "px"
+            },
+            "offsetY": {
+              "value": 1,
+              "unit": "px"
+            },
+            "blur": {
+              "value": 0,
+              "unit": "px"
+            },
+            "spread": {
+              "value": 0,
+              "unit": "px"
+            },
+            "inset": true
+          },
+          "{shadow.floating}"
+        ],
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      }
+    },
+    "topBar": {
+      "$description": "The sticky Web top bar.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 16,
+          "unit": "px"
+        }
+      }
+    },
+    "bottomBar": {
+      "$description": "The Web mobile navigation bar.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 20,
+          "unit": "px"
+        }
+      }
+    },
+    "chip": {
+      "$description": "Glass badges over photos.",
+      "$extensions": {
+        "com.memotrail": {
+          "ios": {
+            "material": "ultraThin"
+          }
+        }
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 8,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      }
+    },
+    "inverseChip": {
+      "$description": "Inverse badges over photos.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "tint": {
+        "$type": "color",
+        "$value": "{color.inverseSurface}"
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 8,
+          "unit": "px"
+        }
+      }
+    },
+    "mediaControl": {
+      "$description": "Round controls over photos.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "tint": {
+        "$type": "color",
+        "$value": "{color.inverseSurface}"
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 6,
+          "unit": "px"
+        }
+      }
+    },
+    "dialogScrim": {
+      "$description": "The scrim behind dialogs.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "tint": {
+        "$type": "color",
+        "$value": "{color.scrimStrong}"
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 6,
+          "unit": "px"
+        }
+      }
+    },
+    "sheetScrim": {
+      "$description": "The scrim behind in-page sheets, such as the timeline detail.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "tint": {
+        "$type": "color",
+        "$value": "{color.scrimStrong}"
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 5,
+          "unit": "px"
+        }
+      }
+    },
+    "paletteScrim": {
+      "$description": "The scrim behind the command palette.",
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      },
+      "tint": {
+        "$type": "color",
+        "$value": "{color.scrimMedium}"
+      },
+      "blur": {
+        "$type": "dimension",
+        "$value": {
+          "value": 8,
+          "unit": "px"
+        }
+      }
+    }
+  }
+}

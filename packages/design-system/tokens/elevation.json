@@ -1,0 +1,60 @@
+{
+  "elevation": {
+    "$description": "Surface and shadow pairs, from flat to overlay.",
+    "flat": {
+      "$description": "Cards that sit on the page with a border and no shadow.",
+      "surface": {
+        "$type": "color",
+        "$value": "{color.surfaceRaised}"
+      }
+    },
+    "resting": {
+      "$description": "Record cards with a barely visible lift.",
+      "surface": {
+        "$type": "color",
+        "$value": "{color.surfaceRaised}"
+      },
+      "shadow": {
+        "$type": "shadow",
+        "$value": "{shadow.hairline}"
+      }
+    },
+    "raised": {
+      "$description": "Panels and selected cards.",
+      "surface": {
+        "$type": "color",
+        "$value": "{color.surfaceRaised}"
+      },
+      "shadow": {
+        "$type": "shadow",
+        "$value": "{shadow.raised}"
+      }
+    },
+    "floating": {
+      "$description": "Menus, popovers, and toasts.",
+      "surface": {
+        "$type": "color",
+        "$value": "{color.surfaceRaised}"
+      },
+      "shadow": {
+        "$type": "shadow",
+        "$value": "{shadow.floating}"
+      }
+    },
+    "overlay": {
+      "$description": "Dialogs and sheets over a scrim.",
+      "surface": {
+        "$type": "color",
+        "$value": "{color.surfaceRaised}"
+      },
+      "shadow": {
+        "$type": "shadow",
+        "$value": "{shadow.floating}"
+      },
+      "scrim": {
+        "$type": "color",
+        "$value": "{color.scrimStrong}"
+      }
+    }
+  }
+}

@@ -9,7 +9,7 @@ import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
-import { Icon, iconNames } from "@/components/icon";
+import { Icon } from "@/components/icon";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -31,24 +31,13 @@ import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
 import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
 import { BrandMotionPreview } from "./brand-motion-preview";
-
-type TokenSet = {
-  name: string;
-  color: {
-    light: Record<string, string>;
-    dark: Record<string, string>;
-  };
-  font: {
-    family: Record<string, string>;
-    size: Record<string, number>;
-    weight: Record<string, number>;
-  };
-  lineHeight: Record<string, number>;
-  space: Record<string, number>;
-  radius: Record<string, number>;
-  motion: Record<string, number>;
-  shadow: Record<string, string>;
-};
+import {
+  FoundationTokens,
+  IconTokens,
+  LayoutTokens,
+  type TokenSet,
+} from "./foundations-gallery";
+import { Specimen } from "./specimen";
 
 const sampleRichText: EntryRichText = {
   document: {
@@ -87,26 +76,6 @@ const sampleRichText: EntryRichText = {
 
 const loadedImage =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23DDE8E1'/%3E%3Cpath d='M0 285 190 115l112 95 90-72 248 147v75H0Z' fill='%2382AD98'/%3E%3Ccircle cx='492' cy='92' r='38' fill='%23A76346'/%3E%3C/svg%3E";
-
-const typographyRoles = [
-  { family: "serif", name: "display", size: "display", weight: "medium" },
-  { family: "serif", name: "title", size: "title", weight: "medium" },
-  {
-    family: "sans",
-    name: "titleSmall",
-    size: "title-small",
-    weight: "semibold",
-  },
-  {
-    family: "sans",
-    name: "bodyLarge",
-    size: "body-large",
-    weight: "regular",
-  },
-  { family: "sans", name: "body", size: "body", weight: "regular" },
-  { family: "sans", name: "label", size: "label", weight: "medium" },
-  { family: "sans", name: "caption", size: "caption", weight: "medium" },
-] as const;
 
 export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   const [galleryTheme, setGalleryTheme] = useState<"system" | "light" | "dark">(
@@ -177,123 +146,16 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         <SharedPrimitivesGallery />
       </GallerySection>
       <GallerySection
-        description="Values are resolved from the DTCG tokens in packages/design-system/tokens. The nested previews exercise the generated light and dark CSS variables."
+        description="Values are resolved from the DTCG tokens in packages/design-system/tokens and drawn with the generated CSS variables. The nested previews exercise both themes."
         id="foundations"
         index="01"
         title="Foundations"
       >
-        <Specimen
-          description={`${Object.keys(tokens.color.light).length} semantic colors with matched light and dark names.`}
-          title="Colors"
-        >
-          <div className={styles.themeGrid}>
-            {(["light", "dark"] as const).map((theme) => (
-              <div
-                className={styles.themePreview}
-                data-theme={theme}
-                key={theme}
-              >
-                <h3>{capitalize(theme)}</h3>
-                <div className={styles.colorGrid}>
-                  {Object.entries(tokens.color[theme]).map(([name, value]) => (
-                    <div className={styles.colorToken} key={name}>
-                      <span
-                        aria-hidden="true"
-                        style={{ background: `var(--mt-color-${kebab(name)})` }}
-                      />
-                      <strong>{name}</strong>
-                      <code>{value}</code>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </Specimen>
-
-        <Specimen
-          description="The source provides primitive family, size, line-height, and weight tokens. These samples show the semantic combinations currently hardcoded by the Swift generator and repeatedly assembled in Web CSS."
-          title="Typography"
-        >
-          <div className={styles.typeList}>
-            {typographyRoles.map((role) => (
-              <div className={styles.typeRow} key={role.name}>
-                <p
-                  style={{
-                    fontFamily: `var(--mt-font-family-${role.family})`,
-                    fontSize: `var(--mt-font-size-${role.size})`,
-                    fontWeight: `var(--mt-font-weight-${role.weight})`,
-                  }}
-                >
-                  A life in progress
-                </p>
-                <code>
-                  {role.name} · {role.family} · {role.size} · {role.weight}
-                </code>
-              </div>
-            ))}
-          </div>
-        </Specimen>
-
-        <div className={styles.foundationGrid}>
-          <Specimen title="Spacing">
-            <div className={styles.scaleList}>
-              {Object.entries(tokens.space).map(([name, value]) => (
-                <div className={styles.scaleRow} key={name}>
-                  <code>space.{name}</code>
-                  <span
-                    aria-hidden="true"
-                    style={{ width: `var(--mt-space-${name})` }}
-                  />
-                  <small>{value}px</small>
-                </div>
-              ))}
-            </div>
-          </Specimen>
-
-          <Specimen title="Radius">
-            <div className={styles.radiusGrid}>
-              {Object.entries(tokens.radius).map(([name, value]) => (
-                <div key={name}>
-                  <span
-                    aria-hidden="true"
-                    style={{ borderRadius: `var(--mt-radius-${name})` }}
-                  />
-                  <code>{name}</code>
-                  <small>{value}px</small>
-                </div>
-              ))}
-            </div>
-          </Specimen>
-
-          <Specimen title="Shadow">
-            <div className={styles.shadowGrid}>
-              {Object.entries(tokens.shadow).map(([name, value]) => (
-                <div key={name}>
-                  <span style={{ boxShadow: `var(--mt-shadow-${name})` }} />
-                  <code>{name}</code>
-                  <small>{value}</small>
-                </div>
-              ))}
-            </div>
-          </Specimen>
-
-          <Specimen title="Motion">
-            <div className={styles.motionList}>
-              {Object.entries(tokens.motion).map(([name, value]) => (
-                <div key={name}>
-                  <code>{name}</code>
-                  <span style={{ animationDuration: `${value}ms` }} />
-                  <small>{value}ms</small>
-                </div>
-              ))}
-            </div>
-          </Specimen>
-        </div>
+        <FoundationTokens tokens={tokens} />
       </GallerySection>
 
       <GallerySection
-        description="Shared identity and the complete production icon set. Icon accepts name and size; BrandMark accepts className, optional counter-rotation motion, and collapsed state."
+        description="Shared identity and the icon set from packages/design-system/icons.json. Icon accepts name and size; BrandMark accepts className, optional counter-rotation motion, and collapsed state."
         id="identity"
         index="02"
         title="Identity and icons"
@@ -312,40 +174,16 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         >
           <BrandMotionPreview />
         </Specimen>
-        <div className={styles.iconGrid}>
-          {iconNames.map((name) => (
-            <div key={name}>
-              <Icon name={name} size={20} />
-              <code>{name}</code>
-            </div>
-          ))}
-        </div>
+        <IconTokens tokens={tokens} />
       </GallerySection>
 
       <GallerySection
-        description="PageFrame is the canonical outer geometry. This gallery itself uses the canvas variant."
+        description="PageFrame is the canonical outer geometry, sized by the layout tokens. This gallery itself uses the canvas variant."
         id="layout"
         index="03"
         title="Layout"
       >
-        <div className={styles.variantTable}>
-          <div>
-            <strong>compact</strong>
-            <span>880px · forms and focused reading</span>
-          </div>
-          <div>
-            <strong>standard</strong>
-            <span>960px · lists and search</span>
-          </div>
-          <div>
-            <strong>wide</strong>
-            <span>1080px · dashboards and card grids</span>
-          </div>
-          <div>
-            <strong>canvas</strong>
-            <span>1180px · dense spatial views</span>
-          </div>
-        </div>
+        <LayoutTokens tokens={tokens} />
       </GallerySection>
 
       <GallerySection
@@ -989,39 +827,4 @@ function GallerySection({
       <div className={styles.sectionBody}>{children}</div>
     </section>
   );
-}
-
-function Specimen({
-  api,
-  children,
-  description,
-  id,
-  title,
-}: {
-  api?: string;
-  children: React.ReactNode;
-  description?: string;
-  id?: string;
-  title: string;
-}) {
-  return (
-    <article className={styles.specimen} id={id}>
-      <header>
-        <div>
-          <h3>{title}</h3>
-          {description ? <p>{description}</p> : null}
-        </div>
-        {api ? <code>{api}</code> : null}
-      </header>
-      <div className={styles.specimenBody}>{children}</div>
-    </article>
-  );
-}
-
-function kebab(value: string) {
-  return value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
-}
-
-function capitalize(value: string) {
-  return `${value[0].toUpperCase()}${value.slice(1)}`;
 }

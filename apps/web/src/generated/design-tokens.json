@@ -1,59 +1,5 @@
 {
   "name": "Soft Ledger",
-  "font": {
-    "family": {
-      "sans": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "serif": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
-      "mono": "ui-monospace, \"SFMono-Regular\", Consolas, monospace"
-    },
-    "size": {
-      "caption": 12,
-      "label": 13,
-      "body": 15,
-      "bodyLarge": 17,
-      "titleSmall": 20,
-      "title": 28,
-      "display": 42
-    },
-    "weight": {
-      "regular": 400,
-      "medium": 500,
-      "semibold": 600
-    }
-  },
-  "lineHeight": {
-    "tight": 1.15,
-    "body": 1.55,
-    "relaxed": 1.7
-  },
-  "space": {
-    "1": 4,
-    "2": 8,
-    "3": 12,
-    "4": 16,
-    "5": 20,
-    "6": 24,
-    "8": 32,
-    "10": 40,
-    "12": 48,
-    "16": 64
-  },
-  "radius": {
-    "small": 8,
-    "medium": 12,
-    "large": 18,
-    "xlarge": 24,
-    "pill": 999
-  },
-  "motion": {
-    "quick": 120,
-    "standard": 180,
-    "deliberate": 280
-  },
-  "shadow": {
-    "raised": "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)",
-    "floating": "0 16px 48px rgb(38 37 31 / 0.14)"
-  },
   "color": {
     "light": {
       "canvas": "#F4F1E9",
@@ -73,7 +19,56 @@
       "warmSubtle": "#F1E2D8",
       "success": "#49705B",
       "warning": "#9B6A2F",
-      "scrim": "#26251F"
+      "scrim": "#26251F",
+      "danger": "#A76346",
+      "dangerSubtle": "#F1E2D8",
+      "dangerBorder": "rgb(167 99 70 / 0.34)",
+      "dangerTint": "rgb(167 99 70 / 0.1)",
+      "info": "#315E4F",
+      "infoSubtle": "#DDE8E1",
+      "successSubtle": "#DDE8E1",
+      "warningSubtle": "#F1E2D8",
+      "warningBorder": "rgb(155 106 47 / 0.35)",
+      "inverseSurface": "rgb(24 24 20 / 0.72)",
+      "inverseInk": "#FFFFFF",
+      "accentWash": "rgb(49 94 79 / 0.07)",
+      "accentTint": "rgb(49 94 79 / 0.1)",
+      "accentBorderFaint": "rgb(49 94 79 / 0.15)",
+      "accentBorder": "rgb(49 94 79 / 0.34)",
+      "accentBorderStrong": "rgb(49 94 79 / 0.42)",
+      "accentStripe": "rgb(49 94 79 / 0.62)",
+      "accentHalo": "rgb(221 232 225 / 0.55)",
+      "accentPanel": "#EEF2EB",
+      "accentPanelBorder": "#9BA89B",
+      "warmGlow": "rgb(241 226 216 / 0.78)",
+      "warmWash": "rgb(241 226 216 / 0.65)",
+      "captureQueued": "#F4F5EF",
+      "captureRefused": "#F8F2EA",
+      "chipSurface": "#FCFBF6",
+      "laneSurface": "#FDFEFD",
+      "surfaceWash": "rgb(236 231 220 / 0.42)",
+      "surfaceRaisedTranslucent": "rgb(255 255 255 / 0.94)",
+      "skeletonHighlight": "rgb(255 255 255 / 0.72)",
+      "borderFaint": "rgb(220 214 201 / 0.7)",
+      "inkUnderline": "rgb(38 37 31 / 0.7)",
+      "scrollbar": "rgb(113 109 99 / 0.38)",
+      "scrimFaint": "rgb(38 37 31 / 0.12)",
+      "scrimMedium": "rgb(38 37 31 / 0.34)",
+      "scrimStrong": "rgb(38 37 31 / 0.48)",
+      "menuScrim": "rgb(0 0 0 / 0.48)",
+      "mediaControl": "rgb(0 0 0 / 0.64)",
+      "mediaControlBorder": "rgb(255 255 255 / 0.4)",
+      "onInkKey": "rgb(255 255 255 / 0.1)",
+      "onInkKeyBorder": "rgb(255 255 255 / 0.35)",
+      "map": {
+        "marker": "#5C6F5D",
+        "canvas": "#F3F1EB",
+        "grid": "#D9D5CA",
+        "labelSurface": "#FFFFFF",
+        "labelInk": "#4C514B",
+        "pin": "#526F60",
+        "pinInk": "#FFFFFF"
+      }
     },
     "dark": {
       "canvas": "#171816",
@@ -93,7 +88,1162 @@
       "warmSubtle": "#432E25",
       "success": "#82AD98",
       "warning": "#D3A360",
-      "scrim": "#000000"
+      "scrim": "#000000",
+      "danger": "#D49373",
+      "dangerSubtle": "#432E25",
+      "dangerBorder": "rgb(212 147 115 / 0.34)",
+      "dangerTint": "rgb(212 147 115 / 0.1)",
+      "info": "#82AD98",
+      "infoSubtle": "#273C33",
+      "successSubtle": "#273C33",
+      "warningSubtle": "#432E25",
+      "warningBorder": "rgb(211 163 96 / 0.35)",
+      "inverseSurface": "rgb(24 24 20 / 0.72)",
+      "inverseInk": "#FFFFFF",
+      "accentWash": "rgb(130 173 152 / 0.07)",
+      "accentTint": "rgb(130 173 152 / 0.1)",
+      "accentBorderFaint": "rgb(130 173 152 / 0.15)",
+      "accentBorder": "rgb(130 173 152 / 0.34)",
+      "accentBorderStrong": "rgb(130 173 152 / 0.42)",
+      "accentStripe": "rgb(130 173 152 / 0.62)",
+      "accentHalo": "rgb(39 60 51 / 0.55)",
+      "accentPanel": "#222C26",
+      "accentPanelBorder": "#55665B",
+      "warmGlow": "rgb(67 46 37 / 0.78)",
+      "warmWash": "rgb(67 46 37 / 0.65)",
+      "captureQueued": "#202722",
+      "captureRefused": "#2A2420",
+      "chipSurface": "#20221F",
+      "laneSurface": "#262925",
+      "surfaceWash": "rgb(44 46 41 / 0.42)",
+      "surfaceRaisedTranslucent": "rgb(38 40 36 / 0.94)",
+      "skeletonHighlight": "rgb(38 40 36 / 0.72)",
+      "borderFaint": "rgb(57 59 53 / 0.7)",
+      "inkUnderline": "rgb(238 234 223 / 0.7)",
+      "scrollbar": "rgb(180 175 163 / 0.38)",
+      "scrimFaint": "rgb(0 0 0 / 0.12)",
+      "scrimMedium": "rgb(0 0 0 / 0.34)",
+      "scrimStrong": "rgb(0 0 0 / 0.48)",
+      "menuScrim": "rgb(0 0 0 / 0.48)",
+      "mediaControl": "rgb(0 0 0 / 0.64)",
+      "mediaControlBorder": "rgb(255 255 255 / 0.4)",
+      "onInkKey": "rgb(38 40 36 / 0.1)",
+      "onInkKeyBorder": "rgb(38 40 36 / 0.35)",
+      "map": {
+        "marker": "#9CB6A5",
+        "canvas": "#252824",
+        "grid": "#3E433F",
+        "labelSurface": "#343A35",
+        "labelInk": "#E4E7DF",
+        "pin": "#526F60",
+        "pinInk": "#FFFFFF"
+      }
     }
+  },
+  "font": {
+    "family": {
+      "sans": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "serif": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "mono": "ui-monospace, \"SFMono-Regular\", Consolas, monospace"
+    },
+    "size": {
+      "caption": 12,
+      "label": 13,
+      "body": 15,
+      "bodyLarge": 17,
+      "titleSmall": 20,
+      "title": 28,
+      "display": 42
+    },
+    "weight": {
+      "regular": 400,
+      "medium": 500,
+      "semibold": 600,
+      "bold": 700
+    }
+  },
+  "lineHeight": {
+    "tight": 1.15,
+    "body": 1.55,
+    "relaxed": 1.7
+  },
+  "type": {
+    "hero": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 70,
+      "fluidFontSize": "clamp(46px, 5.5vw, 70px)",
+      "fontWeight": 500,
+      "lineHeight": 1.02,
+      "letterSpacing": -3.15,
+      "textCase": "none"
+    },
+    "heroCompact": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 54,
+      "fluidFontSize": "clamp(40px, 13vw, 54px)",
+      "fontWeight": 500,
+      "lineHeight": 1.02,
+      "letterSpacing": -2.43,
+      "textCase": "none"
+    },
+    "display": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 42,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "title": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 28,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "sheetTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 28,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "recordTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 26,
+      "fontWeight": 700,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "titleSmall": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 20,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "cardTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 20,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "wordmark": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 19,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": -0.38,
+      "textCase": "none"
+    },
+    "sectionTitle": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 18,
+      "fontWeight": 700,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "heading": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 17,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "bodyLarge": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 17,
+      "fontWeight": 400,
+      "lineHeight": 1.55,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "subsectionTitle": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 16,
+      "fontWeight": 700,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "body": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 15,
+      "fontWeight": 400,
+      "lineHeight": 1.55,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "bodySmall": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 14,
+      "fontWeight": 400,
+      "lineHeight": 1.55,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "label": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 13,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "listHeading": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 13,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.65,
+      "textCase": "uppercase"
+    },
+    "caption": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 12,
+      "fontWeight": 500,
+      "lineHeight": 1.55,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "micro": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 11,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "eyebrow": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 1,
+      "textCase": "uppercase"
+    },
+    "fine": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 400,
+      "lineHeight": 1.55,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "stamp": {
+      "fontFamily": "ui-monospace, \"SFMono-Regular\", Consolas, monospace",
+      "fontSize": 10,
+      "fontWeight": 400,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.25,
+      "textCase": "uppercase"
+    },
+    "nano": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 9,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.36,
+      "textCase": "uppercase"
+    }
+  },
+  "space": {
+    "1": 4,
+    "2": 8,
+    "3": 12,
+    "4": 16,
+    "5": 20,
+    "6": 24,
+    "8": 32,
+    "10": 40,
+    "12": 48,
+    "16": 64
+  },
+  "size": {
+    "control": {
+      "small": 32,
+      "medium": 40,
+      "large": 48
+    },
+    "field": {
+      "small": 34,
+      "medium": 42,
+      "large": 48
+    },
+    "hitTarget": 24,
+    "icon": {
+      "7": 7,
+      "8": 8,
+      "10": 10,
+      "11": 11,
+      "12": 12,
+      "13": 13,
+      "14": 14,
+      "15": 15,
+      "16": 16,
+      "17": 17,
+      "18": 18,
+      "19": 19,
+      "20": 20,
+      "21": 21,
+      "22": 22,
+      "23": 23,
+      "24": 24,
+      "25": 25,
+      "30": 30
+    },
+    "stroke": {
+      "thin": 1,
+      "medium": 2,
+      "thick": 3,
+      "icon": 1.7
+    }
+  },
+  "radius": {
+    "small": 8,
+    "medium": 12,
+    "large": 18,
+    "xlarge": 24,
+    "pill": 999
+  },
+  "layout": {
+    "pageWidth": {
+      "compact": 880,
+      "standard": 960,
+      "wide": 1080,
+      "canvas": 1180
+    },
+    "pageGutter": {
+      "regular": 32,
+      "compact": 16,
+      "narrow": 12
+    },
+    "breakpoint": {
+      "390": 390,
+      "430": 430,
+      "480": 480,
+      "520": 520,
+      "540": 540,
+      "560": 560,
+      "600": 600,
+      "640": 640,
+      "700": 700,
+      "720": 720,
+      "780": 780,
+      "800": 800,
+      "820": 820,
+      "900": 900,
+      "1050": 1050,
+      "1100": 1100,
+      "1300": 1300
+    },
+    "container": {
+      "440": 440,
+      "620": 620,
+      "1000": 1000
+    },
+    "layer": {
+      "local1": 1,
+      "local2": 2,
+      "local3": 3,
+      "local4": 4,
+      "local5": 5,
+      "header": 5,
+      "sidebar": 10,
+      "dock": 12,
+      "menuScrim": 18,
+      "menu": 19,
+      "mobileNavigation": 20,
+      "progress": 30,
+      "panel": 50,
+      "dialog": 70,
+      "popover": 80,
+      "palette": 80,
+      "nestedPopover": 90,
+      "mapOverlay": 500
+    }
+  },
+  "motion": {
+    "quick": 120,
+    "standard": 180,
+    "deliberate": 280,
+    "shimmer": 1250,
+    "easing": {
+      "standard": "cubic-bezier(0.25, 0.1, 0.25, 1)",
+      "enter": "cubic-bezier(0, 0, 0.58, 1)",
+      "exit": "cubic-bezier(0.42, 0, 1, 1)",
+      "emphasized": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "inOut": "cubic-bezier(0.42, 0, 0.58, 1)",
+      "linear": "cubic-bezier(0, 0, 1, 1)"
+    }
+  },
+  "shadow": {
+    "raised": "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)",
+    "floating": "0 16px 48px rgb(38 37 31 / 0.14)",
+    "hairline": "0 1px 2px rgb(38 37 31 / 0.025)",
+    "thumb": "0 1px 3px rgb(38 37 31 / 0.1)",
+    "thumbStrong": "0 1px 3px rgb(38 37 31 / 0.12)",
+    "lifted": "0 3px 12px rgb(38 37 31 / 0.06)",
+    "menu": "0 16px 44px rgb(0 0 0 / 0.2)",
+    "mapNotice": "0 2px 10px rgb(0 0 0 / 0.08)",
+    "mapPin": "0 2px 8px rgb(0 0 0 / 0.25)",
+    "mediaControl": "0 4px 18px rgb(0 0 0 / 0.24)"
+  },
+  "state": {
+    "light": {
+      "focus": {
+        "ring": "#315E4F",
+        "halo": "#DDE8E1",
+        "ringWidth": 2,
+        "ringOffset": 3,
+        "ringOffsetSnug": 2,
+        "ringOffsetLoose": 4,
+        "ringOffsetHairline": 1,
+        "ringOffsetInset": -2,
+        "ringOffsetInsetDeep": -3,
+        "haloWidth": 3
+      },
+      "hover": {
+        "surface": "#ECE7DC",
+        "ink": "#26251F",
+        "accentSurface": "#DDE8E1",
+        "primary": "#254A3E",
+        "mediaControl": "rgb(0 0 0 / 0.78)",
+        "chipBorder": "#889687",
+        "periodBar": "#ADC1B8"
+      },
+      "selected": {
+        "surface": "#FFFFFF",
+        "ink": "#315E4F",
+        "fill": "#315E4F",
+        "onFill": "#F8FBF9"
+      },
+      "disabled": {
+        "opacity": {
+          "button": 0.5,
+          "field": 0.65,
+          "choice": 0.56,
+          "quiet": 0.58,
+          "navigation": 0.45,
+          "soft": 0.7,
+          "toolbar": 0.38,
+          "calendarDay": 0.35
+        },
+        "codeSurface": "#EEE9DF"
+      }
+    },
+    "dark": {
+      "focus": {
+        "ring": "#82AD98",
+        "halo": "#273C33",
+        "ringWidth": 2,
+        "ringOffset": 3,
+        "ringOffsetSnug": 2,
+        "ringOffsetLoose": 4,
+        "ringOffsetHairline": 1,
+        "ringOffsetInset": -2,
+        "ringOffsetInsetDeep": -3,
+        "haloWidth": 3
+      },
+      "hover": {
+        "surface": "#2C2E29",
+        "ink": "#EEEADF",
+        "accentSurface": "#273C33",
+        "primary": "#96BEAA",
+        "mediaControl": "rgb(0 0 0 / 0.78)",
+        "chipBorder": "#627668",
+        "periodBar": "#405C4F"
+      },
+      "selected": {
+        "surface": "#262824",
+        "ink": "#82AD98",
+        "fill": "#82AD98",
+        "onFill": "#142019"
+      },
+      "disabled": {
+        "opacity": {
+          "button": 0.5,
+          "field": 0.65,
+          "choice": 0.56,
+          "quiet": 0.58,
+          "navigation": 0.45,
+          "soft": 0.7,
+          "toolbar": 0.38,
+          "calendarDay": 0.35
+        },
+        "codeSurface": "#272924"
+      }
+    }
+  },
+  "material": {
+    "light": {
+      "glass": {
+        "blur": 18,
+        "saturation": 1.6,
+        "sheen": "rgb(255 255 255 / 0.05)",
+        "tint": "rgb(255 255 255 / 0.72)",
+        "border": "rgb(199 191 175 / 0.72)",
+        "hoverBorder": "rgb(49 94 79 / 0.58)",
+        "key": "rgb(255 255 255 / 0.32)",
+        "keyBorder": "rgb(199 191 175 / 0.55)",
+        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(38 37 31 / 0.12)",
+        "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(49 94 79 / 0.12), 0 0 16px rgb(49 94 79 / 0.16), 0 10px 32px rgb(38 37 31 / 0.15)"
+      },
+      "glassPanel": {
+        "blur": 18,
+        "saturation": 1.4,
+        "sheen": "rgb(255 255 255 / 0.06)",
+        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), 0 16px 48px rgb(38 37 31 / 0.14)",
+        "tint": "rgb(255 255 255 / 0.76)",
+        "border": "rgb(199 191 175 / 0.8)"
+      },
+      "topBar": {
+        "blur": 16,
+        "tint": "rgb(244 241 233 / 0.88)",
+        "border": "rgb(220 214 201 / 0.82)"
+      },
+      "bottomBar": {
+        "blur": 20,
+        "tint": "rgb(251 249 243 / 0.94)"
+      },
+      "chip": {
+        "blur": 8,
+        "tint": "rgb(255 255 255 / 0.86)"
+      },
+      "inverseChip": {
+        "tint": "rgb(24 24 20 / 0.72)",
+        "blur": 8
+      },
+      "mediaControl": {
+        "tint": "rgb(24 24 20 / 0.72)",
+        "blur": 6
+      },
+      "dialogScrim": {
+        "tint": "rgb(38 37 31 / 0.48)",
+        "blur": 6
+      },
+      "sheetScrim": {
+        "tint": "rgb(38 37 31 / 0.48)",
+        "blur": 5
+      },
+      "paletteScrim": {
+        "tint": "rgb(38 37 31 / 0.34)",
+        "blur": 8
+      }
+    },
+    "dark": {
+      "glass": {
+        "blur": 18,
+        "saturation": 1.6,
+        "sheen": "rgb(255 255 255 / 0.05)",
+        "tint": "rgb(38 40 36 / 0.72)",
+        "border": "rgb(75 78 70 / 0.72)",
+        "hoverBorder": "rgb(130 173 152 / 0.58)",
+        "key": "rgb(38 40 36 / 0.32)",
+        "keyBorder": "rgb(75 78 70 / 0.55)",
+        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(238 234 223 / 0.12)",
+        "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(130 173 152 / 0.12), 0 0 16px rgb(130 173 152 / 0.16), 0 10px 32px rgb(238 234 223 / 0.15)"
+      },
+      "glassPanel": {
+        "blur": 18,
+        "saturation": 1.4,
+        "sheen": "rgb(255 255 255 / 0.06)",
+        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), 0 16px 48px rgb(38 37 31 / 0.14)",
+        "tint": "rgb(38 40 36 / 0.76)",
+        "border": "rgb(75 78 70 / 0.8)"
+      },
+      "topBar": {
+        "blur": 16,
+        "tint": "rgb(23 24 22 / 0.88)",
+        "border": "rgb(57 59 53 / 0.82)"
+      },
+      "bottomBar": {
+        "blur": 20,
+        "tint": "rgb(30 32 29 / 0.94)"
+      },
+      "chip": {
+        "blur": 8,
+        "tint": "rgb(38 40 36 / 0.86)"
+      },
+      "inverseChip": {
+        "tint": "rgb(24 24 20 / 0.72)",
+        "blur": 8
+      },
+      "mediaControl": {
+        "tint": "rgb(24 24 20 / 0.72)",
+        "blur": 6
+      },
+      "dialogScrim": {
+        "tint": "rgb(0 0 0 / 0.48)",
+        "blur": 6
+      },
+      "sheetScrim": {
+        "tint": "rgb(0 0 0 / 0.48)",
+        "blur": 5
+      },
+      "paletteScrim": {
+        "tint": "rgb(0 0 0 / 0.34)",
+        "blur": 8
+      }
+    }
+  },
+  "elevation": {
+    "light": {
+      "flat": {
+        "surface": "#FFFFFF"
+      },
+      "resting": {
+        "surface": "#FFFFFF",
+        "shadow": "0 1px 2px rgb(38 37 31 / 0.025)"
+      },
+      "raised": {
+        "surface": "#FFFFFF",
+        "shadow": "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)"
+      },
+      "floating": {
+        "surface": "#FFFFFF",
+        "shadow": "0 16px 48px rgb(38 37 31 / 0.14)"
+      },
+      "overlay": {
+        "surface": "#FFFFFF",
+        "shadow": "0 16px 48px rgb(38 37 31 / 0.14)",
+        "scrim": "rgb(38 37 31 / 0.48)"
+      }
+    },
+    "dark": {
+      "flat": {
+        "surface": "#262824"
+      },
+      "resting": {
+        "surface": "#262824",
+        "shadow": "0 1px 2px rgb(38 37 31 / 0.025)"
+      },
+      "raised": {
+        "surface": "#262824",
+        "shadow": "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)"
+      },
+      "floating": {
+        "surface": "#262824",
+        "shadow": "0 16px 48px rgb(38 37 31 / 0.14)"
+      },
+      "overlay": {
+        "surface": "#262824",
+        "shadow": "0 16px 48px rgb(38 37 31 / 0.14)",
+        "scrim": "rgb(0 0 0 / 0.48)"
+      }
+    }
+  },
+  "icon": {
+    "archive": {
+      "description": "Archived records.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "archivebox"
+    },
+    "arrowLeft": {
+      "description": "Go back or move earlier.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "arrow.left"
+    },
+    "arrowRight": {
+      "description": "Go forward or move later.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "arrow.right"
+    },
+    "bold": {
+      "description": "Bold text formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "bold"
+    },
+    "bulletList": {
+      "description": "Bulleted list formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "list.bullet"
+    },
+    "calendar": {
+      "description": "Dates and date pickers.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "calendar"
+    },
+    "car": {
+      "description": "Vehicles.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "car"
+    },
+    "check": {
+      "description": "Confirmed, selected, or done.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "checkmark"
+    },
+    "chevron": {
+      "description": "Disclosure and navigation to a detail.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "chevron.right"
+    },
+    "clock": {
+      "description": "Times, history, and recent items.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "clock"
+    },
+    "close": {
+      "description": "Close, dismiss, or remove.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "xmark"
+    },
+    "code": {
+      "description": "Inline code formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "chevron.left.forwardslash.chevron.right"
+    },
+    "codeBlock": {
+      "description": "Code block formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "curlybraces.square"
+    },
+    "collection": {
+      "description": "Collections of records.",
+      "platforms": [
+        "ios"
+      ],
+      "sfSymbol": "square.stack"
+    },
+    "copy": {
+      "description": "Copy to the clipboard.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "doc.on.doc"
+    },
+    "dashboard": {
+      "description": "The Home dashboard.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "square.grid.2x2"
+    },
+    "edit": {
+      "description": "Edit a record.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "square.and.pencil"
+    },
+    "export": {
+      "description": "Export or share.",
+      "platforms": [
+        "ios"
+      ],
+      "sfSymbol": "square.and.arrow.up"
+    },
+    "history": {
+      "description": "Version history.",
+      "platforms": [
+        "ios"
+      ],
+      "sfSymbol": "clock.arrow.circlepath"
+    },
+    "home": {
+      "description": "Home.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "house"
+    },
+    "inbox": {
+      "description": "The capture inbox.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "tray"
+    },
+    "italic": {
+      "description": "Italic text formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "italic"
+    },
+    "library": {
+      "description": "The Library.",
+      "platforms": [
+        "ios"
+      ],
+      "sfSymbol": "books.vertical"
+    },
+    "link": {
+      "description": "Links.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "link"
+    },
+    "map": {
+      "description": "Places and the map.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "map"
+    },
+    "mic": {
+      "description": "Voice capture.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "mic"
+    },
+    "more": {
+      "description": "More actions.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "ellipsis"
+    },
+    "orderedList": {
+      "description": "Numbered list formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "list.number"
+    },
+    "people": {
+      "description": "People.",
+      "platforms": [
+        "ios"
+      ],
+      "sfSymbol": "person.2"
+    },
+    "person": {
+      "description": "One person or the account.",
+      "platforms": [
+        "ios"
+      ],
+      "sfSymbol": "person"
+    },
+    "photo": {
+      "description": "Photos and attachments.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "photo"
+    },
+    "plus": {
+      "description": "Create or add.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "plus"
+    },
+    "quote": {
+      "description": "Quote formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "text.quote"
+    },
+    "refresh": {
+      "description": "Retry or refresh.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "arrow.clockwise"
+    },
+    "search": {
+      "description": "Search.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "magnifyingglass"
+    },
+    "settings": {
+      "description": "Settings.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "gearshape"
+    },
+    "sidebarClosed": {
+      "description": "Show the collapsed sidebar.",
+      "platforms": [
+        "web"
+      ],
+      "sfSymbol": null
+    },
+    "sidebarOpen": {
+      "description": "Hide the open sidebar.",
+      "platforms": [
+        "web"
+      ],
+      "sfSymbol": null
+    },
+    "sparkle": {
+      "description": "AI features.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "sparkles"
+    },
+    "star": {
+      "description": "Goals and favorites.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "star"
+    },
+    "stop": {
+      "description": "Stop recording.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "stop.fill"
+    },
+    "strike": {
+      "description": "Strikethrough formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "strikethrough"
+    },
+    "tag": {
+      "description": "Tags.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "tag"
+    },
+    "target": {
+      "description": "Goals and targets.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "target"
+    },
+    "timeline": {
+      "description": "The timeline.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "point.bottomleft.forward.to.point.topright.scurvepath"
+    },
+    "trash": {
+      "description": "Delete or Trash.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "trash"
+    },
+    "underline": {
+      "description": "Underline formatting.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "underline"
+    },
+    "warning": {
+      "description": "Warnings.",
+      "platforms": [
+        "ios"
+      ],
+      "sfSymbol": "exclamationmark.triangle"
+    }
+  },
+  "descriptions": {
+    "color.danger": "Errors and destructive actions. Uses the warm palette, as errors do today.",
+    "color.dangerSubtle": "Background of danger buttons and error panels.",
+    "color.dangerBorder": "Border of danger buttons.",
+    "color.dangerTint": "Background of inline form errors.",
+    "color.info": "Neutral notices, such as an informational toast. Uses the accent palette.",
+    "color.infoSubtle": "Background of informational notices.",
+    "color.successSubtle": "Background of success notices.",
+    "color.warningSubtle": "Background of setup warnings. Uses the warm subtle palette.",
+    "color.warningBorder": "Border of setup warnings.",
+    "color.inverseSurface": "Dark translucent chips and controls over photos, in both themes.",
+    "color.inverseInk": "Text and glyphs on the inverse surface.",
+    "color.accentWash": "Faint accent wash behind a hovered result.",
+    "color.accentTint": "Accent tint behind selected rows and icon wells.",
+    "color.accentBorderFaint": "Hairline accent borders on accent halos.",
+    "color.accentBorder": "Borders of accent chips.",
+    "color.accentBorderStrong": "Borders of selected accent cards.",
+    "color.accentStripe": "Dashed accent stripes, such as the timeline today rail.",
+    "color.accentHalo": "Soft accent halo behind an icon.",
+    "color.accentPanel": "Opaque accent panel, such as a selected goal section.",
+    "color.accentPanelBorder": "Border of the accent panel.",
+    "color.warmGlow": "Warm radial glow behind the sign-in story.",
+    "color.warmWash": "Warm wash behind Trash previews.",
+    "color.captureQueued": "Background of a queued capture.",
+    "color.captureRefused": "Background of a refused capture.",
+    "color.chipSurface": "Background of tag chips.",
+    "color.laneSurface": "Background of timeline lanes, raised with a trace of accent.",
+    "color.surfaceWash": "Faint wash behind grouped search results.",
+    "color.surfaceRaisedTranslucent": "Nearly opaque raised surface, such as the sign-in card.",
+    "color.skeletonHighlight": "Moving highlight of loading placeholders.",
+    "color.borderFaint": "Dividers lighter than the default border.",
+    "color.inkUnderline": "Underlines of inline links.",
+    "color.scrollbar": "Scrollbar thumbs.",
+    "color.scrimFaint": "Faint scrim behind a light popover.",
+    "color.scrimMedium": "Scrim behind the command palette and over uploading photos.",
+    "color.scrimStrong": "Scrim behind dialogs and sheets.",
+    "color.menuScrim": "Scrim behind the mobile navigation menu.",
+    "color.mediaControl": "Controls over a selected photo before upload.",
+    "color.mediaControlBorder": "Border of controls over a selected photo.",
+    "color.onInkKey": "Keyboard key inside a dark tooltip.",
+    "color.onInkKeyBorder": "Border of a keyboard key inside a dark tooltip.",
+    "color.map.pin": "Interactive map pins and clusters.",
+    "color.map.pinInk": "Pin borders and counts.",
+    "type.hero": "Sign-in story headline.",
+    "type.heroCompact": "Sign-in story headline on narrow screens.",
+    "type.display": "Page titles.",
+    "type.title": "Section and onboarding titles.",
+    "type.sheetTitle": "Sheet and dialog titles.",
+    "type.recordTitle": "Record detail titles.",
+    "type.titleSmall": "Card and panel titles.",
+    "type.cardTitle": "Serif record, Collection, and empty-state titles.",
+    "type.wordmark": "The MemoTrail wordmark beside the brand mark.",
+    "type.sectionTitle": "Settings section headings.",
+    "type.heading": "Compact list and card headings.",
+    "type.bodyLarge": "Reading text and primary inputs.",
+    "type.subsectionTitle": "Settings subsection headings.",
+    "type.body": "Default interface text.",
+    "type.bodySmall": "Secondary paragraphs and compact editors.",
+    "type.label": "Field labels, buttons, and navigation.",
+    "type.listHeading": "Small uppercase headings above lists.",
+    "type.caption": "Metadata and helper text.",
+    "type.micro": "Dense badges and tooltips.",
+    "type.eyebrow": "Uppercase eyebrows above titles.",
+    "type.fine": "The smallest readable text, such as map attribution and inline actions.",
+    "type.stamp": "Monospaced counts and dates.",
+    "type.nano": "Tiny uppercase markers, such as the timeline today label and micro badges.",
+    "size.hitTarget": "Minimum pointer target: WCAG 2.2 target size on Web, the Human Interface Guidelines minimum on iOS.",
+    "size.stroke.icon": "Stroke width of the Web line icons.",
+    "layout.pageWidth.compact": "Forms and focused reading",
+    "layout.pageWidth.standard": "Lists and search",
+    "layout.pageWidth.wide": "Dashboards and card grids",
+    "layout.pageWidth.canvas": "Dense spatial views",
+    "layout.pageGutter.regular": "Wide windows.",
+    "layout.pageGutter.compact": "Phones and narrow windows.",
+    "layout.pageGutter.narrow": "The narrowest phones.",
+    "layout.layer.header": "The sticky top bar.",
+    "layout.layer.dock": "The floating workspace action dock.",
+    "layout.layer.progress": "Upload progress over the workspace.",
+    "layout.layer.panel": "In-page dialogs, such as the timeline detail panel.",
+    "layout.layer.popover": "Menus and pickers above dialogs.",
+    "layout.layer.palette": "The command palette.",
+    "layout.layer.nestedPopover": "Popovers opened from popovers.",
+    "layout.layer.mapOverlay": "Overlays above the map library's own panes.",
+    "motion.shimmer": "One sweep of the loading placeholder shimmer.",
+    "motion.easing.standard": "The CSS ease curve, the Web transition default.",
+    "motion.easing.enter": "Ease out, for elements that appear. The native default.",
+    "motion.easing.exit": "Ease in, for elements that leave.",
+    "motion.easing.emphasized": "A quick start with a long settle, for sheets and reveals.",
+    "motion.easing.inOut": "Ease in and out, for looping and symmetric motion.",
+    "motion.easing.linear": "Constant speed, for progress and shimmer.",
+    "shadow.hairline": "A barely visible lift for resting cards.",
+    "shadow.thumb": "Switch and slider thumbs.",
+    "shadow.thumbStrong": "Switch thumbs on settings rows.",
+    "shadow.lifted": "A hovered tag chip.",
+    "shadow.menu": "The mobile navigation menu.",
+    "shadow.mapNotice": "Notices floating over the map.",
+    "shadow.mapPin": "Map pins and clusters.",
+    "shadow.mediaControl": "Round controls over photos, such as the upload progress ring.",
+    "state.focus.ring": "Keyboard focus outline.",
+    "state.focus.halo": "Soft focus halo around fields.",
+    "state.focus.ringOffset": "Gap between a control and its focus outline.",
+    "state.focus.ringOffsetSnug": "Focus gap for links, photo tiles, checkboxes, and small choice controls.",
+    "state.focus.ringOffsetLoose": "Focus gap around Home dashboard links.",
+    "state.focus.ringOffsetHairline": "Focus gap for map attribution links.",
+    "state.focus.ringOffsetInset": "Focus outline inside list links, dock controls, and mobile navigation buttons.",
+    "state.focus.ringOffsetInsetDeep": "Focus outline inside photo preview triggers.",
+    "state.hover.surface": "Hovered quiet buttons and rows.",
+    "state.hover.ink": "Text of hovered quiet controls.",
+    "state.hover.accentSurface": "Hovered accent chips.",
+    "state.hover.primary": "Hovered primary buttons.",
+    "state.hover.mediaControl": "Hovered controls over a selected photo.",
+    "state.hover.chipBorder": "Border of a hovered tag chip.",
+    "state.hover.periodBar": "A hovered timeline period bar.",
+    "state.selected.surface": "Selected segments and tabs.",
+    "state.selected.ink": "Text of selected quiet controls.",
+    "state.selected.fill": "Selected checkboxes, days, and switches.",
+    "state.selected.onFill": "Marks drawn on a selected fill.",
+    "state.disabled.opacity.choice": "Pickers, editors, and choice chips.",
+    "state.disabled.opacity.quiet": "Quiet and remove buttons.",
+    "state.disabled.opacity.navigation": "History navigation and switches.",
+    "state.disabled.opacity.soft": "Provider sign-in and filter selects.",
+    "state.disabled.opacity.toolbar": "Editor toolbar buttons.",
+    "state.disabled.codeSurface": "Background of a disabled code block.",
+    "material.glass.saturation": "Backdrop saturation multiplier.",
+    "material.glass.key": "A key cap inside a glass control.",
+    "material.glass.shadow": "Top sheen, bottom sheen, and a soft ink drop shadow.",
+    "material.glassPanel.saturation": "Backdrop saturation multiplier."
   }
 }

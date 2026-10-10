@@ -117,7 +117,7 @@ Do not link, migrate, or mutate a hosted Supabase project until the exact target
 
 ## Validation
 
-After changing a token file in `packages/design-system/tokens`, regenerate both platform outputs:
+After changing a token file in `packages/design-system/tokens` or the icon manifest `packages/design-system/icons.json`, regenerate both platform outputs:
 
 ```bash
 pnpm design-system:generate
@@ -140,6 +140,7 @@ node apps/web/scripts/verify-media-trace.mjs
 ```
 
 The CI Web job runs these independent checks concurrently before the build.
+`pnpm design-system:check` also holds the text and background pairs in `packages/design-system/contrast.json` to WCAG AA in both themes; `node packages/design-system/scripts/generate.mjs --contrast` prints every ratio.
 Web type checking runs `next typegen` before TypeScript so a fresh checkout generates the required Next.js declarations.
 The generated `apps/web/next-env.d.ts` stays local and is ignored by Git.
 Playwright browser tests are a separate local acceptance suite that requires the local Supabase stack; they are not part of the current GitHub CI job.
@@ -151,6 +152,7 @@ Before merging a change to `apps/ios`, design tokens, migrations, or a contract 
 
 | Layer                                             | Location                                                | Command                                                                              | Runtime needed                                          |
 | ------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| Design-token generator, validation, and contrast  | `packages/design-system/scripts`                        | `pnpm --filter @memotrail/design-system test`                                        | Node.js                                                 |
 | Web unit and rendering contracts                  | `apps/web/src/**/*.test.{ts,tsx}`                       | `pnpm --filter @memotrail/web test`                                                  | Node.js                                                 |
 | Database security and RPC behavior                | `supabase/tests`                                        | `supabase test db`                                                                   | Local Supabase database                                 |
 | Multi-client RPC, Storage, and locking contracts  | `apps/web/contracts`                                    | `pnpm --filter @memotrail/web test:contracts`                                        | Local Supabase stack; no Web server or browser          |

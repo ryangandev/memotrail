@@ -5,12 +5,13 @@
     linear-gradient(
       105deg,
       transparent 35%,
-      color-mix(in srgb, var(--mt-color-surface-raised) 72%, transparent) 50%,
+      var(--mt-color-skeleton-highlight) 50%,
       transparent 65%
     ),
     var(--mt-color-surface-subtle);
   background-size: 220% 100%;
-  animation: skeleton-shimmer 1.25s ease-in-out infinite;
+  animation: skeleton-shimmer var(--mt-motion-shimmer)
+    var(--mt-motion-easing-in-out) infinite;
 }
 
 .skeleton[data-animated="false"] {
