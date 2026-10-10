@@ -194,7 +194,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(homeEntryText).toBeVisible();
     await expect(
       homeCapture.locator('[data-rich-text-editor="true"]'),
-    ).toHaveAttribute("data-variant", "page");
+    ).toHaveAttribute("data-variant", "embedded");
     const homeCaptureLeft = await homeCapture.evaluate(
       (element) => element.getBoundingClientRect().left,
     );
