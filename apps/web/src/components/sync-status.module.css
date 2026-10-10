@@ -2,14 +2,14 @@
   display: flex;
   height: 30px;
   align-items: center;
-  gap: 6px;
+  gap: var(--mt-space-1-5);
   padding: 0 var(--mt-space-2);
   border: 0;
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-faint);
   background: transparent;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--mt-font-size-micro);
   cursor: pointer;
   transition:
     color var(--mt-motion-quick),
@@ -26,7 +26,8 @@
   outline: none;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-subtle);
-  box-shadow: inset 0 0 0 2px var(--mt-color-accent);
+  box-shadow: inset 0 0 0 var(--mt-state-focus-ring-width)
+    var(--mt-state-focus-ring);
 }
 
 /* A capture MemoTrail did not accept waits for the person, so it stays visible. */
@@ -42,7 +43,8 @@
 }
 
 .syncStatus[aria-busy="true"] > span {
-  animation: sync-status-pulse 1.1s ease-in-out infinite;
+  animation: sync-status-pulse var(--mt-motion-pulse)
+    var(--mt-motion-easing-in-out) infinite;
 }
 
 .syncError {
@@ -53,7 +55,7 @@
 
 @keyframes sync-status-pulse {
   50% {
-    opacity: 0.3;
+    opacity: var(--mt-state-muted-opacity-pulse-low);
   }
 }
 

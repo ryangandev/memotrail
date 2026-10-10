@@ -20,8 +20,8 @@
 
 .sectionLink:focus-visible {
   border-radius: var(--mt-radius-small);
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 2px;
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
 }
 
 .sectionNote {
@@ -34,12 +34,12 @@
   display: grid;
   margin: 0;
   padding: 0;
-  border-block: 1px solid var(--mt-color-border);
+  border-block: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   list-style: none;
 }
 
 .wikiList li + li {
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .wikiList a {
@@ -62,8 +62,8 @@
 }
 
 .wikiList a:focus-visible {
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: -2px;
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-inset);
 }
 
 .wikiList strong {
@@ -103,7 +103,7 @@
 
 .wikiEmpty {
   padding: var(--mt-space-8);
-  border: 1px dashed var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) dashed var(--mt-color-border-strong);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-ink-muted);
   text-align: center;

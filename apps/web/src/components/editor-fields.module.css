@@ -16,7 +16,7 @@
 .fields label:not(:where([data-ui-field] *)) > span small,
 .fields label:not(:where([data-ui-field] *)) > small {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
   font-weight: var(--mt-font-weight-regular);
 }
 
@@ -24,7 +24,7 @@
   width: 100%;
   min-width: 0;
   padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);
   outline: 0;
   color: var(--mt-color-ink);
@@ -46,7 +46,7 @@
 
 .fields :is(input, select, textarea):not(:where([data-ui-field] *)):focus {
   border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+  box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
 }
 
 .fields :is(input, select, textarea):not(:where([data-ui-field] *)):disabled {

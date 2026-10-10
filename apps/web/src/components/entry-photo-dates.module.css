@@ -1,17 +1,17 @@
 .panel {
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   padding: var(--mt-space-4);
   background: var(--mt-color-surface);
   margin-bottom: var(--mt-space-4);
 }
 .panel h3 {
-  font-size: 14px;
+  font-size: var(--mt-font-size-body-small);
   margin: 0;
 }
 .panel p {
   font-size: var(--mt-font-size-caption);
-  line-height: 1.6;
+  line-height: var(--mt-line-height-paragraph);
   color: var(--mt-color-ink-muted);
   margin: var(--mt-space-2) 0;
 }
@@ -19,7 +19,7 @@
   display: flex;
   gap: var(--mt-space-3);
   padding-block: var(--mt-space-3);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 .photo .thumbnail {
   width: 80px;
@@ -42,7 +42,7 @@
   overflow-wrap: anywhere;
 }
 .panel fieldset {
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);
   padding: var(--mt-space-3);
   margin-top: var(--mt-space-3);
@@ -68,7 +68,7 @@
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   background: var(--mt-color-surface);
   color: var(--mt-color-ink);
   border-radius: var(--mt-radius-small);

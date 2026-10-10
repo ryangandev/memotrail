@@ -4,7 +4,7 @@
   background:
     radial-gradient(
       circle at 8% 15%,
-      color-mix(in srgb, var(--mt-color-warm-subtle) 78%, transparent) 0,
+      var(--mt-color-warm-glow) 0,
       transparent 32%
     ),
     var(--mt-color-canvas);
@@ -17,22 +17,22 @@
   align-items: center;
   justify-content: space-between;
   margin: 0 auto;
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .header:not([data-ui-page-header]) > span {
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  letter-spacing: 0.04em;
+  font-size: var(--mt-type-tagline-font-size);
+  letter-spacing: var(--mt-type-tagline-letter-spacing);
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 11px;
-  font-family: var(--mt-font-family-serif);
-  font-size: 19px;
-  letter-spacing: -0.02em;
+  gap: var(--mt-space-2-75);
+  font-family: var(--mt-type-wordmark-font-family);
+  font-size: var(--mt-type-wordmark-font-size);
+  letter-spacing: var(--mt-type-wordmark-letter-spacing);
 }
 
 .brandMark,
@@ -52,9 +52,9 @@
   min-height: calc(100dvh - 84px);
   grid-template-columns: minmax(0, 1.2fr) minmax(350px, 0.8fr);
   align-items: center;
-  gap: clamp(64px, 9vw, 128px);
+  gap: clamp(var(--mt-space-16), 9vw, var(--mt-space-32));
   margin: 0 auto;
-  padding: 72px 0 92px;
+  padding: var(--mt-space-18) 0 var(--mt-space-23);
 }
 
 .story {
@@ -64,20 +64,20 @@
 .eyebrow,
 .cardEyebrow {
   color: var(--mt-color-accent);
-  font-size: 11px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-sign-in-eyebrow-font-size);
+  font-weight: var(--mt-type-sign-in-eyebrow-font-weight);
+  letter-spacing: var(--mt-type-sign-in-eyebrow-letter-spacing);
+  text-transform: var(--mt-type-sign-in-eyebrow-text-transform);
 }
 
 .story h1 {
   max-width: 590px;
   margin-top: var(--mt-space-4);
-  font-family: var(--mt-font-family-serif);
-  font-size: clamp(46px, 5.5vw, 70px);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.045em;
-  line-height: 1.02;
+  font-family: var(--mt-type-hero-font-family);
+  font-size: var(--mt-type-hero-font-size);
+  font-weight: var(--mt-type-hero-font-weight);
+  letter-spacing: var(--mt-type-hero-letter-spacing);
+  line-height: var(--mt-type-hero-line-height);
 }
 
 .intro {
@@ -102,48 +102,44 @@
   top: 7px;
   bottom: 26px;
   left: 5px;
-  width: 1px;
+  width: var(--mt-size-stroke-thin);
   background: var(--mt-color-border-strong);
   content: "";
 }
 
 .trail > span {
-  z-index: 1;
+  z-index: var(--mt-layout-layer-local1);
   width: 11px;
   height: 11px;
   margin-top: var(--mt-space-1);
-  border: 3px solid var(--mt-color-canvas);
+  border: var(--mt-size-stroke-thick) solid var(--mt-color-canvas);
   border-radius: 50%;
   background: var(--mt-color-accent);
-  box-shadow: 0 0 0 1px var(--mt-color-accent);
+  box-shadow: 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-accent);
 }
 
 .trail article {
   display: grid;
-  gap: 2px;
+  gap: var(--mt-space-0-5);
 }
 
 .trail time,
 .trail small {
   color: var(--mt-color-ink-faint);
-  font-size: 11px;
+  font-size: var(--mt-font-size-micro);
 }
 
 .trail strong {
   font-family: var(--mt-font-family-serif);
-  font-size: 16px;
+  font-size: var(--mt-font-size-callout);
   font-weight: var(--mt-font-weight-medium);
 }
 
 .signInCard {
   padding: var(--mt-space-10);
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-xlarge);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 94%,
-    transparent
-  );
+  background: var(--mt-color-surface-raised-translucent);
   box-shadow: var(--mt-shadow-floating);
 }
 
@@ -157,17 +153,17 @@
 }
 
 .signInCard h2 {
-  margin-top: 10px;
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.025em;
+  margin-top: var(--mt-space-2-5);
+  font-family: var(--mt-type-headline-font-family);
+  font-size: var(--mt-type-headline-font-size);
+  font-weight: var(--mt-type-headline-font-weight);
+  letter-spacing: var(--mt-type-headline-letter-spacing);
 }
 
 .signInCard > p:not(.cardEyebrow):not(.error) {
   margin-top: var(--mt-space-2);
   color: var(--mt-color-ink-muted);
-  font-size: 14px;
+  font-size: var(--mt-font-size-body-small);
   line-height: var(--mt-line-height-body);
 }
 
@@ -179,11 +175,11 @@
   justify-content: center;
   gap: var(--mt-space-3);
   margin-top: var(--mt-space-8);
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
-  font-size: 14px;
+  font-size: var(--mt-font-size-body-small);
   font-weight: var(--mt-font-weight-medium);
   cursor: pointer;
   transition:
@@ -200,25 +196,25 @@
 
 .googleButton:disabled {
   cursor: wait;
-  opacity: 0.7;
+  opacity: var(--mt-state-disabled-opacity-soft);
 }
 
 .googleButton svg {
-  width: 18px;
-  height: 18px;
+  width: var(--mt-size-icon-18);
+  height: var(--mt-size-icon-18);
 }
 
 .setupState {
   display: grid;
-  gap: 5px;
+  gap: var(--mt-space-1-25);
   margin-top: var(--mt-space-8);
   padding: var(--mt-space-4);
-  border: 1px solid color-mix(in srgb, var(--mt-color-warning) 35%, transparent);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-warning-border);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-warm-subtle);
   font-size: var(--mt-font-size-caption);
-  line-height: 1.5;
+  line-height: var(--mt-line-height-message);
 }
 
 .setupState strong {
@@ -230,14 +226,14 @@
   margin-top: var(--mt-space-3);
   color: var(--mt-color-warm);
   font-size: var(--mt-font-size-caption);
-  line-height: 1.5;
+  line-height: var(--mt-line-height-message);
 }
 
 .privacyNote {
   display: block;
   margin-top: var(--mt-space-6);
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
   line-height: var(--mt-line-height-body);
   text-align: center;
 }
@@ -282,11 +278,11 @@
   .main {
     min-height: calc(100dvh - 68px);
     gap: var(--mt-space-8);
-    padding: 44px 0 var(--mt-space-16);
+    padding: var(--mt-space-11) 0 var(--mt-space-16);
   }
 
   .story h1 {
-    font-size: clamp(40px, 13vw, 54px);
+    font-size: var(--mt-type-hero-compact-font-size);
   }
 
   .intro {

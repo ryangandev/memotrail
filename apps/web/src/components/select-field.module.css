@@ -16,7 +16,7 @@
   min-width: 0;
   height: 42px;
   align-items: center;
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink-faint);
   background: var(--mt-color-surface);
@@ -27,7 +27,7 @@
 
 .control:focus-within {
   border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+  box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
 }
 
 .control select {
@@ -68,7 +68,7 @@
 
 .field[data-disabled="true"] .control {
   background: var(--mt-color-surface-subtle);
-  opacity: 0.65;
+  opacity: var(--mt-state-disabled-opacity-field);
 }
 
 .field[data-disabled="true"] select {

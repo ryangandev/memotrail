@@ -14,7 +14,7 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 180ms ease-out;
+  transition: opacity var(--mt-motion-standard) var(--mt-motion-easing-enter);
 }
 
 .cover {
@@ -31,9 +31,9 @@
 
 .skeleton {
   position: absolute;
-  z-index: 1;
+  z-index: var(--mt-layout-layer-local1);
   inset: 0;
-  transition: opacity 180ms ease-out;
+  transition: opacity var(--mt-motion-standard) var(--mt-motion-easing-enter);
 }
 
 .frame[data-image-status="loaded"] .skeleton,

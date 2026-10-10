@@ -5,7 +5,7 @@
 
 .primaryCard {
   padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-raised);
@@ -52,7 +52,7 @@
   gap: var(--mt-space-5);
   margin-top: var(--mt-space-5);
   padding-top: var(--mt-space-5);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .switchRow > span:first-child {
@@ -79,11 +79,11 @@
   width: 46px;
   height: 28px;
   align-items: center;
-  padding: 3px;
-  border: 1px solid var(--mt-color-border-strong);
+  padding: var(--mt-space-0-75);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-pill);
   background: var(--mt-color-surface-subtle);
-  opacity: 0.45;
+  opacity: var(--mt-state-disabled-opacity-navigation);
 }
 
 .switchTrack > span {

@@ -4,9 +4,10 @@
   min-height: 52px;
   align-items: flex-start;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-3) 40px var(--mt-space-3) var(--mt-space-4);
-  border: 1px solid var(--mt-color-border-strong);
-  border-left: 3px solid var(--mt-color-accent);
+  padding: var(--mt-space-3) var(--mt-space-10) var(--mt-space-3)
+    var(--mt-space-4);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
+  border-left: var(--mt-size-stroke-thick) solid var(--mt-color-accent);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);

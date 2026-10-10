@@ -17,7 +17,7 @@
   height: 42px;
   align-items: center;
   padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface);
   transition:
@@ -27,7 +27,7 @@
 
 .control:focus-within {
   border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+  box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
 }
 
 .control input,
@@ -64,5 +64,5 @@
 
 .field[data-disabled="true"] .control {
   background: var(--mt-color-surface-subtle);
-  opacity: 0.65;
+  opacity: var(--mt-state-disabled-opacity-field);
 }
