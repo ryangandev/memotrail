@@ -58,10 +58,10 @@ struct EntryAISuggestionsView: View {
       Text(
         "Optional, based on saved text (up to 16,000 characters). With Photo analysis enabled, up to 12 compact photo previews are included, without metadata. Choose what to copy, edit freely, then Save."
       )
-      .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+      .font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
       if let count = result?.photoCount, count > 0 {
         Text("Photo previews included: \(count). Originals are not sent.")
-          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+          .font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
       }
       if busy {
         ProgressView("Checking suggestions…")
@@ -72,7 +72,7 @@ struct EntryAISuggestionsView: View {
       } else if dismissed || result?.suggestion?.status == "dismissed" {
         Text("Suggestions dismissed for this version.")
       } else if let suggestion = result?.suggestion?.suggestions {
-        Text(suggestion.rationale).font(MTTypography.caption)
+        Text(suggestion.rationale).font(MTFont.caption)
         if let title = suggestion.title {
           Button("Use title: \(title)") { applyTitle(title) }
         }
@@ -86,7 +86,7 @@ struct EntryAISuggestionsView: View {
           Text(
             "Date idea: \(date). Copies the description only. Review the precision and calendar fields before saving."
           )
-          .font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+          .font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
           Button("Use as approximate date") { applyDate(date) }
         }
         Button("Dismiss suggestions") {

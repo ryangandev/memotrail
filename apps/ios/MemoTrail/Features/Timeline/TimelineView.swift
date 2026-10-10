@@ -134,9 +134,9 @@ struct TimelineView: View {
     MTFlowLayout(spacing: MTSpacing.s2) {
       Button("Manage tracks") { managingTracks = true }
         .buttonStyle(.plain)
-        .font(MTFont.caption.weight(.medium))
+        .font(MTFont.caption)
         .foregroundStyle(MTColor.accent)
-        .frame(minHeight: 32)
+        .frame(minHeight: MTLayout.InlineAction.height)
         .contentShape(Rectangle())
         .accessibilityIdentifier("manage-timeline-tracks")
       ForEach(summaryFacts, id: \.self) { fact in
@@ -153,7 +153,7 @@ struct TimelineView: View {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
     }
-    .font(MTFont.caption.weight(.regular))
+    .font(MTFont.detail)
     .foregroundStyle(MTColor.inkFaint)
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Timeline summary")
@@ -176,7 +176,7 @@ struct TimelineView: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage, controller.tracks.isEmpty {
       MTEmptyState(title: "Timeline unavailable", message: message, icon: .clock) {
         Button("Try again") { Task { await load() } }
@@ -382,13 +382,13 @@ private struct TimelineTrackCard: View {
   var body: some View {
     VStack(spacing: 0) {
       HStack(spacing: MTSpacing.s3) {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
           Text(track.name)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
             .accessibilityAddTraits(.isHeader)
           Text(countLabel(track.entries.count, "moment"))
-            .font(.caption2)
+            .font(MTFont.note)
             .foregroundStyle(MTColor.inkFaint)
         }
         Spacer(minLength: 0)
@@ -397,11 +397,11 @@ private struct TimelineTrackCard: View {
       }
       .padding(.horizontal, MTSpacing.s4)
       .padding(.vertical, MTSpacing.s3)
-      .frame(minHeight: 62)
+      .frame(minHeight: MTLayout.Timeline.rowHeight)
       MTListDivider()
       if track.entries.isEmpty {
         Text("No moments yet.")
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkFaint)
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.horizontal, MTSpacing.s4)
@@ -422,7 +422,8 @@ private struct TimelineTrackCard: View {
     .background(MTColor.surfaceRaised)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
   }
 }
@@ -435,19 +436,21 @@ private struct TimelineEntryRow: View {
     HStack(spacing: MTSpacing.s3) {
       Group {
         if entry.kind == .stage {
-          Capsule().fill(MTColor.accent).frame(width: 14, height: 7)
+          Capsule().fill(MTColor.accent).frame(
+            width: MTLayout.Timeline.stageWidth, height: MTLayout.Timeline.stageHeight)
         } else {
-          Circle().fill(MTColor.warm).frame(width: 10, height: 10)
+          Circle().fill(MTColor.warm).frame(
+            width: MTLayout.Timeline.moment, height: MTLayout.Timeline.moment)
         }
       }
-      .frame(width: 14)
-      VStack(alignment: .leading, spacing: 3) {
+      .frame(width: MTLayout.Timeline.stageWidth)
+      VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
         Text(entry.title)
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
         Text(entry.displayDate)
-          .font(.caption2)
+          .font(MTFont.note)
           .foregroundStyle(MTColor.inkFaint)
           .lineLimit(1)
       }
@@ -456,13 +459,13 @@ private struct TimelineEntryRow: View {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       } else {
         Image(.chevron)
-          .font(.system(size: 12, weight: .semibold))
+          .font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
           .foregroundStyle(MTColor.inkMuted)
       }
     }
     .padding(.horizontal, MTSpacing.s4)
     .padding(.vertical, MTSpacing.s3)
-    .frame(maxWidth: .infinity, minHeight: 62, alignment: .leading)
+    .frame(maxWidth: .infinity, minHeight: MTLayout.Timeline.rowHeight, alignment: .leading)
     .contentShape(Rectangle())
   }
 }
@@ -629,7 +632,7 @@ private struct TimelineEditorSheet: View {
         if occurrence.precision == .range { occurrence.precision = .day }
       }
       Text(kind.explanation)
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkFaint)
     }
   }

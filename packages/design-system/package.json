@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node ./scripts/generate.mjs --check",
+    "check": "node ./scripts/generate.mjs --check && node ./scripts/check-swift.mjs",
     "export": "node ./scripts/export-claude-design.mjs",
     "generate": "node ./scripts/generate.mjs",
     "test": "node --test",

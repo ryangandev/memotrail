@@ -14,9 +14,9 @@ enum MTFieldSize: CaseIterable, Sendable {
   /// The Web field heights (34, 42, 48) raised slightly for native touch targets.
   var height: CGFloat {
     switch self {
-    case .small: 36
-    case .medium: 44
-    case .large: 50
+    case .small: MTSize.Field.small
+    case .medium: MTSize.Field.medium
+    case .large: MTSize.Field.large
     }
   }
 
@@ -36,7 +36,7 @@ struct MTFieldLabel: View {
         .font(MTFont.label)
         .foregroundStyle(MTColor.inkMuted)
       if let note {
-        Text(note).font(.caption2).foregroundStyle(MTColor.inkFaint)
+        Text(note).font(MTFont.note).foregroundStyle(MTColor.inkFaint)
       }
     }
     .accessibilityHidden(true)
@@ -58,7 +58,7 @@ private struct MTFieldSurface: ViewModifier {
       .background {
         let surface = ZStack {
           // The Web focus ring: a 3 point accent halo outside the border.
-          if isFocused { shape.stroke(MTColor.accentSubtle, lineWidth: 6) }
+          if isFocused { shape.stroke(MTColor.accentSubtle, lineWidth: MTState.Focus.haloStroke) }
           shape.fill(isEnabled ? fill : MTColor.surfaceSubtle)
         }
         if let focus {
@@ -70,11 +70,12 @@ private struct MTFieldSurface: ViewModifier {
         }
       }
       .overlay {
-        shape.strokeBorder(isFocused ? MTColor.accent : MTColor.borderStrong, lineWidth: 1)
+        shape.strokeBorder(
+          isFocused ? MTColor.accent : MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
       }
       .contentShape(shape)
-      .opacity(isEnabled ? 1 : 0.65)
-      .animation(.easeOut(duration: MTMotion.quick), value: isFocused)
+      .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.field)
+      .animation(MTEasing.enter.animation(duration: MTMotion.quick), value: isFocused)
   }
 }
 
@@ -124,7 +125,7 @@ struct MTTextField: View {
       .font(MTFont.body)
       .foregroundStyle(MTColor.ink)
       .focused($isFocused)
-      .padding(.vertical, axis == .vertical ? MTSpacing.s3 - 1 : 0)
+      .padding(.vertical, axis == .vertical ? MTLayout.Field.textareaInset : 0)
       .mtFieldSurface(size: size, isFocused: isFocused) { isFocused = true }
       .mtFieldAccessibility(label, isRequired: isRequired)
       .onChange(of: text) {
@@ -167,7 +168,7 @@ struct MTSearchField<Trailing: View>: View {
       if !hidesLabel { MTFieldLabel(title: label) }
       HStack(spacing: MTSpacing.s2) {
         Image(.search)
-          .font(.system(size: size == .small ? 14 : 16, weight: .medium))
+          .font(.mtIcon(size == .small ? MTSize.Icon.s14 : MTSize.Icon.s16, weight: .medium))
           .foregroundStyle(MTColor.inkFaint)
           .accessibilityHidden(true)
         TextField(
@@ -184,11 +185,11 @@ struct MTSearchField<Trailing: View>: View {
           Button {
             text = ""
           } label: {
-            Image(systemName: "xmark.circle.fill").font(.system(size: 15))
+            Image(systemName: "xmark.circle.fill").font(.mtIcon(MTSize.Icon.s15))
           }
           .buttonStyle(.plain)
           .foregroundStyle(MTColor.inkFaint)
-          .frame(width: 28, height: 28)
+          .frame(width: MTLayout.Field.accessory, height: MTLayout.Field.accessory)
           .contentShape(Rectangle())
           .accessibilityLabel("Clear \(label.lowercased())")
         }
@@ -281,7 +282,7 @@ struct MTSelectField<Value: Hashable>: View {
             .multilineTextAlignment(.leading)
           Spacer(minLength: 0)
           Image(.chevron)
-            .font(.system(size: 11, weight: .semibold))
+            .font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
             .rotationEffect(.degrees(90))
             .foregroundStyle(MTColor.inkFaint)
         }
@@ -314,18 +315,20 @@ struct MTCheckbox: View {
       isOn.toggle()
     } label: {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
-        RoundedRectangle(cornerRadius: 5)
+        RoundedRectangle(cornerRadius: MTLayout.Checkbox.radius)
           .fill(isOn ? MTColor.accent : MTColor.surface)
-          .strokeBorder(isOn ? MTColor.accent : MTColor.borderStrong, lineWidth: 1)
-          .frame(width: 20, height: 20)
+          .strokeBorder(isOn ? MTColor.accent : MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
+          .frame(width: MTLayout.Checkbox.box, height: MTLayout.Checkbox.box)
           .overlay {
             if isOn {
-              Image(.check).font(.system(size: 12, weight: .bold)).foregroundStyle(
-                MTColor.accentInk)
+              Image(.check).font(.mtIcon(MTSize.Icon.s12, weight: .bold))
+                .foregroundStyle(MTColor.accentInk)
             }
           }
-          .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
-        VStack(alignment: .leading, spacing: 2) {
+          .alignmentGuide(.firstTextBaseline) {
+            $0[VerticalAlignment.center] + MTLayout.Checkbox.baselineOffset
+          }
+        VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
           Text(title).font(MTFont.label).foregroundStyle(MTColor.ink)
           if let detail {
             Text(detail).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
@@ -333,9 +336,9 @@ struct MTCheckbox: View {
         }
         Spacer(minLength: 0)
       }
-      .frame(minHeight: 44)
+      .frame(minHeight: MTSize.hitTarget)
       .contentShape(Rectangle())
-      .opacity(isEnabled ? 1 : 0.56)
+      .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.choice)
     }
     .buttonStyle(.plain)
     .accessibilityElement(children: .ignore)
@@ -348,7 +351,7 @@ struct MTCheckbox: View {
 /// Places fields in equal columns while each keeps `minimumColumnWidth`, like the Web
 /// `repeat(auto-fit, minmax(240px, 1fr))` field rows, and stacks them on narrow screens.
 struct MTFieldGrid: Layout {
-  var minimumColumnWidth: CGFloat = 240
+  var minimumColumnWidth = MTLayout.FieldGrid.minimumColumnWidth
   var spacing: CGFloat = MTSpacing.s4
 
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

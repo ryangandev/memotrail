@@ -59,7 +59,7 @@ struct PeopleView: View {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
     }
-    .font(MTFont.caption.weight(.regular))
+    .font(MTFont.detail)
     .foregroundStyle(MTColor.inkFaint)
     .accessibilityElement(children: .contain)
     .accessibilityLabel("People summary")
@@ -74,7 +74,7 @@ struct PeopleView: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage {
       MTEmptyState(title: "People unavailable", message: message, icon: .person) {
         Button("Try again") { Task { await controller.load() } }
@@ -93,7 +93,7 @@ struct PeopleView: View {
       .padding(.top, MTSpacing.s4)
     } else {
       LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 300), spacing: MTSpacing.s4)],
+        columns: [GridItem(.adaptive(minimum: MTLayout.Grid.record), spacing: MTSpacing.s4)],
         spacing: MTSpacing.s4
       ) {
         ForEach(controller.people) { person in
@@ -123,24 +123,23 @@ private struct PersonCard: View {
       MTRecordCardBody {
         VStack(alignment: .leading, spacing: MTSpacing.s2) {
           Text(person.name.first.map { String($0).uppercased() } ?? "")
-            .font(.system(.title2, design: .serif))
+            .font(MTFont.avatarInitial)
             .foregroundStyle(MTColor.accent)
-            .frame(width: 48, height: 48)
+            .frame(width: MTLayout.Avatar.size, height: MTLayout.Avatar.size)
             .background(MTColor.accentSubtle, in: Circle())
             .accessibilityHidden(true)
           Text(person.name)
-            .font(MTFont.cardTitle)
-            .tracking(-0.4)
+            .mtTextRole(.recordNameCompact)
             .foregroundStyle(MTColor.ink)
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s2)
           Text(relationship)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
             .multilineTextAlignment(.leading)
           if let notes = person.notes?.trimmed.nonEmpty {
             Text(notes)
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
               .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
               .lineLimit(3)
@@ -148,7 +147,7 @@ private struct PersonCard: View {
           }
           Spacer(minLength: 0)
           Text(countLabel(connections, "connected Item"))
-            .font(.caption2)
+            .font(MTFont.note)
             .foregroundStyle(MTColor.inkFaint)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, MTSpacing.s4)
@@ -156,7 +155,7 @@ private struct PersonCard: View {
             .padding(.top, MTSpacing.s2)
         }
         // Web keeps short Person cards the same height, with the count at the bottom.
-        .frame(minHeight: 260 - 2 * MTSpacing.s5, alignment: .top)
+        .frame(minHeight: MTLayout.RecordCard.personMinHeight - 2 * MTSpacing.s5, alignment: .top)
       }
     }
   }

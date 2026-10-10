@@ -26,7 +26,7 @@ extension MTButtonSize {
     switch self {
     case .small: MTFont.caption
     case .medium: MTFont.label
-    case .large: MTFont.body.weight(.medium)
+    case .large: MTFont.bodyEmphasis
     }
   }
 }
@@ -117,7 +117,7 @@ struct MTIconButton: View {
 
   var body: some View {
     Button(action: action) {
-      Image(icon).font(.system(size: size == .small ? 14 : 17, weight: .medium))
+      Image(icon).font(.mtIcon(size == .small ? MTSize.Icon.s14 : MTSize.Icon.s17, weight: .medium))
     }
     .buttonStyle(
       MTButtonStyle(variant: variant, size: size, isLoading: isLoading, isIconOnly: true)
@@ -140,7 +140,7 @@ struct MTFilterChip: View {
         .foregroundStyle(isSelected ? MTColor.accentInk : MTColor.inkMuted)
         .padding(.horizontal, MTSpacing.s3)
         .padding(.vertical, MTSpacing.s2)
-        .frame(minHeight: 44)
+        .frame(minHeight: MTSize.hitTarget)
         .background(isSelected ? MTColor.accent : MTColor.surfaceSubtle, in: Capsule())
     }
     .buttonStyle(.plain)

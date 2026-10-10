@@ -70,7 +70,7 @@
             MTRecordCard(accessibilityLabel: "Open sample Home without a Location") {
               recordMessage = "Opened the Home without a Location."
             } content: {
-              MTRecordCardVisual(height: 148) {
+              MTRecordCardVisual(height: MTLayout.Gallery.sampleVisual) {
                 MTRecordMark(icon: .home, title: "A place in your trail")
               }
               .overlay(alignment: .topLeading) {
@@ -178,7 +178,9 @@
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
             LazyVGrid(
-              columns: [GridItem(.adaptive(minimum: 220), spacing: MTSpacing.s3)],
+              columns: [
+                GridItem(.adaptive(minimum: MTLayout.Gallery.sampleGrid), spacing: MTSpacing.s3)
+              ],
               spacing: MTSpacing.s3
             ) {
               ForEach(collections, id: \.name) { collection in
@@ -196,9 +198,11 @@
                       collectionMessage = "Delete \(collection.name): preview only."
                     }
                   } label: {
-                    Image(.more).font(.system(size: 15, weight: .medium))
+                    Image(.more).font(.mtIcon(MTSize.Icon.s15, weight: .medium))
                       .foregroundStyle(MTColor.inkMuted)
-                      .frame(width: 32, height: 32)
+                      .frame(
+                        width: MTLayout.InlineAction.height, height: MTLayout.InlineAction.height
+                      )
                       .contentShape(Rectangle())
                   }
                   .accessibilityLabel("Manage \(collection.name)")
@@ -260,14 +264,17 @@
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("\(name) word-spaced facts")
               }
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkFaint)
               .padding(MTSpacing.s4)
               .frame(width: width)
               .overlay {
                 RoundedRectangle(cornerRadius: MTRadius.medium)
                   .strokeBorder(
-                    MTColor.borderStrong, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    MTColor.borderStrong,
+                    style: StrokeStyle(
+                      lineWidth: MTSize.Stroke.thin,
+                      dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap]))
               }
             }
           }

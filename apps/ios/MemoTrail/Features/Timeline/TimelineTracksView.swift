@@ -186,7 +186,7 @@ struct TimelineTracksView: View {
     if !controller.hasLoaded {
       ProgressView()
         .tint(MTColor.accent)
-        .frame(maxWidth: .infinity, minHeight: 120)
+        .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.section)
     } else if let message = controller.loadErrorMessage, controller.tracks.isEmpty {
       MTEmptyState(title: "Tracks unavailable", message: message, icon: .warning) {
         Button("Try again") { Task { await controller.load() } }
@@ -249,7 +249,7 @@ private struct TimelineTrackForm: View {
           .foregroundStyle(MTColor.ink)
           .accessibilityAddTraits(.isHeader)
         Text(summary)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
       }
       .fixedSize(horizontal: false, vertical: true)
@@ -259,7 +259,7 @@ private struct TimelineTrackForm: View {
             .autocorrectionDisabled()
           MTTextField(label: "Order", text: $order)
             .keyboardType(.numbersAndPunctuation)
-            .frame(width: 118)
+            .frame(width: MTLayout.Timeline.orderField)
         }
         MTCheckbox(title: "Hide from Timeline", isOn: $isHidden)
         Button(track == nil ? "Create track" : "Save track") { Task { await submit() } }
@@ -273,7 +273,8 @@ private struct TimelineTrackForm: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .accessibilityElement(children: .contain)
     .accessibilityLabel(track.map { "Edit \($0.name)" } ?? "New track")

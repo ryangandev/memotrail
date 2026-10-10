@@ -16,7 +16,8 @@ struct MTRemoteImage: View {
       .overlay {
         AsyncImage(
           url: url,
-          transaction: Transaction(animation: reduceMotion ? nil : .easeOut(duration: 0.18))
+          transaction: Transaction(
+            animation: reduceMotion ? nil : MTEasing.enter.animation(duration: MTMotion.standard))
         ) { phase in
           switch phase {
           case .success(let image):
@@ -62,7 +63,7 @@ struct MTLoadingSkeleton: View {
             LinearGradient(
               stops: [
                 .init(color: .clear, location: 0.35),
-                .init(color: MTColor.surfaceRaised.opacity(0.72), location: 0.5),
+                .init(color: MTColor.skeletonHighlight, location: 0.5),
                 .init(color: .clear, location: 0.65),
               ], startPoint: UnitPoint(x: 0, y: 0.4), endPoint: UnitPoint(x: 1, y: 0.6)
             )
@@ -74,7 +75,9 @@ struct MTLoadingSkeleton: View {
       .clipped()
       .contentShape(Rectangle())
       .onAppear {
-        withAnimation(.easeInOut(duration: 1.25).repeatForever(autoreverses: false)) {
+        withAnimation(
+          MTEasing.inOut.animation(duration: MTMotion.shimmer).repeatForever(autoreverses: false)
+        ) {
           isShimmering = true
         }
       }
@@ -104,14 +107,14 @@ struct MTUploadProgress: View {
           ring
           HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
             Text("Uploading photos").font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
-            Text("\(completed) of \(total)").font(.caption2).monospacedDigit()
+            Text("\(completed) of \(total)").font(MTFont.note).monospacedDigit()
               .foregroundStyle(MTColor.inkFaint)
           }
         }
       case .overlay:
         ZStack {
-          MTColor.scrim.opacity(0.34)
-          ring.shadow(color: .black.opacity(0.24), radius: 9, y: 4)
+          MTColor.scrimMedium
+          ring.mtShadow(MTShadow.mediaControl)
         }
         .allowsHitTesting(false)
       }
@@ -124,18 +127,19 @@ struct MTUploadProgress: View {
   private var ring: some View {
     ZStack {
       Circle().fill(MTColor.surfaceRaised)
-      Circle().stroke(MTColor.surfaceSubtle, lineWidth: 5).padding(2.5)
+      Circle().stroke(MTColor.surfaceSubtle, lineWidth: MTLayout.UploadRing.stroke)
+        .padding(MTLayout.UploadRing.inset)
       Circle().trim(from: 0, to: fraction)
-        .stroke(MTColor.accent, lineWidth: 5)
+        .stroke(MTColor.accent, lineWidth: MTLayout.UploadRing.stroke)
         .rotationEffect(.degrees(-90))
-        .padding(2.5)
+        .padding(MTLayout.UploadRing.inset)
       Text("\(percentage)%")
-        .font(.system(size: 10, weight: .semibold))
+        .font(.mtIcon(MTSize.Icon.s10, weight: .semibold))
         .monospacedDigit()
         .foregroundStyle(MTColor.ink)
     }
-    .frame(width: 44, height: 44)
-    .animation(.easeOut(duration: MTMotion.standard), value: fraction)
+    .frame(width: MTSize.hitTarget, height: MTSize.hitTarget)
+    .animation(MTEasing.enter.animation(duration: MTMotion.standard), value: fraction)
   }
 }
 
@@ -171,7 +175,7 @@ struct MTPhotoField: View {
       MTFieldLabel(title: "Photos")
       if !saved.isEmpty || !new.isEmpty {
         LazyVGrid(
-          columns: [GridItem(.adaptive(minimum: 104), spacing: MTSpacing.s2)],
+          columns: [GridItem(.adaptive(minimum: MTLayout.Grid.photo), spacing: MTSpacing.s2)],
           spacing: MTSpacing.s2
         ) {
           ForEach(saved) { photo in
@@ -185,7 +189,7 @@ struct MTPhotoField: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Preview \(photo.name ?? "\(recordLabel) photo")")
               } else {
-                Text("Private photo").font(.caption2).foregroundStyle(MTColor.inkFaint)
+                Text("Private photo").font(MTFont.note).foregroundStyle(MTColor.inkFaint)
               }
             }
           }
@@ -203,7 +207,7 @@ struct MTPhotoField: View {
                 .contentShape(Rectangle())
               }
               MTBadge(title: "New", tone: .solidAccent, size: .micro, uppercase: true)
-                .padding(6)
+                .padding(MTSpacing.chipGap)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
               if index == 0, let progress, progress.total > 0, progress.completed < progress.total {
                 MTUploadProgress(
@@ -222,7 +226,7 @@ struct MTPhotoField: View {
       .mtButtonStyle(.secondary)
       .disabled(remaining == 0)
       Text("Originals stay private. Up to \(limit) photos, 50 MB each.")
-        .font(.caption2)
+        .font(MTFont.note)
         .foregroundStyle(MTColor.inkFaint)
     }
     .sheet(item: $previewing) { photo in
@@ -241,17 +245,18 @@ struct MTPhotoField: View {
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
     .contentShape(RoundedRectangle(cornerRadius: MTRadius.medium))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .overlay(alignment: .topTrailing) {
       Button(action: remove) {
-        Image(.close).font(.system(size: 12, weight: .semibold))
-          .foregroundStyle(.white)
-          .frame(width: 26, height: 26)
+        Image(.close).font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
+          .foregroundStyle(MTColor.inverseInk)
+          .frame(width: MTLayout.PhotoTile.removeButton, height: MTLayout.PhotoTile.removeButton)
           .background(
-            Color(red: 24 / 255, green: 24 / 255, blue: 20 / 255).opacity(0.72), in: Circle()
+            MTColor.inverseSurface, in: Circle()
           )
-          .frame(width: 38, height: 38)
+          .frame(width: MTLayout.PhotoTile.removeTarget, height: MTLayout.PhotoTile.removeTarget)
           .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
@@ -300,7 +305,7 @@ struct MTPhotoPreview: View {
         }
       }
       .tabViewStyle(.page(indexDisplayMode: .never))
-      .background(Color.black.ignoresSafeArea())
+      .background(MTColor.photoBackdrop.ignoresSafeArea())
       .safeAreaInset(edge: .bottom, spacing: 0) {
         if photos.count > 1 { navigation }
       }
@@ -337,12 +342,12 @@ struct MTPhotoPreview: View {
     }
     .padding(.horizontal, MTSpacing.s4)
     .padding(.vertical, MTSpacing.s3)
-    .background(Color.black.ignoresSafeArea())
+    .background(MTColor.photoBackdrop.ignoresSafeArea())
   }
 
   private func move(by offset: Int) {
     guard photos.indices.contains(index + offset) else { return }
-    withAnimation(reduceMotion ? nil : .easeOut(duration: 0.2)) {
+    withAnimation(reduceMotion ? nil : MTEasing.enter.animation(duration: MTMotion.photoPage)) {
       selectedID = photos[index + offset].id
     }
   }

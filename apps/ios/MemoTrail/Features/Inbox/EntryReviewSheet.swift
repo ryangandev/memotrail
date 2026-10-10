@@ -98,7 +98,7 @@ struct EntryReviewSheet: View {
           Label("Version history", icon: .history)
             .font(MTFont.caption)
             .foregroundStyle(MTColor.accent)
-            .frame(minHeight: 32)
+            .frame(minHeight: MTLayout.InlineAction.height)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -117,12 +117,12 @@ struct EntryReviewSheet: View {
       MTFieldLabel(title: "Note")
       MTRichTextEditor(
         text: $note, placeholder: "Write what you want to remember",
-        accessibilityIdentifier: "review-body", minimumHeight: 200)
+        accessibilityIdentifier: "review-body", minimumHeight: MTLayout.RichText.reviewMinHeight)
       if hasWebOnlyFormatting {
         Text(
           "Lists, quotes, links, and code from the web stay as they are unless you edit this note here."
         )
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkFaint)
       }
     }

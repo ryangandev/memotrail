@@ -11,8 +11,10 @@ extension Label where Title == Text, Icon == Image {
   init(_ title: String, icon: MTIcon) { self.init(title, systemImage: icon.systemName) }
 }
 
-/// Applies a text role's font, tracking, and case. Roles with a Dynamic Type style scale their
-/// size with it, including custom sizes that have no static `MTFont`, such as `MTTextRole.hero`.
+/// Applies a text role's font, tracking, and case. A role with a static `MTFont` uses it, so
+/// `mtTextRole(.listHeading)` draws exactly like `.font(MTFont.listHeading)` plus its tracking and
+/// case. Roles that scale a custom size with a Dynamic Type style, such as `MTTextRole.hero`,
+/// scale that size and its tracking together.
 private struct MTTextRoleModifier: ViewModifier {
   let role: MTTextRole
   @ScaledMetric private var scaledSize: CGFloat
@@ -24,10 +26,22 @@ private struct MTTextRoleModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     let size = role.textStyle == nil ? role.size : scaledSize
-    content
-      .font(.system(size: size, weight: role.weight, design: role.design))
-      .tracking(role.tracking * size / role.size)
-      .textCase(role.isUppercase ? .uppercase : nil)
+    let styled =
+      content
+      .font(role.font ?? .system(size: size, weight: role.weight, design: role.design))
+      .tracking(role.font == nil ? role.tracking * size / role.size : role.tracking)
+    if role.isUppercase {
+      styled.textCase(.uppercase)
+    } else {
+      styled
+    }
+  }
+}
+
+extension Font {
+  /// An SF Symbol glyph at a generated icon size, such as `.mtIcon(MTSize.Icon.s12)`.
+  static func mtIcon(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+    .system(size: size, weight: weight)
   }
 }
 
@@ -226,6 +240,20 @@ extension View {
   /// Applies a generated multi-layer shadow token such as `MTShadow.raised`.
   func mtShadow(_ layers: [MTShadowLayer]) -> some View {
     modifier(MTShadowModifier(layers: layers))
+  }
+
+  /// Fills the background with a material token such as `MTMaterial.glassPanel`: its tint over
+  /// its system material, in `shape`. Callers that want the token's border draw it themselves.
+  func mtMaterial<S: Shape>(_ material: MTMaterialToken, in shape: S) -> some View {
+    background(material.tint, in: shape)
+      .background {
+        if let system = material.systemMaterial { shape.fill(system.material) }
+      }
+  }
+
+  /// Fills the rectangular background with a material token such as `MTMaterial.glassPanel`.
+  func mtMaterial(_ material: MTMaterialToken) -> some View {
+    mtMaterial(material, in: Rectangle())
   }
 
   /// Approximates a Web line-height token, such as `MTLineHeight.body`, for the given text style.

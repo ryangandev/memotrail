@@ -25,7 +25,7 @@ struct EntryPhotoGalleryView: View {
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading, spacing: MTSpacing.panelGap) {
       HStack(alignment: .center, spacing: MTSpacing.s3) {
         Text("Current photos")
           .font(MTFont.heading)
@@ -42,7 +42,7 @@ struct EntryPhotoGalleryView: View {
       )
       if let message {
         Text(message)
-          .font(MTFont.label.weight(.regular))
+          .font(MTFont.supporting)
           .foregroundStyle(MTColor.warm)
           .fixedSize(horizontal: false, vertical: true)
       }
@@ -76,7 +76,7 @@ struct EntryPhotoGalleryView: View {
         }
       }
     }
-    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : 14)
+    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : MTSpacing.panelGap)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
@@ -102,7 +102,7 @@ struct EntryPhotoGalleryView: View {
 
   private func note(_ text: String) -> some View {
     Text(text)
-      .font(MTFont.label.weight(.regular))
+      .font(MTFont.supporting)
       .foregroundStyle(MTColor.inkMuted)
       .fixedSize(horizontal: false, vertical: true)
   }

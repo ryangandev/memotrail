@@ -42,7 +42,7 @@ struct WikiItemDetailView: View {
             ProgressView().tint(MTColor.accent)
             Text("Loading this item...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
           }
-          .frame(maxWidth: .infinity, minHeight: 180)
+          .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
         }
       } else if controller.loadFailed {
         MTPage(width: .compact) {

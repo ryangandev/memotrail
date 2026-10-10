@@ -60,6 +60,97 @@
         "unit": "px"
       }
     },
+    "lineGap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Between stacked lines of one item, such as a title and the detail under it.",
+      "$type": "dimension",
+      "$value": {
+        "value": 2,
+        "unit": "px"
+      }
+    },
+    "headingGap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Between a heading and the short line under it.",
+      "$type": "dimension",
+      "$value": {
+        "value": 3,
+        "unit": "px"
+      }
+    },
+    "detailGap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Above the detail line under a card title.",
+      "$type": "dimension",
+      "$value": {
+        "value": 5,
+        "unit": "px"
+      }
+    },
+    "chipGap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Between chips, badges, and other small inline items.",
+      "$type": "dimension",
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      }
+    },
+    "actionGap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Between controls in a row, such as buttons or a field and its actions.",
+      "$type": "dimension",
+      "$value": {
+        "value": 10,
+        "unit": "px"
+      }
+    },
+    "badgeGap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Between badges and match reasons in a row.",
+      "$type": "dimension",
+      "$value": {
+        "value": 5,
+        "unit": "px"
+      }
+    },
+    "panelGap": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Between the parts of a compact panel, and its padding on phones.",
+      "$type": "dimension",
+      "$value": {
+        "value": 14,
+        "unit": "px"
+      }
+    },
     "$description": "Spacing for padding, gaps, and margins, named by 4px step.",
     "$type": "dimension"
   }

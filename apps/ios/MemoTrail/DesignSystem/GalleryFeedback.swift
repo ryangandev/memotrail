@@ -44,7 +44,7 @@
               GallerySampleArtwork()
               MTUploadProgress(completed: uploaded, total: 5, variant: .overlay)
             }
-            .frame(width: 132, height: 132)
+            .frame(width: MTLayout.Gallery.sampleTile, height: MTLayout.Gallery.sampleTile)
             .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
             Button("Advance upload", systemImage: MTIcon.refresh.systemName) {
               uploaded = uploaded >= 5 ? 0 : uploaded + 1
@@ -102,7 +102,7 @@
         image
           .aspectRatio(4 / 3, contentMode: .fit)
           .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
-        Text(title).font(.caption2).foregroundStyle(MTColor.inkMuted)
+        Text(title).font(MTFont.note).foregroundStyle(MTColor.inkMuted)
       }
       .frame(maxWidth: .infinity)
     }
@@ -179,7 +179,8 @@
 
     @MainActor private static func renderArtwork() -> UIImage? {
       let renderer = ImageRenderer(
-        content: GallerySampleArtwork().frame(width: 640, height: 360))
+        content: GallerySampleArtwork().frame(
+          width: MTLayout.Gallery.artworkWidth, height: MTLayout.Gallery.artworkHeight))
       renderer.scale = 1
       return renderer.uiImage
     }

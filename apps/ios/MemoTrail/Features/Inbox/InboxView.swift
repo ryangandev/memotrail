@@ -118,7 +118,7 @@ struct InboxView: View {
           ProgressView("Loading your Inbox...")
             .font(MTFont.caption)
             .tint(MTColor.accent)
-            .frame(maxWidth: .infinity, minHeight: 140)
+            .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.list)
         } else if let message = controller.loadErrorMessage, controller.entries.isEmpty {
           InboxMessage(icon: .clock, title: "Inbox unavailable", message: message) {
             Button("Try again") { Task { await controller.refresh() } }

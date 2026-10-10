@@ -45,10 +45,10 @@ struct MTLocationSnapshot<Fallback: View>: View {
         if let position, let rendered, rendered.position == position {
           Image(uiImage: rendered.image).resizable().scaledToFill()
           Image(systemName: "mappin.circle.fill")
-            .font(.system(size: 30))
+            .font(.mtIcon(MTSize.Icon.s30))
             .symbolRenderingMode(.palette)
             .foregroundStyle(MTColor.surfaceRaised, MTColor.accent)
-            .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
+            .mtShadow(MTShadow.snapshotPin)
         } else if position == nil || failedPosition == position {
           fallback
         } else {
@@ -123,18 +123,21 @@ struct MTLocationPanel<Content: View>: View {
     VStack(alignment: .leading, spacing: MTSpacing.s4) {
       HStack(alignment: .top, spacing: MTSpacing.s3) {
         Image(.map)
-          .font(.system(size: 17, weight: .medium))
+          .font(.mtIcon(MTSize.Icon.s17, weight: .medium))
           .foregroundStyle(MTColor.accent)
-          .frame(width: 34, height: 34)
-          .background(MTColor.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+          .frame(width: MTLayout.IconTile.compact, height: MTLayout.IconTile.compact)
+          .background(
+            MTColor.accentTint,
+            in: RoundedRectangle(cornerRadius: MTLayout.IconTile.compactRadius)
+          )
           .accessibilityHidden(true)
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
           Text("Location")
-            .font(.system(.title3, design: .serif).weight(.medium))
+            .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
             .accessibilityAddTraits(.isHeader)
           Text(message)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkFaint)
             .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
             .fixedSize(horizontal: false, vertical: true)
@@ -145,7 +148,7 @@ struct MTLocationPanel<Content: View>: View {
     .padding(MTSpacing.s4)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surfaceSubtle, in: shape)
-    .overlay { shape.strokeBorder(MTColor.border, lineWidth: 1) }
+    .overlay { shape.strokeBorder(MTColor.border, lineWidth: MTSize.Stroke.thin) }
   }
 }
 
@@ -165,13 +168,13 @@ struct MTLocationPreview: View {
     let shape = RoundedRectangle(cornerRadius: MTRadius.medium)
     VStack(alignment: .leading, spacing: 0) {
       MTLocationSnapshot(latitude: latitude, longitude: longitude) { unavailable }
-        .frame(height: 160)
+        .frame(height: MTLayout.LocationMap.height)
         .overlay(alignment: .bottom) { MTListDivider() }
         .accessibilityLabel("Map showing \(label)")
 
       HStack(spacing: MTSpacing.s3) {
         Text(label)
-          .font(MTFont.label.weight(.semibold))
+          .font(MTFont.listHeading)
           .foregroundStyle(MTColor.ink)
           .fixedSize(horizontal: false, vertical: true)
           .frame(maxWidth: .infinity, alignment: .leading)
@@ -198,7 +201,7 @@ struct MTLocationPreview: View {
               .underline()
           }
         }
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkFaint)
         .padding(.horizontal, MTSpacing.s4)
         .padding(.bottom, MTSpacing.s3)
@@ -206,15 +209,15 @@ struct MTLocationPreview: View {
     }
     .background(MTColor.surface, in: shape)
     .clipShape(shape)
-    .overlay { shape.strokeBorder(MTColor.border, lineWidth: 1) }
+    .overlay { shape.strokeBorder(MTColor.border, lineWidth: MTSize.Stroke.thin) }
   }
 
   private var unavailable: some View {
     VStack(spacing: MTSpacing.s2) {
-      Image(.map).font(.system(size: 22))
+      Image(.map).font(.mtIcon(MTSize.Icon.s22))
       if coordinate == nil {
         Text("This Location does not have coordinates yet.")
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .multilineTextAlignment(.center)
       }
     }

@@ -99,7 +99,7 @@ struct EntryRelationsView: View {
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading, spacing: MTSpacing.panelGap) {
       Text("Related Items")
         .font(MTFont.heading)
         .foregroundStyle(MTColor.ink)
@@ -151,14 +151,14 @@ struct EntryRelationsView: View {
       }
       if let message {
         Text(message)
-          .font(MTFont.label.weight(.regular))
+          .font(MTFont.supporting)
           .foregroundStyle(MTColor.warm)
       }
       Button("Refresh links") { Task { await load(mode, query: appliedQuery, page: page) } }
         .mtButtonStyle(.secondary)
         .disabled(isBusy)
     }
-    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : 14)
+    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : MTSpacing.panelGap)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
@@ -181,7 +181,7 @@ struct EntryRelationsView: View {
 
   private func note(_ text: String) -> some View {
     Text(text)
-      .font(MTFont.label.weight(.regular))
+      .font(MTFont.supporting)
       .foregroundStyle(MTColor.inkMuted)
       .fixedSize(horizontal: false, vertical: true)
   }
@@ -193,7 +193,7 @@ struct EntryRelationsView: View {
       ? AnyLayout(HStackLayout(alignment: .center, spacing: MTSpacing.s3))
       : AnyLayout(VStackLayout(alignment: .leading, spacing: MTSpacing.s3))
     return layout {
-      VStack(alignment: .leading, spacing: 6) {
+      VStack(alignment: .leading, spacing: MTSpacing.chipGap) {
         Button(row.displayTitle) { open(row.entryID) }
           .buttonStyle(.plain)
           .font(MTFont.body)
@@ -202,11 +202,11 @@ struct EntryRelationsView: View {
         Text(
           row.itemKind.displayName(subtype: row.itemSubtype) + (row.isDeleted ? " · In Trash" : "")
         )
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
         if let excerpt = row.excerpt.trimmed.nonEmpty {
           Text(excerpt)
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .lineLimit(3)
         }
@@ -235,7 +235,7 @@ struct EntryRelationsView: View {
         .disabled(page == 0)
       Spacer(minLength: 0)
       Text("Page \(page + 1) · \(countLabel(result.totalCount, "Item"))")
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
       Spacer(minLength: 0)
       Button("Next links") { Task { await load(mode, query: appliedQuery, page: page + 1) } }

@@ -7,8 +7,7 @@ struct MTEyebrow: View {
 
   var body: some View {
     Text(text.uppercased())
-      .font(MTFont.caption.weight(.semibold))
-      .tracking(1)
+      .mtTextRole(.pageEyebrow)
       .foregroundStyle(tone)
   }
 }
@@ -52,7 +51,7 @@ struct MTPageHeader<Actions: View>: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body)
-          .frame(maxWidth: 640, alignment: .leading)
+          .frame(maxWidth: MTLayout.PageHeader.descriptionWidth, alignment: .leading)
       }
     }
     .fixedSize(horizontal: false, vertical: true)
@@ -67,7 +66,7 @@ struct MTPageHeader<Actions: View>: View {
 /// actions while both fit, so a small Edit stays beside a long title; otherwise the actions
 /// move below the copy.
 private struct MTPageHeaderLayout: Layout {
-  private static let copyBasis: CGFloat = 260
+  private static let copyBasis = MTLayout.PageHeader.copyBasis
   private let spacing = MTSpacing.s5
   private let wrapSpacing = MTSpacing.s4
 
@@ -140,7 +139,7 @@ struct MTSectionHeader<Trailing: View>: View {
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
         Text(title)
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
@@ -183,21 +182,20 @@ struct MTListHeader<Trailing: View>: View {
     HStack(alignment: .center, spacing: MTSpacing.s2) {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
         Text(title.uppercased())
-          .font(MTFont.label.weight(.semibold))
-          .tracking(0.5)
+          .mtTextRole(.listHeading)
           .foregroundStyle(MTColor.ink)
           .accessibilityAddTraits(.isHeader)
         if alignsDetailTrailing { Spacer(minLength: MTSpacing.s2) }
         if let detail {
           Text(detail)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkFaint)
         }
       }
       if !alignsDetailTrailing { Spacer(minLength: MTSpacing.s2) }
       trailing
     }
-    .frame(minHeight: 34)
+    .frame(minHeight: MTSize.Control.small)
   }
 }
 
@@ -216,11 +214,11 @@ struct MTSectionLink: View {
     Button(action: action) {
       HStack(spacing: MTSpacing.s1) {
         Text(title)
-        Image(.chevron).font(.system(size: 11, weight: .semibold))
+        Image(.chevron).font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
       }
       .font(MTFont.caption)
       .foregroundStyle(MTColor.accent)
-      .frame(minHeight: 44)
+      .frame(minHeight: MTSize.hitTarget)
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)

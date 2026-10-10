@@ -109,24 +109,24 @@ struct NativeSettingsView: View {
     VStack(alignment: .leading, spacing: MTSpacing.s4) {
       HStack(spacing: MTSpacing.s4) {
         Text(accountName.first.map { String($0).uppercased() } ?? user.initial)
-          .font(MTFont.body.weight(.semibold))
+          .font(MTFont.bodyStrong)
           .foregroundStyle(MTColor.accentInk)
-          .frame(width: 48, height: 48)
+          .frame(width: MTLayout.Avatar.size, height: MTLayout.Avatar.size)
           .background(MTColor.accent, in: Circle())
           .accessibilityHidden(true)
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
           Text(accountName)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
             .lineLimit(1)
           Text(user.email)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
             .lineLimit(1)
           Text("Google Sign-In")
-            .font(.caption2)
+            .font(MTFont.note)
             .foregroundStyle(MTColor.inkFaint)
-            .padding(.top, 3)
+            .padding(.top, MTSpacing.headingGap)
         }
         .accessibilityElement(children: .combine)
       }
@@ -139,7 +139,8 @@ struct NativeSettingsView: View {
     .padding(MTSpacing.s5)
     .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
   }
 
@@ -206,7 +207,8 @@ struct NativeSettingsView: View {
       .background(MTColor.surfaceRaised)
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
       .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+          MTColor.border, lineWidth: MTSize.Stroke.thin)
       }
     }
   }
@@ -215,15 +217,15 @@ struct NativeSettingsView: View {
   private var privacyNote: some View {
     HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
       Image(.check)
-        .font(.system(size: 15, weight: .semibold))
+        .font(.mtIcon(MTSize.Icon.s15, weight: .semibold))
         .foregroundStyle(MTColor.accent)
         .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: 3) {
+      VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
         Text("Private by default")
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
         Text("Your account and archive are not shared with other MemoTrail users.")
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
       }
@@ -288,14 +290,13 @@ private struct SettingsSectionHeading<Trailing: View>: View {
 
   var body: some View {
     HStack(alignment: .center, spacing: MTSpacing.s4) {
-      VStack(alignment: .leading, spacing: 3) {
+      VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
         Text(title.uppercased())
-          .font(MTFont.label.weight(.semibold))
-          .tracking(0.6)
+          .mtTextRole(.settingsHeading)
           .foregroundStyle(MTColor.ink)
           .accessibilityAddTraits(.isHeader)
         Text(detail)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkFaint)
       }
       Spacer(minLength: 0)
@@ -336,7 +337,7 @@ private struct SettingsFormCard<Field: View, Action: View>: View {
           .foregroundStyle(MTColor.ink)
           .accessibilityAddTraits(.isHeader)
         Text(detail)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkFaint)
           .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
       }
@@ -348,7 +349,8 @@ private struct SettingsFormCard<Field: View, Action: View>: View {
     .padding(MTSpacing.s5)
     .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
   }
 }
@@ -431,11 +433,11 @@ private struct SettingsLinkRow: View {
       SettingsPreferenceLabel(icon: icon, title: title, detail: detail)
       Spacer(minLength: 0)
       Image(.chevron)
-        .font(.system(size: 13, weight: .semibold))
+        .font(.mtIcon(MTSize.Icon.s13, weight: .semibold))
         .foregroundStyle(MTColor.ink)
     }
     .padding(MTSpacing.s4)
-    .frame(minHeight: 76)
+    .frame(minHeight: MTLayout.OptionRow.minHeight)
     .contentShape(Rectangle())
   }
 }
@@ -448,17 +450,17 @@ private struct SettingsPreferenceLabel: View {
   var body: some View {
     HStack(spacing: MTSpacing.s3) {
       Image(icon)
-        .font(.system(size: 17, weight: .medium))
+        .font(.mtIcon(MTSize.Icon.s17, weight: .medium))
         .foregroundStyle(MTColor.accent)
-        .frame(width: 42, height: 42)
+        .frame(width: MTLayout.IconTile.medium, height: MTLayout.IconTile.medium)
         .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
         .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
         Text(title)
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
         Text(detail)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkFaint)
           .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
       }

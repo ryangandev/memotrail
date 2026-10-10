@@ -179,12 +179,14 @@
                   title: "#A long tag name that stays within the available width", size: .medium)
               }
               .padding(MTSpacing.s2)
-              .frame(width: 160, alignment: .leading)
+              .frame(width: MTLayout.Gallery.truncationFrame, alignment: .leading)
               .overlay {
                 RoundedRectangle(cornerRadius: MTRadius.small)
                   .strokeBorder(
                     MTColor.borderStrong,
-                    style: StrokeStyle(lineWidth: MTSize.Stroke.thin, dash: [3, 3]))
+                    style: StrokeStyle(
+                      lineWidth: MTSize.Stroke.thin,
+                      dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap]))
               }
             }
             GalleryCaseSeparator()
@@ -192,7 +194,10 @@
               MTFlowLayout(spacing: MTSpacing.s3) {
                 ForEach([MTBadgeTone.glassAccent, .glassNeutral], id: \.self) { tone in
                   GallerySampleArtwork()
-                    .frame(width: 240, height: 135)
+                    .frame(
+                      width: MTLayout.Gallery.photoSampleWidth,
+                      height: MTLayout.Gallery.photoSampleHeight
+                    )
                     .overlay(alignment: .topLeading) {
                       MTBadge(
                         title: tone == .glassAccent ? "Current" : "Earlier", tone: tone,
@@ -209,7 +214,7 @@
               }
             }
             GalleryCaseSeparator()
-            Text("MTOrganizationBadges").font(MTFont.caption.monospaced())
+            Text("MTOrganizationBadges").font(MTFont.identifier)
               .foregroundStyle(MTColor.ink)
             MTOrganizationBadges(
               collectionNames: ["Early years"], tagNames: ["family", "travel", "milestone", "home"])
@@ -341,7 +346,7 @@
                 .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
                 .overlay {
                   RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
-                    MTColor.borderStrong, lineWidth: 1)
+                    MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
                 }
             }
             OccurrenceEditor(value: $occurrence, defaultTimezone: "America/Los_Angeles")

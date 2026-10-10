@@ -205,7 +205,7 @@ struct ExportView: View {
         paragraph(
           "Keep up to two snapshots. Original media is verified during download; changed or missing files stop the export."
         )
-        MTFlowLayout(spacing: 10) {
+        MTFlowLayout(spacing: MTSpacing.actionGap) {
           Button("Prepare snapshot") { run { await change("create") } }
             .mtButtonStyle(isLoading: busy && !downloading && pendingCreate != nil)
             .disabled(busy || snapshots.count >= 2)
@@ -235,7 +235,7 @@ struct ExportView: View {
           paragraph(
             "This temporary download is removed when you leave this screen. Files you save or share are yours to manage."
           )
-          MTFlowLayout(spacing: 10) {
+          MTFlowLayout(spacing: MTSpacing.actionGap) {
             Button("Save or share ZIP") { sharing = true }
               .mtButtonStyle()
             Button("Remove local copy") { clearFile() }
@@ -247,7 +247,7 @@ struct ExportView: View {
       Text(
         "Downloads stream to disk. If the connection or server time limit interrupts the ZIP, it is not offered as a complete backup. Retry the same snapshot or prepare a new one."
       )
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .mtLineSpacing(MTLineHeight.relaxed, textStyle: .caption1)
     }
@@ -264,7 +264,7 @@ struct ExportView: View {
   private var snapshotList: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s4) {
       Text("Available snapshots")
-        .font(.system(.headline, design: .serif).weight(.medium))
+        .font(MTFont.panelTitle)
         .foregroundStyle(MTColor.ink)
         .accessibilityAddTraits(.isHeader)
       if snapshots.isEmpty {
@@ -283,7 +283,7 @@ struct ExportView: View {
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(1.65)
           paragraph("Expires \(ExportSnapshot.dateLabel(snapshot.expiresAt))")
-          MTFlowLayout(spacing: 10) {
+          MTFlowLayout(spacing: MTSpacing.actionGap) {
             Button("Download ZIP") { run { await download(snapshot) } }
               .mtButtonStyle(.secondary)
               .disabled(busy)
@@ -297,7 +297,7 @@ struct ExportView: View {
               paragraph(
                 "Discard this temporary copy? Your original records and downloaded ZIPs will stay unchanged."
               )
-              MTFlowLayout(spacing: 10) {
+              MTFlowLayout(spacing: MTSpacing.actionGap) {
                 Button("Confirm discard") {
                   run { await change("discard", id: snapshot.id) }
                 }
@@ -400,18 +400,18 @@ private struct ExportCard<Content: View>: View {
   @ViewBuilder let content: Content
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 14) {
+    VStack(alignment: .leading, spacing: MTSpacing.panelGap) {
       Text(title)
         .font(
           level == .section
-            ? .system(.headline, design: .serif).weight(.medium)
-            : .system(.callout, design: .serif).weight(.medium)
+            ? MTFont.panelTitle
+            : MTFont.panelTitleSmall
         )
         .foregroundStyle(MTColor.ink)
         .accessibilityAddTraits(.isHeader)
       content
     }
-    .padding(18)
+    .padding(MTLayout.ExportPanel.padding)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {

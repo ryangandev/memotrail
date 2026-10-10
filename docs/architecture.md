@@ -325,6 +325,10 @@ Pair it with the test file carrying the same feature name.
   Web props and native parameters take those types and defaults, so a value removed from a spec stops both platforms compiling; component unit tests catch the other direction, a value the spec adds that a Web stylesheet does not draw.
 - Both galleries show every specimen a spec lists: Web wraps each in `SpecimenCase`, marked `data-specimen="<id>"`, and iOS in `GalleryCase`, with the accessibility identifier `specimen-<id>`.
   The `/design-system` e2e test and the native `testGalleryShowsEveryComponentSpecimen` UI test iterate the generated lists, and the Web test also checks that each specimen draws every prop value it covers.
+- Native Swift reads every visual value from a token, and the check enforces it because CI does not build iOS.
+  `scripts/check-swift.mjs` scans `apps/ios/MemoTrail` for literal fonts, colors, opacity, spacing, sizes, radii, strokes, shadows, gradients, animation timing, and materials, and prints each one's file, line, and the tokens with the same value.
+  Only `DesignTokens.swift` and `MTFoundations.swift` may hold literals; a value no token has gets a semantic token, iOS-only through `platforms` when Web has no counterpart.
+  The commented allowances in `scripts/lib/swift-guard.mjs` name each deliberate exception, such as a writer's bold or code mark, a system spring, gradient stops that stay with their drawing as they do in Web CSS, or the gallery's specimen diagrams, and an allowance that matches nothing fails the check.
 - The SVGs in `assets/brand` are the source of the iOS app icon.
   `apps/ios/scripts/render-app-icon.swift` writes the light, dark, and tinted PNGs in `AppIcon.appiconset`, which are never exported by hand; `AppIconTests` checks their alpha layout.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
@@ -376,7 +380,7 @@ Pair it with the test file carrying the same feature name.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
 - Native `DesignSystem/Components` owns reusable presentation components.
   Generated `DesignTokens.swift` supplies semantic colors, the `MTTextRole` and `MTFont` text roles that follow Dynamic Type, `MTIcon`, `MTPageWidth`, spacing, sizes, layout, radius, motion and easing, line heights, shadow layers, state, materials, elevation, and the catalogs the gallery lists.
-  `MTFoundations.swift` holds the view helpers that apply them, such as `mtTextRole`, `mtShadow`, `mtLineSpacing`, and the `MTIcon` image and label initializers.
+  `MTFoundations.swift` holds the view helpers that apply them, such as `mtTextRole`, `mtIcon`, `mtShadow`, `mtMaterial`, `mtLineSpacing`, and the `MTIcon` image and label initializers.
   Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, SectionHeader, and EmptyState.
   `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library and People.
   `MTListHeader` and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.

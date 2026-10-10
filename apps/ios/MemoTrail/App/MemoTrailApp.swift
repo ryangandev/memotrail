@@ -67,7 +67,7 @@ struct MemoTrailApp: App {
       #if DEBUG
         .onPreferenceChange(NativeReviewAppearancePreference.self) { reviewAppearance = $0 }
       #endif
-      .animation(.easeOut(duration: 0.3), value: isShowingSplash)
+      .animation(MTEasing.enter.animation(duration: MTMotion.splashFade), value: isShowingSplash)
       .task {
         #if DEBUG
           guard NativeReviewMode.current == nil else { return }

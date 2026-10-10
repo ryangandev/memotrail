@@ -35,12 +35,13 @@ struct MTFormSection<Content: View>: View {
       .padding(.top, MTSpacing.s1)
       .background {
         shape.fill(MTColor.surface)
-          .overlay(shape.fill(MTColor.accentSubtle.opacity(isAccent ? 0.42 : 0)))
+          .overlay(shape.fill(isAccent ? MTColor.accentNotice : .clear))
       }
       .overlay {
-        shape.strokeBorder(MTColor.border, lineWidth: 1)
+        shape.strokeBorder(MTColor.border, lineWidth: MTSize.Stroke.thin)
           .overlay(
-            shape.strokeBorder(MTColor.accent.opacity(isAccent ? 0.38 : 0), lineWidth: 1)
+            shape.strokeBorder(
+              isAccent ? MTColor.accentGroupBorder : .clear, lineWidth: MTSize.Stroke.thin)
           )
           .mask {
             Rectangle()
@@ -57,8 +58,7 @@ struct MTFormSection<Content: View>: View {
 
   private var legend: some View {
     Text(title.uppercased())
-      .font(MTFont.caption.weight(.semibold))
-      .tracking(0.7)
+      .mtTextRole(.legend)
       .foregroundStyle(MTColor.inkMuted)
       .padding(.horizontal, MTSpacing.s2)
   }
@@ -84,7 +84,7 @@ struct MTFormNote: View {
 
   var body: some View {
     Text(text)
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(color)
       .mtLineSpacing(MTLineHeight.body)
       .fixedSize(horizontal: false, vertical: true)
@@ -100,7 +100,7 @@ struct MTFactList: View {
       ForEach(Array(visibleFacts.enumerated()), id: \.offset) { _, fact in
         VStack(alignment: .leading, spacing: MTSpacing.s2) {
           Text(fact.label)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
           Text(fact.value)
             .font(MTFont.bodyLarge)
@@ -139,7 +139,7 @@ struct MTDetailSection<Content: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       Text(title)
-        .font(.system(.title3, design: .serif))
+        .font(MTFont.quietTitle)
         .foregroundStyle(MTColor.ink)
         .accessibilityAddTraits(.isHeader)
       content
@@ -159,7 +159,7 @@ struct MTRecordPhotos: View {
 
   var body: some View {
     LazyVGrid(
-      columns: [GridItem(.adaptive(minimum: 220), spacing: MTSpacing.s3)],
+      columns: [GridItem(.adaptive(minimum: MTLayout.Grid.detail), spacing: MTSpacing.s3)],
       spacing: MTSpacing.s3
     ) {
       ForEach(Array(photos.enumerated()), id: \.element.id) { index, photo in
@@ -193,9 +193,9 @@ struct MTRecordMark: View {
   var body: some View {
     let isRegular = horizontalSizeClass == .regular
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      Image(icon).font(.system(size: 22, weight: .medium)).foregroundStyle(MTColor.accent)
+      Image(icon).font(.mtIcon(MTSize.Icon.s22, weight: .medium)).foregroundStyle(MTColor.accent)
       Text(title)
-        .font(.system(isRegular ? .title3 : .subheadline, design: .serif))
+        .font(isRegular ? MTFont.quietTitle : MTFont.quietTitleSmall)
         .foregroundStyle(MTColor.inkMuted)
         .lineLimit(2)
     }

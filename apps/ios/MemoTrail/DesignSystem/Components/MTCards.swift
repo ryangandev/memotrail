@@ -12,7 +12,8 @@ struct MTCard<Content: View>: View {
       .padding(MTSpacing.s4)
       .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
       .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border, lineWidth: 1)
+        RoundedRectangle(cornerRadius: MTRadius.large).stroke(
+          MTColor.border, lineWidth: MTSize.Stroke.thin)
       }
   }
 }
@@ -30,7 +31,8 @@ struct MTListSurface<Content: View>: View {
       .background(MTColor.surface)
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
       .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+          MTColor.border, lineWidth: MTSize.Stroke.thin)
       }
   }
 }
@@ -38,7 +40,7 @@ struct MTListSurface<Content: View>: View {
 /// The hairline between list rows.
 struct MTListDivider: View {
   var body: some View {
-    Rectangle().fill(MTColor.border).frame(height: 1).accessibilityHidden(true)
+    Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin).accessibilityHidden(true)
   }
 }
 
@@ -52,7 +54,7 @@ struct MTListRowButtonStyle: ButtonStyle {
         in: RoundedRectangle(cornerRadius: MTRadius.medium)
       )
       .contentShape(Rectangle())
-      .animation(.easeOut(duration: MTMotion.quick), value: configuration.isPressed)
+      .animation(MTEasing.enter.animation(duration: MTMotion.quick), value: configuration.isPressed)
   }
 }
 
@@ -70,16 +72,17 @@ struct MTCardButtonStyle: ButtonStyle {
       .clipShape(shape)
       .overlay {
         shape.strokeBorder(
-          configuration.isPressed ? MTColor.borderStrong : MTColor.border, lineWidth: 1)
+          configuration.isPressed ? MTColor.borderStrong : MTColor.border,
+          lineWidth: MTSize.Stroke.thin)
       }
       .mtShadow(
         configuration.isPressed
           ? MTShadow.raised
-          : [MTShadowLayer(red: 38, green: 37, blue: 31, opacity: 0.025, radius: 1, x: 0, y: 1)]
+          : MTShadow.hairline
       )
-      .scaleEffect(configuration.isPressed ? 0.99 : 1)
+      .scaleEffect(configuration.isPressed ? MTState.Pressed.cardScale : 1)
       .contentShape(shape)
-      .animation(.easeOut(duration: MTMotion.quick), value: configuration.isPressed)
+      .animation(MTEasing.enter.animation(duration: MTMotion.quick), value: configuration.isPressed)
   }
 }
 
@@ -104,7 +107,7 @@ struct MTRecordCard<Content: View>: View {
 
 /// The media band at the top of a record card.
 struct MTRecordCardVisual<Content: View>: View {
-  var height: CGFloat = 190
+  var height: CGFloat = MTLayout.RecordCard.visualHeight
   @ViewBuilder var content: Content
 
   var body: some View {
@@ -114,7 +117,9 @@ struct MTRecordCardVisual<Content: View>: View {
       .background(MTColor.surfaceSubtle)
       .clipped()
       .contentShape(Rectangle())
-      .overlay(alignment: .bottom) { Rectangle().fill(MTColor.border).frame(height: 1) }
+      .overlay(alignment: .bottom) {
+        Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
+      }
   }
 }
 
@@ -144,13 +149,11 @@ struct MTCollectionCard<Manage: View>: View {
       VStack(alignment: .leading, spacing: 0) {
         Label("Collection", icon: .archive)
           .labelStyle(MTInlineIconLabelStyle())
-          .font(.caption2.weight(.semibold))
-          .textCase(.uppercase)
-          .tracking(0.8)
+          .mtTextRole(.cardEyebrow)
           .foregroundStyle(MTColor.warm)
-          .padding(.trailing, 32)
+          .padding(.trailing, MTSpacing.s8)
         Text(name)
-          .font(.system(.title3, design: .serif).weight(.medium))
+          .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
           .lineLimit(2)
           .multilineTextAlignment(.leading)
@@ -159,17 +162,20 @@ struct MTCollectionCard<Manage: View>: View {
         HStack(spacing: MTSpacing.s2) {
           Text(countSummary).lineLimit(1)
           Spacer(minLength: 0)
-          Image(.chevron).font(.system(size: 12, weight: .semibold))
+          Image(.chevron).font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
         }
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
         Text(updatedLabel ?? "Ready for its first Entry")
-          .font(.caption2)
+          .font(MTFont.note)
           .foregroundStyle(MTColor.inkFaint)
           .lineLimit(1)
-          .padding(.top, 2)
+          .padding(.top, MTSpacing.lineGap)
       }
-      .frame(maxWidth: .infinity, minHeight: 138, alignment: .topLeading)
+      .frame(
+        maxWidth: .infinity, minHeight: MTLayout.RecordCard.collectionMinHeight,
+        alignment: .topLeading
+      )
       .padding(MTSpacing.s4)
     }
     .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
