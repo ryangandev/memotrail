@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
+import { Checkbox } from "@/components/checkbox";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
@@ -19,8 +20,10 @@ import {
 } from "@/components/record-card";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SearchField } from "@/components/search-field";
+import { SectionHeader } from "@/components/section-header";
 import { SelectField } from "@/components/select-field";
 import { SeparatedList } from "@/components/separated-list";
+import { Skeleton } from "@/components/skeleton";
 import { TextField } from "@/components/text-field";
 import { notify } from "@/components/app-toast";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
@@ -141,6 +144,8 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   const [recordMessage, setRecordMessage] = useState(
     "Interactive state has not been activated.",
   );
+  const [reminders, setReminders] = useState(false);
+  const [submitted, setSubmitted] = useState("Nothing submitted yet.");
 
   return (
     <div
@@ -344,7 +349,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="TextField, SearchField, SelectField, and the current production date, rich-text, occurrence, and organization editors are reusable. TextField is a proposed replacement for route-level plain text inputs; other textareas, labels, and validation messages are still route-level patterns."
+        description="TextField, SearchField, SelectField, Checkbox, and the current production date, rich-text, occurrence, and organization editors are reusable. TextField is a proposed replacement for route-level plain text inputs; other textareas, labels, and validation messages are still route-level patterns."
         id="forms"
         index="04"
         title="Forms"
@@ -425,6 +430,73 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             </SelectField>
           </div>
         </Specimen>
+        <Specimen
+          api="label · description · size: small | medium · disabled · native checkbox props (name, value, defaultChecked, required)"
+          description="A native checkbox, so it submits with its form like any other. The label names it; the description is read after it."
+          id="checkbox"
+          title="Checkbox"
+        >
+          <div className={styles.checkboxGrid}>
+            <div className={styles.checkboxColumn}>
+              <Checkbox label="Unchecked" />
+              <Checkbox defaultChecked label="Checked" />
+              <Checkbox
+                checked={reminders}
+                description="Controlled by this page"
+                label="Remind me"
+                onChange={(event) => setReminders(event.target.checked)}
+              />
+              <Checkbox
+                description="A longer explanation wraps beside the label until it needs another line, and never runs past its container."
+                label="With description"
+              />
+            </div>
+            <div className={styles.checkboxColumn}>
+              <Checkbox disabled label="Disabled" />
+              <Checkbox
+                defaultChecked
+                description="Cannot change"
+                disabled
+                label="Disabled checked"
+              />
+              <Checkbox label="Small unchecked" size="small" />
+              <Checkbox
+                defaultChecked
+                description="Still going on"
+                label="Small checked"
+                size="small"
+              />
+            </div>
+          </div>
+          <form
+            className={styles.checkboxForm}
+            onSubmit={(event) => {
+              event.preventDefault();
+              const data = new FormData(event.currentTarget);
+              setSubmitted(
+                `Submitted: ${JSON.stringify(
+                  Object.fromEntries(data.entries()),
+                )}. No request was sent.`,
+              );
+            }}
+          >
+            <Checkbox
+              defaultChecked
+              label="Include photos"
+              name="photos"
+              value="yes"
+            />
+            <Checkbox label="Include Trash" name="trash" value="yes" />
+            <Button type="submit" variant="secondary">
+              Submit form
+            </Button>
+          </form>
+          <p className={styles.stateNote} role="status">
+            {reminders ? "Remind me is on. " : "Remind me is off. "}
+            {submitted}
+          </p>
+        </Specimen>
+
         <Specimen
           api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"
           description="Date values, time controls, and calendar text use the shared form typography."
@@ -627,7 +699,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. SeparatedList and SectionHeader organize the rows and headings around it."
         id="containers"
         index="05"
         title="Containers and data display"
@@ -701,10 +773,91 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
             ))}
           </div>
         </Specimen>
+
+        <Specimen
+          api="title · variant: section | list · detail · detailAlign: start | end · description · action · headingLevel: 2 | 3 | 4 · headingId"
+          description="The heading of a region of a page. Section is a serif title, like iOS MTSectionHeader; list is the small uppercase heading above a list, like MTListHeader. The caller chooses the heading level."
+          id="section-header"
+          title="SectionHeader"
+        >
+          <div className={styles.headerStack}>
+            <div data-header="section">
+              <SectionHeader headingLevel={4} title="Recent Entries" />
+            </div>
+            <div data-header="section-action">
+              <SectionHeader
+                action={
+                  <a className={styles.headerLink} href="#section-header">
+                    View all
+                    <Icon name="chevron" size={14} />
+                  </a>
+                }
+                headingLevel={4}
+                title="A memory for today"
+              />
+            </div>
+            <div data-header="section-description">
+              <SectionHeader
+                action={
+                  <Button size="small" variant="secondary">
+                    Edit
+                  </Button>
+                }
+                description="Pinned to the top of your Library."
+                headingLevel={4}
+                title="Favorites"
+              />
+            </div>
+            <div data-header="list">
+              <SectionHeader
+                detail="12 items"
+                headingLevel={4}
+                title="All items"
+                variant="list"
+              />
+            </div>
+            <div data-header="list-end">
+              <SectionHeader
+                action={
+                  <a className={styles.headerLink} href="#section-header">
+                    3 need organizing
+                  </a>
+                }
+                detail="12 items"
+                detailAlign="end"
+                headingLevel={4}
+                title="All items"
+                variant="list"
+              />
+            </div>
+            <div data-header="list-description">
+              <SectionHeader
+                action={<Badge uppercase>Connected</Badge>}
+                description="Your current MemoTrail identity"
+                headingLevel={4}
+                title="Account"
+                variant="list"
+              />
+            </div>
+            <div data-header="long">
+              <SectionHeader
+                action={
+                  <a className={styles.headerLink} href="#section-header">
+                    View all
+                  </a>
+                }
+                detail="1,284 items"
+                headingLevel={4}
+                title="A long heading that wraps within its container instead of pushing the action away"
+                variant="list"
+              />
+            </div>
+          </div>
+        </Specimen>
       </GallerySection>
 
       <GallerySection
-        description="Transient action feedback and reviewed media states. The shared EmptyState is demonstrated above."
+        description="Transient action feedback and reviewed media states, including the Skeleton placeholder. The shared EmptyState is demonstrated above."
         id="feedback"
         index="06"
         title="Feedback and media states"
@@ -734,6 +887,49 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
           </Specimen>
           <Specimen api="completed · total" title="PhotoUploadProgress">
             <PhotoUploadProgress progress={{ completed: 3, total: 5 }} />
+          </Specimen>
+          <Specimen
+            api="shape: fill | block | line | circle · width · height · animated"
+            description="Decorative: hidden from assistive technology, so the loading region announces itself. The shimmer stops under reduced motion."
+            id="skeleton"
+            title="Skeleton"
+          >
+            <div className={styles.skeletonShapes}>
+              <div data-skeleton="fill">
+                <div className={styles.skeletonFrame}>
+                  <Skeleton shape="fill" />
+                </div>
+                <small>fill</small>
+              </div>
+              <div data-skeleton="block">
+                <Skeleton height="64px" shape="block" />
+                <small>block</small>
+              </div>
+              <div data-skeleton="line">
+                <Skeleton shape="line" />
+                <Skeleton shape="line" width="72%" />
+                <Skeleton shape="line" width="48%" />
+                <small>line</small>
+              </div>
+              <div data-skeleton="circle">
+                <Skeleton shape="circle" width="48px" />
+                <small>circle</small>
+              </div>
+              <div data-skeleton="still">
+                <Skeleton animated={false} height="64px" shape="block" />
+                <small>animated=false</small>
+              </div>
+              <div data-skeleton="card">
+                <div className={styles.skeletonCard}>
+                  <Skeleton shape="circle" width="40px" />
+                  <div>
+                    <Skeleton shape="line" width="60%" />
+                    <Skeleton shape="line" width="90%" />
+                  </div>
+                </div>
+                <small>composed</small>
+              </div>
+            </div>
           </Specimen>
           <Specimen
             api="loading · loaded · failed · fit: cover | contain · fallback"

@@ -648,3 +648,243 @@ test("Shared primitives fit both themes at desktop and mobile widths", async ({
     }
   }
 });
+
+test("Checkbox is a native input with a name, a description, a focus ring, and form values", async ({
+  page,
+}) => {
+  await page.goto("/design-system#checkbox");
+  const specimen = page.locator("#checkbox");
+  await specimen.scrollIntoViewIfNeeded();
+  const named = (name: string) =>
+    specimen.getByRole("checkbox", { name, exact: true });
+
+  // The label names the input and the description is announced after it.
+  const remind = named("Remind me");
+  await expect(remind).not.toBeChecked();
+  await expect(remind).toHaveAccessibleDescription("Controlled by this page");
+  await expect(remind).toHaveJSProperty("type", "checkbox");
+  await expect(named("Unchecked")).toHaveAccessibleDescription("");
+  await expect(named("Checked")).toBeChecked();
+
+  // A click on the label text toggles it, and the controlled state follows.
+  await specimen.getByText("Remind me", { exact: true }).click();
+  await expect(remind).toBeChecked();
+  await expect(specimen.getByRole("status")).toContainText("Remind me is on.");
+  await remind.focus();
+  await page.keyboard.press("Space");
+  await expect(remind).not.toBeChecked();
+
+  // Disabled controls cannot change and read as unavailable.
+  for (const name of ["Disabled", "Disabled checked"]) {
+    const disabled = named(name);
+    await expect(disabled).toBeDisabled();
+    await disabled.click({ force: true });
+  }
+  await expect(named("Disabled")).not.toBeChecked();
+  await expect(named("Disabled checked")).toBeChecked();
+
+  // The drawn box tracks the input, in both sizes.
+  const box = (name: string) =>
+    named(name).locator("xpath=following-sibling::span[1]");
+  await expect(box("Unchecked")).toHaveCSS("width", "20px");
+  await expect(box("Small unchecked")).toHaveCSS("width", "16px");
+  await expect(box("Checked")).toHaveCSS("background-color", "rgb(49, 94, 79)");
+  await expect(box("Unchecked")).toHaveCSS(
+    "background-color",
+    "rgb(251, 249, 243)",
+  );
+
+  // Keyboard focus draws a ring around the box.
+  await named("Unchecked").focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(named("Unchecked")).toBeFocused();
+  await expect(box("Unchecked")).toHaveCSS("outline-style", "solid");
+  await expect(box("Unchecked")).toHaveCSS("outline-width", "2px");
+
+  // Inside a form, a checked box submits its name and value and an unchecked one does not.
+  const form = specimen.locator("form");
+  await form.getByRole("button", { name: "Submit form" }).click();
+  await expect(specimen.getByRole("status")).toContainText(
+    'Submitted: {"photos":"yes"}',
+  );
+  await form.getByRole("checkbox", { name: "Include photos" }).uncheck();
+  await form.getByRole("checkbox", { name: "Include Trash" }).check();
+  await form.getByRole("button", { name: "Submit form" }).click();
+  await expect(specimen.getByRole("status")).toContainText(
+    'Submitted: {"trash":"yes"}',
+  );
+
+  for (const [theme, width] of [
+    ["light", 1280],
+    ["dark", 390],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ colorScheme: theme });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await specimen.screenshot({
+      caret: "initial",
+      path: `/private/tmp/memotrail-checkbox-${theme}-${width}.png`,
+    });
+  }
+});
+
+test("SectionHeader renders section and list headings at the level the caller picks", async ({
+  page,
+}) => {
+  await page.goto("/design-system#section-header");
+  const specimen = page.locator("#section-header");
+  await specimen.scrollIntoViewIfNeeded();
+  const header = (name: string) =>
+    specimen.locator(`[data-header="${name}"] [data-ui-section-header]`);
+
+  // The gallery sits below an h3 specimen title, so its headers are h4.
+  await expect(
+    specimen.getByRole("heading", { level: 4, name: "Recent Entries" }),
+  ).toBeVisible();
+  await expect(specimen.getByRole("heading", { level: 2 })).toHaveCount(0);
+
+  // Section is a serif title; list is a small uppercase heading.
+  const sectionTitle = specimen.getByRole("heading", {
+    name: "Recent Entries",
+  });
+  await expect(sectionTitle).toHaveCSS("text-transform", "none");
+  await expect(sectionTitle).toHaveCSS("font-size", "20px");
+  const listTitle = header("list").getByRole("heading");
+  await expect(listTitle).toHaveCSS("text-transform", "uppercase");
+  await expect(listTitle).toHaveCSS("font-size", "13px");
+  await expect(listTitle).toHaveCSS("font-weight", "600");
+  const family = (title: typeof sectionTitle) =>
+    title.evaluate((element) => getComputedStyle(element).fontFamily);
+  expect(await family(sectionTitle)).not.toBe(await family(listTitle));
+
+  // Detail sits beside the title by default and at the trailing edge on request.
+  const start = header("list");
+  const startTitle = await start.getByRole("heading").boundingBox();
+  const startDetail = await start.getByText("12 items").boundingBox();
+  expect(startDetail!.x).toBeGreaterThan(startTitle!.x + startTitle!.width);
+  expect(startDetail!.x).toBeLessThan(startTitle!.x + startTitle!.width + 24);
+  const end = header("list-end");
+  const endDetail = await end.getByText("12 items").boundingBox();
+  const endAction = await end
+    .getByRole("link", { name: "3 need organizing" })
+    .boundingBox();
+  const endBox = await end.boundingBox();
+  expect(endAction!.x + endAction!.width).toBeCloseTo(
+    endBox!.x + endBox!.width,
+    0,
+  );
+  expect(endDetail!.x + endDetail!.width).toBeLessThan(endAction!.x);
+  expect(endDetail!.x).toBeGreaterThan(
+    (await end.getByRole("heading").boundingBox())!.x + 200,
+  );
+
+  // A description reads under the title and the action centers on the block.
+  const described = header("section-description");
+  const describedTitle = await described.getByRole("heading").boundingBox();
+  const describedText = await described
+    .getByText("Pinned to the top of your Library.")
+    .boundingBox();
+  expect(describedText!.y).toBeGreaterThan(
+    describedTitle!.y + describedTitle!.height - 1,
+  );
+  const edit = await described
+    .getByRole("button", { name: "Edit" })
+    .boundingBox();
+  const block = await described.boundingBox();
+  expect(edit!.y + edit!.height / 2).toBeCloseTo(
+    block!.y + block!.height / 2,
+    0,
+  );
+  await expect(header("list-description").getByText("Connected")).toBeVisible();
+
+  // A long heading wraps instead of overflowing, and the action stays reachable.
+  for (const width of [1280, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    const long = header("long");
+    await expect(long.getByRole("link", { name: "View all" })).toBeVisible();
+    const longBox = await long.boundingBox();
+    const longTitle = await long.getByRole("heading").boundingBox();
+    expect(longTitle!.x + longTitle!.width).toBeLessThanOrEqual(
+      longBox!.x + longBox!.width + 0.5,
+    );
+  }
+
+  for (const [theme, width] of [
+    ["light", 1280],
+    ["dark", 390],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ colorScheme: theme });
+    await specimen.screenshot({
+      caret: "initial",
+      path: `/private/tmp/memotrail-section-header-${theme}-${width}.png`,
+    });
+  }
+});
+
+test("Skeleton is decorative, shimmers, and stands still for reduced motion", async ({
+  page,
+}) => {
+  await page.goto("/design-system#skeleton");
+  const specimen = page.locator("#skeleton");
+  await specimen.scrollIntoViewIfNeeded();
+  const skeletons = specimen.locator("[data-ui-skeleton]");
+  const shape = (name: string) =>
+    specimen.locator(`[data-skeleton="${name}"] [data-ui-skeleton]`).first();
+
+  // Placeholders add nothing to the accessibility tree.
+  await expect(skeletons).toHaveCount(10);
+  for (const skeleton of await skeletons.all())
+    await expect(skeleton).toHaveAttribute("aria-hidden", "true");
+  await expect(specimen.getByRole("img")).toHaveCount(0);
+  await expect(specimen.getByRole("progressbar")).toHaveCount(0);
+
+  // Shapes: a circle is square and round, a line is thin, fill takes its frame.
+  const circle = await shape("circle").boundingBox();
+  expect(circle!.width).toBeCloseTo(48, 0);
+  expect(circle!.height).toBeCloseTo(48, 0);
+  await expect(shape("circle")).toHaveCSS("border-radius", "50%");
+  expect((await shape("line").boundingBox())!.height).toBeCloseTo(14, 0);
+  const frame = await specimen
+    .locator('[data-skeleton="fill"] > div')
+    .boundingBox();
+  const fill = await shape("fill").boundingBox();
+  expect(fill!.width).toBeCloseTo(frame!.width, 0);
+  expect(fill!.height).toBeCloseTo(frame!.height, 0);
+  expect((await shape("block").boundingBox())!.height).toBeCloseTo(64, 0);
+
+  // The shimmer runs by default, stops on request, and stops for reduced motion.
+  await expect(shape("block")).toHaveCSS("animation-name", /shimmer/);
+  await expect(shape("still")).toHaveCSS("animation-name", "none");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(shape("block")).toHaveCSS("animation-name", "none");
+  await expect(shape("fill")).toHaveCSS("animation-name", "none");
+
+  for (const [theme, width] of [
+    ["light", 1280],
+    ["dark", 390],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.emulateMedia({ colorScheme: theme });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await specimen.screenshot({
+      animations: "disabled",
+      caret: "initial",
+      path: `/private/tmp/memotrail-skeleton-${theme}-${width}.png`,
+    });
+  }
+});
