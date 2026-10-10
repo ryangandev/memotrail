@@ -128,10 +128,10 @@ struct MTLocationPanel<Content: View>: View {
           .frame(width: MTLayout.IconTile.compact, height: MTLayout.IconTile.compact)
           .background(
             MTColor.accentTint,
-            in: RoundedRectangle(cornerRadius: MTLayout.IconTile.compactRadius)
+            in: RoundedRectangle(cornerRadius: MTRadius.notice)
           )
           .accessibilityHidden(true)
-        VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
+        VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
           Text("Location")
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)

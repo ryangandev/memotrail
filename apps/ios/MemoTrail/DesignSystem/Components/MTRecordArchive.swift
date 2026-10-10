@@ -83,7 +83,7 @@ struct MTEntityCard: View {
       MTRecordCardBody {
         dates
         Text(title)
-          .mtTextRole(horizontalSizeClass == .regular ? .recordName : .recordNameCompact)
+          .mtTextRole(horizontalSizeClass == .regular ? .recordCardTitle : .recordCardTitleCompact)
           .foregroundStyle(MTColor.ink)
           .multilineTextAlignment(.leading)
         ForEach(facts, id: \.self) { fact in
@@ -152,7 +152,7 @@ struct MTRecordCardFooter: View {
       status + collectionNames.prefix(2).map { ($0, MTBadgeTone.neutral) }
       + tagNames.prefix(2).map { ("#\($0)", MTBadgeTone.neutral) }
     HStack(alignment: .bottom, spacing: MTSpacing.s3) {
-      MTFlowLayout(spacing: MTSpacing.badgeGap) {
+      MTFlowLayout(spacing: MTSpacing.s1_25) {
         ForEach(
           Array(badges.prefix(horizontalSizeClass == .regular ? badges.count : 2).enumerated()),
           id: \.offset

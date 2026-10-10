@@ -256,7 +256,7 @@ describe("suggest", () => {
   test("keeps icon and stroke sizes out of gaps and frames", () => {
     const gap = suggestFor(`VStack(spacing: 2) {}`);
     assert.ok(!gap.some((reference) => reference.startsWith("MTSize.Stroke.")));
-    assert.ok(gap.includes("MTSpacing.lineGap"));
+    assert.ok(gap.includes("MTSpacing.s0_5"));
     const frame = suggestFor(`view.frame(width: 17)`);
     assert.ok(!frame.some((reference) => reference.startsWith("MTSize.Icon.")));
     assert.ok(

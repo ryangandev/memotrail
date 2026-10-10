@@ -45,7 +45,7 @@ struct MemoTrailMark: View {
         Circle()
           .trim(from: 35 / 360, to: revealed ? 255 / 360 : 35 / 360)
           .stroke(
-            MTColor.markRing,
+            MTColor.brandInnerRing,
             style: StrokeStyle(lineWidth: size * 0.066_406, lineCap: .round)
           )
           .frame(width: size * 0.361_328, height: size * 0.361_328)

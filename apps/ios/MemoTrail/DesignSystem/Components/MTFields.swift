@@ -315,7 +315,7 @@ struct MTCheckbox: View {
       isOn.toggle()
     } label: {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
-        RoundedRectangle(cornerRadius: MTLayout.Checkbox.radius)
+        RoundedRectangle(cornerRadius: MTRadius.checkbox)
           .fill(isOn ? MTColor.accent : MTColor.surface)
           .strokeBorder(isOn ? MTColor.accent : MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
           .frame(width: MTLayout.Checkbox.box, height: MTLayout.Checkbox.box)
@@ -328,7 +328,7 @@ struct MTCheckbox: View {
           .alignmentGuide(.firstTextBaseline) {
             $0[VerticalAlignment.center] + MTLayout.Checkbox.baselineOffset
           }
-        VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+        VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
           Text(title).font(MTFont.label).foregroundStyle(MTColor.ink)
           if let detail {
             Text(detail).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)

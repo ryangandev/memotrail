@@ -114,7 +114,7 @@ struct NativeSettingsView: View {
           .frame(width: MTLayout.Avatar.size, height: MTLayout.Avatar.size)
           .background(MTColor.accent, in: Circle())
           .accessibilityHidden(true)
-        VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+        VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
           Text(accountName)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
@@ -126,7 +126,7 @@ struct NativeSettingsView: View {
           Text("Google Sign-In")
             .font(MTFont.note)
             .foregroundStyle(MTColor.inkFaint)
-            .padding(.top, MTSpacing.headingGap)
+            .padding(.top, MTSpacing.s0_75)
         }
         .accessibilityElement(children: .combine)
       }
@@ -220,7 +220,7 @@ struct NativeSettingsView: View {
         .font(.mtIcon(MTSize.Icon.s15, weight: .semibold))
         .foregroundStyle(MTColor.accent)
         .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
         Text("Private by default")
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
@@ -290,7 +290,7 @@ private struct SettingsSectionHeading<Trailing: View>: View {
 
   var body: some View {
     HStack(alignment: .center, spacing: MTSpacing.s4) {
-      VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
         Text(title.uppercased())
           .mtTextRole(.settingsHeading)
           .foregroundStyle(MTColor.ink)
@@ -455,7 +455,7 @@ private struct SettingsPreferenceLabel: View {
         .frame(width: MTLayout.IconTile.medium, height: MTLayout.IconTile.medium)
         .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
         .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
         Text(title)
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)

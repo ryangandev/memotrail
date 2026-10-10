@@ -926,15 +926,6 @@
         }
       }
     },
-    "markRing": {
-      "$description": "The brand mark's inner ring, the same in both themes.",
-      "$value": "{palette.green.400}",
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["ios"]
-        }
-      }
-    },
     "photoBackdrop": {
       "$description": "Behind photos in the full-screen viewer, in both themes.",
       "$value": "{palette.black}",
@@ -946,18 +937,23 @@
     },
     "brand": {
       "$description": "The brand mark's fixed colors, the same in both themes.",
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["web"]
-        }
-      },
       "ring": {
         "$description": "The brand mark's outer ring.",
-        "$value": "{palette.green.700}"
+        "$value": "{palette.green.700}",
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
       },
       "accent": {
         "$description": "The brand mark's clay arc.",
-        "$value": "{palette.clay.600}"
+        "$value": "{palette.clay.600}",
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
       },
       "innerRing": {
         "$description": "The brand mark's inner ring.",

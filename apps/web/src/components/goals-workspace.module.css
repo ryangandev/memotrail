@@ -33,11 +33,11 @@
 }
 
 .goalCardBody h3 {
-  font-family: var(--mt-type-headline-font-family);
-  font-size: var(--mt-type-headline-font-size);
-  font-weight: var(--mt-type-headline-font-weight);
-  letter-spacing: var(--mt-type-headline-letter-spacing);
-  line-height: var(--mt-type-headline-line-height);
+  font-family: var(--mt-type-goal-card-title-font-family);
+  font-size: var(--mt-type-goal-card-title-font-size);
+  font-weight: var(--mt-type-goal-card-title-font-weight);
+  letter-spacing: var(--mt-type-goal-card-title-letter-spacing);
+  line-height: var(--mt-type-goal-card-title-line-height);
 }
 
 .target {

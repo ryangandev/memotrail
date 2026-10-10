@@ -137,7 +137,7 @@ private struct FirstTimeCard: View {
           .mtTextRole(.firstTimeDate)
           .foregroundStyle(MTColor.warm)
         Text(entry.title)
-          .mtTextRole(horizontalSizeClass == .regular ? .recordName : .recordNameCompact)
+          .mtTextRole(horizontalSizeClass == .regular ? .recordCardTitle : .recordCardTitleCompact)
           .foregroundStyle(MTColor.ink)
           .multilineTextAlignment(.leading)
           .padding(.top, MTSpacing.s1)

@@ -136,7 +136,7 @@ struct AISettingsView: View {
           MTBadge(title: "Beta", tone: .neutral)
         }
         Toggle(isOn: .constant(false)) {
-          VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+          VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
             Text("AI capabilities")
               .font(MTFont.label)
               .foregroundStyle(MTColor.ink)

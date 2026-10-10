@@ -170,7 +170,7 @@ struct MTCollectionCard<Manage: View>: View {
           .font(MTFont.note)
           .foregroundStyle(MTColor.inkFaint)
           .lineLimit(1)
-          .padding(.top, MTSpacing.lineGap)
+          .padding(.top, MTSpacing.s0_5)
       }
       .frame(
         maxWidth: .infinity, minHeight: MTLayout.RecordCard.collectionMinHeight,

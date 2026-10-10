@@ -205,7 +205,7 @@ struct ExportView: View {
         paragraph(
           "Keep up to two snapshots. Original media is verified during download; changed or missing files stop the export."
         )
-        MTFlowLayout(spacing: MTSpacing.actionGap) {
+        MTFlowLayout(spacing: MTSpacing.s2_5) {
           Button("Prepare snapshot") { run { await change("create") } }
             .mtButtonStyle(isLoading: busy && !downloading && pendingCreate != nil)
             .disabled(busy || snapshots.count >= 2)
@@ -235,7 +235,7 @@ struct ExportView: View {
           paragraph(
             "This temporary download is removed when you leave this screen. Files you save or share are yours to manage."
           )
-          MTFlowLayout(spacing: MTSpacing.actionGap) {
+          MTFlowLayout(spacing: MTSpacing.s2_5) {
             Button("Save or share ZIP") { sharing = true }
               .mtButtonStyle()
             Button("Remove local copy") { clearFile() }
@@ -283,7 +283,7 @@ struct ExportView: View {
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(1.65)
           paragraph("Expires \(ExportSnapshot.dateLabel(snapshot.expiresAt))")
-          MTFlowLayout(spacing: MTSpacing.actionGap) {
+          MTFlowLayout(spacing: MTSpacing.s2_5) {
             Button("Download ZIP") { run { await download(snapshot) } }
               .mtButtonStyle(.secondary)
               .disabled(busy)
@@ -297,7 +297,7 @@ struct ExportView: View {
               paragraph(
                 "Discard this temporary copy? Your original records and downloaded ZIPs will stay unchanged."
               )
-              MTFlowLayout(spacing: MTSpacing.actionGap) {
+              MTFlowLayout(spacing: MTSpacing.s2_5) {
                 Button("Confirm discard") {
                   run { await change("discard", id: snapshot.id) }
                 }
@@ -400,7 +400,7 @@ private struct ExportCard<Content: View>: View {
   @ViewBuilder let content: Content
 
   var body: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.panelGap) {
+    VStack(alignment: .leading, spacing: MTSpacing.s3_5) {
       Text(title)
         .font(
           level == .section

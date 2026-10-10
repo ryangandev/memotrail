@@ -187,7 +187,7 @@ private struct CollectionEntryCard: View {
         .clipped()
       }
       VStack(alignment: .leading, spacing: 0) {
-        HStack(alignment: .center, spacing: MTSpacing.chipGap) {
+        HStack(alignment: .center, spacing: MTSpacing.s1_5) {
           MTBadge(title: entry.displayType, tone: .neutral)
           if entry.isInInbox { MTBadge(title: "In Inbox", tone: .warm) }
           Spacer(minLength: MTSpacing.s2)
@@ -219,7 +219,7 @@ private struct CollectionEntryCard: View {
           fullNote(body)
         }
         if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
-          MTFlowLayout(spacing: MTSpacing.chipGap) {
+          MTFlowLayout(spacing: MTSpacing.s1_5) {
             ForEach(entry.collectionNames, id: \.self) { name in
               chip(Label(name, icon: .archive), label: "Collection \(name)") {
                 openCollection(name)
@@ -254,7 +254,7 @@ private struct CollectionEntryCard: View {
     Button {
       withAnimation(MTEasing.enter.animation(duration: MTMotion.quick)) { showsFullNote.toggle() }
     } label: {
-      HStack(spacing: MTSpacing.chipGap) {
+      HStack(spacing: MTSpacing.s1_5) {
         Image(systemName: "arrowtriangle.right.fill")
           .font(.mtIcon(MTSize.Icon.s7))
           .rotationEffect(.degrees(showsFullNote ? 90 : 0))
@@ -290,7 +290,7 @@ private struct CollectionEntryCard: View {
         .font(MTFont.fine)
         .foregroundStyle(MTColor.inkMuted)
         .padding(.horizontal, MTSpacing.s2)
-        .padding(.vertical, MTSpacing.headingGap)
+        .padding(.vertical, MTSpacing.s0_75)
         .background(MTColor.surfaceSubtle, in: Capsule())
         .frame(minHeight: MTLayout.InlineAction.height)
         .contentShape(Rectangle())

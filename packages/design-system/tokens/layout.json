@@ -371,14 +371,6 @@
           "unit": "px"
         }
       },
-      "radius": {
-        "$description": "The checkbox square's corner radius.",
-        "$type": "dimension",
-        "$value": {
-          "value": 5,
-          "unit": "px"
-        }
-      },
       "baselineOffset": {
         "$description": "How far below its center the box aligns with the label's first baseline.",
         "$type": "dimension",
@@ -725,14 +717,6 @@
         "$type": "dimension",
         "$value": {
           "value": 34,
-          "unit": "px"
-        }
-      },
-      "compactRadius": {
-        "$description": "The corner radius of a compact icon tile.",
-        "$type": "dimension",
-        "$value": {
-          "value": 10,
           "unit": "px"
         }
       }

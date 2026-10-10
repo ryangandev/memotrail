@@ -207,7 +207,7 @@ struct MTPhotoField: View {
                 .contentShape(Rectangle())
               }
               MTBadge(title: "New", tone: .solidAccent, size: .micro, uppercase: true)
-                .padding(MTSpacing.chipGap)
+                .padding(MTSpacing.s1_5)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
               if index == 0, let progress, progress.total > 0, progress.completed < progress.total {
                 MTUploadProgress(

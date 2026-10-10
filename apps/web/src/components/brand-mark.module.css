@@ -13,7 +13,7 @@
 .counterRotation [data-brand-part] {
   transform-box: view-box;
   transform-origin: center;
-  transition: transform var(--mt-motion-brand-rotation)
+  transition: transform var(--mt-motion-mark-turn)
     var(--mt-motion-easing-emphasized);
 }
 

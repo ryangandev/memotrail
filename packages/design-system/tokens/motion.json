@@ -58,16 +58,11 @@
         "unit": "ms"
       }
     },
-    "brandRotation": {
-      "$description": "The brand mark turning as the sidebar collapses.",
+    "markTurn": {
+      "$description": "The brand mark's quarter turn, as the Web sidebar collapses.",
       "$value": {
         "value": 320,
         "unit": "ms"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["web"]
-        }
       }
     },
     "loadingSpin": {
@@ -209,18 +204,6 @@
       "$description": "The brand mark's inner ring drawing in.",
       "$value": {
         "value": 500,
-        "unit": "ms"
-      }
-    },
-    "markTurn": {
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["ios"]
-        }
-      },
-      "$description": "The brand mark's quarter turn, matching the Web sidebar collapse.",
-      "$value": {
-        "value": 320,
         "unit": "ms"
       }
     },

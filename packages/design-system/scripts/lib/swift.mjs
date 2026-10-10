@@ -180,10 +180,10 @@ export function makeSwift(system, icons, sourceLabel) {
   });
 
   // Scales
-  const spacing = children("space").map((path) => [
-    path.split(".")[1],
-    token(path).value,
-  ]);
+  // Ordered by size: JavaScript lists whole-number keys before fractional steps like 1-5.
+  const spacing = children("space")
+    .map((path) => [path.split(".")[1], token(path).value])
+    .sort((a, b) => a[1] - b[1]);
   const radius = children("radius").map((path) => [
     path.split(".")[1],
     token(path).value,
@@ -872,9 +872,10 @@ export function swiftReference(path) {
   return [swiftGroups[group], ...enums, swiftIdentifier(rest.at(-1))].join(".");
 }
 
-// Names that start with a digit get an s prefix, like MTSpacing.s4 and MTSize.Icon.s18.
+// Names that start with a digit get an s prefix, like MTSpacing.s4 and MTSize.Icon.s18, and a
+// fractional step's hyphen becomes an underscore, like MTSpacing.s1_5.
 function swiftIdentifier(name) {
-  return /^\d/.test(name) ? `s${name}` : name;
+  return /^\d/.test(name) ? `s${name.replaceAll("-", "_")}` : name;
 }
 
 function swiftCase(name) {

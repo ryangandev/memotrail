@@ -129,7 +129,7 @@ private struct PersonCard: View {
             .background(MTColor.accentSubtle, in: Circle())
             .accessibilityHidden(true)
           Text(person.name)
-            .mtTextRole(.recordNameCompact)
+            .mtTextRole(.recordCardTitleCompact)
             .foregroundStyle(MTColor.ink)
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s2)

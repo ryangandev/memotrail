@@ -99,7 +99,7 @@ struct EntryRelationsView: View {
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   var body: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.panelGap) {
+    VStack(alignment: .leading, spacing: MTSpacing.s3_5) {
       Text("Related Items")
         .font(MTFont.heading)
         .foregroundStyle(MTColor.ink)
@@ -158,7 +158,7 @@ struct EntryRelationsView: View {
         .mtButtonStyle(.secondary)
         .disabled(isBusy)
     }
-    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : MTSpacing.panelGap)
+    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : MTSpacing.s3_5)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
@@ -193,7 +193,7 @@ struct EntryRelationsView: View {
       ? AnyLayout(HStackLayout(alignment: .center, spacing: MTSpacing.s3))
       : AnyLayout(VStackLayout(alignment: .leading, spacing: MTSpacing.s3))
     return layout {
-      VStack(alignment: .leading, spacing: MTSpacing.chipGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
         Button(row.displayTitle) { open(row.entryID) }
           .buttonStyle(.plain)
           .font(MTFont.body)

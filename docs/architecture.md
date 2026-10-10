@@ -305,9 +305,11 @@ Pair it with the test file carrying the same feature name.
   The `palette` group holds raw colors that only semantic tokens reference; generated outputs never include it, so components use semantic roles.
   The semantic groups are `color`, `font`, `lineHeight`, `type` text roles, `space`, `textSpace`, `size`, `radius`, `layout`, `motion` durations and easing, `shadow`, `state`, `material`, and `elevation`.
   `textSpace` is Web spacing in `em`, such as list indents and inline code padding, so it scales with the text it sits in.
+  Both platforms share the numeric `space` scale, including hyphenated half steps such as `space.1-5`, which Swift names `MTSpacing.s1_5`; a semantic spacing token exists only where both platforms use it for the same purpose.
   Values reproduce what each platform renders today, so a group may hold several near values rather than a snapped scale.
 - `$extensions["com.memotrail"]` carries what DTCG cannot express.
   `platforms` limits a token or group to Web or iOS, and the generator emits it only there; `web` and `ios` override a value on one platform.
+  A design decision both platforms make is one token that both read, never a Web-only and an iOS-only copy; when a platform draws it differently, such as a text role at an iOS Dynamic Type size, that token carries the difference as an override.
   `web.unit: "em"` writes a Web-only number token as a length relative to the surrounding text.
   A text role names its iOS Dynamic Type style in `ios.textStyle`, and a material names its iOS system material in `ios.material`.
   `mix` records the colors a translucent or mixed color comes from, and the generator verifies the value against them.

@@ -154,10 +154,10 @@
 
 .signInCard h2 {
   margin-top: var(--mt-space-2-5);
-  font-family: var(--mt-type-headline-font-family);
-  font-size: var(--mt-type-headline-font-size);
-  font-weight: var(--mt-type-headline-font-weight);
-  letter-spacing: var(--mt-type-headline-letter-spacing);
+  font-family: var(--mt-type-welcome-title-font-family);
+  font-size: var(--mt-type-welcome-title-font-size);
+  font-weight: var(--mt-type-welcome-title-font-weight);
+  letter-spacing: var(--mt-type-welcome-title-letter-spacing);
 }
 
 .signInCard > p:not(.cardEyebrow):not(.error) {

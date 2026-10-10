@@ -146,7 +146,7 @@ struct AuthenticationView: View {
       .frame(maxWidth: .infinity, minHeight: MTLayout.SignIn.controlHeight)
     case .setupRequired:
       // Web's Setup needed notice, naming the native configuration instead.
-      VStack(alignment: .leading, spacing: MTSpacing.detailGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s1_25) {
         Text("Setup needed")
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
@@ -190,7 +190,7 @@ struct AuthenticationView: View {
   /// Web's `eyebrow` and `cardEyebrow`: small uppercase accent labels.
   private func eyebrow(_ text: String) -> some View {
     Text(text)
-      .mtTextRole(.storyEyebrow)
+      .mtTextRole(.signInEyebrow)
       .foregroundStyle(MTColor.accent)
   }
 }

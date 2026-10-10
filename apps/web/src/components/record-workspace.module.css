@@ -170,10 +170,10 @@
 .formSection > legend {
   padding: 0 var(--mt-space-2);
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-type-overline-font-size);
-  font-weight: var(--mt-type-overline-font-weight);
-  letter-spacing: var(--mt-type-overline-letter-spacing);
-  text-transform: var(--mt-type-overline-text-transform);
+  font-size: var(--mt-type-legend-font-size);
+  font-weight: var(--mt-type-legend-font-weight);
+  letter-spacing: var(--mt-type-legend-letter-spacing);
+  text-transform: var(--mt-type-legend-text-transform);
 }
 
 .fullField {

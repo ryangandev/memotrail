@@ -170,7 +170,7 @@ private struct TagBadge: View {
 
   var body: some View {
     Button(action: edit) {
-      HStack(spacing: MTSpacing.chipGap) {
+      HStack(spacing: MTSpacing.s1_5) {
         Text("#")
           .font(MTFont.tagMark)
           .foregroundStyle(MTColor.accent)
@@ -182,7 +182,7 @@ private struct TagBadge: View {
         Text("\(tag.entryCount)")
           .font(MTFont.stamp)
           .foregroundStyle(MTColor.inkMuted)
-          .padding(.horizontal, MTSpacing.chipGap)
+          .padding(.horizontal, MTSpacing.s1_5)
           .frame(minWidth: MTLayout.TagChip.count, minHeight: MTLayout.TagChip.count)
           .background(MTColor.surfaceSubtle, in: Capsule())
       }

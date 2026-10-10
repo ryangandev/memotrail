@@ -27,15 +27,10 @@
       }
     },
     "checkbox": {
-      "$description": "The medium checkbox box.",
+      "$description": "The checkbox square: the medium Web checkbox and every iOS checkbox.",
       "$value": {
         "value": 5,
         "unit": "px"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["web"]
-        }
       }
     },
     "xsmall": {
@@ -70,15 +65,10 @@
       }
     },
     "notice": {
-      "$description": "Inline notices and 34px heading icons.",
+      "$description": "Inline notices, and the 34px icon tile beside a Location's name.",
       "$value": {
         "value": 10,
         "unit": "px"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["web"]
-        }
       }
     },
     "medium": {
