@@ -1,15 +1,17 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { loadComponentSpecs } from "./lib/components.mjs";
 import { checkContrast } from "./lib/contrast.mjs";
 import { validateIcons } from "./lib/icons.mjs";
 import { readJson, resolveSystem } from "./lib/resolve.mjs";
-import { makeSwift } from "./lib/swift.mjs";
+import { makeComponentSwift, makeSwift } from "./lib/swift.mjs";
 import { makeCatalog, makeCss, makeTypeScript } from "./lib/web.mjs";
 
 // Reads the DTCG 2025.10 resolver in tokens/, resolves it for each platform and theme,
-// validates the icon manifest and WCAG contrast, and writes the Web CSS variables, the Web
-// gallery catalog, typed Web data, and the Swift tokens.
+// validates the icon manifest, WCAG contrast, and the component specs in components/, and
+// writes the Web CSS variables, the Web gallery catalog, typed Web data with the component
+// variants, the Swift tokens, and the Swift component variants.
 //
 //   node scripts/generate.mjs            write every output
 //   node scripts/generate.mjs --check    fail when an output is missing or stale
@@ -56,10 +58,17 @@ async function main() {
   if (contrast.error) throw new Error(contrast.error);
   if (printContrast) return;
 
+  const components = await loadComponentSpecs({
+    componentDirectory: resolve(packageRoot, "components"),
+    schemaPath: resolve(packageRoot, "schema/component-spec.schema.json"),
+    root: repositoryRoot,
+    system,
+  });
+
   const outputs = [
     [
       output("apps/web/src/styles/generated-tokens.css"),
-      makeCss(system, sourceLabel),
+      makeCss(system, sourceLabel, icons),
     ],
     [
       output("apps/web/src/generated/design-tokens.json"),
@@ -67,11 +76,17 @@ async function main() {
     ],
     [
       output("apps/web/src/generated/design-system.ts"),
-      makeTypeScript(system, icons, packageLabel),
+      makeTypeScript(system, icons, packageLabel, components),
     ],
     [
       output("apps/ios/MemoTrail/DesignSystem/Generated/DesignTokens.swift"),
       makeSwift(system, icons, packageLabel),
+    ],
+    [
+      output(
+        "apps/ios/MemoTrail/DesignSystem/Generated/ComponentVariants.swift",
+      ),
+      makeComponentSwift(components, packageLabel),
     ],
   ];
 
@@ -94,7 +109,7 @@ async function main() {
     }
 
     console.log(
-      `Generated design tokens are current. Contrast: ${contrast.results.length} checks pass AA or have one of ${contrast.exceptions.length} named exceptions.`,
+      `Generated design tokens are current. Contrast: ${contrast.results.length} checks pass AA or have one of ${contrast.exceptions.length} named exceptions. Components: ${components.length} specs with ${components.reduce((count, spec) => count + spec.specimens.length, 0)} specimens are valid.`,
     );
   } else {
     for (const [path, contents] of outputs) {
@@ -102,7 +117,9 @@ async function main() {
       await writeFile(path, contents, "utf8");
     }
 
-    console.log("Generated Web and Swift design tokens.");
+    console.log(
+      "Generated Web and Swift design tokens and component variants.",
+    );
   }
 }
 

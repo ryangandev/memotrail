@@ -20,6 +20,10 @@ import StarterKit from "@tiptap/starter-kit";
 import { CharacterCount, Placeholder } from "@tiptap/extensions";
 import { Icon, type IconName } from "@/components/icon";
 import {
+  richTextDefaults,
+  type RichTextVariant,
+} from "@/generated/design-system";
+import {
   createEntryRichText,
   plainTextDocument,
   type EntryRichText,
@@ -36,7 +40,7 @@ type RichTextEditorProps = {
   placeholder: string;
   richText: EntryRichText | null;
   text: string;
-  variant?: "dialog" | "form" | "page";
+  variant?: RichTextVariant;
 };
 
 type FormatState = {
@@ -74,7 +78,7 @@ export function RichTextEditor({
   placeholder,
   richText,
   text,
-  variant = "form",
+  variant = richTextDefaults.variant,
 }: RichTextEditorProps) {
   const onChangeRef = useRef(onChange);
   const textRef = useRef(text);
@@ -182,6 +186,7 @@ export function RichTextEditor({
       data-disabled={disabled || undefined}
       data-rich-text-editor
       data-ui-field
+      data-ui-rich-text
       data-variant={variant}
     >
       <EditorContent className={styles.content} editor={editor} />
@@ -482,10 +487,9 @@ function normalizedLink(value: string) {
   }
 }
 
-const variantClassNames = {
-  dialog: styles.dialog,
+const variantClassNames: Record<RichTextVariant, string | undefined> = {
+  embedded: styles.embedded,
   form: styles.form,
-  page: styles.page,
 };
 
 type FormattingShortcut = "bulletList" | "link" | "orderedList";

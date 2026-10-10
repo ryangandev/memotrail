@@ -62,7 +62,7 @@
         GalleryPreviewStatus()
         MTCard {
           HStack(spacing: MTSpacing.s3) {
-            MemoTrailMark().frame(width: 40, height: 40)
+            MemoTrailMark().frame(width: MTLayout.Gallery.mark, height: MTLayout.Gallery.mark)
             VStack(alignment: .leading, spacing: MTSpacing.s1) {
               Text("MemoTrail").font(MTFont.title).foregroundStyle(MTColor.ink)
               Text("Shared meaning. Native interactions.").font(MTFont.caption)
@@ -74,9 +74,9 @@
           NavigationLink(value: section) {
             MTCard {
               HStack(alignment: .top, spacing: MTSpacing.s3) {
-                Text(section.index).font(MTFont.caption.monospaced()).foregroundStyle(
+                Text(section.index).font(MTFont.identifier).foregroundStyle(
                   MTColor.inkFaint
-                ).frame(width: 22, alignment: .leading)
+                ).frame(width: MTLayout.Gallery.index, alignment: .leading)
                 VStack(alignment: .leading, spacing: MTSpacing.s1) {
                   Label(section.title, icon: section.icon).font(MTFont.heading)
                     .foregroundStyle(MTColor.ink)
@@ -156,13 +156,13 @@
             Text(description).font(MTFont.body).foregroundStyle(MTColor.inkMuted)
           }
           if let api {
-            Text(api).font(MTFont.caption.monospaced()).foregroundStyle(MTColor.inkMuted)
+            Text(api).font(MTFont.identifier).foregroundStyle(MTColor.inkMuted)
           }
         }
         .fixedSize(horizontal: false, vertical: true)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(MTSpacing.s4)
-        Rectangle().fill(MTColor.border).frame(height: 1)
+        Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
         content
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(MTSpacing.s4)
@@ -171,6 +171,40 @@
       .background(MTColor.surfaceRaised)
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
       .overlay { RoundedRectangle(cornerRadius: MTRadius.large).stroke(MTColor.border) }
+    }
+  }
+
+  /// One specimen from a component spec in packages/design-system/components, titled with its id
+  /// like the Web gallery. The UI test finds every generated specimen by its identifier.
+  struct GalleryCase<Content: View>: View {
+    let specimen: MTComponentSpecimen
+    @ViewBuilder var content: Content
+
+    init(_ specimen: MTComponentSpecimen, @ViewBuilder content: () -> Content) {
+      self.specimen = specimen
+      self.content = content()
+    }
+
+    var body: some View {
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        VStack(alignment: .leading, spacing: MTSpacing.s1) {
+          Text(specimen.rawValue).font(MTFont.identifier).foregroundStyle(MTColor.ink)
+            .accessibilityAddTraits(.isHeader)
+          Text(specimen.summary).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        content
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier(specimen.accessibilityIdentifier)
+    }
+  }
+
+  /// The hairline between specimen cases.
+  struct GalleryCaseSeparator: View {
+    var body: some View {
+      Rectangle().fill(MTColor.border).frame(height: MTSize.Stroke.thin)
     }
   }
 

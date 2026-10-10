@@ -1,12 +1,13 @@
 .toast {
   display: flex;
-  width: min(360px, calc(100vw - 32px));
-  min-height: 52px;
+  width: min(var(--mt-size-toast-width), calc(100vw - 32px));
+  min-height: var(--mt-size-toast-min-height);
   align-items: flex-start;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-3) 40px var(--mt-space-3) var(--mt-space-4);
-  border: 1px solid var(--mt-color-border-strong);
-  border-left: 3px solid var(--mt-color-accent);
+  padding: var(--mt-space-3) var(--mt-space-10) var(--mt-space-3)
+    var(--mt-space-4);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
+  border-left: var(--mt-size-stroke-thick) solid var(--mt-color-accent);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
@@ -38,8 +39,8 @@
 
 .icon {
   display: grid;
-  width: 18px;
-  height: 18px;
+  width: var(--mt-size-toast-icon);
+  height: var(--mt-size-toast-icon);
   flex: 0 0 auto;
   place-items: center;
   color: var(--mt-color-accent);

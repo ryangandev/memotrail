@@ -1,0 +1,109 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Toast
+
+platforms:
+  web:
+    path: apps/web/src/components/app-toast.tsx
+    symbols: [AppToaster, notify]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTToast.swift
+    symbols: [MTToast, MTToastCenter]
+
+purpose: Brief feedback about an action that just finished, which rises from the bottom, stays for a few seconds, and never blocks the page.
+
+use:
+  - Confirming a change saved away from where it was made, such as Changes saved. after a dialog closes.
+  - An action that removed or moved something, such as Moved to Trash. or Pending Entry discarded.
+  - A failure that has no field to sit beside, such as Could not save. Try again.
+
+avoid:
+  - Failures tied to a field. Show the message on the field.
+  - Anything people must read or act on. Use a Dialog or an inline notice.
+  - Progress. Show a busy Button or a busy Dialog.
+
+anatomy:
+  container: The raised card, with the tone's stripe along its leading edge.
+  stripe: The thick tone-colored border on the leading edge.
+  icon: The tone's icon before the message.
+  message: The sentence that says what happened.
+  close: The action that dismisses the toast early.
+
+props:
+  tone:
+    description: What happened. Success confirms a change, info reports a neutral outcome, and error reports a failure, in the warm color and for longer.
+    values: [success, info, error]
+    default: info
+
+states: [default]
+
+tokens:
+  - container:
+      width: "{size.toast.width}"
+      minHeight: "{size.toast.minHeight}"
+      radius: "{radius.medium}"
+      background: "{color.surfaceRaised}"
+      border: "{color.borderStrong}"
+      borderWidth: "{size.stroke.thin}"
+      shadow: "{shadow.floating}"
+      paddingBlock: "{space.3}"
+      paddingInline: "{space.4}"
+      gap: "{space.3}"
+      duration: "{motion.toast}"
+    stripe:
+      borderWidth: "{size.stroke.thick}"
+      color: "{color.accent}"
+    icon:
+      width: "{size.toast.icon}"
+      color: "{color.accent}"
+      size: { ios: "{size.icon.15}" }
+    message:
+      color: "{color.ink}"
+      type: { ios: "{type.label}" }
+      fontFamily: { web: "{font.family.sans}" }
+      fontSize: { web: "{font.size.label}" }
+      lineHeight: "{lineHeight.body}"
+    close:
+      color: "{color.inkMuted}"
+      size: { ios: "{size.icon.11}" }
+      radius: { web: "{radius.small}" }
+  - when: { tone: error }
+    container:
+      duration: "{motion.toastError}"
+    stripe:
+      color: "{color.warm}"
+    icon:
+      color: "{color.warm}"
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: One short sentence in the past tense, ending with a period, such as Changes saved. A failure adds what to do next, such as Could not save. Try again.
+  notes:
+    - At most three toasts show at once; a fourth replaces the oldest.
+    - Success and info stay for 4.5 seconds and errors for 8, from motion.toast and motion.toastError.
+
+accessibility:
+  role: A status message. Web renders it in a polite live region; iOS posts an announcement with the message.
+  label: The message. The close action reads Close toast on Web and Dismiss notification on iOS.
+  focus: A toast never takes focus. Web keeps it open while the pointer or focus is inside it, and the close action is reachable by keyboard.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: iOS text follows Dynamic Type through the label role, and the toast grows taller. Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Toasts are at most 360 px wide at the bottom right on Web and at most 420 pt wide, centered at the bottom, on iOS.
+    reason: A desktop keeps the corner clear of the content; on a phone the screen's width less its margins sets the width, and 420 pt only caps it on iPad.
+  - difference: The Web close action is a 24 px square in the top trailing corner; the iOS one is a 32 pt tap target at the end of the message line.
+    reason: A pointer needs a smaller target, and the native target stays comfortable to tap without growing the toast.
+  - difference: Web draws Sonner's tone icons at the icon column's size; iOS draws filled SF Symbols at 15 pt inside the same column.
+    reason: Each uses its platform's own status glyphs, and the shared column keeps messages aligned.
+  - difference: iOS toasts also dismiss with a downward swipe and sit above the keyboard, the tab bar, and a sheet's footer; Web toasts sit above the page and pause while hovered.
+    reason: Swipes and the keyboard are touch interactions, and hover is a pointer one.
+
+specimens:
+  - id: toast-tones
+    description: Success, info, and error, each with its icon and stripe.
+    covers: { tone: all }
+  - id: toast-long-message
+    description: An error long enough to wrap onto a second line.
+    covers: { tone: [error] }

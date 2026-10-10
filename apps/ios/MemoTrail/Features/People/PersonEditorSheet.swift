@@ -106,7 +106,7 @@ struct PersonEditorSheet: View {
         } label: {
           HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
             Image(.chevron)
-              .font(.system(size: 11, weight: .semibold))
+              .font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
               .foregroundStyle(MTColor.inkMuted)
               .rotationEffect(.degrees(isExpanded ? 90 : 0))
             Text(title ?? "Linked Item")
@@ -121,12 +121,12 @@ struct PersonEditorSheet: View {
         .accessibilityValue(isExpanded ? "Expanded" : "Collapsed")
         if isExpanded, let body = entry?.body.trimmed.nonEmpty {
           Text(body)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
             .textSelection(.enabled)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.leading, 19)
+            .padding(.leading, MTLayout.Disclosure.indent)
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)

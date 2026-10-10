@@ -7,7 +7,7 @@ import { ProgressiveImage } from "@/components/progressive-image";
 import styles from "./photo-preview-dialog.module.css";
 
 // Shows one photo. With `position`, it pages through a set with Previous and Next, and
-// the arrow keys.
+// the arrow keys. Specified in packages/design-system/components/photo-viewer.yaml.
 export function PhotoPreviewDialog({
   name,
   onClose,
@@ -78,7 +78,7 @@ export function PhotoPreviewDialog({
       size="wide"
       title={name}
     >
-      <div className={styles.image}>
+      <div className={styles.image} data-ui-photo-viewer>
         <ProgressiveImage
           alt={name}
           fallback="Photo unavailable. Close this preview and try again."

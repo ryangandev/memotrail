@@ -118,9 +118,9 @@ struct AISettingsView: View {
       VStack(alignment: .leading, spacing: MTSpacing.s5) {
         HStack(alignment: .top, spacing: MTSpacing.s3) {
           Image(.sparkle)
-            .font(.system(size: 19, weight: .medium))
+            .font(.mtIcon(MTSize.Icon.s19, weight: .medium))
             .foregroundStyle(MTColor.accent)
-            .frame(width: 44, height: 44)
+            .frame(width: MTLayout.IconTile.large, height: MTLayout.IconTile.large)
             .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
             .accessibilityHidden(true)
           VStack(alignment: .leading, spacing: MTSpacing.s1) {
@@ -129,19 +129,19 @@ struct AISettingsView: View {
               .foregroundStyle(MTColor.ink)
               .accessibilityAddTraits(.isHeader)
             Text("Currently off and unavailable to enable.")
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
           }
           Spacer(minLength: 0)
           MTBadge(title: "Beta", tone: .neutral)
         }
         Toggle(isOn: .constant(false)) {
-          VStack(alignment: .leading, spacing: 2) {
+          VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
             Text("AI capabilities")
               .font(MTFont.label)
               .foregroundStyle(MTColor.ink)
             Text("Capture, organize, and search your archive manually.")
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
           }
         }
@@ -150,12 +150,13 @@ struct AISettingsView: View {
         .padding(MTSpacing.s4)
         .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
         .overlay {
-          RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border, lineWidth: 1)
+          RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
+            MTColor.border, lineWidth: MTSize.Stroke.thin)
         }
         Text(
           "No new AI requests will run while this beta is paused. Your Entries and previous AI data are preserved."
         )
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
         .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
         .fixedSize(horizontal: false, vertical: true)
@@ -163,7 +164,8 @@ struct AISettingsView: View {
       .padding(MTSpacing.s5)
       .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
       .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+        RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+          MTColor.border, lineWidth: MTSize.Stroke.thin)
       }
       .accessibilityElement(children: .contain)
       .accessibilityLabel("AI availability")

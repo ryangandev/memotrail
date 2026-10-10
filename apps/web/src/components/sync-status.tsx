@@ -1,7 +1,7 @@
 "use client";
 import syncStatusStyles from "@/components/sync-status.module.css";
 
-import { useState } from "react";
+import { useState, type ComponentPropsWithRef } from "react";
 import { Button } from "@/components/button";
 import { useCaptureQueue } from "@/components/capture-provider";
 import { Dialog } from "@/components/dialog";
@@ -13,7 +13,10 @@ import {
   hasWaitingCaptures,
 } from "@/lib/data/inbox-sync";
 
-/** The workspace's pending captures: syncs them and lists what is waiting. */
+/**
+ * The workspace's pending captures: syncs them and lists what is waiting.
+ * Specified in packages/design-system/components/sync-status.yaml.
+ */
 export function SyncStatus() {
   const captureQueue = useCaptureQueue();
   const { isSyncing, items, lastError, synchronize } = captureQueue;
@@ -28,12 +31,6 @@ export function SyncStatus() {
     return null;
   }
 
-  const label = [
-    waiting > 0 ? `${waiting} pending` : null,
-    rejected > 0 ? `${rejected} not accepted` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
   const description = [
     waiting > 0
       ? `${countLabel(waiting, "Entry")} saved on this device will sync when MemoTrail can be reached.`
@@ -66,21 +63,12 @@ export function SyncStatus() {
       size="compact"
       title="Pending sync"
       trigger={
-        <button
-          aria-busy={isSyncing}
-          className={syncStatusStyles.syncStatus}
-          data-rejected={rejected > 0 || undefined}
+        <SyncStatusButton
+          busy={isSyncing}
           onClick={() => void synchronize()}
-          title={
-            rejected > 0
-              ? "Review captures MemoTrail did not accept and sync the rest"
-              : "Sync now and review captures waiting on this device"
-          }
-          type="button"
-        >
-          <span aria-hidden="true" />
-          {label}
-        </button>
+          rejected={rejected}
+          waiting={waiting}
+        />
       }
     >
       {lastError ? (
@@ -90,5 +78,45 @@ export function SyncStatus() {
       ) : null}
       <PendingCaptureList items={items} />
     </Dialog>
+  );
+}
+
+/**
+ * The top-bar indicator itself: the counts of captures waiting on this device and refused by
+ * MemoTrail, drawn warm when one was refused. SyncStatus wires it to the capture queue.
+ */
+export function SyncStatusButton({
+  busy,
+  rejected,
+  waiting,
+  ...props
+}: {
+  busy: boolean;
+  rejected: number;
+  waiting: number;
+} & Omit<ComponentPropsWithRef<"button">, "children" | "title" | "type">) {
+  const label = [
+    waiting > 0 ? `${waiting} pending` : null,
+    rejected > 0 ? `${rejected} not accepted` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  return (
+    <button
+      {...props}
+      aria-busy={busy}
+      className={syncStatusStyles.syncStatus}
+      data-rejected={rejected > 0 || undefined}
+      data-ui-sync-status
+      title={
+        rejected > 0
+          ? "Review captures MemoTrail did not accept and sync the rest"
+          : "Sync now and review captures waiting on this device"
+      }
+      type="button"
+    >
+      <span aria-hidden="true" />
+      {label}
+    </button>
   );
 }

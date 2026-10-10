@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: IconButton
+
+platforms:
+  web:
+    path: apps/web/src/components/button.tsx
+    symbols: [IconButton]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTActions.swift
+    symbols: [MTIconButton]
+
+purpose: An icon-only action, drawn as a square Button, that names itself with a required label.
+
+use:
+  - Close, more, and add actions in dialog and sheet headers, toolbars, and record rows.
+  - Actions whose icon is unmistakable in context, such as close or more.
+  - Ghost by default, so the icon reads as quiet chrome beside the content it acts on.
+
+avoid:
+  - Actions an icon cannot name on its own. Use a Button with a label and a leading icon.
+  - The main action of a form or dialog. Use a primary Button.
+  - Toggles and filters. Use a filter chip or a checkbox.
+
+anatomy:
+  container: The square control that carries the variant's fill and border and receives the press.
+  icon: The icon that stands for the action, drawn in the variant's label color.
+  spinner: The progress indicator that replaces the icon while loading.
+  focusRing: The Web keyboard focus outline around the container.
+
+props:
+  variant:
+    description: The action's emphasis, with Button's variants. Ghost is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one.
+    values: [primary, secondary, ghost, danger]
+    default: ghost
+  size:
+    description: The square's side. Small fits dense rows and composer headers, and large stands alone.
+    values: [small, medium, large]
+    default: medium
+  loading:
+    description: Replaces the icon with the spinner and disables the action while it runs.
+    type: boolean
+    default: false
+    platformNames: { ios: isLoading }
+
+states: [default, hover, pressed, focus, disabled, loading]
+
+tokens:
+  - container:
+      size: "{size.control.medium}"
+      radius: "{radius.medium}"
+      borderWidth: "{size.stroke.thin}"
+      duration: "{motion.quick}"
+      easing: "{motion.easing.standard}"
+    icon:
+      size: { ios: "{size.icon.17}" }
+    spinner:
+      size: { web: "{size.icon.14}" }
+      borderWidth: { web: "{size.stroke.medium}" }
+    focusRing:
+      color: { web: "{state.focus.ring}" }
+      borderWidth: { web: "{state.focus.ringWidth}" }
+      offset: { web: "{state.focus.ringOffset}" }
+  - when: { size: small }
+    container:
+      size: "{size.control.small}"
+      radius: "{radius.small}"
+    icon:
+      size: { ios: "{size.icon.14}" }
+  - when: { size: large }
+    container:
+      size: "{size.control.large}"
+  - when: { variant: primary }
+    container: { background: "{color.accent}" }
+    icon: { color: "{color.accentInk}" }
+  - when: { variant: primary, state: hover }
+    container: { background: "{state.hover.primary}" }
+  - when: { variant: secondary }
+    container:
+      background: "{color.surfaceRaised}"
+      border: "{color.borderStrong}"
+    icon: { color: "{color.inkMuted}" }
+  - when: { variant: secondary, state: hover }
+    container:
+      background: "{state.hover.accentSurface}"
+      border: "{color.accent}"
+    icon: { color: "{color.accent}" }
+  - when: { variant: ghost }
+    icon: { color: "{color.inkMuted}" }
+  - when: { variant: ghost, state: hover }
+    container: { background: "{state.hover.surface}" }
+    icon: { color: "{state.hover.ink}" }
+  - when: { variant: danger }
+    container:
+      background: "{color.dangerSubtle}"
+      border: "{color.dangerBorder}"
+    icon: { color: "{color.danger}" }
+  - when: { variant: danger, state: hover }
+    container: { border: "{color.danger}" }
+  - when: { state: disabled }
+    container: { opacity: "{state.disabled.opacity.button}" }
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: The label is a verb and its object, such as Close entry editor or More actions for Travel, because it is the only name a screen reader hears.
+  notes:
+    - The label is never drawn; it names the button for assistive technology and, on Web, for the title tooltip a caller may add.
+
+accessibility:
+  role: A button. Web IconButton is a Button element with aria-label; iOS MTIconButton is a Button whose label VoiceOver reads.
+  label: The required label, which names the action and its object. The icon is decorative. While loading, Web sets aria-busy and iOS adds the value In progress.
+  focus: Like Button. Web shows the accent focus ring on keyboard focus and leaves the tab order while disabled or loading; iOS draws the system focus effect.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: The square keeps its size at every text size, because it holds no text. iOS icons are SF Symbols at a fixed point size; Web icons grow only with browser zoom.
+
+platformDifferences:
+  - difference: Squares are 32, 40, and 48 px on Web and 34, 44, and 52 pt on iOS.
+    reason: IconButton shares Button's size.control tokens, which raise iOS toward the 44 pt touch target.
+  - difference: Web callers pass the Icon as the child at the size they need, usually 17 or 18 px; iOS takes an MTIcon and draws it at 17 pt, or 14 pt when small.
+    reason: Web icons are SVGs that callers size like any other Icon; an SF Symbol is a glyph that MTIconButton sizes from the control, so every native icon action matches.
+  - difference: Web shows hover colors on pointer hover; iOS shows them while pressed.
+    reason: Touch has no hover, as with Button.
+  - difference: Web draws the spinner and focus ring from tokens; iOS uses the system ProgressView and focus effect.
+    reason: Native progress and focus indicators match the rest of each platform.
+
+specimens:
+  - id: icon-button-variants
+    description: Every variant at the default medium size, with add, edit, more, and remove icons.
+    covers: { variant: all }
+  - id: icon-button-sizes
+    description: Every size in the ghost variant, with the close icon a dialog header uses.
+    covers: { size: all }
+  - id: icon-button-states
+    description: A ghost action at rest, disabled, and loading, where the spinner replaces the icon.
+    covers: { variant: [ghost] }

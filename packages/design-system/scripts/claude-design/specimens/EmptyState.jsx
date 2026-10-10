@@ -1,29 +1,25 @@
 const { Button, EmptyState, Icon } = MemoTrail;
 
+// The same states the Web and iOS galleries show.
 export const specimens = {
   "empty-state-with-action": {
     title: "With an icon and an action",
     render: () => (
       <EmptyState
-        actions={
-          <Button size="small">
-            <Icon name="plus" size={16} />
-            New entry
-          </Button>
-        }
-        description="Entries you save to Library will appear here, ready to return to."
-        icon={<Icon name="sparkle" size={22} />}
-        title="Your trail starts here"
+        actions={<Button>Add your first memory</Button>}
+        description="Capture a memory to begin building your trail."
+        icon={<Icon name="plus" size={24} />}
+        title="Your Life Wiki is empty"
       />
     ),
   },
   "empty-state-informational": {
-    title: "Informational, without an action",
+    title: "Informational, without an icon or action",
     render: () => (
       <EmptyState
-        description="As your archive grows, an older dated Entry will find its way back here."
+        description="Photos you add to this Home appear here."
         headingLevel={3}
-        title="Room for a memory"
+        title="No photos yet"
       />
     ),
   },
@@ -31,9 +27,10 @@ export const specimens = {
     title: "The whole state as one button",
     render: () => (
       <EmptyState
-        description="The home you live in, the vehicle you drive, and the Periods still going on will appear here."
+        description="Add the first time you did something new."
+        icon={<Icon name="star" size={24} />}
         onClick={() => {}}
-        title="Life is still unfolding"
+        title="Start with a first worth remembering"
       />
     ),
   },

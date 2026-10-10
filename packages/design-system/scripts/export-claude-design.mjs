@@ -4,7 +4,12 @@ import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { buildBundle } from "./claude-design/bundle.mjs";
-import { bundled, excluded, specOnlyGroups } from "./claude-design/catalog.mjs";
+import {
+  bundled,
+  excluded,
+  specName,
+  specOnlyGroups,
+} from "./claude-design/catalog.mjs";
 import {
   componentNames,
   makeDeclarations,
@@ -66,12 +71,10 @@ export async function exportClaudeDesign({
   const contrast = parseManifest(
     await readJson(resolve(packageRoot, "contrast.json"), repositoryRoot),
   );
-  const iconNames = icons.icons
-    .filter((icon) => icon.platforms.includes("web"))
-    .map((icon) => icon.name);
 
   const { tokens, stylesheet } = makeTokens({
     system,
+    icons,
     contrast,
     meta: sourceMeta(),
     title: `MemoTrail ${system.name}`,
@@ -96,18 +99,17 @@ export async function exportClaudeDesign({
     webRoot,
     packageRoot,
     components: bundled,
-    iconNames,
   });
 
   const files = new Map();
   for (const component of bundled) {
-    const spec = specsByName.get(component.name);
+    const spec = specsByName.get(specName(component));
     if (spec) checkSpecAgainstComponent(spec, component);
-    const available = await readSpecimens(component.name, iconNames);
+    const available = await readSpecimens(component.name, specName(component));
     const order = specimenOrder(component.name, available, spec);
     files.set(
       `components/${component.name}/preview.html`,
-      await buildPreview({ component, order, iconNames }),
+      await buildPreview({ component, order }),
     );
     files.set(
       `components/${component.name}/README.md`,
@@ -122,7 +124,7 @@ export async function exportClaudeDesign({
   }
 
   const specOnly = specs.filter(
-    (spec) => !bundled.some((component) => component.name === spec.name),
+    (spec) => !bundled.some((component) => specName(component) === spec.name),
   );
   for (const spec of specOnly) {
     const reason = specOnlyReason(spec);

@@ -27,7 +27,7 @@
   position: relative;
   aspect-ratio: 1;
   overflow: hidden;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink-faint);
   background: var(--mt-color-surface-subtle);
@@ -50,8 +50,8 @@
 }
 
 .previewTrigger:focus-visible {
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: -3px;
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-inset-deep);
 }
 
 .fallback {
@@ -59,13 +59,13 @@
   height: 100%;
   place-items: center;
   padding: var(--mt-space-2);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
   text-align: center;
 }
 
 .tile > .removeButton {
   position: absolute;
-  z-index: 2;
+  z-index: var(--mt-layout-layer-local2);
   top: 6px;
   right: 6px;
   display: grid;
@@ -74,20 +74,20 @@
   place-items: center;
   padding: 0;
   border-radius: 50%;
-  color: white;
-  background: rgb(24 24 20 / 0.72);
+  color: var(--mt-color-inverse-ink);
+  background: var(--mt-material-media-control-tint);
   cursor: pointer;
-  backdrop-filter: blur(6px);
+  backdrop-filter: var(--mt-material-media-control-backdrop-filter);
 }
 
 .tile > .removeButton:disabled {
   cursor: wait;
-  opacity: 0.58;
+  opacity: var(--mt-state-disabled-opacity-quiet);
 }
 
 .pendingBadge {
   position: absolute;
-  z-index: 2;
+  z-index: var(--mt-layout-layer-local2);
   bottom: 6px;
   left: 6px;
 }
@@ -102,7 +102,7 @@
   gap: var(--mt-space-2);
   margin-top: var(--mt-space-1);
   padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-raised);
@@ -125,7 +125,7 @@
   border-color: var(--mt-color-border-strong);
   background: var(--mt-color-surface-raised);
   cursor: default;
-  opacity: 0.56;
+  opacity: var(--mt-state-disabled-opacity-choice);
 }
 
 .picker input {

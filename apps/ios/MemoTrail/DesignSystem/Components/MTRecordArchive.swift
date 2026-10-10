@@ -19,17 +19,16 @@ struct MTRecordSection<Content: View>: View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s4) {
         Text(title.uppercased())
-          .font(MTFont.label.weight(.semibold))
-          .tracking(0.8)
+          .mtTextRole(.archiveHeading)
           .foregroundStyle(MTColor.inkMuted)
           .accessibilityAddTraits(.isHeader)
         Spacer(minLength: 0)
         if isRegular {
-          Text(detail).font(MTFont.caption.weight(.regular)).foregroundStyle(MTColor.inkFaint)
+          Text(detail).font(MTFont.detail).foregroundStyle(MTColor.inkFaint)
         }
       }
       LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 300), spacing: MTSpacing.s5)],
+        columns: [GridItem(.adaptive(minimum: MTLayout.Grid.record), spacing: MTSpacing.s5)],
         spacing: isRegular ? MTSpacing.s5 : MTSpacing.s3
       ) {
         content
@@ -84,23 +83,19 @@ struct MTEntityCard: View {
       MTRecordCardBody {
         dates
         Text(title)
-          .font(
-            .system(horizontalSizeClass == .regular ? .title2 : .title3, design: .serif)
-              .weight(.medium)
-          )
-          .tracking(-0.4)
+          .mtTextRole(horizontalSizeClass == .regular ? .recordCardTitle : .recordCardTitleCompact)
           .foregroundStyle(MTColor.ink)
           .multilineTextAlignment(.leading)
         ForEach(facts, id: \.self) { fact in
           Label(fact.text, icon: fact.icon)
             .labelStyle(MTInlineIconLabelStyle())
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
             .multilineTextAlignment(.leading)
         }
         if let memory = memory?.trimmed.nonEmpty {
           Text(memory)
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body)
             .lineLimit(2)
@@ -140,8 +135,7 @@ struct MTEntityCard: View {
         }
       }
     }
-    .font(.caption2.monospaced())
-    .tracking(0.25)
+    .mtTextRole(.dateStamp)
   }
 }
 
@@ -158,7 +152,7 @@ struct MTRecordCardFooter: View {
       status + collectionNames.prefix(2).map { ($0, MTBadgeTone.neutral) }
       + tagNames.prefix(2).map { ("#\($0)", MTBadgeTone.neutral) }
     HStack(alignment: .bottom, spacing: MTSpacing.s3) {
-      MTFlowLayout(spacing: 5) {
+      MTFlowLayout(spacing: MTSpacing.s1_25) {
         ForEach(
           Array(badges.prefix(horizontalSizeClass == .regular ? badges.count : 2).enumerated()),
           id: \.offset
@@ -168,10 +162,10 @@ struct MTRecordCardFooter: View {
       }
       Spacer(minLength: 0)
       Image(.chevron)
-        .font(.system(size: 12, weight: .semibold))
+        .font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
         .foregroundStyle(MTColor.inkFaint)
     }
-    .frame(minHeight: 31 - MTSpacing.s3, alignment: .bottom)
+    .frame(minHeight: MTSize.RecordCard.footerHeight - MTSpacing.s3, alignment: .bottom)
     .padding(.top, MTSpacing.s3)
     .overlay(alignment: .top) { MTListDivider() }
     .padding(.top, MTSpacing.s2)

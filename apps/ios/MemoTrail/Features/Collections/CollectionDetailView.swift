@@ -84,7 +84,7 @@ struct CollectionDetailView: View {
           Text("\(collection.unreviewedCount) still in Inbox")
         }
       }
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkFaint)
       .accessibilityElement(children: .contain)
       .accessibilityLabel("Collection summary")
@@ -103,7 +103,7 @@ struct CollectionDetailView: View {
         ProgressView().tint(MTColor.accent)
         Text("Loading \(collection.name)...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage, controller.entries.isEmpty {
       MTEmptyState(title: "Collection unavailable", message: message, icon: .archive) {
         Button("Try again") { Task { await reload() } }
@@ -183,22 +183,22 @@ private struct CollectionEntryCard: View {
               .background(MTColor.surfaceSubtle)
           }
         }
-        .frame(height: 210)
+        .frame(height: MTLayout.RecordCard.entryVisualHeight)
         .clipped()
       }
       VStack(alignment: .leading, spacing: 0) {
-        HStack(alignment: .center, spacing: 6) {
+        HStack(alignment: .center, spacing: MTSpacing.s1_5) {
           MTBadge(title: entry.displayType, tone: .neutral)
           if entry.isInInbox { MTBadge(title: "In Inbox", tone: .warm) }
           Spacer(minLength: MTSpacing.s2)
           Text(entry.displayDate)
-            .font(.system(size: 10, design: .monospaced))
+            .font(MTFont.stamp)
             .foregroundStyle(MTColor.inkFaint)
             .multilineTextAlignment(.trailing)
         }
         Button(action: open) {
           Text(entry.displayTitle)
-            .font(.system(.title3, design: .serif).weight(.medium))
+            .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -219,7 +219,7 @@ private struct CollectionEntryCard: View {
           fullNote(body)
         }
         if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
-          MTFlowLayout(spacing: 6) {
+          MTFlowLayout(spacing: MTSpacing.s1_5) {
             ForEach(entry.collectionNames, id: \.self) { name in
               chip(Label(name, icon: .archive), label: "Collection \(name)") {
                 openCollection(name)
@@ -232,7 +232,7 @@ private struct CollectionEntryCard: View {
           .padding(.top, MTSpacing.s3)
           .frame(maxWidth: .infinity, alignment: .leading)
           .overlay(alignment: .top) {
-            Rectangle().fill(MTColor.border.opacity(0.7)).frame(height: 1)
+            Rectangle().fill(MTColor.borderFaint).frame(height: MTSize.Stroke.thin)
           }
           .padding(.top, MTSpacing.s4)
           .accessibilityElement(children: .contain)
@@ -252,17 +252,17 @@ private struct CollectionEntryCard: View {
   /// Web's `details` below the clamped writing.
   @ViewBuilder private func fullNote(_ body: String) -> some View {
     Button {
-      withAnimation(.easeOut(duration: MTMotion.quick)) { showsFullNote.toggle() }
+      withAnimation(MTEasing.enter.animation(duration: MTMotion.quick)) { showsFullNote.toggle() }
     } label: {
-      HStack(spacing: 6) {
+      HStack(spacing: MTSpacing.s1_5) {
         Image(systemName: "arrowtriangle.right.fill")
-          .font(.system(size: 7))
+          .font(.mtIcon(MTSize.Icon.s7))
           .rotationEffect(.degrees(showsFullNote ? 90 : 0))
         Text("Read full note")
       }
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.accent)
-      .frame(minHeight: 32)
+      .frame(minHeight: MTLayout.InlineAction.height)
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
@@ -287,12 +287,12 @@ private struct CollectionEntryCard: View {
     Button(action: action) {
       content
         .labelStyle(MTInlineIconLabelStyle())
-        .font(.system(size: 10))
+        .font(MTFont.fine)
         .foregroundStyle(MTColor.inkMuted)
         .padding(.horizontal, MTSpacing.s2)
-        .padding(.vertical, 3)
+        .padding(.vertical, MTSpacing.s0_75)
         .background(MTColor.surfaceSubtle, in: Capsule())
-        .frame(minHeight: 32)
+        .frame(minHeight: MTLayout.InlineAction.height)
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)

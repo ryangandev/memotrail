@@ -1,35 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { BrandMark } from "@/components/brand-mark";
 import { Badge } from "@/components/badge";
-import { Button } from "@/components/button";
-import { Checkbox } from "@/components/checkbox";
-import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { EntryPhotoField } from "@/components/entry-photo-field";
-import { EntryRichTextContent } from "@/components/entry-rich-text-content";
-import { Icon } from "@/components/icon";
 import { OccurrenceEditor } from "@/components/occurrence-editor";
-import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { ProgressiveImage } from "@/components/progressive-image";
-import {
-  RecordCard,
-  RecordCardBody,
-  RecordCardVisual,
-} from "@/components/record-card";
-import { RichTextEditor } from "@/components/rich-text-editor";
-import { SearchField } from "@/components/search-field";
-import { SectionHeader } from "@/components/section-header";
-import { SelectField } from "@/components/select-field";
-import { SeparatedList } from "@/components/separated-list";
-import { Skeleton } from "@/components/skeleton";
-import { TextField } from "@/components/text-field";
-import { notify } from "@/components/app-toast";
+import { badgeSizes, badgeTones } from "@/generated/design-system";
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
-import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
+import {
+  CaptureComposerSpecimen,
+  FocusedRecordSpecimen,
+  RecordCardSpecimen,
+  RichTextSpecimen,
+  SectionHeaderSpecimen,
+  SeparatedListSpecimen,
+} from "./content-specimens";
+import {
+  ImageSpecimen,
+  PhotoViewerSpecimen,
+  SkeletonSpecimen,
+  UploadProgressSpecimen,
+} from "./media-specimens";
+import { loadedImage } from "./samples";
 import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
+import { ToastSpecimen, WorkspaceSpecimens } from "./controls-gallery";
+import { FormControlSpecimens } from "./form-controls-gallery";
 import { BrandMotionPreview } from "./brand-motion-preview";
 import {
   FoundationTokens,
@@ -37,63 +35,14 @@ import {
   LayoutTokens,
   type TokenSet,
 } from "./foundations-gallery";
-import { Specimen } from "./specimen";
-
-const sampleRichText: EntryRichText = {
-  document: {
-    content: [
-      {
-        content: [
-          {
-            marks: [{ type: "bold" }],
-            text: "Formatted memory",
-            type: "text",
-          },
-          { text: " with durable, validated structure.", type: "text" },
-        ],
-        type: "paragraph",
-      },
-      {
-        content: [
-          {
-            content: [
-              {
-                content: [{ text: "One remembered detail", type: "text" }],
-                type: "paragraph",
-              },
-            ],
-            type: "listItem",
-          },
-        ],
-        type: "bulletList",
-      },
-    ],
-    type: "doc",
-  },
-  text: "Formatted memory with durable, validated structure.\nOne remembered detail",
-  version: 1,
-};
-
-const loadedImage =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect width='640' height='360' fill='%23DDE8E1'/%3E%3Cpath d='M0 285 190 115l112 95 90-72 248 147v75H0Z' fill='%2382AD98'/%3E%3Ccircle cx='492' cy='92' r='38' fill='%23A76346'/%3E%3C/svg%3E";
+import { Specimen, SpecimenCase } from "./specimen";
 
 export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
   const [galleryTheme, setGalleryTheme] = useState<"system" | "light" | "dark">(
     "system",
   );
-  const [date, setDate] = useState("2026-09-17");
-  const [emptyDate, setEmptyDate] = useState("");
-  const [dateTime, setDateTime] = useState("2026-09-17T14:30");
-  const [month, setMonth] = useState("2026-09");
-  const [year, setYear] = useState("2026");
-  const [editorValue, setEditorValue] = useState<EntryRichText | null>(null);
-  const [editorText, setEditorText] = useState("");
   const [tags, setTags] = useState(["family", "travel"]);
   const [tagInput, setTagInput] = useState("");
-  const [searchSample, setSearchSample] = useState("");
-  const [searchMessage, setSearchMessage] = useState(
-    "Type a query to try this local-only preview.",
-  );
   const [existingPhotos, setExistingPhotos] = useState([
     {
       id: "design-system-photo",
@@ -110,11 +59,6 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
     label: "",
     timezone: "America/Los_Angeles",
   });
-  const [recordMessage, setRecordMessage] = useState(
-    "Interactive state has not been activated.",
-  );
-  const [reminders, setReminders] = useState(false);
-  const [submitted, setSubmitted] = useState("Nothing submitted yet.");
 
   return (
     <div
@@ -192,267 +136,73 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         index="04"
         title="Forms"
       >
-        <Specimen
-          api="label · size: small | medium | large · disabled · native text input props"
-          description="Proposed plain text input for review. Its font, height, border, and focus surface match SearchField and SelectField. The Settings page still uses its existing field."
-          id="text-field"
-          title="TextField"
-        >
-          <div className={styles.formGrid}>
-            <TextField defaultValue="Alex Morgan" label="Preferred name" />
-            <TextField label="Empty text field" placeholder="Add a name" />
-            <TextField
-              disabled
-              label="Disabled text field"
-              placeholder="Unavailable"
-              size="small"
-            />
-          </div>
-        </Specimen>
-        <Specimen
-          api="label · hideLabel · size: small | medium | large · disabled · native input props"
-          description="One focus surface for the icon and text. The search action stays composable, so each feature can choose its own submit behavior."
-          id="search-field"
-          title="SearchField"
-        >
-          <form
-            className={styles.searchFieldDemo}
-            onSubmit={(event) => {
-              event.preventDefault();
-              setSearchMessage(
-                searchSample.trim()
-                  ? `Demo search: ${searchSample.trim()}. No request was sent.`
-                  : "Enter a search term first.",
-              );
-            }}
-          >
-            <SearchField
-              label="Search Locations"
-              onChange={(event) => setSearchSample(event.target.value)}
-              placeholder="Search for an address"
-              value={searchSample}
-            />
-            <Button type="submit" variant="secondary">
-              Search
-            </Button>
-          </form>
-          <div className={styles.searchFieldVariants}>
-            <SearchField
-              label="Compact search"
-              placeholder="Search your trail"
-              size="small"
-            />
-            <SearchField
-              disabled
-              label="Disabled search"
-              placeholder="Search unavailable"
-            />
-          </div>
-          <p className={styles.stateNote} role="status">
-            {searchMessage}
-          </p>
-        </Specimen>
-        <Specimen
-          api="label · size: small | medium | large · disabled · native select props"
-          description="A labeled native select with the same surface and focus treatment as SearchField."
-          title="SelectField"
-        >
-          <div className={styles.formGrid}>
-            <SelectField defaultValue="all" label="Show records">
-              <option value="all">All records</option>
-              <option value="entries">Entries</option>
-              <option value="entities">Homes & vehicles</option>
-            </SelectField>
-            <SelectField disabled label="Unavailable filter" size="small">
-              <option>Unavailable</option>
-            </SelectField>
-          </div>
-        </Specimen>
-        <Specimen
-          api="label · description · size: small | medium · disabled · native checkbox props (name, value, defaultChecked, required)"
-          description="A native checkbox, so it submits with its form like any other. The label names it; the description is read after it."
-          id="checkbox"
-          title="Checkbox"
-        >
-          <div className={styles.checkboxGrid}>
-            <div className={styles.checkboxColumn}>
-              <Checkbox label="Unchecked" />
-              <Checkbox defaultChecked label="Checked" />
-              <Checkbox
-                checked={reminders}
-                description="Controlled by this page"
-                label="Remind me"
-                onChange={(event) => setReminders(event.target.checked)}
-              />
-              <Checkbox
-                description="A longer explanation wraps beside the label until it needs another line, and never runs past its container."
-                label="With description"
-              />
-            </div>
-            <div className={styles.checkboxColumn}>
-              <Checkbox disabled label="Disabled" />
-              <Checkbox
-                defaultChecked
-                description="Cannot change"
-                disabled
-                label="Disabled checked"
-              />
-              <Checkbox label="Small unchecked" size="small" />
-              <Checkbox
-                defaultChecked
-                description="Still going on"
-                label="Small checked"
-                size="small"
-              />
-            </div>
-          </div>
-          <form
-            className={styles.checkboxForm}
-            onSubmit={(event) => {
-              event.preventDefault();
-              const data = new FormData(event.currentTarget);
-              setSubmitted(
-                `Submitted: ${JSON.stringify(
-                  Object.fromEntries(data.entries()),
-                )}. No request was sent.`,
-              );
-            }}
-          >
-            <Checkbox
-              defaultChecked
-              label="Include photos"
-              name="photos"
-              value="yes"
-            />
-            <Checkbox label="Include Trash" name="trash" value="yes" />
-            <Button type="submit" variant="secondary">
-              Submit form
-            </Button>
-          </form>
-          <p className={styles.stateNote} role="status">
-            {reminders ? "Remind me is on. " : "Remind me is off. "}
-            {submitted}
-          </p>
-        </Specimen>
+        <FormControlSpecimens />
 
-        <Specimen
-          api="size: small | medium | large · granularity: day | month | year · editable · includeTime · disabled"
-          description="Date values, time controls, and calendar text use the shared form typography."
-          title="DatePickerField"
-        >
-          <div className={styles.formGrid}>
-            <DatePickerField
-              label="Filled date"
-              onChange={setDate}
-              size="small"
-              value={date}
-            />
-            <DatePickerField
-              label="Empty date"
-              onChange={setEmptyDate}
-              size="medium"
-              value={emptyDate}
-            />
-            <DatePickerField
-              editable={false}
-              label="Picker only"
-              onChange={setEmptyDate}
-              size="large"
-              value={emptyDate}
-            />
-            <DatePickerField
-              includeTime
-              label="Exact date and time"
-              onChange={setDateTime}
-              value={dateTime}
-            />
-            <DatePickerField
-              granularity="month"
-              label="Month precision"
-              onChange={setMonth}
-              value={month}
-            />
-            <DatePickerField
-              granularity="year"
-              label="Year precision"
-              onChange={setYear}
-              value={year}
-            />
-            <DatePickerField
-              disabled
-              label="Disabled"
-              onChange={() => undefined}
-              value="2026-09-17"
-            />
-          </div>
-        </Specimen>
-
-        <Specimen
-          api="variant: dialog | form | page · disabled · autoFocus · maxLength"
-          title="RichTextEditor"
-        >
-          <div className={styles.editorGrid}>
-            <RichTextEditor
-              label="Editable memory"
-              maxLength={1_000}
-              onChange={(value) => {
-                setEditorValue(value);
-                setEditorText(value?.text ?? "");
-              }}
-              placeholder="Write a memory..."
-              richText={editorValue}
-              text={editorText}
-              variant="form"
-            />
-            <RichTextEditor
-              disabled
-              label="Disabled memory"
-              maxLength={1_000}
-              onChange={() => undefined}
-              placeholder="Write a memory..."
-              richText={null}
-              text="This editor is disabled."
-              variant="form"
-            />
-          </div>
-        </Specimen>
+        <RichTextSpecimen />
 
         <Specimen
           title="Badge"
-          api="micro | small | medium · semantic and photo tones · uppercase · one line · tags use # text"
+          api="tone · size · uppercase · one line · tags use # text"
         >
-          <div className={styles.badgeExamples}>
-            <Badge size="micro" uppercase>
-              Entry
-            </Badge>
-            <Badge size="small" tone="neutral" uppercase>
-              Home
-            </Badge>
-            <Badge size="medium">Keyword search</Badge>
-            <Badge size="small" tone="warm">
-              Needs organizing
-            </Badge>
-            <Badge size="small" tone="outline">
-              Vehicle
-            </Badge>
-            <Badge size="small" tone="inverse">
-              3 photos
-            </Badge>
-            <Badge title="A long label that stays on one line">
-              A long label that stays on one line
-            </Badge>
-            <Badge size="medium" title="#learning">
-              #learning
-            </Badge>
-            <Badge size="medium" title="#旅行">
-              #旅行
-            </Badge>
-            <Badge
-              size="medium"
-              title="#A long tag name that stays within the available width"
-            >
-              #A long tag name that stays within the available width
-            </Badge>
+          <div className={styles.specimenCases}>
+            <SpecimenCase id="badge-tones">
+              {badgeTones.map((tone) => (
+                <Badge key={tone} tone={tone}>
+                  {tone}
+                </Badge>
+              ))}
+            </SpecimenCase>
+            <SpecimenCase id="badge-sizes">
+              {badgeSizes.map((size) => (
+                <Fragment key={size}>
+                  <Badge size={size}>{size}</Badge>
+                  <Badge size={size} uppercase>
+                    {size}
+                  </Badge>
+                </Fragment>
+              ))}
+            </SpecimenCase>
+            <SpecimenCase id="badge-tags">
+              <Badge size="medium" title="#learning">
+                #learning
+              </Badge>
+              <Badge size="medium" title="#旅行">
+                #旅行
+              </Badge>
+              <Badge size="medium" tone="neutral" title="#family">
+                #family
+              </Badge>
+            </SpecimenCase>
+            <SpecimenCase id="badge-truncation">
+              <div className={styles.badgeTruncationFrame}>
+                <Badge title="A long label that stays on one line">
+                  A long label that stays on one line
+                </Badge>
+                <Badge
+                  size="medium"
+                  title="#A long tag name that stays within the available width"
+                >
+                  #A long tag name that stays within the available width
+                </Badge>
+              </div>
+            </SpecimenCase>
+            <SpecimenCase id="badge-photo-overlay">
+              {(["glassAccent", "glassNeutral"] as const).map((tone) => (
+                <div className={styles.badgePhoto} key={tone}>
+                  <ProgressiveImage alt="" src={loadedImage} />
+                  <span className={styles.badgePhotoTop}>
+                    <Badge size="micro" tone={tone} uppercase>
+                      {tone === "glassAccent" ? "Current" : "Earlier"}
+                    </Badge>
+                  </span>
+                  <span className={styles.badgePhotoBottom}>
+                    <Badge size="micro" tone="inverse" uppercase>
+                      3 photos
+                    </Badge>
+                  </span>
+                </div>
+              ))}
+            </SpecimenCase>
           </div>
         </Specimen>
 
@@ -537,161 +287,16 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times. SeparatedList and SectionHeader organize the rows and headings around it."
+        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times, and FocusedRecord is the page it opens. SeparatedList and SectionHeader organize the rows and headings around them, and CaptureComposer writes new Entries."
         id="containers"
         index="05"
         title="Containers and data display"
       >
-        <Specimen
-          api="ariaLabel · onClick · className; composable RecordCardVisual and RecordCardBody"
-          title="RecordCard"
-        >
-          <div className={styles.cardSpecimen}>
-            <RecordCard
-              ariaLabel="Open sample memory"
-              onClick={() => setRecordMessage("RecordCard onClick fired.")}
-            >
-              <RecordCardVisual>
-                <ProgressiveImage alt="" src={loadedImage} />
-              </RecordCardVisual>
-              <RecordCardBody>
-                <p className={styles.cardEyebrow}>Memory</p>
-                <h3>First trip to the coast</h3>
-                <p>A production RecordCard composed with its real subparts.</p>
-              </RecordCardBody>
-            </RecordCard>
-            <small role="status">{recordMessage}</small>
-          </div>
-        </Specimen>
-
-        <Specimen
-          api="body · richText or metadata · className"
-          title="EntryRichTextContent"
-        >
-          <EntryRichTextContent
-            body={sampleRichText.text}
-            richText={sampleRichText}
-          />
-        </Specimen>
-
-        <Specimen
-          api="align: start | end · spacing: default | word · className"
-          description="Summary and metadata rows. As the frames narrow, facts wrap whole and a separator shows only between two facts on the same line."
-          id="separated-list"
-          title="SeparatedList"
-        >
-          <div className={styles.separatedListFrames}>
-            {["wide", "medium", "narrow"].map((frame) => (
-              <div
-                className={styles.separatedListFrame}
-                data-frame={frame}
-                key={frame}
-              >
-                <SeparatedList>
-                  <a href="#separated-list">Manage tracks</a>
-                  <span>8 tracks</span>
-                  <span>12 moments</span>
-                  <span>2017 to 2026</span>
-                </SeparatedList>
-                <SeparatedList spacing="word">
-                  <span>First Time</span>
-                  <span>3 earlier versions</span>
-                  <span>In Trash</span>
-                </SeparatedList>
-                <SeparatedList
-                  align="end"
-                  className={styles.separatedListAttribution}
-                >
-                  <span>
-                    Powered by <a href="#separated-list">Geoapify</a>
-                  </span>
-                  <a href="#separated-list">© OpenStreetMap contributors</a>
-                </SeparatedList>
-              </div>
-            ))}
-          </div>
-        </Specimen>
-
-        <Specimen
-          api="title · variant: section | list · detail · detailAlign: start | end · description · action · headingLevel: 2 | 3 | 4 · headingId"
-          description="The heading of a region of a page. Section is a serif title, like iOS MTSectionHeader; list is the small uppercase heading above a list, like MTListHeader. The caller chooses the heading level."
-          id="section-header"
-          title="SectionHeader"
-        >
-          <div className={styles.headerStack}>
-            <div data-header="section">
-              <SectionHeader headingLevel={4} title="Recent Entries" />
-            </div>
-            <div data-header="section-action">
-              <SectionHeader
-                action={
-                  <a className={styles.headerLink} href="#section-header">
-                    View all
-                    <Icon name="chevron" size={14} />
-                  </a>
-                }
-                headingLevel={4}
-                title="A memory for today"
-              />
-            </div>
-            <div data-header="section-description">
-              <SectionHeader
-                action={
-                  <Button size="small" variant="secondary">
-                    Edit
-                  </Button>
-                }
-                description="Pinned to the top of your Library."
-                headingLevel={4}
-                title="Favorites"
-              />
-            </div>
-            <div data-header="list">
-              <SectionHeader
-                detail="12 items"
-                headingLevel={4}
-                title="All items"
-                variant="list"
-              />
-            </div>
-            <div data-header="list-end">
-              <SectionHeader
-                action={
-                  <a className={styles.headerLink} href="#section-header">
-                    3 need organizing
-                  </a>
-                }
-                detail="12 items"
-                detailAlign="end"
-                headingLevel={4}
-                title="All items"
-                variant="list"
-              />
-            </div>
-            <div data-header="list-description">
-              <SectionHeader
-                action={<Badge uppercase>Connected</Badge>}
-                description="Your current MemoTrail identity"
-                headingLevel={4}
-                title="Account"
-                variant="list"
-              />
-            </div>
-            <div data-header="long">
-              <SectionHeader
-                action={
-                  <a className={styles.headerLink} href="#section-header">
-                    View all
-                  </a>
-                }
-                detail="1,284 items"
-                headingLevel={4}
-                title="A long heading that wraps within its container instead of pushing the action away"
-                variant="list"
-              />
-            </div>
-          </div>
-        </Specimen>
+        <RecordCardSpecimen />
+        <FocusedRecordSpecimen />
+        <SeparatedListSpecimen />
+        <SectionHeaderSpecimen />
+        <CaptureComposerSpecimen />
       </GallerySection>
 
       <GallerySection
@@ -701,102 +306,21 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
         title="Feedback and media states"
       >
         <div className={styles.feedbackGrid}>
-          <Specimen
-            api="notify.success · notify.error · notify.info"
-            title="Toast"
-          >
-            <div className={styles.toastPreviewActions}>
-              <Button onClick={() => notify.success("Changes saved.")}>
-                Show success
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => notify.info("Moved to Trash.")}
-              >
-                Show info
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => notify.error("Could not save. Try again.")}
-              >
-                Show error
-              </Button>
-            </div>
-          </Specimen>
-          <Specimen api="completed · total" title="PhotoUploadProgress">
-            <PhotoUploadProgress progress={{ completed: 3, total: 5 }} />
-          </Specimen>
-          <Specimen
-            api="shape: fill | block | line | circle · width · height · animated"
-            description="Decorative: hidden from assistive technology, so the loading region announces itself. The shimmer stops under reduced motion."
-            id="skeleton"
-            title="Skeleton"
-          >
-            <div className={styles.skeletonShapes}>
-              <div data-skeleton="fill">
-                <div className={styles.skeletonFrame}>
-                  <Skeleton shape="fill" />
-                </div>
-                <small>fill</small>
-              </div>
-              <div data-skeleton="block">
-                <Skeleton height="64px" shape="block" />
-                <small>block</small>
-              </div>
-              <div data-skeleton="line">
-                <Skeleton shape="line" />
-                <Skeleton shape="line" width="72%" />
-                <Skeleton shape="line" width="48%" />
-                <small>line</small>
-              </div>
-              <div data-skeleton="circle">
-                <Skeleton shape="circle" width="48px" />
-                <small>circle</small>
-              </div>
-              <div data-skeleton="still">
-                <Skeleton animated={false} height="64px" shape="block" />
-                <small>animated=false</small>
-              </div>
-              <div data-skeleton="card">
-                <div className={styles.skeletonCard}>
-                  <Skeleton shape="circle" width="40px" />
-                  <div>
-                    <Skeleton shape="line" width="60%" />
-                    <Skeleton shape="line" width="90%" />
-                  </div>
-                </div>
-                <small>composed</small>
-              </div>
-            </div>
-          </Specimen>
-          <Specimen
-            api="loading · loaded · failed · fit: cover | contain · fallback"
-            title="ProgressiveImage"
-          >
-            <div className={styles.imageStates}>
-              <div>
-                <ProgressiveImage alt="Loading sample" />
-                <small>Loading skeleton</small>
-              </div>
-              <div>
-                <ProgressiveImage alt="Loaded sample" src={loadedImage} />
-                <small>Loaded</small>
-              </div>
-              <div>
-                <ProgressiveImage
-                  alt="Failed sample"
-                  fallback="Photo unavailable"
-                  src="/design-system/intentionally-missing-image.png"
-                />
-                <small>Failure fallback</small>
-              </div>
-            </div>
-            <p className={styles.stateNote}>
-              Loading is normally transient while the image decodes. Failure
-              replaces the image and skeleton with the supplied fallback.
-            </p>
-          </Specimen>
+          <ToastSpecimen />
+          <UploadProgressSpecimen />
+          <SkeletonSpecimen />
+          <ImageSpecimen />
+          <PhotoViewerSpecimen />
         </div>
+      </GallerySection>
+
+      <GallerySection
+        description="Web-only workspace chrome. Each spec says what iOS uses instead."
+        id="workspace"
+        index="07"
+        title="Workspace"
+      >
+        <WorkspaceSpecimens />
       </GallerySection>
     </div>
   );

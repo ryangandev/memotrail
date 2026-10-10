@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 import * as esbuild from "esbuild";
+import { kebabCase } from "../lib/util.mjs";
 import { cardGroups } from "./catalog.mjs";
 
 // Builds each component's preview card from its specimen file in ./specimens.
@@ -20,7 +21,7 @@ const specimenId = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/;
 
 // Specimen ids start with the component's kebab-case name, as spec ids do, such as badge-tones.
 export function specimenPrefix(name) {
-  return `${name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()}-`;
+  return `${kebabCase(name)}-`;
 }
 
 export function specimenFile(name) {
@@ -45,13 +46,13 @@ const jsxOptions = {
 };
 
 // Reads the specimen ids and titles without rendering anything.
-export async function readSpecimens(name, iconNames) {
+// Specimen ids start with the spec's name, which `prefixName` gives when it differs from the file's.
+export async function readSpecimens(name, prefixName = name) {
   const result = await esbuild.build({
     ...jsxOptions,
     entryPoints: [specimenFile(name)],
     format: "iife",
     globalName: "specimenModule",
-    define: { ICON_NAMES: JSON.stringify(iconNames) },
   });
   const stub = new Proxy({}, { get: () => () => null });
   const context = vm.createContext({
@@ -65,9 +66,9 @@ export async function readSpecimens(name, iconNames) {
     throw new Error(`specimens/${name}.jsx must export a specimens object.`);
   }
   return Object.entries(specimens).map(([id, specimen]) => {
-    if (!specimenId.test(id) || !id.startsWith(specimenPrefix(name))) {
+    if (!specimenId.test(id) || !id.startsWith(specimenPrefix(prefixName))) {
       throw new Error(
-        `specimens/${name}.jsx: the specimen id ${id} must be kebab-case and start with ${specimenPrefix(name)}.`,
+        `specimens/${name}.jsx: the specimen id ${id} must be kebab-case and start with ${specimenPrefix(prefixName)}.`,
       );
     }
     if (
@@ -115,7 +116,7 @@ export function specimenOrder(name, available, spec) {
   }));
 }
 
-export async function buildPreview({ component, order, iconNames }) {
+export async function buildPreview({ component, order }) {
   if (!Number.isInteger(component.height) || component.height <= 0) {
     throw new Error(`${component.name} needs a whole-pixel card height.`);
   }
@@ -132,7 +133,6 @@ export async function buildPreview({ component, order, iconNames }) {
       loader: "jsx",
     },
     format: "iife",
-    define: { ICON_NAMES: JSON.stringify(iconNames) },
   });
   return previewDocument(component, result.outputFiles[0].text);
 }
@@ -186,8 +186,25 @@ export function buildSpecPreview({ spec, group, reason }) {
   );
 })();
 `;
-  const height = 160 + 24 * spec.specimens.length;
-  return previewDocument({ name: spec.name, group, height }, script);
+  return previewDocument(
+    { name: spec.name, group, height: specPreviewHeight(data) },
+    script,
+  );
+}
+
+// Estimates a spec-only card's height from how many lines its text wraps to at the 640px preview
+// width: the padding, title, and gaps, then body lines for the purpose and caption lines for the
+// reason and each specimen. Each line holds slightly fewer characters than it fits, so the estimate
+// leans tall, within the slack the preview test allows.
+export function specPreviewHeight({ purpose, reason, specimens }) {
+  const lines = (text, perLine) =>
+    Math.max(1, Math.ceil(text.length / perLine));
+  const frame = 40 + 28 + 3 * 12 + 8;
+  const body = 22 * lines(purpose, 78);
+  const captions =
+    lines(reason, 90) +
+    specimens.reduce((sum, { description }) => sum + lines(description, 86), 0);
+  return frame + body + 18 * captions;
 }
 
 function previewDocument(component, script) {

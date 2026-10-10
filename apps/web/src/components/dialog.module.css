@@ -1,14 +1,14 @@
 .backdrop {
   position: fixed;
-  z-index: 70;
+  z-index: var(--mt-layout-layer-dialog);
   inset: 0;
-  background: color-mix(in srgb, var(--mt-color-scrim) 48%, transparent);
-  backdrop-filter: blur(6px);
+  background: var(--mt-material-dialog-scrim-tint);
+  backdrop-filter: var(--mt-material-dialog-scrim-backdrop-filter);
 }
 
 .positioner {
   position: fixed;
-  z-index: 70;
+  z-index: var(--mt-layout-layer-dialog);
   inset: 0;
   display: grid;
   align-items: center;
@@ -24,7 +24,7 @@
   min-width: 0;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
@@ -46,7 +46,7 @@
   justify-content: space-between;
   gap: var(--mt-space-4);
   padding: var(--mt-space-5);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .header > div {
@@ -93,14 +93,14 @@
   justify-content: flex-end;
   gap: var(--mt-space-2);
   padding: var(--mt-space-4) var(--mt-space-5);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .dialog[data-state="open"] {
-  animation: enter var(--mt-motion-standard) ease-out;
+  animation: enter var(--mt-motion-standard) var(--mt-motion-easing-enter);
 }
 .backdrop[data-state="open"] {
-  animation: fade var(--mt-motion-standard) ease-out;
+  animation: fade var(--mt-motion-standard) var(--mt-motion-easing-enter);
 }
 
 @keyframes enter {

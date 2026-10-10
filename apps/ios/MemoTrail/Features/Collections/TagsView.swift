@@ -93,7 +93,7 @@ struct TagsView: View {
         ProgressView().tint(MTColor.accent)
         Text("Loading your tags...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let errorMessage {
       MTEmptyState(title: "Tags unavailable", message: errorMessage, icon: .tag) {
         Button("Try again") { Task { await load(query: appliedQuery) } }
@@ -109,7 +109,7 @@ struct TagsView: View {
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
         Text(countLabel(totalCount, "tag"))
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkFaint)
         MTFlowLayout(spacing: MTSpacing.s3) {
           ForEach(tags) { tag in
@@ -170,24 +170,24 @@ private struct TagBadge: View {
 
   var body: some View {
     Button(action: edit) {
-      HStack(spacing: 6) {
+      HStack(spacing: MTSpacing.s1_5) {
         Text("#")
-          .font(.system(.footnote, design: .monospaced))
+          .font(MTFont.tagMark)
           .foregroundStyle(MTColor.accent)
         Text(tag.name)
-          .font(MTFont.label.weight(.medium))
+          .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
           .truncationMode(.tail)
         Text("\(tag.entryCount)")
-          .font(.system(size: 10, design: .monospaced))
+          .font(MTFont.stamp)
           .foregroundStyle(MTColor.inkMuted)
-          .padding(.horizontal, 6)
-          .frame(minWidth: 22, minHeight: 22)
+          .padding(.horizontal, MTSpacing.s1_5)
+          .frame(minWidth: MTLayout.TagChip.count, minHeight: MTLayout.TagChip.count)
           .background(MTColor.surfaceSubtle, in: Capsule())
       }
       .padding(.horizontal, MTSpacing.s3)
-      .frame(minHeight: 42)
+      .frame(minHeight: MTLayout.TagChip.height)
       .background(MTColor.surface, in: Capsule())
       .overlay { Capsule().strokeBorder(MTColor.border) }
       .contentShape(Capsule())

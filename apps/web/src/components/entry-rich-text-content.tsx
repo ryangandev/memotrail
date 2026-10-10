@@ -8,6 +8,11 @@ import {
 } from "@/lib/data/rich-text";
 import styles from "./entry-rich-text-content.module.css";
 
+/**
+ * An Entry's saved writing with its structure and emphasis, or the plain body when no valid
+ * rich document is saved. Specified in packages/design-system/components/rich-text.yaml, with
+ * RichTextEditor.
+ */
 export function EntryRichTextContent({
   body,
   className,
@@ -24,13 +29,18 @@ export function EntryRichTextContent({
     : entryRichTextFromMetadata(metadata, body);
 
   if (!value) {
-    return <p className={className}>{body}</p>;
+    return (
+      <p className={className} data-ui-rich-text>
+        {body}
+      </p>
+    );
   }
 
   return (
     <div
       className={`${styles.content}${className ? ` ${className}` : ""}`}
       data-entry-rich-text
+      data-ui-rich-text
     >
       {value.document.content.map((node, index) =>
         renderNode(node, `root:${index}`),

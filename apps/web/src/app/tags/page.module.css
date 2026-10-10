@@ -34,13 +34,9 @@
   min-height: 42px;
   align-items: center;
   overflow: hidden;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-pill);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface) 72%,
-    var(--mt-color-surface-raised)
-  );
+  background: var(--mt-color-chip-surface);
   transition:
     border-color var(--mt-motion-quick),
     background var(--mt-motion-quick),
@@ -51,8 +47,8 @@
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 6px;
-  padding: 9px var(--mt-space-3);
+  gap: var(--mt-space-1-5);
+  padding: var(--mt-space-2-25) var(--mt-space-3);
   border: 0;
   color: var(--mt-color-ink);
   background: transparent;
@@ -78,24 +74,20 @@
   display: grid;
   min-width: 22px;
   height: 22px;
-  padding: 0 6px;
+  padding: 0 var(--mt-space-1-5);
   place-items: center;
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
   font-family: var(--mt-font-family-mono);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .tagBadge:hover,
 .tagBadge:focus-within {
-  border-color: color-mix(
-    in srgb,
-    var(--mt-color-accent) 42%,
-    var(--mt-color-border-strong)
-  );
+  border-color: var(--mt-state-hover-chip-border);
   background: var(--mt-color-surface-raised);
-  box-shadow: 0 3px 12px rgb(38 37 31 / 0.06);
+  box-shadow: var(--mt-shadow-lifted);
 }
 
 .tagTrigger:hover .tagName,
@@ -108,7 +100,7 @@
   margin-top: var(--mt-space-8);
   place-items: center;
   padding: var(--mt-space-12);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
   text-align: center;

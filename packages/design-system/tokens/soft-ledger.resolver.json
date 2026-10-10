@@ -4,7 +4,7 @@
   "description": "MemoTrail's cross-platform design tokens. Generated Web CSS and Swift receive every semantic token; palette tokens stay private to this package.",
   "sets": {
     "foundation": {
-      "description": "Theme-independent palette, typography, text roles, spacing, sizes, radius, layout, motion, shadow, state, material, and elevation tokens.",
+      "description": "Theme-independent palette, typography, text roles, spacing, text-relative spacing, sizes, radius, layout, motion, shadow, state, material, and elevation tokens.",
       "sources": [
         {
           "$ref": "palette.json"
@@ -17,6 +17,9 @@
         },
         {
           "$ref": "space.json"
+        },
+        {
+          "$ref": "text-space.json"
         },
         {
           "$ref": "size.json"

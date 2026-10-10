@@ -53,7 +53,8 @@ struct DashboardRibbon: View {
     .background(MTColor.surface)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Your archive at a glance")
@@ -63,7 +64,7 @@ struct DashboardRibbon: View {
   private func row(_ leading: Item, _ trailing: Item) -> some View {
     HStack(spacing: 0) {
       cell(leading)
-      Rectangle().fill(MTColor.border).frame(width: 1).frame(maxHeight: .infinity)
+      Rectangle().fill(MTColor.border).frame(width: MTSize.Stroke.thin).frame(maxHeight: .infinity)
       cell(trailing)
     }
     .fixedSize(horizontal: false, vertical: true)
@@ -79,7 +80,7 @@ struct DashboardRibbon: View {
       .multilineTextAlignment(.center)
       .padding(.horizontal, MTSpacing.s3)
       .padding(.vertical, MTSpacing.s3)
-      .frame(maxWidth: .infinity, minHeight: 56)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Dashboard.rowHeight)
       .contentShape(Rectangle())
     }
     .buttonStyle(DashboardRibbonButtonStyle())
@@ -89,13 +90,13 @@ struct DashboardRibbon: View {
   @ViewBuilder
   private func cellContent(_ item: Item) -> some View {
     Image(item.icon)
-      .font(.system(size: 15, weight: .medium))
+      .font(.mtIcon(MTSize.Icon.s15, weight: .medium))
       .foregroundStyle(MTColor.accent)
       .accessibilityHidden(true)
     Text("\(item.value)")
-      .font(.system(.title3, design: .serif))
+      .font(MTFont.quietTitle)
       .monospacedDigit()
-    Text(item.label).font(MTFont.caption.weight(.regular))
+    Text(item.label).font(MTFont.detail)
   }
 }
 
@@ -115,9 +116,9 @@ struct DashboardInboxRow: View {
     Button(action: open) {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
         Text(entry.createdAt.formatted(.dateTime.month(.abbreviated).day()))
-          .font(.caption2)
+          .font(MTFont.note)
           .foregroundStyle(MTColor.inkFaint)
-          .frame(width: 46, alignment: .leading)
+          .frame(width: MTLayout.Dashboard.dateColumn, alignment: .leading)
         VStack(alignment: .leading, spacing: MTSpacing.s1) {
           Text(entry.displayTitle)
             .font(MTFont.label)
@@ -125,14 +126,14 @@ struct DashboardInboxRow: View {
             .lineLimit(entry.excerpt == nil ? 2 : 1)
           if let excerpt = entry.excerpt {
             Text(excerpt)
-              .font(MTFont.caption.weight(.regular))
+              .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
               .lineLimit(1)
           }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         Image(.chevron)
-          .font(.system(size: 12, weight: .semibold))
+          .font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
           .foregroundStyle(MTColor.inkFaint)
       }
       .padding(.vertical, MTSpacing.s4)
@@ -151,14 +152,14 @@ struct DashboardMemoryCard: View {
     VStack(alignment: .leading, spacing: 0) {
       if let cover = entry.coverAttachment, cover.signedURL != nil {
         MTRemoteImage(url: cover.signedURL, accessibilityLabel: cover.originalFilename)
-          .frame(height: 230)
+          .frame(height: MTLayout.Dashboard.coverHeight)
       }
       VStack(alignment: .leading, spacing: MTSpacing.s2) {
         HStack(spacing: MTSpacing.s2) {
           Text(entry.displayType)
           Text(entry.occurrence.displayLabel)
         }
-        .font(.caption2.weight(.medium))
+        .font(MTFont.noteStrong)
         .foregroundStyle(MTColor.warm)
         Text(entry.cardTitle)
           .font(MTFont.cardTitle)
@@ -166,7 +167,7 @@ struct DashboardMemoryCard: View {
           .fixedSize(horizontal: false, vertical: true)
         if let body = entry.body.trimmed.nonEmpty {
           Text(body.truncated(to: 260))
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body, textStyle: .footnote)
             .lineLimit(3)
@@ -187,7 +188,8 @@ struct DashboardMemoryCard: View {
     .background(MTColor.surface)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .accessibilityElement(children: .combine)
   }
@@ -216,7 +218,8 @@ struct DashboardChapterCard: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
       .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border, lineWidth: 1)
+        RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
+          MTColor.border, lineWidth: MTSize.Stroke.thin)
       }
     }
     .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
@@ -226,11 +229,10 @@ struct DashboardChapterCard: View {
   private var heading: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s1) {
       Text(stage.trackName.uppercased())
-        .font(.system(size: 10, weight: .semibold))
-        .tracking(1)
+        .mtTextRole(.eyebrow)
         .foregroundStyle(MTColor.warm)
       Text(stage.title)
-        .font(.system(.body, design: .serif).weight(.medium))
+        .font(MTFont.itemTitle)
         .foregroundStyle(MTColor.ink)
         .multilineTextAlignment(.leading)
     }
@@ -238,7 +240,7 @@ struct DashboardChapterCard: View {
 
   private var span: some View {
     Text(stage.occurrence.spanLabel)
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
   }
 }
@@ -249,22 +251,22 @@ struct DashboardEntryRow: View {
 
   var body: some View {
     HStack(alignment: .center, spacing: MTSpacing.s3) {
-      VStack(alignment: .leading, spacing: 6) {
+      VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
         HStack(spacing: MTSpacing.s2) {
           Text(entry.occurrence.displayLabel)
-            .font(.caption2.weight(.medium))
+            .font(MTFont.noteStrong)
             .foregroundStyle(MTColor.warm)
             .lineLimit(1)
           MTBadge(title: entry.displayType, tone: .outline)
             .fixedSize()
         }
         title
-          .font(.system(.body, design: .serif).weight(.medium))
+          .font(MTFont.itemTitle)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
         if let body = entry.body.trimmed.nonEmpty {
           Text(body.replacingOccurrences(of: "\n", with: " "))
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .lineLimit(1)
         }
@@ -282,7 +284,7 @@ struct DashboardEntryRow: View {
       .frame(maxWidth: .infinity, alignment: .leading)
       if let cover = entry.coverAttachment, cover.signedURL != nil {
         MTRemoteImage(url: cover.signedURL, accessibilityLabel: cover.originalFilename)
-          .frame(width: 64, height: 72)
+          .frame(width: MTLayout.Dashboard.thumbWidth, height: MTLayout.Dashboard.thumbHeight)
           .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
       }
     }

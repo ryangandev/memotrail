@@ -1,14 +1,16 @@
 import SwiftUI
 import UIKit
 
-/// Native writing surface. The binding contains formatting as well as readable plaintext.
+/// Web `RichTextEditor`: the native writing surface with its emphasis, undo, and keyboard
+/// actions. The binding contains formatting as well as readable plaintext. The form variant is
+/// a bordered field; the embedded variant sits inside a host card that already draws the
+/// surface. Specified in packages/design-system/components/rich-text.yaml.
 struct MTRichTextEditor: View {
   @Binding var text: NSAttributedString
   var placeholder = "Write a note..."
   var accessibilityIdentifier = "rich-editor"
-  /// Embedded editors sit inside a host card that already draws the surface and border.
-  var isEmbedded = false
-  var minimumHeight = 180.0
+  var variant = MTRichTextDefaults.variant
+  var minimumHeight = MTLayout.RichText.minHeight
   /// Each increase moves keyboard focus into the editor; a positive start focuses on appear.
   var focusRequest = 0
   @State private var session = NativeRichTextSession()
@@ -23,22 +25,23 @@ struct MTRichTextEditor: View {
           text: $text, session: session, identifier: accessibilityIdentifier,
           focusRequest: focusRequest
         )
-        .frame(height: min(editorHeight, 300))
+        .frame(height: min(editorHeight, MTLayout.RichText.maxHeight))
         if text.length == 0 {
           Text(placeholder).font(MTFont.bodyLarge).foregroundStyle(MTColor.inkMuted)
-            .padding(.horizontal, 12).padding(.top, 12).allowsHitTesting(false)
+            .padding(.horizontal, MTLayout.RichText.placeholderInset)
+            .padding(.top, MTLayout.RichText.verticalInset).allowsHitTesting(false)
         }
       }
       if showsFormatting {
         Divider().overlay(MTColor.border)
         ScrollView(.horizontal) {
-          HStack(spacing: 4) {
+          HStack(spacing: MTSpacing.s1) {
             ForEach(EmphasisStyle.allCases, id: \.self) { style in
               Button {
                 session.toggle(style)
               } label: {
-                Image(systemName: style.symbol).font(.system(size: 18, weight: .medium))
-                  .frame(width: 44, height: 44)
+                Image(systemName: style.symbol).font(.mtIcon(MTSize.Icon.s18, weight: .medium))
+                  .frame(width: MTSize.hitTarget, height: MTSize.hitTarget)
                   .background(
                     session.styles.contains(style) ? MTColor.accentSubtle : .clear,
                     in: RoundedRectangle(cornerRadius: MTRadius.small))
@@ -50,30 +53,34 @@ struct MTRichTextEditor: View {
               .accessibilityIdentifier("rich-format-\(style.rawValue)")
               .disabled(session.isComposing)
             }
-            Divider().frame(height: 24).padding(.horizontal, 4)
+            Divider().frame(height: MTLayout.RichText.toolbarDivider).padding(
+              .horizontal, MTSpacing.s1)
             Button {
               session.clearFormatting()
             } label: {
-              Image(systemName: "eraser").frame(width: 44, height: 44)
+              Image(systemName: "eraser").frame(width: MTSize.hitTarget, height: MTSize.hitTarget)
             }
             .buttonStyle(.plain).foregroundStyle(MTColor.inkMuted)
             .accessibilityLabel("Clear formatting").accessibilityIdentifier("rich-format-clear")
             .help("Clear formatting")
             .disabled(session.isComposing)
-          }.font(.system(size: 18)).padding(.horizontal, 8).padding(.vertical, 4)
+          }.font(.mtIcon(MTSize.Icon.s18)).padding(.horizontal, MTSpacing.s2)
+            .padding(.vertical, MTSpacing.s1)
         }
         .scrollIndicators(.hidden)
         .accessibilityIdentifier("rich-format-toolbar")
       }
       Divider().overlay(MTColor.border)
-      HStack(spacing: 4) {
+      HStack(spacing: MTSpacing.s1) {
         Button {
           showsFormatting.toggle()
         } label: {
-          Text("Aa").font(.system(size: 18, weight: .semibold)).frame(width: 44, height: 44)
-            .background(
-              showsFormatting ? MTColor.accentSubtle : .clear,
-              in: RoundedRectangle(cornerRadius: MTRadius.small))
+          Text("Aa").font(.mtIcon(MTSize.Icon.s18, weight: .semibold)).frame(
+            width: MTSize.hitTarget, height: MTSize.hitTarget
+          )
+          .background(
+            showsFormatting ? MTColor.accentSubtle : .clear,
+            in: RoundedRectangle(cornerRadius: MTRadius.small))
         }
         .accessibilityLabel(showsFormatting ? "Hide formatting" : "Show formatting")
         .accessibilityValue(showsFormatting ? "Expanded" : "Collapsed")
@@ -82,30 +89,36 @@ struct MTRichTextEditor: View {
         Button {
           session.undo()
         } label: {
-          Image(systemName: "arrow.uturn.backward").frame(width: 44, height: 44)
+          Image(systemName: "arrow.uturn.backward").frame(
+            width: MTSize.hitTarget, height: MTSize.hitTarget)
         }
         .disabled(!session.canUndo).accessibilityLabel("Undo").accessibilityIdentifier("rich-undo")
         Button {
           session.redo()
         } label: {
-          Image(systemName: "arrow.uturn.forward").frame(width: 44, height: 44)
+          Image(systemName: "arrow.uturn.forward").frame(
+            width: MTSize.hitTarget, height: MTSize.hitTarget)
         }
         .disabled(!session.canRedo).accessibilityLabel("Redo").accessibilityIdentifier("rich-redo")
         Button {
           session.dismissKeyboard()
         } label: {
-          Image(systemName: "keyboard.chevron.compact.down").frame(width: 44, height: 44)
+          Image(systemName: "keyboard.chevron.compact.down").frame(
+            width: MTSize.hitTarget, height: MTSize.hitTarget)
         }
         .accessibilityLabel("Dismiss keyboard").accessibilityIdentifier("rich-dismiss-keyboard")
       }
-      .font(.system(size: 18)).buttonStyle(.plain).foregroundStyle(MTColor.inkMuted)
-      .padding(.horizontal, 8)
+      .font(.mtIcon(MTSize.Icon.s18)).buttonStyle(.plain).foregroundStyle(MTColor.inkMuted)
+      .padding(.horizontal, MTSpacing.s2)
     }
-    .background(isEmbedded ? Color.clear : MTColor.surface)
-    .clipShape(RoundedRectangle(cornerRadius: isEmbedded ? 0 : MTRadius.medium))
+    .background(variant == .form ? MTColor.surface : Color.clear)
+    .clipShape(RoundedRectangle(cornerRadius: variant == .form ? MTRadius.medium : 0))
     .overlay {
-      if !isEmbedded {
-        RoundedRectangle(cornerRadius: MTRadius.medium).stroke(MTColor.border, lineWidth: 1)
+      switch variant {
+      case .form:
+        RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
+          MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
+      case .embedded: EmptyView()
       }
     }
   }
@@ -123,7 +136,7 @@ struct MTRichTextPreview: View {
     text.enumerateAttributes(in: NSRange(location: 0, length: text.length)) {
       attributes, range, _ in
       var run = AttributedString(text.attributedSubstring(from: range))
-      var font = Font.body
+      var font = MTFont.bodyLarge
       if EmphasisStyle.bold.isApplied(to: attributes) { font = font.bold() }
       if EmphasisStyle.italic.isApplied(to: attributes) { font = font.italic() }
       run.font = font
@@ -254,7 +267,9 @@ private struct NativeAttributedTextView: UIViewRepresentable {
   func makeUIView(context: Context) -> UITextView {
     let view = UITextView()
     view.backgroundColor = .clear
-    view.textContainerInset = UIEdgeInsets(top: 12, left: 8, bottom: 12, right: 8)
+    view.textContainerInset = UIEdgeInsets(
+      top: MTLayout.RichText.verticalInset, left: MTLayout.RichText.horizontalInset,
+      bottom: MTLayout.RichText.verticalInset, right: MTLayout.RichText.horizontalInset)
     view.font = context.coordinator.font(for: dynamicTypeSize)
     view.adjustsFontForContentSizeCategory = true
     view.allowsEditingTextAttributes = true

@@ -93,7 +93,7 @@ struct HomeView: View {
           ProgressView("Loading your Dashboard...")
             .font(MTFont.caption)
             .tint(MTColor.accent)
-            .frame(maxWidth: .infinity, minHeight: 150)
+            .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.dashboard)
         }
       }
       .navigationTitle("Dashboard")
@@ -133,7 +133,7 @@ struct HomeView: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s3)
     .background(
-      (hasRejected ? MTColor.warmSubtle : MTColor.accentSubtle).opacity(0.42),
+      hasRejected ? MTColor.warmNotice : MTColor.accentNotice,
       in: RoundedRectangle(cornerRadius: MTRadius.medium)
     )
     .accessibilityIdentifier("home-pending-entries")
@@ -175,7 +175,8 @@ struct HomeView: View {
     .padding(MTSpacing.s5)
     .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .accessibilityIdentifier("home-inbox-preview")
   }

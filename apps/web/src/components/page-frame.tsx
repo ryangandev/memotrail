@@ -1,19 +1,18 @@
 import type { HTMLAttributes, ReactNode } from "react";
+import {
+  pageFrameDefaults,
+  type PageFrameVariant,
+} from "@/generated/design-system";
 import styles from "./page-frame.module.css";
 
-export const pageFrameVariants = [
-  "compact",
-  "standard",
-  "wide",
-  "canvas",
-] as const;
-
-export type PageFrameVariant = (typeof pageFrameVariants)[number];
-
+/**
+ * The centered column that holds a page, at most its variant's width and inset by the page
+ * gutter. Specified in packages/design-system/components/page-frame.yaml.
+ */
 export function PageFrame({
   children,
   className,
-  variant = "standard",
+  variant = pageFrameDefaults.variant,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
@@ -26,6 +25,8 @@ export function PageFrame({
         .filter(Boolean)
         .join(" ")}
       data-page-frame={variant}
+      data-ui-page-frame
+      data-variant={variant}
     >
       {children}
     </div>

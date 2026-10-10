@@ -1,14 +1,16 @@
 .backdrop {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  z-index: var(--mt-layout-layer-palette);
   display: grid;
   align-items: start;
   justify-items: center;
-  padding: min(14vh, 120px) var(--mt-space-4) var(--mt-space-8);
-  background: color-mix(in srgb, var(--mt-color-scrim) 34%, transparent);
-  backdrop-filter: blur(8px);
-  animation: palette-backdrop-enter var(--mt-motion-standard) ease-out both;
+  padding: min(14vh, var(--mt-layout-inset-palette)) var(--mt-space-4)
+    var(--mt-space-8);
+  background: var(--mt-material-palette-scrim-tint);
+  backdrop-filter: var(--mt-material-palette-scrim-backdrop-filter);
+  animation: palette-backdrop-enter var(--mt-motion-standard)
+    var(--mt-motion-easing-enter) both;
 }
 
 .dialog {
@@ -17,13 +19,12 @@
   max-height: min(72dvh, 700px);
   grid-template-rows: auto minmax(0, 1fr) auto;
   overflow: hidden;
-  border: 1px solid
-    color-mix(in srgb, var(--mt-color-border-strong) 82%, transparent);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-palette-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-floating);
   animation: palette-dialog-enter var(--mt-motion-standard)
-    cubic-bezier(0.22, 1, 0.36, 1) both;
+    var(--mt-motion-easing-emphasized) both;
 }
 
 @keyframes palette-backdrop-enter {
@@ -66,18 +67,18 @@
 
 .searchRow {
   padding: var(--mt-space-2) var(--mt-space-3);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .searchRow kbd,
 .footer kbd {
-  padding: 3px 7px;
-  border: 1px solid var(--mt-color-border);
-  border-radius: 6px;
+  padding: var(--mt-space-0-75) var(--mt-space-1-75);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-xsmall);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
   font-family: var(--mt-font-family-sans);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .section {
@@ -87,15 +88,15 @@
 .sectionLabel {
   margin: var(--mt-space-2);
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-eyebrow-font-size);
+  font-weight: var(--mt-type-eyebrow-font-weight);
+  letter-spacing: var(--mt-type-eyebrow-letter-spacing);
+  text-transform: var(--mt-type-eyebrow-text-transform);
 }
 
 .commandList {
   display: grid;
-  gap: 2px;
+  gap: var(--mt-space-0-5);
 }
 
 .command {
@@ -105,7 +106,7 @@
   grid-template-columns: 34px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--mt-space-3);
-  padding: 7px var(--mt-space-3);
+  padding: var(--mt-space-1-75) var(--mt-space-3);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink);
   background: transparent;
@@ -118,7 +119,7 @@
   width: 34px;
   height: 34px;
   place-items: center;
-  border-radius: 9px;
+  border-radius: var(--mt-radius-tile);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
 }
@@ -126,7 +127,7 @@
 .command > span:nth-child(2) {
   display: grid;
   min-width: 0;
-  gap: 2px;
+  gap: var(--mt-space-0-5);
 }
 
 .command strong {
@@ -175,13 +176,13 @@
 
 .searching {
   display: grid;
-  gap: 7px;
+  gap: var(--mt-space-1-75);
   padding: var(--mt-space-2);
 }
 
 .fullSearchSection {
   padding-top: 0;
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .footer {
@@ -191,16 +192,16 @@
   justify-content: space-between;
   gap: var(--mt-space-4);
   padding: 0 var(--mt-space-5);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-faint);
   background: var(--mt-color-surface-subtle);
-  font-size: 11px;
+  font-size: var(--mt-font-size-micro);
 }
 
 .footer span {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--mt-space-1-5);
 }
 
 @media (max-width: 720px) {

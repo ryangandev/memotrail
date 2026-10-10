@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: RichText
+
+platforms:
+  web:
+    path: apps/web/src/components/entry-rich-text-content.tsx
+    symbols: [EntryRichTextContent]
+    files:
+      - path: apps/web/src/components/rich-text-editor.tsx
+        symbols: [RichTextEditor]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTRichTextContent.swift
+    symbols: [MTRichTextContent]
+    files:
+      - path: apps/ios/MemoTrail/DesignSystem/Components/NativeRichTextEditor.swift
+        symbols: [MTRichTextEditor]
+
+purpose: Writes and shows an Entry's formatted writing, with paragraphs, emphasis, links, quotes, lists, and code, falling back to the plain body when no valid formatting is saved.
+
+use:
+  - An Entry's note, in its editor and on its Item page.
+  - The note in the capture composer, where the editor is embedded in the composer's card.
+
+avoid:
+  - Short single-line input, such as a title or a search. Use TextField.
+  - Plain multi-line text without formatting, such as a reason or a fact. Use a multi-line TextField.
+
+anatomy:
+  content: The rendered writing, one block after another.
+  editor: The writing area people type in, with a placeholder while it is empty.
+  toolbar: The formatting actions under the writing area.
+  container: The bordered field that holds the editor and its toolbar in the form variant.
+
+props:
+  variant:
+    description: How the editor sits on its surface. Form is a bordered field among other fields; embedded draws no field, because a host such as the capture composer already draws the surface.
+    values: [form, embedded]
+    default: form
+
+states: [default, focus, disabled]
+
+tokens:
+  - content:
+      color: "{color.ink}"
+      fontSize: { web: "{font.size.body}" }
+    toolbar:
+      color: "{color.inkMuted}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+  - when: { variant: form }
+    container:
+      background: "{color.surface}"
+      border: "{color.borderStrong}"
+      borderWidth: "{size.stroke.thin}"
+      radius: "{radius.medium}"
+  - when: { state: disabled }
+    content:
+      color: "{color.inkFaint}"
+  - when: { variant: form, state: disabled }
+    container:
+      background: { web: "{color.surfaceSubtle}" }
+      border: { web: "{color.border}" }
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: Up to the Entry body limit; the editor stops accepting text at it.
+  notes:
+    - The placeholder asks a question or gives a short instruction, such as Write what you want to remember.
+    - Saved formatting shows only when it matches the plain body exactly; otherwise the plain body shows as written.
+
+accessibility:
+  role: Text for the rendered writing, and a multi-line text box labeled by its field for the editor.
+  label: The editor's label, such as Note or Entry text; each formatting action names its format, such as Bold or Bulleted list.
+  focus: The editor takes focus as one stop, then each formatting action in order.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Writing scales with Dynamic Type on iOS and browser zoom on Web, and the editor grows to its maximum height before it scrolls.
+
+platformDifferences:
+  - difference: Web shows every formatting action under the writing area, with tooltips and keyboard shortcuts; iOS shows Show formatting, Undo, Redo, and Dismiss keyboard, and opens the emphasis actions only on Show formatting.
+    reason: The iPhone keyboard leaves room for one row of actions, and the native text menu already offers formatting on a selection.
+  - difference: Web writes bold, italic, underline, strikethrough, inline code, links, quotes, lists, and code blocks; the iOS editor writes only bold, italic, underline, and strikethrough, while the iOS content renders every saved format.
+    reason: The native text view edits emphasis directly but has no structure for lists, quotes, links, or code. iOS keeps those formats from Web as they are unless the note is edited on iPhone, and says so under the editor.
+  - difference: Web's form editor is at least 168 px tall and grows to 420 px, or 48 percent of the window; iOS's is at least 180 pt and grows to 300 pt, and 120 pt in the capture composer.
+    reason: The iPhone keeps the keyboard and the editor's actions on screen together, and a taller field would push the toolbar under the keyboard.
+  - difference: Web's disabled form editor draws a quieter border on a subtle surface; iOS keeps its field and fades the writing.
+    reason: iOS disables the editor only while it saves, for a moment, and redrawing the field would flicker.
+  - difference: Web reads the writing at 15 px, or 14 px up to 720 px; iOS reads it at the 17 pt body large size.
+    reason: 17 pt is the iOS reading size at the default Dynamic Type setting.
+
+specimens:
+  - id: rich-text-content
+    description: A saved note with a paragraph, emphasis, a link, a quote, and a list.
+  - id: rich-text-form
+    description: The bordered editor with a placeholder, as in the Entry editor.
+    covers: { variant: [form] }
+  - id: rich-text-embedded
+    description: The editor without a field, as inside the capture composer.
+    covers: { variant: [embedded] }

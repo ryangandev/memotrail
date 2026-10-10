@@ -2,19 +2,18 @@ import SwiftUI
 
 /// A labeled IANA time zone choice. Options show the offset on `referenceDate`, grouped like
 /// the Web select: the current value when unlisted, common time zones, then all time zones.
+/// A time zone always has a value, so the field has no required mark, and it always shows its
+/// label. Specified in packages/design-system/components/time-zone-field.yaml.
 struct MTTimeZoneField: View {
   let label: String
   @Binding var selection: String
   var referenceDate = ""
-  var size: MTFieldSize = .medium
-  var isRequired = false
   var note: String?
-  var hidesLabel = false
   @State private var isChoosing = false
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      if !hidesLabel { MTFieldLabel(title: label, isRequired: isRequired, note: note) }
+      MTFieldLabel(title: label, note: note)
       Button {
         isChoosing = true
       } label: {
@@ -25,14 +24,14 @@ struct MTTimeZoneField: View {
             .lineLimit(1)
           Spacer(minLength: 0)
           Image(.chevron)
-            .font(.system(size: 11, weight: .semibold))
+            .font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
             .rotationEffect(.degrees(90))
             .foregroundStyle(MTColor.inkFaint)
         }
-        .mtFieldSurface(size: size, isFocused: isChoosing)
+        .mtFieldSurface(isFocused: isChoosing)
       }
       .buttonStyle(.plain)
-      .accessibilityLabel(isRequired ? "\(label), required" : label)
+      .accessibilityLabel(label)
       .accessibilityValue(TimeZoneOptions.optionLabel(selection, reference: referenceDate))
       .sheet(isPresented: $isChoosing) {
         MTTimeZonePicker(title: label, selection: $selection, referenceDate: referenceDate)
@@ -103,7 +102,8 @@ private struct MTTimeZonePicker: View {
           .foregroundStyle(MTColor.ink)
         Spacer(minLength: 0)
         if identifier == selection {
-          Image(.check).font(.system(size: 14, weight: .semibold)).foregroundStyle(MTColor.accent)
+          Image(.check).font(.mtIcon(MTSize.Icon.s14, weight: .semibold)).foregroundStyle(
+            MTColor.accent)
         }
       }
       .contentShape(Rectangle())

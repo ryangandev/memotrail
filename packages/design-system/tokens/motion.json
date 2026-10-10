@@ -1,11 +1,35 @@
 {
   "motion": {
     "$type": "duration",
+    "labelFade": {
+      "$description": "Sidebar labels fading, and the wait before a faded label hides.",
+      "$value": {
+        "value": 100,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "quick": {
       "$description": "Hover, press, and focus transitions.",
       "$value": {
         "value": 120,
         "unit": "ms"
+      }
+    },
+    "composerEnter": {
+      "$description": "The bottom Quick Capture dialog rising into place.",
+      "$value": {
+        "value": 160,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
       }
     },
     "standard": {
@@ -15,6 +39,18 @@
         "unit": "ms"
       }
     },
+    "sidebar": {
+      "$description": "The sidebar collapsing and expanding.",
+      "$value": {
+        "value": 240,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "deliberate": {
       "$description": "Slower reveals, such as the tag editor's expanding search.",
       "$value": {
@@ -22,10 +58,79 @@
         "unit": "ms"
       }
     },
+    "markTurn": {
+      "$description": "The brand mark's quarter turn, as the Web sidebar collapses.",
+      "$value": {
+        "value": 320,
+        "unit": "ms"
+      }
+    },
+    "loadingSpin": {
+      "$description": "One turn of the Timeline editor's loading spinner.",
+      "$value": {
+        "value": 700,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "spin": {
+      "$description": "One turn of a busy button's spinner.",
+      "$value": {
+        "value": 800,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "progressSweep": {
+      "$description": "One sweep of the navigation progress bar.",
+      "$value": {
+        "value": 850,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "pulse": {
+      "$description": "One pulse of the syncing indicator.",
+      "$value": {
+        "value": 1100,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "shimmer": {
       "$description": "One sweep of the loading placeholder shimmer.",
       "$value": {
         "value": 1250,
+        "unit": "ms"
+      }
+    },
+    "toast": {
+      "$description": "How long a success or info toast stays before it dismisses itself.",
+      "$value": {
+        "value": 4500,
+        "unit": "ms"
+      }
+    },
+    "toastError": {
+      "$description": "How long an error toast stays, long enough to read what went wrong.",
+      "$value": {
+        "value": 8000,
         "unit": "ms"
       }
     },
@@ -54,6 +159,102 @@
       "linear": {
         "$description": "Constant speed, for progress and shimmer.",
         "$value": [0, 0, 1, 1]
+      }
+    },
+    "photoPage": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "Paging between photos in the viewer.",
+      "$value": {
+        "value": 200,
+        "unit": "ms"
+      }
+    },
+    "markRing": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The brand mark's outer ring drawing in.",
+      "$value": {
+        "value": 580,
+        "unit": "ms"
+      }
+    },
+    "markTrail": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The brand mark's trail drawing in.",
+      "$value": {
+        "value": 340,
+        "unit": "ms"
+      }
+    },
+    "markTrailDelay": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The wait before the trail draws.",
+      "$value": {
+        "value": 220,
+        "unit": "ms"
+      }
+    },
+    "markInnerRing": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The brand mark's inner ring drawing in.",
+      "$value": {
+        "value": 500,
+        "unit": "ms"
+      }
+    },
+    "splashFade": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The splash screen fading into the app.",
+      "$value": {
+        "value": 300,
+        "unit": "ms"
+      }
+    },
+    "wordmarkReveal": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The splash wordmark fading and rising in.",
+      "$value": {
+        "value": 400,
+        "unit": "ms"
+      }
+    },
+    "wordmarkDelay": {
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["ios"]
+        }
+      },
+      "$description": "The wait before the splash wordmark appears.",
+      "$value": {
+        "value": 420,
+        "unit": "ms"
       }
     }
   }

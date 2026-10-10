@@ -1,9 +1,9 @@
 import SwiftUI
 import UIKit
 
-enum MTToastTone: Sendable {
-  case success, info, error
-
+// MTToastTone and MTToastDefaults are generated from
+// packages/design-system/components/toast.yaml, which also lists each tone's tokens.
+extension MTToastTone {
   fileprivate var systemImage: String {
     switch self {
     case .success: "checkmark.circle.fill"
@@ -13,6 +13,11 @@ enum MTToastTone: Sendable {
   }
 
   fileprivate var color: Color { self == .error ? MTColor.warm : MTColor.accent }
+
+  /// How long a toast in this tone stays: errors stay longer, so there is time to read them.
+  var duration: Duration {
+    .seconds(self == .error ? MTMotion.toastError : MTMotion.toast)
+  }
 }
 
 struct MTToast: Identifiable, Equatable, Sendable {
@@ -22,7 +27,7 @@ struct MTToast: Identifiable, Equatable, Sendable {
 }
 
 /// Transient action feedback matching the Web `notify` helpers: success and info stay for
-/// 4.5 seconds, errors for 8, and at most three are visible. Like Web, toasts rise from the
+/// `MTMotion.toast`, errors for `MTMotion.toastError`, and at most three are visible. Like Web, toasts rise from the
 /// bottom, in a pass-through window above sheets. They sit clear of the tab bar, a sheet's
 /// actions, and the keyboard, and leave the top free for back and close buttons.
 @MainActor
@@ -32,7 +37,7 @@ final class MTToastCenter {
 
   /// Space kept below toasts above the home indicator or keyboard, which clears the tab bar
   /// and a sheet's action footer.
-  static let bottomClearance: CGFloat = 76
+  static let bottomClearance = MTLayout.Toast.bottomClearance
 
   /// The distance from the window's bottom edge to the lowest toast: above the home indicator
   /// or the keyboard, whichever reaches higher, plus `bottomClearance`.
@@ -83,9 +88,8 @@ final class MTToastCenter {
       if toasts.count > 3 { toasts.removeFirst(toasts.count - 3) }
     }
     UIAccessibility.post(notification: .announcement, argument: message)
-    let duration: Duration = tone == .error ? .seconds(8) : .milliseconds(4_500)
     Task {
-      try? await Task.sleep(for: duration)
+      try? await Task.sleep(for: tone.duration)
       dismiss(toast.id)
     }
   }
@@ -160,12 +164,14 @@ private struct MTToastStack: View {
           .transition(.move(edge: .bottom).combined(with: .opacity))
       }
     }
-    .frame(maxWidth: 420)
+    .frame(maxWidth: MTSize.Toast.width)
     .padding(.horizontal, MTSpacing.s4)
   }
 }
 
-private struct MTToastView: View {
+/// One toast. The toast center stacks them; the design-system gallery draws them in place.
+/// Specified in packages/design-system/components/toast.yaml.
+struct MTToastView: View {
   let toast: MTToast
   let dismiss: () -> Void
   @State private var drag: CGFloat = 0
@@ -173,9 +179,9 @@ private struct MTToastView: View {
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
       Image(systemName: toast.tone.systemImage)
-        .font(.system(size: 15))
+        .font(.mtIcon(MTSize.Icon.s15))
         .foregroundStyle(toast.tone.color)
-        .frame(width: 18)
+        .frame(width: MTSize.Toast.icon)
         .accessibilityHidden(true)
       Text(toast.message)
         .font(MTFont.label)
@@ -184,9 +190,9 @@ private struct MTToastView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .fixedSize(horizontal: false, vertical: true)
       Button(action: dismiss) {
-        Image(.close).font(.system(size: 11, weight: .semibold))
+        Image(.close).font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
           .foregroundStyle(MTColor.inkMuted)
-          .frame(width: 32, height: 32)
+          .frame(width: MTLayout.InlineAction.height, height: MTLayout.InlineAction.height)
           .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
@@ -196,18 +202,18 @@ private struct MTToastView: View {
     .padding(.leading, MTSpacing.s4)
     .padding(.trailing, MTSpacing.s2)
     .padding(.vertical, MTSpacing.s3)
-    .frame(minHeight: 52)
+    .frame(minHeight: MTSize.Toast.minHeight)
     .background {
       // The Web toast's 3 point tone border on the leading edge, inside the rounded card.
       ZStack(alignment: .leading) {
         MTColor.surfaceRaised
-        toast.tone.color.frame(width: 3)
+        toast.tone.color.frame(width: MTSize.Stroke.thick)
       }
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
     }
     .overlay {
       RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
-        MTColor.borderStrong, lineWidth: 1)
+        MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
     }
     .mtShadow(MTShadow.floating)
     .offset(y: max(0, drag))

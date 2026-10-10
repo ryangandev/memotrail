@@ -11,19 +11,24 @@ struct SplashView: View {
 
       VStack(spacing: MTSpacing.s5) {
         MemoTrailMark(animated: true)
-          .frame(width: 132, height: 132)
+          .frame(width: MTLayout.Splash.mark, height: MTLayout.Splash.mark)
 
         Text("MemoTrail")
-          .font(.system(size: 32, weight: .medium, design: .serif))
+          .font(MTFont.wordmarkLarge)
           .foregroundStyle(MTColor.ink)
           .opacity(wordmarkVisible ? 1 : 0)
-          .offset(y: wordmarkVisible ? 0 : 7)
+          .offset(y: wordmarkVisible ? 0 : MTLayout.Splash.wordmarkRise)
       }
     }
     .accessibilityElement(children: .ignore)
     .accessibilityLabel("MemoTrail is opening")
     .onAppear {
-      withAnimation(reduceMotion ? nil : .easeOut(duration: 0.4).delay(0.42)) {
+      withAnimation(
+        reduceMotion
+          ? nil
+          : MTEasing.enter.animation(duration: MTMotion.wordmarkReveal)
+            .delay(MTMotion.wordmarkDelay)
+      ) {
         wordmarkVisible = true
       }
     }

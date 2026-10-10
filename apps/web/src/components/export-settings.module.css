@@ -8,33 +8,33 @@
   gap: var(--mt-space-3);
 }
 .content h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
-  font-size: 18px;
+  font-size: var(--mt-type-section-title-font-size);
 }
 .content h3:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
-  font-size: 16px;
+  font-size: var(--mt-font-size-callout);
 }
 .content p:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
-  line-height: 1.65;
+  line-height: var(--mt-line-height-prose);
   color: var(--mt-color-ink-muted);
   overflow-wrap: anywhere;
 }
 .card {
   display: grid;
-  gap: 14px;
+  gap: var(--mt-space-3-5);
   padding: var(--mt-space-6);
-  border: 1px solid var(--mt-color-border);
-  border-radius: 16px;
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-panel);
   background: var(--mt-color-surface);
 }
 .actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: var(--mt-space-2-5);
 }
 .notice {
   padding: var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
-  border-radius: 10px;
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-notice);
   background: var(--mt-color-surface-subtle);
   display: grid;
   gap: var(--mt-space-3);
@@ -59,6 +59,6 @@
     gap: var(--mt-space-5);
   }
   .card {
-    padding: 18px;
+    padding: var(--mt-space-4-5);
   }
 }

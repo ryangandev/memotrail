@@ -2,6 +2,10 @@
 
 import { useId, type ComponentProps, type ReactNode } from "react";
 import { Icon } from "@/components/icon";
+import {
+  searchFieldDefaults,
+  type SearchFieldSize,
+} from "@/generated/design-system";
 import styles from "./search-field.module.css";
 
 export type SearchFieldProps = Omit<
@@ -10,18 +14,22 @@ export type SearchFieldProps = Omit<
 > & {
   hideLabel?: boolean;
   label: string;
-  size?: "small" | "medium" | "large";
+  size?: SearchFieldSize;
   trailing?: ReactNode;
 };
 
+/**
+ * A labeled search input with one focus surface for its icon, query, and trailing content.
+ * Specified in packages/design-system/components/search-field.yaml.
+ */
 export function SearchField({
   autoComplete = "off",
   className,
   disabled,
-  hideLabel = false,
+  hideLabel = searchFieldDefaults.hideLabel,
   id,
   label,
-  size = "medium",
+  size = searchFieldDefaults.size,
   trailing,
   ...inputProps
 }: SearchFieldProps) {
@@ -35,6 +43,7 @@ export function SearchField({
       data-search-field
       data-size={size}
       data-ui-field
+      data-ui-search-field
     >
       <label
         className={styles.label}

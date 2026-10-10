@@ -6,7 +6,7 @@
   gap: var(--mt-space-4) var(--mt-space-6);
   margin-top: var(--mt-space-3);
   padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
 }
@@ -52,7 +52,7 @@
   gap: var(--mt-space-4) var(--mt-space-6);
   margin-bottom: var(--mt-space-3);
   padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
 }
@@ -89,7 +89,7 @@
   width: 100%;
   height: 42px;
   padding-left: var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   outline: 0;
   color: var(--mt-color-ink);
@@ -101,7 +101,7 @@
 
 .timezoneCard select:focus {
   border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+  box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
 }
 
 .timezoneControls {
@@ -123,13 +123,18 @@
   align-items: center;
   gap: var(--mt-space-4);
   padding: var(--mt-space-4) var(--mt-space-5);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+.appearanceRow,
+.preferenceIcon {
+  --preference-icon-size: 42px;
 }
 
 .preferenceIcon {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: var(--preference-icon-size);
+  height: var(--preference-icon-size);
   flex: 0 0 auto;
   place-items: center;
   border-radius: var(--mt-radius-medium);
@@ -145,10 +150,10 @@
 .appearanceControl {
   display: flex;
   min-width: 234px;
-  gap: 3px;
+  gap: var(--mt-space-0-75);
   margin: 0;
-  padding: 3px;
-  border: 1px solid var(--mt-color-border);
+  padding: var(--mt-space-0-75);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface-subtle);
 }
@@ -181,7 +186,7 @@
   min-height: 34px;
   place-items: center;
   padding: 0 var(--mt-space-3);
-  border-radius: 9px;
+  border-radius: var(--mt-radius-tile);
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);
@@ -198,12 +203,12 @@
 .appearanceControl input:checked + span {
   color: var(--mt-color-accent);
   background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 3px rgb(38 37 31 / 0.12);
+  box-shadow: var(--mt-shadow-thumb-strong);
 }
 
 .appearanceControl input:focus-visible + span {
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: 2px;
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
 }
 
 @media (max-width: 720px) {
@@ -233,8 +238,8 @@
   }
 
   .appearanceControl {
-    width: calc(100% - 54px);
+    width: calc(100% - var(--preference-icon-size) - var(--mt-space-3));
     min-width: 0;
-    margin-left: 54px;
+    margin-left: calc(var(--preference-icon-size) + var(--mt-space-3));
   }
 }

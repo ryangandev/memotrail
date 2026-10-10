@@ -90,16 +90,16 @@ struct ExplorationView: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: MTSpacing.s5) {
-        Text("ROOM FOR A THOUGHT TO GROW").font(MTTypography.caption).foregroundStyle(MTColor.warm)
-        Text("Explore with AI").font(MTTypography.display)
+        Text("ROOM FOR A THOUGHT TO GROW").font(MTFont.caption).foregroundStyle(MTColor.warm)
+        Text("Explore with AI").font(MTFont.display)
         Text("A separate conversation. Your original words stay yours.").foregroundStyle(
           MTColor.inkMuted)
         if let workspace {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            Text("ORIGINAL ENTRY · VERSION \(workspace.source.revision)").font(MTTypography.caption)
+            Text("ORIGINAL ENTRY · VERSION \(workspace.source.revision)").font(MTFont.caption)
               .foregroundStyle(MTColor.warm)
             Text(workspace.source.title?.trimmed.nonEmpty ?? "Untitled Entry").font(
-              MTTypography.title)
+              MTFont.title)
             Text(workspace.source.body).textSelection(.enabled)
             NavigationLink("Open original Entry") {
               EntryHistoryDetailView(client: client, ownerID: ownerID, entryID: entryID)
@@ -114,7 +114,7 @@ struct ExplorationView: View {
             }
           }
           if workspace.linksTruncated {
-            Text("Showing the first 100 links.").font(MTTypography.caption)
+            Text("Showing the first 100 links.").font(MTFont.caption)
           }
         }
         HStack {
@@ -124,7 +124,7 @@ struct ExplorationView: View {
         }
         Text(
           "Sending shares a bounded excerpt of this Entry and up to eight recent completed turns with Anthropic. No photos or other archive records are sent. AI may be wrong. Opening and refreshing are free."
-        ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+        ).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
         if let workspace, turns.count < workspace.totalCount {
           Button("Load earlier turns") { Task { await load(older: true) } }.disabled(busy)
         }
@@ -134,10 +134,10 @@ struct ExplorationView: View {
         }
         ForEach(turns) { turn in
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            Text("YOU").font(MTTypography.caption).foregroundStyle(MTColor.warm)
+            Text("YOU").font(MTFont.caption).foregroundStyle(MTColor.warm)
             Text(turn.question).textSelection(.enabled)
             Text("AI EXPLORATION · SOURCE VERSION \(turn.sourceRevision)").font(
-              MTTypography.caption
+              MTFont.caption
             ).foregroundStyle(MTColor.warm)
             if turn.status == "completed" {
               Text(turn.answer ?? "").textSelection(.enabled)
@@ -149,7 +149,7 @@ struct ExplorationView: View {
                 turn.status == "generating"
                   ? "Processing. You can leave and return; do not send the same question again."
                   : "This attempt did not finish. No automatic retry was made."
-              ).font(MTTypography.caption).foregroundStyle(MTColor.inkMuted)
+              ).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
               if turn.status == "failed" {
                 Button("Use question for a new attempt") {
                   pendingRequest = nil
@@ -161,9 +161,9 @@ struct ExplorationView: View {
             DisclosureGroup("Recorded source snapshot") {
               Text(
                 "The model uses a bounded excerpt of this snapshot. Its version is retained after later edits."
-              ).font(MTTypography.caption)
+              ).font(MTFont.caption)
               Text(turn.sourceSnapshot["body"]?.text ?? "").textSelection(.enabled)
-            }.font(MTTypography.caption)
+            }.font(MTFont.caption)
             ForEach(turn.savedEntries) { saved in
               if let id = saved.entryID, !saved.deleted {
                 NavigationLink("Saved Entry: \(saved.title ?? "Untitled Entry")") {
@@ -171,19 +171,20 @@ struct ExplorationView: View {
                 }
               } else {
                 Text("A saved conclusion was removed. Old retries will not recreate it.").font(
-                  MTTypography.caption)
+                  MTFont.caption)
               }
             }
           }.padding().frame(maxWidth: .infinity, alignment: .leading).background(
             MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
         }
         VStack(alignment: .leading, spacing: MTSpacing.s3) {
-          Text("Your question").font(MTTypography.label)
-          TextEditor(text: $question).frame(minHeight: 100).scrollContentBackground(.hidden)
-            .padding(8)
+          Text("Your question").font(MTFont.label)
+          TextEditor(text: $question).frame(minHeight: MTLayout.Exploration.questionHeight)
+            .scrollContentBackground(.hidden)
+            .padding(MTSpacing.s2)
             .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
             .accessibilityLabel("Your question").disabled(busy || pendingRequest != nil)
-          Text("\(question.utf16.count) / 2,000").font(MTTypography.caption).foregroundStyle(
+          Text("\(question.utf16.count) / 2,000").font(MTFont.caption).foregroundStyle(
             MTColor.inkMuted)
           Button(pendingRequest == nil ? "Send question" : "Retry the same request") {
             Task { await send() }
@@ -194,7 +195,7 @@ struct ExplorationView: View {
           if pendingRequest != nil {
             Text(
               "The last request is unconfirmed. Refresh to check its saved state. Retrying uses the same ID to prevent duplicate generation."
-            ).font(MTTypography.caption)
+            ).font(MTFont.caption)
           }
         }
         if let savedID {
@@ -313,10 +314,11 @@ private struct ExplorationConclusionSheet: View {
           "Edit the wording before saving. This creates a separate Inbox Entry linked both ways to the original."
         )
         TextField("Conclusion title", text: $title).disabled(busy || attempted)
-        Text("\(title.utf16.count) / 200").font(MTTypography.caption)
-        TextEditor(text: $bodyText).frame(minHeight: 200).accessibilityLabel("Conclusion text")
+        Text("\(title.utf16.count) / 200").font(MTFont.caption)
+        TextEditor(text: $bodyText).frame(minHeight: MTLayout.Exploration.conclusionHeight)
+          .accessibilityLabel("Conclusion text")
           .disabled(busy || attempted)
-        Text("\(bodyText.utf16.count) / 50,000").font(MTTypography.caption)
+        Text("\(bodyText.utf16.count) / 50,000").font(MTFont.caption)
         Button(attempted ? "Retry same save" : "Save conclusion") { Task { await save() } }
           .disabled(
             busy || bodyText.trimmed.isEmpty || title.utf16.count > 200

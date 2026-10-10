@@ -103,9 +103,7 @@ private struct MoreGroup<Content: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       Text(title)
-        .font(.caption2.weight(.semibold))
-        .tracking(1.1)
-        .textCase(.uppercase)
+        .mtTextRole(.menuHeading)
         .foregroundStyle(MTColor.inkFaint)
         .accessibilityAddTraits(.isHeader)
       LazyVGrid(
@@ -126,19 +124,19 @@ private struct MoreTile: View {
   var body: some View {
     HStack(spacing: MTSpacing.s2) {
       Image(icon)
-        .font(.system(size: 17))
+        .font(.mtIcon(MTSize.Icon.s17))
         .foregroundStyle(MTColor.inkMuted)
-        .frame(width: 22)
+        .frame(width: MTLayout.More.icon)
         .accessibilityHidden(true)
       Text(title)
-        .font(MTFont.caption.weight(.medium))
+        .font(MTFont.caption)
         .foregroundStyle(MTColor.ink)
         .lineLimit(2)
         .multilineTextAlignment(.leading)
       Spacer(minLength: 0)
     }
     .padding(MTSpacing.s3)
-    .frame(maxWidth: .infinity, minHeight: 52, alignment: .leading)
+    .frame(maxWidth: .infinity, minHeight: MTSize.Control.large, alignment: .leading)
   }
 }
 

@@ -29,7 +29,7 @@
 .reviewForm textarea:not(:where([data-ui-field] *)),
 .reviewForm select:not(:where([data-ui-field] *)) {
   width: 100%;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   outline: 0;
   color: var(--mt-color-ink);
@@ -56,5 +56,5 @@
 .reviewForm textarea:not(:where([data-ui-field] *)):focus,
 .reviewForm select:not(:where([data-ui-field] *)):focus {
   border-color: var(--mt-color-accent);
-  box-shadow: 0 0 0 3px var(--mt-color-accent-subtle);
+  box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
 }

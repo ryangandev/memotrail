@@ -116,8 +116,8 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.buttons["Accessibility text"].tap()
     reveal(app.buttons["design-section-containers"], in: app).tap()
     XCTAssertTrue(app.navigationBars["Containers & data"].waitForExistence(timeout: 3))
-    reveal(app.buttons["Open sample memory"], in: app).tap()
-    XCTAssertTrue(app.staticTexts["RecordCard action fired."].waitForExistence(timeout: 3))
+    reveal(app.buttons["Maple Street flat, Since Jun 1, 2021"], in: app).tap()
+    XCTAssertTrue(app.staticTexts["Opened the Maple Street flat."].waitForExistence(timeout: 3))
     let summary = reveal(app.staticTexts["A quiet afternoon by the coast"], in: app)
     attach(app, "Dark records at accessibility text size")
     XCTAssertTrue(summary.isHittable)
@@ -150,21 +150,23 @@ final class NativeWorkspaceUITests: XCTestCase {
   func testRichWritingTypingFormattingUndoAndSavedPreview() {
     let app = launch("--review-design-system")
     reveal(app.buttons["design-section-writing"], in: app).tap()
-    let editor = app.textViews["rich-editor"]
+    // The RichText specimens draw the same controls, so find these by their card.
+    let writing = app.otherElements["design-writing-editor"]
+    let editor = writing.textViews["rich-editor"]
     XCTAssertTrue(editor.waitForExistence(timeout: 3))
-    XCTAssertFalse(app.buttons["rich-format-bold"].exists)
-    app.buttons["rich-format-toggle"].tap()
-    XCTAssertTrue(app.buttons["rich-format-bold"].exists)
-    app.buttons["rich-format-bold"].tap()
-    app.buttons["rich-format-italic"].tap()
-    app.buttons["rich-format-underline"].tap()
+    XCTAssertFalse(writing.buttons["rich-format-bold"].exists)
+    writing.buttons["rich-format-toggle"].tap()
+    XCTAssertTrue(writing.buttons["rich-format-bold"].exists)
+    writing.buttons["rich-format-bold"].tap()
+    writing.buttons["rich-format-italic"].tap()
+    writing.buttons["rich-format-underline"].tap()
     editor.typeText("A quiet day")
     XCTAssertEqual(editor.value as? String, "A quiet day")
-    XCTAssertEqual(app.buttons["rich-format-bold"].value as? String, "On")
-    XCTAssertEqual(app.buttons["rich-format-italic"].value as? String, "On")
-    XCTAssertEqual(app.buttons["rich-format-underline"].value as? String, "On")
+    XCTAssertEqual(writing.buttons["rich-format-bold"].value as? String, "On")
+    XCTAssertEqual(writing.buttons["rich-format-italic"].value as? String, "On")
+    XCTAssertEqual(writing.buttons["rich-format-underline"].value as? String, "On")
     attach(app, "Rich writing above the keyboard")
-    app.buttons["rich-dismiss-keyboard"].tap()
+    writing.buttons["rich-dismiss-keyboard"].tap()
     app.buttons["design-save-writing"].tap()
     app.swipeUp()
     XCTAssertTrue(app.staticTexts["design-saved-writing"].waitForExistence(timeout: 3))
@@ -175,16 +177,16 @@ final class NativeWorkspaceUITests: XCTestCase {
     // Double-tap the first word in the native text view to select existing writing.
     editor.coordinate(withNormalizedOffset: CGVector(dx: 0.12, dy: 0.1)).doubleTap()
     attach(app, "Native selected word")
-    app.buttons["rich-format-bold"].tap()
+    writing.buttons["rich-format-bold"].tap()
     XCTAssertEqual(editor.value as? String, "A quiet day")
-    XCTAssertEqual(app.buttons["rich-format-bold"].value as? String, "Off")
-    app.buttons["rich-undo"].tap()
-    XCTAssertEqual(app.buttons["rich-format-bold"].value as? String, "On")
-    app.buttons["rich-redo"].tap()
-    XCTAssertEqual(app.buttons["rich-format-bold"].value as? String, "Off")
+    XCTAssertEqual(writing.buttons["rich-format-bold"].value as? String, "Off")
+    writing.buttons["rich-undo"].tap()
+    XCTAssertEqual(writing.buttons["rich-format-bold"].value as? String, "On")
+    writing.buttons["rich-redo"].tap()
+    XCTAssertEqual(writing.buttons["rich-format-bold"].value as? String, "Off")
     attach(app, "Selection formatting after redo")
-    app.buttons["rich-format-toggle"].tap()
-    XCTAssertFalse(app.buttons["rich-format-bold"].exists)
+    writing.buttons["rich-format-toggle"].tap()
+    XCTAssertFalse(writing.buttons["rich-format-bold"].exists)
   }
 
   func testGallerySheetsShowMessagesAndFitShortChoices() {
@@ -217,7 +219,8 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.buttons["design-preview-settings"].tap()
     app.buttons["Accessibility text"].tap()
     reveal(app.buttons["design-section-writing"], in: app).tap()
-    reveal(app.buttons["rich-format-toggle"], in: app).tap()
+    let writing = app.otherElements["design-writing-editor"]
+    reveal(writing.buttons["rich-format-toggle"], in: app).tap()
     attach(app, "Dark rich text tools at accessibility size")
     reveal(app.buttons["design-open-writing-sheet"], in: app).tap()
     XCTAssertTrue(app.textViews["rich-sheet-editor"].waitForExistence(timeout: 3))
@@ -231,7 +234,7 @@ final class NativeWorkspaceUITests: XCTestCase {
 
   func testFormFieldsPickersAndOrganizationEditing() {
     let app = launchSection("forms")
-    let record = reveal(app.buttons["Record"], in: app)
+    let record = reveal(app.buttons["Record, required"], in: app)
     record.tap()
     XCTAssertTrue(app.buttons["People"].waitForExistence(timeout: 3))
     attach(app, "Grouped select menu")
@@ -387,6 +390,49 @@ final class NativeWorkspaceUITests: XCTestCase {
         previous = current
         attach(app, "\(section) \(page)")
       }
+    }
+  }
+
+  /// Every specimen the component specs list appears, by its identifier, in the gallery section
+  /// that shows its component. The list is generated from packages/design-system/components, so
+  /// a specimen added to a spec fails here until the native gallery shows it.
+  func testGalleryShowsEveryComponentSpecimen() {
+    let sections = [
+      "Badge": "forms", "Button": "primitives", "CaptureComposer": "containers",
+      "Checkbox": "forms", "DateField": "forms", "Dialog": "primitives",
+      "EmptyState": "primitives", "FocusedRecord": "containers", "Icon": "identity",
+      "IconButton": "primitives", "Image": "feedback", "PageFrame": "layout",
+      "PageHeader": "primitives", "PhotoViewer": "feedback", "RecordCard": "containers",
+      "RichText": "writing", "SearchField": "forms", "SectionHeader": "containers",
+      "SelectField": "forms", "SeparatedList": "containers", "Skeleton": "feedback",
+      "TextField": "forms", "TimeZoneField": "forms", "Toast": "feedback",
+      "UploadProgress": "feedback",
+    ]
+    let specimens = Dictionary(grouping: MTComponentSpecimen.allCases, by: \.component)
+    for component in specimens.keys.sorted() where sections[component] == nil {
+      XCTFail("Name the gallery section that shows \(component) specimens.")
+    }
+    let known = Set(MTComponentSpecimen.allCases.map(\.accessibilityIdentifier))
+    for (component, section) in sections.sorted(by: { $0.key < $1.key }) {
+      let expected = specimens[component] ?? []
+      XCTAssertFalse(expected.isEmpty, "\(component) lists no specimens.")
+      let app = launchSection(section)
+      // The gallery shows specimens in spec order, so revealing each one only scrolls down.
+      for specimen in expected {
+        let element = app.descendants(matching: .any)[specimen.accessibilityIdentifier]
+        XCTAssertTrue(
+          reveal(element, in: app).exists, "\(section) does not show \(specimen.rawValue).")
+        XCTAssertTrue(element.staticTexts[specimen.rawValue].exists)
+        // A predicate, because a subscript rejects text longer than 128 characters.
+        XCTAssertTrue(
+          element.staticTexts.matching(NSPredicate(format: "label == %@", specimen.summary))
+            .firstMatch.exists, "\(specimen.rawValue) does not show its description.")
+      }
+      let shown = app.descendants(matching: .any)
+        .matching(NSPredicate(format: "identifier BEGINSWITH 'specimen-'"))
+        .allElementsBoundByIndex.map(\.identifier)
+      XCTAssertEqual(Set(shown).subtracting(known), [], "\(section) shows unlisted specimens.")
+      attach(app, "\(component) specimens")
     }
   }
 

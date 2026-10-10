@@ -69,7 +69,7 @@ struct GoalsView: View {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
     }
-    .font(MTFont.caption.weight(.regular))
+    .font(MTFont.detail)
     .foregroundStyle(MTColor.inkFaint)
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Goals summary")
@@ -84,7 +84,7 @@ struct GoalsView: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage {
       MTEmptyState(title: "Goals unavailable", message: message, icon: .sparkle) {
         Button("Try again") { Task { await controller.load() } }
@@ -128,7 +128,10 @@ private struct GoalCard: View {
       accessibilityLabel: "\(entry.title), \(entry.status.displayName)", action: open
     ) {
       if let cover = entry.attachments.first {
-        MTRecordCardVisual(height: isRegular ? 138 : 125) {
+        MTRecordCardVisual(
+          height: isRegular
+            ? MTLayout.RecordCard.goalVisualHeightRegular : MTLayout.RecordCard.goalVisualHeight
+        ) {
           MTRemoteImage(url: cover.signedURL)
         }
         .overlay(alignment: .bottomTrailing) {
@@ -143,7 +146,7 @@ private struct GoalCard: View {
       }
       MTRecordCardBody {
         VStack(alignment: .leading, spacing: 0) {
-          HStack(spacing: 6) {
+          HStack(spacing: MTSpacing.s1_5) {
             MTBadge(
               title: entry.status.displayName,
               tone: [.active, .achieved].contains(entry.status) ? .accent : .neutral,
@@ -151,14 +154,12 @@ private struct GoalCard: View {
             MTBadge(title: entry.horizon.displayName, tone: .neutral, size: .micro, uppercase: true)
           }
           Text(entry.title)
-            .font(.system(isRegular ? .title2 : .title3, design: .serif).weight(.medium))
-            .tracking(-0.5)
+            .mtTextRole(isRegular ? .goalCardTitle : .goalCardTitleCompact)
             .foregroundStyle(MTColor.ink)
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s3)
           Text(entry.targetLabel.uppercased())
-            .font(.caption2.monospaced())
-            .tracking(0.25)
+            .mtTextRole(.dateStamp)
             .foregroundStyle(MTColor.accent)
             .padding(.top, MTSpacing.s2)
           if let reflection = entry.body.trimmed.nonEmpty {
@@ -167,7 +168,7 @@ private struct GoalCard: View {
               reflection.count > 180
                 ? "\(reflection.prefix(180).trimmingCharacters(in: .whitespaces))..." : reflection
             )
-            .font(MTFont.label.weight(.regular))
+            .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body)
             .lineLimit(3)
@@ -182,7 +183,11 @@ private struct GoalCard: View {
             }, tagNames: entry.tagNames)
         }
         // Web keeps short Goal cards the same height, with their context at the bottom.
-        .frame(minHeight: (isRegular ? 245 : 220) - 2 * MTSpacing.s5, alignment: .top)
+        .frame(
+          minHeight: (isRegular
+            ? MTLayout.RecordCard.goalMinHeightRegular : MTLayout.RecordCard.goalMinHeight)
+            - 2 * MTSpacing.s5,
+          alignment: .top)
       }
     }
   }
@@ -203,7 +208,7 @@ private struct GoalCard: View {
           Text("First Time linked")
         }
       }
-      .font(.caption2)
+      .font(MTFont.note)
       .foregroundStyle(MTColor.inkFaint)
       .padding(.top, MTSpacing.s4)
     }

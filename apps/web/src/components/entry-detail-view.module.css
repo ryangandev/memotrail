@@ -4,11 +4,11 @@
 }
 .workspace h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   font-family: var(--mt-font-family-serif);
-  font-size: 26px;
+  font-size: var(--mt-type-record-title-font-size);
 }
 .workspace p:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
   color: var(--mt-color-ink-muted);
-  line-height: 1.6;
+  line-height: var(--mt-line-height-paragraph);
 }
 .workspace a:not([data-ui-button]) {
   color: var(--mt-color-accent);
@@ -31,16 +31,16 @@
 .currentItem {
   display: grid;
   gap: var(--mt-space-8);
-  padding: clamp(24px, 5vw, 44px);
-  border: 1px solid var(--mt-color-border);
+  padding: clamp(var(--mt-space-6), 5vw, var(--mt-space-11));
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 2px rgb(38 37 31 / 0.025);
+  box-shadow: var(--mt-shadow-hairline);
 }
 .currentBody {
   color: var(--mt-color-ink);
   font-size: var(--mt-font-size-body);
-  line-height: 1.75;
+  line-height: var(--mt-line-height-story);
   overflow-wrap: anywhere;
 }
 .workspace .currentBody p {
@@ -57,7 +57,7 @@
   gap: var(--mt-space-4);
   margin: 0;
   padding-top: var(--mt-space-5);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 .currentFacts > div {
   display: grid;
@@ -66,9 +66,9 @@
 }
 .currentFacts dt {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-fact-label-font-size);
+  letter-spacing: var(--mt-type-fact-label-letter-spacing);
+  text-transform: var(--mt-type-fact-label-text-transform);
 }
 .currentFacts dd {
   margin: 0;
@@ -87,7 +87,7 @@
 .workspace select:not(:where([data-ui-field] *)) {
   background: var(--mt-color-surface);
   color: var(--mt-color-ink);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   padding: var(--mt-space-3);
   font-family: var(--mt-font-family-sans);
@@ -108,8 +108,8 @@
   min-width: 0;
 }
 .conversion {
-  padding: 22px;
-  border: 1px solid var(--mt-color-border);
+  padding: var(--mt-space-5-5);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
 }

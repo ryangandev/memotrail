@@ -60,7 +60,7 @@ struct VehiclesView: View {
         ProgressView().controlSize(.small).tint(MTColor.accent)
       }
     }
-    .font(MTFont.caption.weight(.regular))
+    .font(MTFont.detail)
     .foregroundStyle(MTColor.inkFaint)
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Vehicles summary")
@@ -75,7 +75,7 @@ struct VehiclesView: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage {
       MTEmptyState(title: "Vehicles unavailable", message: message, icon: .car) {
         Button("Try again") { Task { await controller.load() } }

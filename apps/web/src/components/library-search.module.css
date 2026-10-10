@@ -35,7 +35,7 @@
 
 .advancedFilters {
   margin-top: var(--mt-space-4);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .advancedFilters summary {
@@ -50,6 +50,7 @@
 .filters {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
   gap: var(--mt-space-3);
   min-width: 0;
   margin: var(--mt-space-4) 0 0;
@@ -69,7 +70,7 @@
 
 .filters label {
   display: grid;
-  gap: 6px;
+  gap: var(--mt-space-1-5);
   min-width: 0;
 }
 
@@ -79,18 +80,18 @@
 
 .filters label > span {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-filter-label-font-size);
+  font-weight: var(--mt-type-filter-label-font-weight);
+  letter-spacing: var(--mt-type-filter-label-letter-spacing);
+  text-transform: var(--mt-type-filter-label-text-transform);
 }
 
 .filters select {
   width: 100%;
-  height: 38px;
+  height: var(--mt-size-field-small);
   min-width: 0;
   padding: 0 var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);
   outline: 0;
   color: var(--mt-color-ink);
@@ -104,7 +105,7 @@
 
 .filters select:disabled {
   color: var(--mt-color-ink-faint);
-  opacity: 0.7;
+  opacity: var(--mt-state-disabled-opacity-soft);
 }
 
 .filterNotice {
@@ -120,14 +121,10 @@
   gap: var(--mt-space-4);
   margin-top: var(--mt-space-8);
   padding: var(--mt-space-8);
-  border: 1px dashed var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) dashed var(--mt-color-border-strong);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-accent);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-surface-subtle) 42%,
-    transparent
-  );
+  background: var(--mt-color-surface-wash);
 }
 
 .message div {
@@ -164,14 +161,14 @@
 
 .resultList {
   overflow: hidden;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
 }
 
 .resultCard {
   padding: var(--mt-space-6);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .resultCard:last-child {
@@ -182,7 +179,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: var(--mt-space-1-5);
 }
 
 .resultMeta time {
@@ -196,7 +193,7 @@
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
-  line-height: 1.35;
+  line-height: var(--mt-line-height-title-relaxed);
 }
 
 .resultBody,
@@ -234,7 +231,7 @@
 .organization {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: var(--mt-space-1-5);
   margin-top: var(--mt-space-4);
 }
 
@@ -244,19 +241,18 @@
   gap: var(--mt-space-2);
   margin-top: var(--mt-space-4);
   padding-top: var(--mt-space-3);
-  border-top: 1px solid
-    color-mix(in srgb, var(--mt-color-border) 70%, transparent);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border-faint);
 }
 
 .matchLabel {
   flex: none;
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
   text-transform: uppercase;
 }
 
 .matchReasons {
-  --separated-list-gap: 5px;
+  --separated-list-gap: var(--mt-space-1-25);
   --separated-list-separator-color: var(--mt-color-border-strong);
   min-width: 0;
   color: var(--mt-color-accent);
@@ -274,7 +270,7 @@
 .pagination a {
   width: fit-content;
   padding: var(--mt-space-2) var(--mt-space-3);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface);
@@ -319,7 +315,7 @@
   .searchScope {
     align-items: flex-start;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--mt-space-1-5);
   }
 
   .clearSearch {

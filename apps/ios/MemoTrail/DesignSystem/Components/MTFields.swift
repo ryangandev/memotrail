@@ -1,26 +1,52 @@
 import SwiftUI
 
+/// The shared field surface's size. Each field takes its own generated size enum, from its
+/// component spec, and converts it here, so removing a size from a spec breaks the build.
 enum MTFieldSize: CaseIterable, Sendable {
   case small, medium, large
-
-  var title: String {
-    switch self {
-    case .small: "small"
-    case .medium: "medium"
-    case .large: "large"
-    }
-  }
 
   /// The Web field heights (34, 42, 48) raised slightly for native touch targets.
   var height: CGFloat {
     switch self {
-    case .small: 36
-    case .medium: 44
-    case .large: 50
+    case .small: MTSize.Field.small
+    case .medium: MTSize.Field.medium
+    case .large: MTSize.Field.large
     }
   }
 
   var radius: CGFloat { self == .small ? MTRadius.small : MTRadius.medium }
+
+  init(_ size: MTTextFieldSize) {
+    switch size {
+    case .small: self = .small
+    case .medium: self = .medium
+    case .large: self = .large
+    }
+  }
+
+  init(_ size: MTSearchFieldSize) {
+    switch size {
+    case .small: self = .small
+    case .medium: self = .medium
+    case .large: self = .large
+    }
+  }
+
+  init(_ size: MTSelectFieldSize) {
+    switch size {
+    case .small: self = .small
+    case .medium: self = .medium
+    case .large: self = .large
+    }
+  }
+
+  init(_ size: MTDateFieldSize) {
+    switch size {
+    case .small: self = .small
+    case .medium: self = .medium
+    case .large: self = .large
+    }
+  }
 }
 
 /// The label above a field, with a warm required mark and an optional quiet note.
@@ -36,7 +62,7 @@ struct MTFieldLabel: View {
         .font(MTFont.label)
         .foregroundStyle(MTColor.inkMuted)
       if let note {
-        Text(note).font(.caption2).foregroundStyle(MTColor.inkFaint)
+        Text(note).font(MTFont.note).foregroundStyle(MTColor.inkFaint)
       }
     }
     .accessibilityHidden(true)
@@ -46,6 +72,7 @@ struct MTFieldLabel: View {
 private struct MTFieldSurface: ViewModifier {
   let size: MTFieldSize
   let isFocused: Bool
+  var isInvalid = false
   var focus: (() -> Void)?
   @Environment(\.isEnabled) private var isEnabled
   @Environment(\.mtFieldFill) private var fill
@@ -58,7 +85,7 @@ private struct MTFieldSurface: ViewModifier {
       .background {
         let surface = ZStack {
           // The Web focus ring: a 3 point accent halo outside the border.
-          if isFocused { shape.stroke(MTColor.accentSubtle, lineWidth: 6) }
+          if isFocused { shape.stroke(MTState.Focus.halo, lineWidth: MTState.Focus.haloStroke) }
           shape.fill(isEnabled ? fill : MTColor.surfaceSubtle)
         }
         if let focus {
@@ -70,20 +97,28 @@ private struct MTFieldSurface: ViewModifier {
         }
       }
       .overlay {
-        shape.strokeBorder(isFocused ? MTColor.accent : MTColor.borderStrong, lineWidth: 1)
+        shape.strokeBorder(border, lineWidth: MTSize.Stroke.thin)
       }
       .contentShape(shape)
-      .opacity(isEnabled ? 1 : 0.65)
-      .animation(.easeOut(duration: MTMotion.quick), value: isFocused)
+      .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.field)
+      .animation(MTEasing.enter.animation(duration: MTMotion.quick), value: isFocused)
+  }
+
+  // Focus wins over an error, as on Web, so the field reads as active while it is corrected.
+  private var border: Color {
+    if isFocused { return MTColor.accent }
+    return isInvalid ? MTColor.warm : MTColor.borderStrong
   }
 }
 
 extension View {
-  /// The shared field surface: height, border, focus ring, and disabled treatment.
+  /// The shared field surface: height, border, focus ring, and the invalid and disabled
+  /// treatments.
   func mtFieldSurface(
-    size: MTFieldSize = .medium, isFocused: Bool = false, focus: (() -> Void)? = nil
+    size: MTFieldSize = .medium, isFocused: Bool = false, isInvalid: Bool = false,
+    focus: (() -> Void)? = nil
   ) -> some View {
-    modifier(MTFieldSurface(size: size, isFocused: isFocused, focus: focus))
+    modifier(MTFieldSurface(size: size, isFocused: isFocused, isInvalid: isInvalid, focus: focus))
   }
 
   fileprivate func mtFieldAccessibility(_ label: String, isRequired: Bool) -> some View {
@@ -96,15 +131,18 @@ extension View {
 }
 
 /// A labeled single-line input, or with a vertical axis a growing textarea. `lines` sets the
-/// textarea's visible range, like Web `rows`, without affecting the label.
+/// textarea's visible range, like Web `rows`, without affecting the label. An `error` draws the
+/// warm border and its message below the field, and VoiceOver reads it as the hint.
+/// Specified in packages/design-system/components/text-field.yaml.
 struct MTTextField: View {
   let label: String
   @Binding var text: String
   var prompt: String?
-  var size: MTFieldSize = .medium
-  var isRequired = false
+  var size: MTTextFieldSize = MTTextFieldDefaults.size
+  var isRequired = MTTextFieldDefaults.isRequired
   var note: String?
-  var hidesLabel = false
+  var hidesLabel = MTTextFieldDefaults.hidesLabel
+  var error: String?
   var maxLength: Int?
   var axis: Axis = .horizontal
   var lines: ClosedRange<Int>?
@@ -124,22 +162,30 @@ struct MTTextField: View {
       .font(MTFont.body)
       .foregroundStyle(MTColor.ink)
       .focused($isFocused)
-      .padding(.vertical, axis == .vertical ? MTSpacing.s3 - 1 : 0)
-      .mtFieldSurface(size: size, isFocused: isFocused) { isFocused = true }
+      .padding(.vertical, axis == .vertical ? MTLayout.Field.textareaInset : 0)
+      .mtFieldSurface(size: MTFieldSize(size), isFocused: isFocused, isInvalid: error != nil) {
+        isFocused = true
+      }
       .mtFieldAccessibility(label, isRequired: isRequired)
+      .accessibilityHint(error ?? "")
       .onChange(of: text) {
         if let maxLength, text.count > maxLength { text = String(text.prefix(maxLength)) }
+      }
+      if let error {
+        // The field's hint already reads the message, so VoiceOver skips the visible copy.
+        Text(error).font(MTFont.caption).foregroundStyle(MTColor.warm).accessibilityHidden(true)
       }
     }
   }
 }
 
 /// A search input with one focus surface for the icon, text, clear action, and trailing content.
+/// Specified in packages/design-system/components/search-field.yaml.
 struct MTSearchField<Trailing: View>: View {
   let label: String
   @Binding var text: String
   var prompt: String?
-  var size: MTFieldSize
+  var size: MTSearchFieldSize
   var hidesLabel: Bool
   var maxLength: Int?
   /// Each increase moves keyboard focus into the field.
@@ -148,9 +194,10 @@ struct MTSearchField<Trailing: View>: View {
   @FocusState private var isFocused: Bool
 
   init(
-    _ label: String, text: Binding<String>, prompt: String? = nil, size: MTFieldSize = .medium,
-    hidesLabel: Bool = false, maxLength: Int? = nil, focusRequest: Int = 0,
-    @ViewBuilder trailing: () -> Trailing
+    _ label: String, text: Binding<String>, prompt: String? = nil,
+    size: MTSearchFieldSize = MTSearchFieldDefaults.size,
+    hidesLabel: Bool = MTSearchFieldDefaults.hidesLabel, maxLength: Int? = nil,
+    focusRequest: Int = 0, @ViewBuilder trailing: () -> Trailing
   ) {
     self.label = label
     _text = text
@@ -167,7 +214,7 @@ struct MTSearchField<Trailing: View>: View {
       if !hidesLabel { MTFieldLabel(title: label) }
       HStack(spacing: MTSpacing.s2) {
         Image(.search)
-          .font(.system(size: size == .small ? 14 : 16, weight: .medium))
+          .font(.mtIcon(size == .small ? MTSize.Icon.s14 : MTSize.Icon.s16, weight: .medium))
           .foregroundStyle(MTColor.inkFaint)
           .accessibilityHidden(true)
         TextField(
@@ -184,17 +231,17 @@ struct MTSearchField<Trailing: View>: View {
           Button {
             text = ""
           } label: {
-            Image(systemName: "xmark.circle.fill").font(.system(size: 15))
+            Image(systemName: "xmark.circle.fill").font(.mtIcon(MTSize.Icon.s15))
           }
           .buttonStyle(.plain)
           .foregroundStyle(MTColor.inkFaint)
-          .frame(width: 28, height: 28)
+          .frame(width: MTLayout.Field.accessory, height: MTLayout.Field.accessory)
           .contentShape(Rectangle())
           .accessibilityLabel("Clear \(label.lowercased())")
         }
         trailing
       }
-      .mtFieldSurface(size: size, isFocused: isFocused) { isFocused = true }
+      .mtFieldSurface(size: MTFieldSize(size), isFocused: isFocused) { isFocused = true }
     }
     .onChange(of: text) {
       if let maxLength, text.count > maxLength { text = String(text.prefix(maxLength)) }
@@ -205,8 +252,10 @@ struct MTSearchField<Trailing: View>: View {
 
 extension MTSearchField where Trailing == EmptyView {
   init(
-    _ label: String, text: Binding<String>, prompt: String? = nil, size: MTFieldSize = .medium,
-    hidesLabel: Bool = false, maxLength: Int? = nil, focusRequest: Int = 0
+    _ label: String, text: Binding<String>, prompt: String? = nil,
+    size: MTSearchFieldSize = MTSearchFieldDefaults.size,
+    hidesLabel: Bool = MTSearchFieldDefaults.hidesLabel, maxLength: Int? = nil,
+    focusRequest: Int = 0
   ) {
     self.init(
       label, text: text, prompt: prompt, size: size, hidesLabel: hidesLabel, maxLength: maxLength,
@@ -224,20 +273,22 @@ struct MTSelectGroup<Value: Hashable>: Hashable {
 }
 
 /// A labeled single choice presented as a native menu with a check beside the selection.
+/// Specified in packages/design-system/components/select-field.yaml.
 struct MTSelectField<Value: Hashable>: View {
   let label: String
   @Binding var selection: Value
   let groups: [MTSelectGroup<Value>]
   let title: (Value) -> String
-  var size: MTFieldSize = .medium
-  var isRequired = false
+  var size: MTSelectFieldSize
+  var isRequired: Bool
   var note: String?
-  var hidesLabel = false
+  var hidesLabel: Bool
 
   init(
     label: String, selection: Binding<Value>, options: [Value], title: @escaping (Value) -> String,
-    size: MTFieldSize = .medium, isRequired: Bool = false, note: String? = nil,
-    hidesLabel: Bool = false
+    size: MTSelectFieldSize = MTSelectFieldDefaults.size,
+    isRequired: Bool = MTSelectFieldDefaults.isRequired, note: String? = nil,
+    hidesLabel: Bool = MTSelectFieldDefaults.hidesLabel
   ) {
     self.init(
       label: label, selection: selection, groups: [MTSelectGroup(options: options)], title: title,
@@ -246,8 +297,9 @@ struct MTSelectField<Value: Hashable>: View {
 
   init(
     label: String, selection: Binding<Value>, groups: [MTSelectGroup<Value>],
-    title: @escaping (Value) -> String, size: MTFieldSize = .medium, isRequired: Bool = false,
-    note: String? = nil, hidesLabel: Bool = false
+    title: @escaping (Value) -> String, size: MTSelectFieldSize = MTSelectFieldDefaults.size,
+    isRequired: Bool = MTSelectFieldDefaults.isRequired, note: String? = nil,
+    hidesLabel: Bool = MTSelectFieldDefaults.hidesLabel
   ) {
     self.label = label
     _selection = selection
@@ -281,11 +333,11 @@ struct MTSelectField<Value: Hashable>: View {
             .multilineTextAlignment(.leading)
           Spacer(minLength: 0)
           Image(.chevron)
-            .font(.system(size: 11, weight: .semibold))
+            .font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
             .rotationEffect(.degrees(90))
             .foregroundStyle(MTColor.inkFaint)
         }
-        .mtFieldSurface(size: size)
+        .mtFieldSurface(size: MTFieldSize(size))
       }
       .buttonStyle(.plain)
       .mtFieldAccessibility(label, isRequired: isRequired)
@@ -302,11 +354,50 @@ struct MTSelectField<Value: Hashable>: View {
   }
 }
 
+extension MTCheckboxSize {
+  fileprivate var box: CGFloat {
+    switch self {
+    case .small: MTSize.Checkbox.small
+    case .medium: MTSize.Checkbox.medium
+    }
+  }
+
+  fileprivate var radius: CGFloat {
+    switch self {
+    case .small: MTRadius.xxsmall
+    case .medium: MTRadius.checkbox
+    }
+  }
+
+  fileprivate var check: CGFloat {
+    switch self {
+    case .small: MTSize.Icon.s10
+    case .medium: MTSize.Icon.s12
+    }
+  }
+
+  fileprivate var label: Font {
+    switch self {
+    case .small: MTFont.caption
+    case .medium: MTFont.label
+    }
+  }
+
+  fileprivate var detail: Font {
+    switch self {
+    case .small: MTFont.fine
+    case .medium: MTFont.caption
+    }
+  }
+}
+
 /// A checkbox with a label and optional explanation, matching the Web form toggles.
+/// Specified in packages/design-system/components/checkbox.yaml.
 struct MTCheckbox: View {
   let title: String
   var detail: String?
   @Binding var isOn: Bool
+  var size: MTCheckboxSize = MTCheckboxDefaults.size
   @Environment(\.isEnabled) private var isEnabled
 
   var body: some View {
@@ -314,28 +405,32 @@ struct MTCheckbox: View {
       isOn.toggle()
     } label: {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
-        RoundedRectangle(cornerRadius: 5)
-          .fill(isOn ? MTColor.accent : MTColor.surface)
-          .strokeBorder(isOn ? MTColor.accent : MTColor.borderStrong, lineWidth: 1)
-          .frame(width: 20, height: 20)
+        RoundedRectangle(cornerRadius: size.radius)
+          .fill(isOn ? MTState.Selected.fill : MTColor.surface)
+          .strokeBorder(
+            isOn ? MTState.Selected.fill : MTColor.borderStrong, lineWidth: MTSize.Stroke.thin
+          )
+          .frame(width: size.box, height: size.box)
           .overlay {
             if isOn {
-              Image(.check).font(.system(size: 12, weight: .bold)).foregroundStyle(
-                MTColor.accentInk)
+              Image(.check).font(.mtIcon(size.check, weight: .bold))
+                .foregroundStyle(MTState.Selected.onFill)
             }
           }
-          .alignmentGuide(.firstTextBaseline) { $0[VerticalAlignment.center] + 5 }
-        VStack(alignment: .leading, spacing: 2) {
-          Text(title).font(MTFont.label).foregroundStyle(MTColor.ink)
+          .alignmentGuide(.firstTextBaseline) {
+            $0[VerticalAlignment.center] + MTLayout.Checkbox.baselineOffset
+          }
+        VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
+          Text(title).font(size.label).foregroundStyle(MTColor.ink)
           if let detail {
-            Text(detail).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+            Text(detail).font(size.detail).foregroundStyle(MTColor.inkMuted)
           }
         }
         Spacer(minLength: 0)
       }
-      .frame(minHeight: 44)
+      .frame(minHeight: MTSize.hitTarget)
       .contentShape(Rectangle())
-      .opacity(isEnabled ? 1 : 0.56)
+      .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.choice)
     }
     .buttonStyle(.plain)
     .accessibilityElement(children: .ignore)
@@ -348,7 +443,7 @@ struct MTCheckbox: View {
 /// Places fields in equal columns while each keeps `minimumColumnWidth`, like the Web
 /// `repeat(auto-fit, minmax(240px, 1fr))` field rows, and stacks them on narrow screens.
 struct MTFieldGrid: Layout {
-  var minimumColumnWidth: CGFloat = 240
+  var minimumColumnWidth = MTLayout.FieldGrid.minimumColumnWidth
   var spacing: CGFloat = MTSpacing.s4
 
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

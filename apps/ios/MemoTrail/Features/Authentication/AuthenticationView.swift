@@ -6,7 +6,6 @@ struct AuthenticationView: View {
   let isBusy: Bool
   let errorMessage: String?
   let signIn: @MainActor () async -> Void
-  @ScaledMetric(relativeTo: .largeTitle) private var headlineSize = 50
   #if DEBUG
     @State private var showingDesignSystem = false
   #endif
@@ -24,10 +23,10 @@ struct AuthenticationView: View {
               .accessibilityIdentifier("signed-out-design-system")
           #endif
         }
-        .padding(.top, 44)
+        .padding(.top, MTLayout.SignIn.top)
         .padding(.bottom, MTSpacing.s16)
       }
-      .frame(maxWidth: 460, alignment: .leading)
+      .frame(maxWidth: MTLayout.SignIn.width, alignment: .leading)
       .padding(.horizontal, MTSpacing.s4)
       .frame(maxWidth: .infinity)
     }
@@ -35,7 +34,7 @@ struct AuthenticationView: View {
     .background {
       // Web's warm glow near the top leading corner.
       RadialGradient(
-        colors: [MTColor.warmSubtle.opacity(0.78), MTColor.warmSubtle.opacity(0)],
+        colors: [MTColor.warmGlow, MTColor.warmGlowFade],
         center: UnitPoint(x: 0.08, y: 0.15), startRadius: 0, endRadius: 300
       )
       .background(MTColor.canvas)
@@ -56,15 +55,14 @@ struct AuthenticationView: View {
   }
 
   private var header: some View {
-    HStack(spacing: 11) {
+    HStack(spacing: MTLayout.SignIn.markGap) {
       MemoTrailMark()
-        .frame(width: 31, height: 31)
+        .frame(width: MTLayout.SignIn.headerMark, height: MTLayout.SignIn.headerMark)
       Text("MemoTrail")
-        .font(.system(size: 19, weight: .medium, design: .serif))
-        .tracking(-0.4)
+        .mtTextRole(.wordmark)
         .foregroundStyle(MTColor.ink)
     }
-    .frame(maxWidth: .infinity, minHeight: 68, alignment: .leading)
+    .frame(maxWidth: .infinity, minHeight: MTLayout.SignIn.headerHeight, alignment: .leading)
     .overlay(alignment: .bottom) { MTListDivider() }
     .accessibilityElement(children: .ignore)
     .accessibilityLabel("MemoTrail")
@@ -75,8 +73,7 @@ struct AuthenticationView: View {
     VStack(alignment: .leading, spacing: 0) {
       eyebrow("Your life, kept with context")
       Text("A quiet place for everything worth keeping.")
-        .font(.system(size: headlineSize, weight: .medium, design: .serif))
-        .tracking(-0.045 * headlineSize)
+        .mtTextRole(.hero)
         .foregroundStyle(MTColor.ink)
         .fixedSize(horizontal: false, vertical: true)
         .padding(.top, MTSpacing.s4)
@@ -95,15 +92,14 @@ struct AuthenticationView: View {
   private var signInCard: some View {
     VStack(alignment: .leading, spacing: 0) {
       MemoTrailMark()
-        .frame(width: 42, height: 42)
+        .frame(width: MTLayout.SignIn.cardMark, height: MTLayout.SignIn.cardMark)
         .accessibilityHidden(true)
       eyebrow("Personal archive")
         .padding(.top, MTSpacing.s8)
       Text("Welcome to MemoTrail")
-        .font(MTFont.title)
-        .tracking(-0.6)
+        .mtTextRole(.welcomeTitle)
         .foregroundStyle(MTColor.ink)
-        .padding(.top, 10)
+        .padding(.top, MTLayout.SignIn.titleGap)
         .accessibilityAddTraits(.isHeader)
       Text("Sign in to continue to your private space.")
         .font(MTFont.body)
@@ -114,14 +110,14 @@ struct AuthenticationView: View {
         .padding(.top, MTSpacing.s8)
       if let errorMessage {
         Text(errorMessage)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.warm)
           .fixedSize(horizontal: false, vertical: true)
           .padding(.top, MTSpacing.s3)
           .accessibilityLabel("Sign-in error: \(errorMessage)")
       }
       Text("Google verifies your identity. MemoTrail never receives your Google password.")
-        .font(.caption2)
+        .font(MTFont.note)
         .foregroundStyle(MTColor.inkFaint)
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
@@ -130,7 +126,7 @@ struct AuthenticationView: View {
     }
     .padding(MTSpacing.s6)
     .background(
-      MTColor.surfaceRaised.opacity(0.94), in: RoundedRectangle(cornerRadius: MTRadius.xlarge)
+      MTColor.surfaceRaisedTranslucent, in: RoundedRectangle(cornerRadius: MTRadius.xlarge)
     )
     .overlay {
       RoundedRectangle(cornerRadius: MTRadius.xlarge).strokeBorder(MTColor.borderStrong)
@@ -147,17 +143,17 @@ struct AuthenticationView: View {
           .font(MTFont.label)
           .foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 48)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.SignIn.controlHeight)
     case .setupRequired:
       // Web's Setup needed notice, naming the native configuration instead.
-      VStack(alignment: .leading, spacing: 5) {
+      VStack(alignment: .leading, spacing: MTSpacing.s1_25) {
         Text("Setup needed")
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
         Text(
           "Add the Supabase URL, publishable key, Google iOS client ID, and URL scheme to Secrets.xcconfig, then rebuild the app."
         )
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
         .fixedSize(horizontal: false, vertical: true)
       }
@@ -166,7 +162,7 @@ struct AuthenticationView: View {
       .background(MTColor.warmSubtle, in: RoundedRectangle(cornerRadius: MTRadius.medium))
       .overlay {
         RoundedRectangle(cornerRadius: MTRadius.medium)
-          .strokeBorder(MTColor.warning.opacity(0.35))
+          .strokeBorder(MTColor.warningBorder)
       }
       .accessibilityElement(children: .combine)
     case .signedOut, .signedIn:
@@ -177,13 +173,13 @@ struct AuthenticationView: View {
         HStack(spacing: MTSpacing.s3) {
           Image("GoogleMark")
             .resizable()
-            .frame(width: 18, height: 18)
+            .frame(width: MTLayout.SignIn.googleMark, height: MTLayout.SignIn.googleMark)
             .accessibilityHidden(true)
           Text(isBusy ? "Opening Google…" : "Continue with Google")
         }
-        .font(.subheadline.weight(.medium))
+        .font(MTFont.bodyEmphasis)
         .foregroundStyle(MTColor.ink)
-        .frame(maxWidth: .infinity, minHeight: 48)
+        .frame(maxWidth: .infinity, minHeight: MTLayout.SignIn.controlHeight)
       }
       .buttonStyle(GoogleButtonStyle())
       .disabled(isBusy)
@@ -194,9 +190,7 @@ struct AuthenticationView: View {
   /// Web's `eyebrow` and `cardEyebrow`: small uppercase accent labels.
   private func eyebrow(_ text: String) -> some View {
     Text(text)
-      .font(.caption2.weight(.semibold))
-      .tracking(1.3)
-      .textCase(.uppercase)
+      .mtTextRole(.signInEyebrow)
       .foregroundStyle(MTColor.accent)
   }
 }
@@ -213,8 +207,8 @@ private struct GoogleButtonStyle: ButtonStyle {
         shape.strokeBorder(configuration.isPressed ? MTColor.accent : MTColor.borderStrong)
       }
       .contentShape(shape)
-      .opacity(isEnabled ? 1 : 0.7)
-      .animation(.easeOut(duration: MTMotion.quick), value: configuration.isPressed)
+      .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.soft)
+      .animation(MTEasing.enter.animation(duration: MTMotion.quick), value: configuration.isPressed)
   }
 }
 

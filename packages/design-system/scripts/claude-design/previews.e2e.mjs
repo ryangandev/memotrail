@@ -3,13 +3,17 @@ import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
+import { bundled, specName } from "./catalog.mjs";
 import { compileTokens } from "./compile-tokens.mjs";
+import { loadSpecs } from "./docs.mjs";
+import { kebabCase } from "../lib/util.mjs";
 import { cardMarker } from "./validate.mjs";
 
 // Loads each exported preview card the way the Claude Design copy frames it: the compiled tokens
 // CSS, bundle.css, React 18 UMD, and bundle.js, with data-theme on the root element. Every card
 // must render in both themes without console errors, fit its declared height, and fit the card
-// width. Screenshots land in dist/claude-design/screenshots.
+// width. A card made from a spec shows each of its specimens in every value the specimen covers.
+// Screenshots land in dist/claude-design/screenshots.
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const output = resolve(
@@ -22,6 +26,18 @@ const cardWidth = 640;
 // Card heights in catalog.mjs leave a little room for font differences, but not a blank band.
 const maximumSlack = 80;
 const require = createRequire(import.meta.url);
+// The specs the export was made from; CLAUDE_DESIGN_SPECS matches an export made with --specs.
+const rendered = new Set(bundled.map((component) => component.name));
+const specs = new Map(
+  (
+    await loadSpecs(
+      resolve(
+        process.env.CLAUDE_DESIGN_SPECS ?? join(packageRoot, "components"),
+      ),
+      packageRoot,
+    )
+  ).map((spec) => [spec.name, spec]),
+);
 
 if (!existsSync(join(project, "tokens.json"))) {
   throw new Error(
@@ -149,6 +165,28 @@ for (const card of cards) {
         path: join(screenshots, `${card.name}-${theme}.png`),
         animations: "disabled",
       });
+
+      // A spec-only card describes the spec instead of rendering the component.
+      const component = bundled.find(({ name }) => name === card.name);
+      const spec = specs.get(component ? specName(component) : card.name);
+      if (spec && rendered.has(card.name)) {
+        const marker = `[data-ui-${kebabCase(spec.name)}]`;
+        for (const specimen of spec.specimens) {
+          const section = page.locator(`[data-specimen="${specimen.id}"]`);
+          await expect(section, `${specimen.id} is on the card`).toHaveCount(1);
+          await expect(section).toContainText(specimen.description.trim());
+          for (const [prop, values] of Object.entries(specimen.covers)) {
+            for (const value of values) {
+              await expect(
+                section
+                  .locator(`${marker}[data-${kebabCase(prop)}="${value}"]`)
+                  .first(),
+                `${specimen.id} draws ${prop} ${value}`,
+              ).toBeVisible();
+            }
+          }
+        }
+      }
 
       expect(size.elements, "the card renders elements").toBeGreaterThan(1);
       expect(problems, "console and network problems").toEqual([]);

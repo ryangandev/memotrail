@@ -42,7 +42,7 @@ struct VehicleDetailView: View {
             ProgressView().tint(MTColor.accent)
             Text("Loading this Vehicle...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
           }
-          .frame(maxWidth: .infinity, minHeight: 180)
+          .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
         }
       } else if let message = controller.loadErrorMessage {
         MTPage(width: .compact) {

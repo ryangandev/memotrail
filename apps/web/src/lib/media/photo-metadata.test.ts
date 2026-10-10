@@ -8,7 +8,11 @@ import {
 import { readPhotoMetadata } from "./metadata-worker";
 import { resolveOccurrenceDraft } from "@/lib/data/occurrence";
 
-describe("camera metadata suggestions", () => {
+// Two tests load libvips through sharp and encode real images, which can pass
+// Vitest's 5 second default while the machine runs builds in parallel.
+const codecTimeout = 20_000;
+
+describe("camera metadata suggestions", { timeout: codecTimeout }, () => {
   it("preserves camera wall time and subsecond text without inventing a timezone", () => {
     const value = normalizePhotoMetadata({
       DateTimeOriginal: "2017:07:08 00:30:20",

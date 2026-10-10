@@ -12,6 +12,10 @@ function subscribeToHydration() {
   return () => {};
 }
 
+/**
+ * A required native select of IANA time zones, with offsets from the reference date. The caller
+ * labels and styles it. Specified in packages/design-system/components/time-zone-field.yaml.
+ */
 export function TimezoneSelect({
   ariaLabel,
   className,
@@ -44,6 +48,7 @@ export function TimezoneSelect({
     <select
       aria-label={ariaLabel}
       className={className}
+      data-ui-time-zone-field
       disabled={disabled}
       onChange={onChange}
       required

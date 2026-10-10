@@ -19,7 +19,7 @@
 
 .loadingCards > * {
   min-height: 180px;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .loadingLabel {

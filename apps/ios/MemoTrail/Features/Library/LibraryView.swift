@@ -118,10 +118,10 @@ struct LibraryView: View {
       Button("Search", action: searchNow)
         .mtButtonStyle(fillsWidth: true)
         .accessibilityIdentifier("library-search")
-      VStack(alignment: .leading, spacing: 6) {
+      VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
         MTBadge(title: "Keyword search", size: .medium)
         Text("Titles, notes, local dates, Collections, tags, and structured details")
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkFaint)
         if controller.hasCriteria || controller.isShowingResults {
           Button("Clear all") {
@@ -130,10 +130,10 @@ struct LibraryView: View {
             showsFilters = false
           }
           .buttonStyle(.plain)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .underline()
           .foregroundStyle(MTColor.accent)
-          .frame(minHeight: 32)
+          .frame(minHeight: MTLayout.InlineAction.height)
           .contentShape(Rectangle())
           .accessibilityIdentifier("library-clear-search")
         }
@@ -147,11 +147,11 @@ struct LibraryView: View {
   private var filters: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s4) {
       Button {
-        withAnimation(.easeOut(duration: MTMotion.quick)) { showsFilters.toggle() }
+        withAnimation(MTEasing.enter.animation(duration: MTMotion.quick)) { showsFilters.toggle() }
       } label: {
-        HStack(spacing: 6) {
+        HStack(spacing: MTSpacing.s1_5) {
           Image(systemName: "arrowtriangle.right.fill")
-            .font(.system(size: 8))
+            .font(.mtIcon(MTSize.Icon.s8))
             .rotationEffect(.degrees(showsFilters ? 90 : 0))
           Text(
             controller.activeFilterCount > 0
@@ -159,7 +159,7 @@ struct LibraryView: View {
         }
         .font(MTFont.caption)
         .foregroundStyle(MTColor.accent)
-        .frame(minHeight: 36)
+        .frame(minHeight: MTLayout.InlineAction.disclosureHeight)
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
@@ -193,7 +193,7 @@ struct LibraryView: View {
       }
       if let message = controller.filtersErrorMessage {
         Text(message)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.warm)
       }
     }
@@ -208,13 +208,13 @@ struct LibraryView: View {
         path.append(.history)
       } label: {
         HStack(spacing: MTSpacing.s2) {
-          Image(.clock).font(.system(size: 15))
+          Image(.clock).font(.mtIcon(MTSize.Icon.s15))
           Text("Version history")
-          Image(.chevron).font(.system(size: 12, weight: .semibold))
+          Image(.chevron).font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
         }
         .font(MTFont.caption)
         .foregroundStyle(MTColor.accent)
-        .frame(minHeight: 44)
+        .frame(minHeight: MTSize.hitTarget)
         .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
@@ -260,16 +260,16 @@ private struct LibraryBrowse: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      MTListHeader(
-        "All items",
+      MTSectionHeader(
+        "All items", variant: .list,
         detail: controller.hasLoaded
           ? countLabel(controller.totalCount, "item") : nil,
-        alignsDetailTrailing: true)
+        detailAlign: .end)
       if !controller.hasLoaded {
         ProgressView("Loading your Life Wiki...")
           .font(MTFont.caption)
           .tint(MTColor.accent)
-          .frame(maxWidth: .infinity, minHeight: 140)
+          .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.list)
       } else if let message = controller.errorMessage, controller.items.isEmpty {
         LibraryMessage(title: "Life Wiki unavailable", message: message) {
           Button("Try again") { Task { await controller.loadItems() } }
@@ -289,7 +289,11 @@ private struct LibraryBrowse: View {
         .padding(MTSpacing.s8)
         .overlay {
           RoundedRectangle(cornerRadius: MTRadius.large)
-            .strokeBorder(MTColor.borderStrong, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+            .strokeBorder(
+              MTColor.borderStrong,
+              style: StrokeStyle(
+                lineWidth: MTSize.Stroke.thin,
+                dash: [MTLayout.DashedBorder.dash, MTLayout.DashedBorder.gap]))
         }
       } else {
         VStack(spacing: 0) {
@@ -322,7 +326,7 @@ private struct LibraryItemRow: View {
             }
           }
           Text(item.dateLabel)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkFaint)
             .lineLimit(1)
             .fixedSize()
@@ -331,10 +335,10 @@ private struct LibraryItemRow: View {
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
-          .padding(.top, 2)
+          .padding(.top, MTSpacing.s0_5)
         if !item.excerpt.trimmed.isEmpty {
           Text(item.excerpt)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
             .lineLimit(1)
         }
@@ -363,7 +367,7 @@ private struct LibraryResults: View {
         ProgressView("Searching your Life Wiki...")
           .font(MTFont.caption)
           .tint(MTColor.accent)
-          .frame(maxWidth: .infinity, minHeight: 140)
+          .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.list)
       } else {
         LibraryMessage(
           title: "No matching items",
@@ -371,8 +375,8 @@ private struct LibraryResults: View {
       }
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
-        MTListHeader(
-          "Results",
+        MTSectionHeader(
+          "Results", variant: .list,
           detail: countLabel(controller.resultCount, "item")
         ) {
           if controller.isSearching {
@@ -402,21 +406,21 @@ private struct LibraryResultCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: action) {
-        VStack(alignment: .leading, spacing: 6) {
-          MTFlowLayout(spacing: 6) {
+        VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
+          MTFlowLayout(spacing: MTSpacing.s1_5) {
             MTBadge(title: entry.identityLabel, tone: .neutral)
             if entry.isInInbox { MTBadge(title: "In Inbox", tone: .warm) }
           }
           Text(entry.displayDate)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkFaint)
           Text(entry.displayTitle)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
-            .underline(color: MTColor.ink.opacity(0.7))
+            .underline(color: MTColor.inkUnderline)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, 6)
+            .padding(.top, MTSpacing.s1_5)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
@@ -438,17 +442,19 @@ private struct LibraryResultCard: View {
       }
       if entry.hasLongNote {
         Button {
-          withAnimation(.easeOut(duration: MTMotion.quick)) { showsFullNote.toggle() }
+          withAnimation(MTEasing.enter.animation(duration: MTMotion.quick)) {
+            showsFullNote.toggle()
+          }
         } label: {
-          HStack(spacing: 6) {
+          HStack(spacing: MTSpacing.s1_5) {
             Image(systemName: "arrowtriangle.right.fill")
-              .font(.system(size: 7))
+              .font(.mtIcon(MTSize.Icon.s7))
               .rotationEffect(.degrees(showsFullNote ? 90 : 0))
             Text("Read full note")
           }
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.accent)
-          .frame(minHeight: 32)
+          .frame(minHeight: MTLayout.InlineAction.height)
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -465,7 +471,7 @@ private struct LibraryResultCard: View {
         }
       }
       if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
-        MTFlowLayout(spacing: 6) {
+        MTFlowLayout(spacing: MTSpacing.s1_5) {
           ForEach(entry.collectionNames, id: \.self) { MTBadge(title: $0, tone: .neutral) }
           ForEach(entry.tagNames, id: \.self) { MTBadge(title: "#\($0)", tone: .neutral) }
         }
@@ -478,21 +484,21 @@ private struct LibraryResultCard: View {
       if !entry.matchReasons.isEmpty {
         HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
           Text("MATCHED IN")
-            .font(.caption2)
+            .font(MTFont.note)
             .foregroundStyle(MTColor.inkFaint)
           // Web's reasons: 5 points apart, with quiet dots between neighbors on a line.
-          MTFlowLayout(spacing: 5) {
+          MTFlowLayout(spacing: MTSpacing.s1_25) {
             ForEach(entry.matchReasons, id: \.self) { reason in
               MTFlowSeparator().foregroundStyle(MTColor.borderStrong)
               Text(reason).foregroundStyle(MTColor.accent)
             }
           }
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
         }
         .padding(.top, MTSpacing.s3)
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(alignment: .top) {
-          Rectangle().fill(MTColor.border.opacity(0.7)).frame(height: 1)
+          Rectangle().fill(MTColor.borderFaint).frame(height: MTSize.Stroke.thin)
         }
         .padding(.top, MTSpacing.s4)
         .accessibilityElement(children: .ignore)
@@ -518,7 +524,7 @@ private struct LibraryMessage<Actions: View>: View {
   var body: some View {
     HStack(alignment: .top, spacing: MTSpacing.s4) {
       Image(.search)
-        .font(.system(size: 21, weight: .medium))
+        .font(.mtIcon(MTSize.Icon.s21, weight: .medium))
         .foregroundStyle(MTColor.accent)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: MTSpacing.s2) {
@@ -534,14 +540,18 @@ private struct LibraryMessage<Actions: View>: View {
       .fixedSize(horizontal: false, vertical: true)
       Spacer(minLength: 0)
     }
-    .frame(maxWidth: .infinity, minHeight: 164, alignment: .topLeading)
+    .frame(maxWidth: .infinity, minHeight: MTLayout.Library.emptyHeight, alignment: .topLeading)
     .padding(MTSpacing.s6)
     .background(
-      MTColor.surfaceSubtle.opacity(0.42), in: RoundedRectangle(cornerRadius: MTRadius.large)
+      MTColor.surfaceWash, in: RoundedRectangle(cornerRadius: MTRadius.large)
     )
     .overlay {
       RoundedRectangle(cornerRadius: MTRadius.large)
-        .strokeBorder(MTColor.borderStrong, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+        .strokeBorder(
+          MTColor.borderStrong,
+          style: StrokeStyle(
+            lineWidth: MTSize.Stroke.thin,
+            dash: [MTLayout.DashedBorder.dash, MTLayout.DashedBorder.gap]))
     }
     .accessibilityElement(children: .contain)
   }

@@ -1,0 +1,67 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Icon
+
+platforms:
+  web:
+    path: apps/web/src/components/icon.tsx
+    symbols: [Icon]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Generated/DesignTokens.swift
+    symbols: [MTIcon]
+
+purpose: One glyph from the shared icon vocabulary, drawn at a size from the size.icon scale in the color of the text around it.
+
+use:
+  - A leading icon in a Button, a menu row, or a navigation item, beside its label.
+  - The only content of an IconButton, which carries the label.
+  - Status and kind markers, such as the photo count on a pending capture or a toast's tone.
+
+avoid:
+  - Conveying meaning on its own. Pair it with visible text, or put it in an IconButton with a label.
+  - Glyphs outside packages/design-system/icons.json. Add the name there first, with its SF Symbol.
+  - Illustration or decoration at large sizes. Use a photo, the brand mark, or an empty state.
+
+anatomy:
+  glyph: The drawn symbol. Web strokes an SVG path from icons.json; iOS draws the SF Symbol icons.json maps the name to.
+
+props: {}
+
+states: [default]
+
+tokens:
+  - glyph:
+      size: { web: "{size.icon.18}" }
+      borderWidth: { web: "{size.stroke.icon}" }
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: asWritten
+  length: An icon has no text of its own. Names come from icons.json, such as calendar, close, or sparkle, and describe the glyph rather than one use of it.
+  notes:
+    - Choose the name for what the glyph shows, and let the surrounding label say what the action does.
+
+accessibility:
+  role: None. Web draws an aria-hidden SVG, and on iOS the enclosing Label, Button, or MTIconButton supplies the accessible name, so VoiceOver never reads the symbol name.
+  label: The text beside the icon, or the label of the IconButton that holds it. An icon never needs a label of its own.
+  focus: Never focusable; the control around it takes focus.
+  minimumHitTarget: notInteractive
+  dynamicType: Web icons keep their pixel size and grow with browser zoom. iOS icons drawn with Font.mtIcon keep their point size; icons inside a Label follow the label's text style.
+
+platformDifferences:
+  - difference: Web draws the stroked SVG paths in icons.json; iOS draws the SF Symbol each name maps to.
+    reason: SF Symbols match the system's weight, optical sizing, and accessibility, and the shared names keep both platforms choosing the same glyph for the same meaning.
+  - difference: A few names draw only on iOS, and Web has no glyph for them yet.
+    reason: icons.json marks those names iOS-only, and the Web IconName type leaves them out so a Web caller cannot draw a missing glyph.
+  - difference: Web sizes an icon with a size prop from the size.icon scale, 18 px by default; iOS sets the size through the font, usually Font.mtIcon with an MTSize.Icon value, or the label's text style.
+    reason: An SVG needs a box size, and an SF Symbol is sized like text.
+  - difference: An SF Symbol fills more of its point size than a stroked SVG fills its box, so native callers often use the next smaller step of the scale.
+    reason: The SVG paths keep padding inside their 24 unit view box; matching the drawn size, not the number, keeps icons optically equal.
+
+specimens:
+  - id: icon-set
+    description: Every icon the platform draws, at 20, each with its name and a mark on those that draw on only one platform.
+  - id: icon-sizes
+    description: The calendar icon at 14, 16, 18, and 24 on the size.icon scale.
+  - id: icon-color
+    description: Icons take the color of their text, shown beside ink, muted, accent, and warm labels.

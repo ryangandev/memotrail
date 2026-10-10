@@ -84,7 +84,7 @@ struct EntryPhotoDatesView: View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       HStack(alignment: .center, spacing: MTSpacing.s3) {
         Text("Photos & camera dates")
-          .font(MTFont.label.weight(.semibold))
+          .font(MTFont.listHeading)
           .foregroundStyle(MTColor.ink)
           .accessibilityAddTraits(.isHeader)
         Spacer(minLength: 0)
@@ -106,7 +106,7 @@ struct EntryPhotoDatesView: View {
         HStack(alignment: .top, spacing: MTSpacing.s3) {
           if let url = validImageURL(photo) {
             MTRemoteImage(url: url, accessibilityLabel: photo.name)
-              .frame(width: 80, height: 100)
+              .frame(width: MTLayout.PhotoDate.thumbWidth, height: MTLayout.PhotoDate.thumbHeight)
               .clipShape(RoundedRectangle(cornerRadius: MTRadius.small))
           }
           VStack(alignment: .leading, spacing: MTSpacing.s2) {
@@ -129,7 +129,7 @@ struct EntryPhotoDatesView: View {
       }
       if let errorMessage {
         Text(errorMessage)
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.warm)
       }
       if photoPlace != nil {
@@ -142,7 +142,8 @@ struct EntryPhotoDatesView: View {
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Photo date suggestions")
@@ -188,7 +189,7 @@ struct EntryPhotoDatesView: View {
 
   private func caption(_ text: String) -> some View {
     Text(text)
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .mtLineSpacing(MTLineHeight.body)
       .fixedSize(horizontal: false, vertical: true)
@@ -239,17 +240,17 @@ private struct PhotoPlaceDraftEditor: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       Text("Photo Location to add when you save")
-        .font(MTFont.label.weight(.semibold))
+        .font(MTFont.listHeading)
         .foregroundStyle(MTColor.ink)
       Text(
         "The photo’s GPS position will be saved for this Entry after you confirm. No address or personal Location name is inferred."
       )
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .fixedSize(horizontal: false, vertical: true)
       if let latitude = value?.latitude, let longitude = value?.longitude {
         Text(String(format: "%.5f, %.5f", latitude, longitude))
-          .font(MTFont.caption.weight(.regular).monospacedDigit())
+          .font(MTFont.detail.monospacedDigit())
           .foregroundStyle(MTColor.inkMuted)
           .textSelection(.enabled)
       }
@@ -259,7 +260,8 @@ private struct PhotoPlaceDraftEditor: View {
     .padding(MTSpacing.s3)
     .frame(maxWidth: .infinity, alignment: .leading)
     .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.small).strokeBorder(MTColor.border, lineWidth: 1)
+      RoundedRectangle(cornerRadius: MTRadius.small).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .padding(.top, MTSpacing.s1)
   }

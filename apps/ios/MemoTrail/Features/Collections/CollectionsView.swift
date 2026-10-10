@@ -64,7 +64,7 @@ struct CollectionsView: View {
         ProgressView().tint(MTColor.accent)
         Text("Loading your Collections...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
       }
-      .frame(maxWidth: .infinity, minHeight: 180)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
     } else if let message = controller.loadErrorMessage {
       MTEmptyState(title: "Collections unavailable", message: message, icon: .archive) {
         Button("Try again") { Task { await controller.load() } }
@@ -85,13 +85,13 @@ struct CollectionsView: View {
         MTFlowSeparator()
         Text(countLabel(controller.entryPlacementCount, "Entry placement"))
       }
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkFaint)
       .accessibilityElement(children: .contain)
       .accessibilityLabel("Collections summary")
       // Web's grid: one column on phones, up to four on wide screens.
       LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 200), spacing: MTSpacing.s3)],
+        columns: [GridItem(.adaptive(minimum: MTLayout.Grid.collection), spacing: MTSpacing.s3)],
         spacing: MTSpacing.s3
       ) {
         ForEach(controller.collections) { collection in

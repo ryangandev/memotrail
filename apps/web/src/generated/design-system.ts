@@ -11,6 +11,7 @@ export const iconNames = [
   "car",
   "check",
   "chevron",
+  "chevronDown",
   "clock",
   "close",
   "code",
@@ -55,6 +56,31 @@ export type IconElement = readonly [
 export const iconViewBox = "0 0 24 24";
 
 export const iconStrokeWidth = 1.7;
+
+/** Icon sizes in px. An icon's size must be one of these, so it stays on the size.icon scale. */
+export const iconSizes = {
+  7: 7,
+  8: 8,
+  10: 10,
+  11: 11,
+  12: 12,
+  13: 13,
+  14: 14,
+  15: 15,
+  16: 16,
+  17: 17,
+  18: 18,
+  19: 19,
+  20: 20,
+  21: 21,
+  22: 22,
+  23: 23,
+  24: 24,
+  25: 25,
+  30: 30,
+} as const;
+
+export type IconSize = keyof typeof iconSizes;
 
 export type IconElements = Readonly<Record<IconName, readonly IconElement[]>>;
 
@@ -102,6 +128,7 @@ export const iconElements: IconElements = {
   ],
   check: [["path", { d: "m5 12 4 4L19 6" }]],
   chevron: [["path", { d: "m9 18 6-6-6-6" }]],
+  chevronDown: [["path", { d: "m7 10 5 5 5-5" }]],
   clock: [
     ["circle", { cx: "12", cy: "12", r: "9" }],
     ["path", { d: "M12 7v5l3 2" }],
@@ -303,10 +330,14 @@ export const typeRoles = [
   "heroCompact",
   "display",
   "title",
+  "welcomeTitle",
+  "goalCardTitle",
+  "recordCardTitle",
   "sheetTitle",
   "recordTitle",
   "titleSmall",
   "cardTitle",
+  "composerTitle",
   "wordmark",
   "sectionTitle",
   "heading",
@@ -317,11 +348,29 @@ export const typeRoles = [
   "label",
   "listHeading",
   "caption",
+  "tagline",
+  "pageEyebrow",
+  "legend",
   "micro",
+  "signInEyebrow",
+  "menuHeading",
   "eyebrow",
+  "navigationLabel",
+  "columnHeading",
+  "filterLabel",
+  "statusLabel",
+  "factLabel",
   "fine",
   "stamp",
+  "dateStamp",
+  "firstTimeDate",
   "nano",
+  "badgeMicro",
+  "badgeSmall",
+  "badgeMedium",
+  "badgeMicroCaps",
+  "badgeSmallCaps",
+  "badgeMediumCaps",
 ] as const;
 
 export type TypeRole = (typeof typeRoles)[number];
@@ -359,6 +408,24 @@ export const breakpoints = {
 
 /** Container query widths in px. */
 export const containerWidths = { 440: 440, 620: 620, 1000: 1000 } as const;
+
+/** Durations in ms, for code that times itself rather than reading a CSS variable, such as a toast. */
+export const durations = {
+  labelFade: 100,
+  quick: 120,
+  composerEnter: 160,
+  standard: 180,
+  sidebar: 240,
+  deliberate: 280,
+  markTurn: 320,
+  loadingSpin: 700,
+  spin: 800,
+  progressSweep: 850,
+  pulse: 1100,
+  shimmer: 1250,
+  toast: 4500,
+  toastError: 8000,
+} as const;
 
 /** Stacking order (z-index) by layer. */
 export const layers = {
@@ -433,6 +500,7 @@ export const themeColors = {
     surfaceRaisedTranslucent: "rgb(255 255 255 / 0.94)",
     skeletonHighlight: "rgb(255 255 255 / 0.72)",
     borderFaint: "rgb(220 214 201 / 0.7)",
+    paletteBorder: "rgb(199 191 175 / 0.82)",
     inkUnderline: "rgb(38 37 31 / 0.7)",
     scrollbar: "rgb(113 109 99 / 0.38)",
     scrimFaint: "rgb(38 37 31 / 0.12)",
@@ -452,6 +520,7 @@ export const themeColors = {
       pin: "#526F60",
       pinInk: "#FFFFFF",
     },
+    brand: { ring: "#315E4F", accent: "#A76346", innerRing: "#82AD98" },
   },
   dark: {
     canvas: "#171816",
@@ -502,6 +571,7 @@ export const themeColors = {
     surfaceRaisedTranslucent: "rgb(38 40 36 / 0.94)",
     skeletonHighlight: "rgb(38 40 36 / 0.72)",
     borderFaint: "rgb(57 59 53 / 0.7)",
+    paletteBorder: "rgb(75 78 70 / 0.82)",
     inkUnderline: "rgb(238 234 223 / 0.7)",
     scrollbar: "rgb(180 175 163 / 0.38)",
     scrimFaint: "rgb(0 0 0 / 0.12)",
@@ -521,5 +591,707 @@ export const themeColors = {
       pin: "#526F60",
       pinInk: "#FFFFFF",
     },
+    brand: { ring: "#315E4F", accent: "#A76346", innerRing: "#82AD98" },
   },
 } as const;
+
+// Badge, from packages/design-system/components/badge.yaml.
+
+/** The badge's color treatment. Glass and inverse tones are for photos and maps; success and danger are for outcomes. */
+export const badgeTones = [
+  "accent",
+  "neutral",
+  "warm",
+  "success",
+  "danger",
+  "outline",
+  "inverse",
+  "solidAccent",
+  "glassAccent",
+  "glassNeutral",
+] as const;
+
+export type BadgeTone = (typeof badgeTones)[number];
+
+/** The badge's text size. Micro fits dense cards, small is the default, and medium sits beside 22 px controls. */
+export const badgeSizes = ["micro", "small", "medium"] as const;
+
+export type BadgeSize = (typeof badgeSizes)[number];
+
+/** Badge prop defaults. */
+export const badgeDefaults = {
+  tone: "accent",
+  size: "small",
+  uppercase: false,
+} as const;
+
+// Button, from packages/design-system/components/button.yaml.
+
+/** The action's emphasis. Primary is the main action, secondary an alternative, ghost a quiet one, and danger a destructive one. */
+export const buttonVariants = [
+  "primary",
+  "secondary",
+  "ghost",
+  "danger",
+] as const;
+
+export type ButtonVariant = (typeof buttonVariants)[number];
+
+/** The control's height, padding, and text size. Small fits dense rows and toolbars, and large stands alone. */
+export const buttonSizes = ["small", "medium", "large"] as const;
+
+export type ButtonSize = (typeof buttonSizes)[number];
+
+/** Button prop defaults. */
+export const buttonDefaults = {
+  variant: "primary",
+  size: "medium",
+  loading: false,
+} as const;
+
+// CaptureComposer, from packages/design-system/components/capture-composer.yaml.
+
+/** Where the composer sits. Page is a raised card with its own question, on the Home Dashboard; dialog is the open body of Quick Capture, which titles it. */
+export const captureComposerVariants = ["page", "dialog"] as const;
+
+export type CaptureComposerVariant = (typeof captureComposerVariants)[number];
+
+/** CaptureComposer prop defaults. */
+export const captureComposerDefaults = { variant: "page" } as const;
+
+// Checkbox, from packages/design-system/components/checkbox.yaml.
+
+/** The box and text size. Small fits dense option rows under a field, and medium stands on its own. */
+export const checkboxSizes = ["small", "medium"] as const;
+
+export type CheckboxSize = (typeof checkboxSizes)[number];
+
+/** Checkbox prop defaults. */
+export const checkboxDefaults = { size: "medium" } as const;
+
+// DateField, from packages/design-system/components/date-field.yaml.
+
+/** The precision of the value. Day stores yyyy-MM-dd, month yyyy-MM, and year yyyy, and the calendar opens at that view. */
+export const dateFieldGranularities = ["day", "month", "year"] as const;
+
+export type DateFieldGranularity = (typeof dateFieldGranularities)[number];
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter rows, and large stands alone, as the birth date does. */
+export const dateFieldSizes = ["small", "medium", "large"] as const;
+
+export type DateFieldSize = (typeof dateFieldSizes)[number];
+
+/** DateField prop defaults. */
+export const dateFieldDefaults = {
+  granularity: "day",
+  size: "medium",
+  includeTime: false,
+  required: false,
+  editable: true,
+  hideLabel: false,
+} as const;
+
+// Dialog, from packages/design-system/components/dialog.yaml.
+
+/** The Web dialog's width. Compact holds confirmations and short choices, standard holds forms, and wide holds long reading or side-by-side content. */
+export const dialogSizes = ["compact", "standard", "wide"] as const;
+
+export type DialogSize = (typeof dialogSizes)[number];
+
+/** Dialog prop defaults. */
+export const dialogDefaults = { size: "standard", busy: false } as const;
+
+// IconButton, from packages/design-system/components/icon-button.yaml.
+
+/** The action's emphasis, with Button's variants. Ghost is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one. */
+export const iconButtonVariants = [
+  "primary",
+  "secondary",
+  "ghost",
+  "danger",
+] as const;
+
+export type IconButtonVariant = (typeof iconButtonVariants)[number];
+
+/** The square's side. Small fits dense rows and composer headers, and large stands alone. */
+export const iconButtonSizes = ["small", "medium", "large"] as const;
+
+export type IconButtonSize = (typeof iconButtonSizes)[number];
+
+/** IconButton prop defaults. */
+export const iconButtonDefaults = {
+  variant: "ghost",
+  size: "medium",
+  loading: false,
+} as const;
+
+// Image, from packages/design-system/components/image.yaml.
+
+/** How the photo fills the frame. Cover crops it to fill, for thumbnails and cards; contain shows it whole, for viewing a photo. */
+export const imageFits = ["cover", "contain"] as const;
+
+export type ImageFit = (typeof imageFits)[number];
+
+/** Image prop defaults. */
+export const imageDefaults = { fit: "cover" } as const;
+
+// PageFrame, from packages/design-system/components/page-frame.yaml.
+
+/** The page's maximum width. Compact suits forms and focused reading, standard lists and search, wide dashboards and card grids, and canvas dense spatial views. */
+export const pageFrameVariants = [
+  "compact",
+  "standard",
+  "wide",
+  "canvas",
+] as const;
+
+export type PageFrameVariant = (typeof pageFrameVariants)[number];
+
+/** PageFrame prop defaults. */
+export const pageFrameDefaults = { variant: "standard" } as const;
+
+// RichText, from packages/design-system/components/rich-text.yaml.
+
+/** How the editor sits on its surface. Form is a bordered field among other fields; embedded draws no field, because a host such as the capture composer already draws the surface. */
+export const richTextVariants = ["form", "embedded"] as const;
+
+export type RichTextVariant = (typeof richTextVariants)[number];
+
+/** RichText prop defaults. */
+export const richTextDefaults = { variant: "form" } as const;
+
+// SearchField, from packages/design-system/components/search-field.yaml.
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter panels, and large leads a page or the command palette. */
+export const searchFieldSizes = ["small", "medium", "large"] as const;
+
+export type SearchFieldSize = (typeof searchFieldSizes)[number];
+
+/** SearchField prop defaults. */
+export const searchFieldDefaults = {
+  size: "medium",
+  hideLabel: false,
+} as const;
+
+// SectionHeader, from packages/design-system/components/section-header.yaml.
+
+/** The heading's weight. Section is a serif title for a region of content; list is the small uppercase heading above a list. */
+export const sectionHeaderVariants = ["section", "list"] as const;
+
+export type SectionHeaderVariant = (typeof sectionHeaderVariants)[number];
+
+/** Where the detail sits. Start keeps it beside the title, for a count; end moves it to the far edge, for a total that lines up with the list below. */
+export const sectionHeaderDetailAligns = ["start", "end"] as const;
+
+export type SectionHeaderDetailAlign = (typeof sectionHeaderDetailAligns)[number];
+
+/** SectionHeader prop defaults. */
+export const sectionHeaderDefaults = {
+  variant: "section",
+  detailAlign: "start",
+} as const;
+
+// SelectField, from packages/design-system/components/select-field.yaml.
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter rows, and large stands alone. */
+export const selectFieldSizes = ["small", "medium", "large"] as const;
+
+export type SelectFieldSize = (typeof selectFieldSizes)[number];
+
+/** SelectField prop defaults. */
+export const selectFieldDefaults = {
+  size: "medium",
+  required: false,
+  hideLabel: false,
+} as const;
+
+// SeparatedList, from packages/design-system/components/separated-list.yaml.
+
+/** Which edge the lines share. Start fits facts read from the leading edge; end lines them up with a trailing edge, such as attribution under a list. */
+export const separatedListAligns = ["start", "end"] as const;
+
+export type SeparatedListAlign = (typeof separatedListAligns)[number];
+
+/** The gap around each separator. Default leaves room for focus rings, for links and buttons; word reads like a sentence, for plain text. */
+export const separatedListSpacings = ["default", "word"] as const;
+
+export type SeparatedListSpacing = (typeof separatedListSpacings)[number];
+
+/** SeparatedList prop defaults. */
+export const separatedListDefaults = {
+  align: "start",
+  spacing: "default",
+} as const;
+
+// Skeleton, from packages/design-system/components/skeleton.yaml.
+
+/** The placeholder's shape. Fill takes the whole container, like a photo still arriving; block is a card or paragraph; line is one line of text; circle is an avatar. */
+export const skeletonShapes = ["fill", "block", "line", "circle"] as const;
+
+export type SkeletonShape = (typeof skeletonShapes)[number];
+
+/** Skeleton prop defaults. */
+export const skeletonDefaults = { shape: "block", animated: true } as const;
+
+// TextField, from packages/design-system/components/text-field.yaml.
+
+/** The control's height and corner radius, from the size.field scale. Small fits filter rows and compact panels, and large stands alone. */
+export const textFieldSizes = ["small", "medium", "large"] as const;
+
+export type TextFieldSize = (typeof textFieldSizes)[number];
+
+/** TextField prop defaults. */
+export const textFieldDefaults = {
+  size: "medium",
+  required: false,
+  hideLabel: false,
+} as const;
+
+// Toast, from packages/design-system/components/toast.yaml.
+
+/** What happened. Success confirms a change, info reports a neutral outcome, and error reports a failure, in the warm color and for longer. */
+export const toastTones = ["success", "info", "error"] as const;
+
+export type ToastTone = (typeof toastTones)[number];
+
+/** Toast prop defaults. */
+export const toastDefaults = { tone: "info" } as const;
+
+// UploadProgress, from packages/design-system/components/upload-progress.yaml.
+
+/** Where the progress shows. Inline sits in a form beside its label and count; overlay covers a photo tile with a scrim and shows only the ring. */
+export const uploadProgressVariants = ["inline", "overlay"] as const;
+
+export type UploadProgressVariant = (typeof uploadProgressVariants)[number];
+
+/** UploadProgress prop defaults. */
+export const uploadProgressDefaults = { variant: "inline" } as const;
+
+/** Every spec's gallery specimens. The gallery marks each with data-specimen="<id>". */
+export const componentSpecimens = [
+  {
+    component: "Badge",
+    id: "badge-tones",
+    description: "Every tone at the default small size.",
+    covers: {
+      tone: [
+        "accent",
+        "neutral",
+        "warm",
+        "success",
+        "danger",
+        "outline",
+        "inverse",
+        "solidAccent",
+        "glassAccent",
+        "glassNeutral",
+      ],
+    },
+  },
+  {
+    component: "Badge",
+    id: "badge-sizes",
+    description: "Every size in the default accent tone, beside the uppercase treatment at each size.",
+    covers: { size: ["micro", "small", "medium"] },
+  },
+  {
+    component: "Badge",
+    id: "badge-tags",
+    description: "Tags written with a leading # in Latin and CJK scripts, at the medium size Dashboard uses.",
+    covers: {},
+  },
+  {
+    component: "Badge",
+    id: "badge-truncation",
+    description: "A long label and a long tag stay on one line and truncate at the tail inside a narrow container.",
+    covers: {},
+  },
+  {
+    component: "Badge",
+    id: "badge-photo-overlay",
+    description: "Uppercase micro glass and inverse tones over a photo, where record cards place them.",
+    covers: { tone: ["glassAccent", "glassNeutral", "inverse"] },
+  },
+  {
+    component: "Button",
+    id: "button-variants",
+    description: "Every variant at the default medium size.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "Button",
+    id: "button-disabled",
+    description: "Every variant disabled, faded to the disabled opacity.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "Button",
+    id: "button-loading",
+    description: "Every variant loading, with the spinner before the label.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "Button",
+    id: "button-sizes",
+    description: "Every size in the secondary variant, each with a leading icon.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "Button",
+    id: "button-link",
+    description: "Navigation drawn as a button, with Web ButtonLink and an iOS NavigationLink.",
+    covers: {},
+  },
+  {
+    component: "CaptureComposer",
+    id: "capture-composer-page",
+    description: "The Dashboard composer as a raised card with its question, an empty note, and its actions.",
+    covers: { variant: ["page"] },
+  },
+  {
+    component: "CaptureComposer",
+    id: "capture-composer-dialog",
+    description: "The Quick Capture body without a card or question, sharing the same draft.",
+    covers: { variant: ["dialog"] },
+  },
+  {
+    component: "Checkbox",
+    id: "checkbox-sizes",
+    description: "Both sizes, unchecked and checked, with a description on each checked one.",
+    covers: { size: ["small", "medium"] },
+  },
+  {
+    component: "Checkbox",
+    id: "checkbox-states",
+    description: "A controlled option, a long description that wraps, disabled, and disabled while checked.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "CommandPalette",
+    id: "command-palette-destinations",
+    description: "The palette as it opens, with the search field and every destination before a query is typed.",
+    covers: {},
+  },
+  {
+    component: "DateField",
+    id: "date-field-precision",
+    description: "Day, month, and year precision, each with a value from the same September.",
+    covers: { granularity: ["day", "month", "year"] },
+  },
+  {
+    component: "DateField",
+    id: "date-field-with-time",
+    description: "A date with its time of day, which opens a separate time picker.",
+    covers: { granularity: ["day"] },
+  },
+  {
+    component: "DateField",
+    id: "date-field-sizes",
+    description: "Every size, from the small filter date to the large birth date.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "DateField",
+    id: "date-field-states",
+    description: "Empty with its placeholder, required, and disabled, and on Web a picker-only field that opens the calendar instead of taking typing.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-confirmation",
+    description: "A compact confirmation to remove a memory that says where it goes, with Cancel and a danger action.",
+    covers: { size: ["compact"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-form",
+    description: "A form dialog to edit a memory, with a title and a date field, and a save that keeps the dialog busy for a moment.",
+    covers: { size: ["standard"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-short-choice",
+    description: "A short choice of what to add, sized to its two options.",
+    covers: { size: ["compact"] },
+  },
+  {
+    component: "Dialog",
+    id: "dialog-long-content",
+    description: "A wide dialog whose long story scrolls while its footer stays in reach.",
+    covers: { size: ["wide"] },
+  },
+  {
+    component: "EmptyState",
+    id: "empty-state-with-action",
+    description: "An icon, a title, a description, and one action, as an empty Library shows.",
+    covers: {},
+  },
+  {
+    component: "EmptyState",
+    id: "empty-state-informational",
+    description: "A title and a description without an icon or action, for a section that fills in on its own.",
+    covers: {},
+  },
+  {
+    component: "EmptyState",
+    id: "empty-state-button",
+    description: "The whole state as one button that starts the missing record.",
+    covers: {},
+  },
+  {
+    component: "FocusedRecord",
+    id: "focused-record-home",
+    description: "A Home's page with its photos, facts, Story, and tags, and Edit beside the title.",
+    covers: {},
+  },
+  {
+    component: "IconButton",
+    id: "icon-button-variants",
+    description: "Every variant at the default medium size, with add, edit, more, and remove icons.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "IconButton",
+    id: "icon-button-sizes",
+    description: "Every size in the ghost variant, with the close icon a dialog header uses.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "IconButton",
+    id: "icon-button-states",
+    description: "A ghost action at rest, disabled, and loading, where the spinner replaces the icon.",
+    covers: { variant: ["ghost"] },
+  },
+  {
+    component: "Icon",
+    id: "icon-set",
+    description: "Every icon the platform draws, at 20, each with its name and a mark on those that draw on only one platform.",
+    covers: {},
+  },
+  {
+    component: "Icon",
+    id: "icon-sizes",
+    description: "The calendar icon at 14, 16, 18, and 24 on the size.icon scale.",
+    covers: {},
+  },
+  {
+    component: "Icon",
+    id: "icon-color",
+    description: "Icons take the color of their text, shown beside ink, muted, accent, and warm labels.",
+    covers: {},
+  },
+  {
+    component: "Image",
+    id: "image-states",
+    description: "A loaded photo, one still loading, and one that failed to load, side by side.",
+    covers: {},
+  },
+  {
+    component: "Image",
+    id: "image-fit",
+    description: "The same tall photo cropped to fill a wide frame and shown whole inside it.",
+    covers: { fit: ["cover", "contain"] },
+  },
+  {
+    component: "PageFrame",
+    id: "page-frame-widths",
+    description: "Every width variant with its maximum width and the pages it suits.",
+    covers: { variant: ["compact", "standard", "wide", "canvas"] },
+  },
+  {
+    component: "PageHeader",
+    id: "page-header-full",
+    description: "An eyebrow, a title, a description, and two actions beside the copy.",
+    covers: {},
+  },
+  {
+    component: "PageHeader",
+    id: "page-header-title-only",
+    description: "A title alone, as a focused page with nothing else to say opens.",
+    covers: {},
+  },
+  {
+    component: "PhotoViewer",
+    id: "photo-viewer-paged",
+    description: "Three saved Home photos that open on the second, with Previous, the position, and Next.",
+    covers: {},
+  },
+  {
+    component: "RecordCard",
+    id: "record-card-photo",
+    description: "A Home card with a cover photo and a Current badge, then its dates, name, a fact, and its organization.",
+    covers: {},
+  },
+  {
+    component: "RecordCard",
+    id: "record-card-mark",
+    description: "A Vehicle card without a photo or map, showing its mark over a soft accent wash.",
+    covers: {},
+  },
+  {
+    component: "RichText",
+    id: "rich-text-content",
+    description: "A saved note with a paragraph, emphasis, a link, a quote, and a list.",
+    covers: {},
+  },
+  {
+    component: "RichText",
+    id: "rich-text-form",
+    description: "The bordered editor with a placeholder, as in the Entry editor.",
+    covers: { variant: ["form"] },
+  },
+  {
+    component: "RichText",
+    id: "rich-text-embedded",
+    description: "The editor without a field, as inside the capture composer.",
+    covers: { variant: ["embedded"] },
+  },
+  {
+    component: "SearchField",
+    id: "search-field-sizes",
+    description: "Every size, from the compact filter search to the large page search.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "SearchField",
+    id: "search-field-hidden-label",
+    description: "A large search whose label is hidden because the page title names it, with trailing content after the query, a shortcut hint on Web and a count on iOS.",
+    covers: { size: ["large"] },
+  },
+  {
+    component: "SearchField",
+    id: "search-field-disabled",
+    description: "A disabled search, faded to the field opacity.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "SectionHeader",
+    id: "section-header-section",
+    description: "Section headers alone, with a count beside the title, with a description, and with a trailing action.",
+    covers: { variant: ["section"] },
+  },
+  {
+    component: "SectionHeader",
+    id: "section-header-list",
+    description: "List headers with a count beside the title and at the far edge, and with a trailing action.",
+    covers: { variant: ["list"], detailAlign: ["start", "end"] },
+  },
+  {
+    component: "SectionHeader",
+    id: "section-header-long",
+    description: "A long section title and its trailing action in a narrow column.",
+    covers: { variant: ["section"] },
+  },
+  {
+    component: "SelectField",
+    id: "select-field-sizes",
+    description: "Every size, from a compact sort order to a standalone default view.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "SelectField",
+    id: "select-field-groups",
+    description: "A required choice whose options sit in titled groups, after an All records option outside any group.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "SelectField",
+    id: "select-field-disabled",
+    description: "A disabled small select, faded to the field opacity.",
+    covers: { size: ["small"] },
+  },
+  {
+    component: "SeparatedList",
+    id: "separated-list-default",
+    description: "Facts and links with the default spacing, wrapping in narrower frames without a separator at a line's edge.",
+    covers: { align: ["start"], spacing: ["default"] },
+  },
+  {
+    component: "SeparatedList",
+    id: "separated-list-word",
+    description: "Plain facts with word spacing, reading like a sentence.",
+    covers: { spacing: ["word"] },
+  },
+  {
+    component: "SeparatedList",
+    id: "separated-list-end-aligned",
+    description: "Attribution links whose lines share the trailing edge.",
+    covers: { align: ["end"] },
+  },
+  {
+    component: "Skeleton",
+    id: "skeleton-shapes",
+    description: "Every shape at its default size, with a fill skeleton inside a photo-sized frame.",
+    covers: { shape: ["fill", "block", "line", "circle"] },
+  },
+  {
+    component: "Skeleton",
+    id: "skeleton-still",
+    description: "A block and two lines with the shimmer turned off, as reduced motion draws them.",
+    covers: {},
+  },
+  {
+    component: "Skeleton",
+    id: "skeleton-composed",
+    description: "A circle beside two lines and a block below them, the way a loading record row is built.",
+    covers: { shape: ["block", "line", "circle"] },
+  },
+  {
+    component: "SyncStatus",
+    id: "sync-status-counts",
+    description: "Waiting captures, a refused capture beside waiting ones, and a sync in progress.",
+    covers: {},
+  },
+  {
+    component: "TextField",
+    id: "text-field-sizes",
+    description: "Every size, holding a nickname, a preferred name, and a full name.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "TextField",
+    id: "text-field-states",
+    description: "Empty with a placeholder, required, disabled, and invalid with its message.",
+    covers: { size: ["medium"] },
+  },
+  {
+    component: "TimeZoneField",
+    id: "time-zone-field-offsets",
+    description: "The same zone on a winter and a summer reference date, each showing the offset that applied that day.",
+    covers: {},
+  },
+  {
+    component: "Toast",
+    id: "toast-tones",
+    description: "Success, info, and error, each with its icon and stripe.",
+    covers: { tone: ["success", "info", "error"] },
+  },
+  {
+    component: "Toast",
+    id: "toast-long-message",
+    description: "An error long enough to wrap onto a second line.",
+    covers: { tone: ["error"] },
+  },
+  {
+    component: "UploadProgress",
+    id: "upload-progress-inline",
+    description: "Three of five photos uploaded, with the label and count beside the ring.",
+    covers: { variant: ["inline"] },
+  },
+  {
+    component: "UploadProgress",
+    id: "upload-progress-overlay",
+    description: "The ring alone over a photo tile, as a new photo's tile shows while it uploads.",
+    covers: { variant: ["overlay"] },
+  },
+  {
+    component: "WorkspaceActionDock",
+    id: "workspace-action-dock-search",
+    description: "The dock with a capture control beside the search shortcut and its Command K hint.",
+    covers: {},
+  },
+] as const;
+
+export type ComponentSpecimen = (typeof componentSpecimens)[number];
+
+export type ComponentSpecimenId = ComponentSpecimen["id"];

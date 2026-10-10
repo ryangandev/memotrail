@@ -50,6 +50,7 @@
       "surfaceRaisedTranslucent": "rgb(255 255 255 / 0.94)",
       "skeletonHighlight": "rgb(255 255 255 / 0.72)",
       "borderFaint": "rgb(220 214 201 / 0.7)",
+      "paletteBorder": "rgb(199 191 175 / 0.82)",
       "inkUnderline": "rgb(38 37 31 / 0.7)",
       "scrollbar": "rgb(113 109 99 / 0.38)",
       "scrimFaint": "rgb(38 37 31 / 0.12)",
@@ -68,6 +69,11 @@
         "labelInk": "#4C514B",
         "pin": "#526F60",
         "pinInk": "#FFFFFF"
+      },
+      "brand": {
+        "ring": "#315E4F",
+        "accent": "#A76346",
+        "innerRing": "#82AD98"
       }
     },
     "dark": {
@@ -119,6 +125,7 @@
       "surfaceRaisedTranslucent": "rgb(38 40 36 / 0.94)",
       "skeletonHighlight": "rgb(38 40 36 / 0.72)",
       "borderFaint": "rgb(57 59 53 / 0.7)",
+      "paletteBorder": "rgb(75 78 70 / 0.82)",
       "inkUnderline": "rgb(238 234 223 / 0.7)",
       "scrollbar": "rgb(180 175 163 / 0.38)",
       "scrimFaint": "rgb(0 0 0 / 0.12)",
@@ -137,6 +144,11 @@
         "labelInk": "#E4E7DF",
         "pin": "#526F60",
         "pinInk": "#FFFFFF"
+      },
+      "brand": {
+        "ring": "#315E4F",
+        "accent": "#A76346",
+        "innerRing": "#82AD98"
       }
     }
   },
@@ -147,13 +159,19 @@
       "mono": "ui-monospace, \"SFMono-Regular\", Consolas, monospace"
     },
     "size": {
+      "nano": 9,
+      "fine": 10,
+      "micro": 11,
       "caption": 12,
       "label": 13,
+      "bodySmall": 14,
       "body": 15,
+      "callout": 16,
       "bodyLarge": 17,
       "titleSmall": 20,
       "title": 28,
-      "display": 42
+      "display": 42,
+      "inlineCode": "0.9em"
     },
     "weight": {
       "regular": 400,
@@ -163,9 +181,16 @@
     }
   },
   "lineHeight": {
+    "none": 1,
     "tight": 1.15,
+    "title": 1.3,
+    "titleRelaxed": 1.35,
+    "message": 1.5,
     "body": 1.55,
-    "relaxed": 1.7
+    "paragraph": 1.6,
+    "prose": 1.65,
+    "relaxed": 1.7,
+    "story": 1.75
   },
   "type": {
     "hero": {
@@ -202,6 +227,30 @@
       "letterSpacing": 0,
       "textCase": "none"
     },
+    "welcomeTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 28,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": -0.7,
+      "textCase": "none"
+    },
+    "goalCardTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 28,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": -0.7,
+      "textCase": "none"
+    },
+    "recordCardTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 28,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": -0.56,
+      "textCase": "none"
+    },
     "sheetTitle": {
       "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
       "fontSize": 28,
@@ -232,6 +281,14 @@
       "fontWeight": 500,
       "lineHeight": 1.15,
       "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "composerTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 20,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": -0.3,
       "textCase": "none"
     },
     "wordmark": {
@@ -314,6 +371,30 @@
       "letterSpacing": 0,
       "textCase": "none"
     },
+    "tagline": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "lineHeight": 1.55,
+      "letterSpacing": 0.48,
+      "textCase": "none"
+    },
+    "pageEyebrow": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 12,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.96,
+      "textCase": "uppercase"
+    },
+    "legend": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 12,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.72,
+      "textCase": "uppercase"
+    },
     "micro": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
       "fontSize": 11,
@@ -322,12 +403,68 @@
       "letterSpacing": 0,
       "textCase": "none"
     },
+    "signInEyebrow": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 11,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 1.32,
+      "textCase": "uppercase"
+    },
+    "menuHeading": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 11,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 1.1,
+      "textCase": "uppercase"
+    },
     "eyebrow": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
       "fontSize": 10,
       "fontWeight": 600,
       "lineHeight": 1.15,
       "letterSpacing": 1,
+      "textCase": "uppercase"
+    },
+    "navigationLabel": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 1.2,
+      "textCase": "uppercase"
+    },
+    "columnHeading": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.8,
+      "textCase": "uppercase"
+    },
+    "filterLabel": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.5,
+      "textCase": "uppercase"
+    },
+    "statusLabel": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.4,
+      "textCase": "uppercase"
+    },
+    "factLabel": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 400,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.6,
       "textCase": "uppercase"
     },
     "fine": {
@@ -346,12 +483,76 @@
       "letterSpacing": 0.25,
       "textCase": "uppercase"
     },
+    "dateStamp": {
+      "fontFamily": "ui-monospace, \"SFMono-Regular\", Consolas, monospace",
+      "fontSize": 10,
+      "fontWeight": 400,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.25,
+      "textCase": "uppercase"
+    },
+    "firstTimeDate": {
+      "fontFamily": "ui-monospace, \"SFMono-Regular\", Consolas, monospace",
+      "fontSize": 10,
+      "fontWeight": 400,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.35,
+      "textCase": "uppercase"
+    },
     "nano": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
       "fontSize": 9,
       "fontWeight": 600,
       "lineHeight": 1.15,
       "letterSpacing": 0.36,
+      "textCase": "uppercase"
+    },
+    "badgeMicro": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 9,
+      "fontWeight": 400,
+      "lineHeight": 1.2,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "badgeSmall": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 400,
+      "lineHeight": 1.2,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "badgeMedium": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 12,
+      "fontWeight": 400,
+      "lineHeight": 1.2,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "badgeMicroCaps": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 9,
+      "fontWeight": 600,
+      "lineHeight": 1.2,
+      "letterSpacing": 0.54,
+      "textCase": "uppercase"
+    },
+    "badgeSmallCaps": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 10,
+      "fontWeight": 600,
+      "lineHeight": 1.2,
+      "letterSpacing": 0.6,
+      "textCase": "uppercase"
+    },
+    "badgeMediumCaps": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 12,
+      "fontWeight": 600,
+      "lineHeight": 1.2,
+      "letterSpacing": 0.72,
       "textCase": "uppercase"
     }
   },
@@ -364,8 +565,33 @@
     "6": 24,
     "8": 32,
     "10": 40,
+    "11": 44,
     "12": 48,
-    "16": 64
+    "16": 64,
+    "18": 72,
+    "23": 92,
+    "32": 128,
+    "0-25": 1,
+    "0-5": 2,
+    "0-75": 3,
+    "1-25": 5,
+    "1-5": 6,
+    "1-75": 7,
+    "2-25": 9,
+    "2-5": 10,
+    "2-75": 11,
+    "3-5": 14,
+    "4-5": 18,
+    "5-5": 22
+  },
+  "textSpace": {
+    "paragraphGap": "0.65em",
+    "editorParagraphGap": "0.55em",
+    "listIndent": "1.5em",
+    "editorListIndent": "1.45em",
+    "codePaddingBlock": "0.12em",
+    "codePaddingInline": "0.35em",
+    "separatorGap": "0.28em"
   },
   "size": {
     "control": {
@@ -404,12 +630,69 @@
       "thin": 1,
       "medium": 2,
       "thick": 3,
-      "icon": 1.7
+      "icon": 1.7,
+      "indicator": 1.8
+    },
+    "badge": {
+      "paddingBlock": 3,
+      "minHeight": 22
+    },
+    "emptyState": {
+      "icon": 48,
+      "messageWidth": 480
+    },
+    "pageHeader": {
+      "descriptionWidth": 640,
+      "copyBasis": 260
+    },
+    "skeleton": {
+      "block": 96,
+      "line": 14,
+      "circle": 40
+    },
+    "uploadProgress": {
+      "ring": 44,
+      "stroke": 5
+    },
+    "recordCard": {
+      "visualHeight": 190,
+      "footerHeight": 31
+    },
+    "capture": {
+      "spark": 32,
+      "statusHeight": 42,
+      "actionBarHeight": 58,
+      "quietAction": 36,
+      "thumbnail": 76,
+      "thumbnailRegular": 88,
+      "removeButton": 24
+    },
+    "focusedRecord": {
+      "photoColumn": 220
+    },
+    "checkbox": {
+      "small": 16,
+      "medium": 20
+    },
+    "toast": {
+      "width": 360,
+      "minHeight": 52,
+      "icon": 18
+    },
+    "datePicker": {
+      "width": 320
     }
   },
   "radius": {
+    "brandMarkTail": 3,
+    "xxsmall": 4,
+    "checkbox": 5,
+    "xsmall": 6,
     "small": 8,
+    "tile": 9,
+    "notice": 10,
     "medium": 12,
+    "panel": 16,
     "large": 18,
     "xlarge": 24,
     "pill": 999
@@ -425,6 +708,10 @@
       "regular": 32,
       "compact": 16,
       "narrow": 12
+    },
+    "inset": {
+      "dock": 100,
+      "palette": 120
     },
     "breakpoint": {
       "390": 390,
@@ -472,10 +759,20 @@
     }
   },
   "motion": {
+    "labelFade": 100,
     "quick": 120,
+    "composerEnter": 160,
     "standard": 180,
+    "sidebar": 240,
     "deliberate": 280,
+    "markTurn": 320,
+    "loadingSpin": 700,
+    "spin": 800,
+    "progressSweep": 850,
+    "pulse": 1100,
     "shimmer": 1250,
+    "toast": 4500,
+    "toastError": 8000,
     "easing": {
       "standard": "cubic-bezier(0.25, 0.1, 0.25, 1)",
       "enter": "cubic-bezier(0, 0, 0.58, 1)",
@@ -538,6 +835,13 @@
           "calendarDay": 0.35
         },
         "codeSurface": "#EEE9DF"
+      },
+      "muted": {
+        "opacity": {
+          "outsideRange": 0.55,
+          "gridLine": 0.66,
+          "pulseLow": 0.3
+        }
       }
     },
     "dark": {
@@ -580,6 +884,13 @@
           "calendarDay": 0.35
         },
         "codeSurface": "#272924"
+      },
+      "muted": {
+        "opacity": {
+          "outsideRange": 0.55,
+          "gridLine": 0.66,
+          "pulseLow": 0.3
+        }
       }
     }
   },
@@ -594,6 +905,10 @@
         "hoverBorder": "rgb(49 94 79 / 0.58)",
         "key": "rgb(255 255 255 / 0.32)",
         "keyBorder": "rgb(199 191 175 / 0.55)",
+        "shadowColor": "rgb(38 37 31 / 0.12)",
+        "hoverRing": "rgb(49 94 79 / 0.12)",
+        "hoverGlow": "rgb(49 94 79 / 0.16)",
+        "hoverShadowColor": "rgb(38 37 31 / 0.15)",
         "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(38 37 31 / 0.12)",
         "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(49 94 79 / 0.12), 0 0 16px rgb(49 94 79 / 0.16), 0 10px 32px rgb(38 37 31 / 0.15)"
       },
@@ -649,6 +964,10 @@
         "hoverBorder": "rgb(130 173 152 / 0.58)",
         "key": "rgb(38 40 36 / 0.32)",
         "keyBorder": "rgb(75 78 70 / 0.55)",
+        "shadowColor": "rgb(238 234 223 / 0.12)",
+        "hoverRing": "rgb(130 173 152 / 0.12)",
+        "hoverGlow": "rgb(130 173 152 / 0.16)",
+        "hoverShadowColor": "rgb(238 234 223 / 0.15)",
         "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(238 234 223 / 0.12)",
         "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(130 173 152 / 0.12), 0 0 16px rgb(130 173 152 / 0.16), 0 10px 32px rgb(238 234 223 / 0.15)"
       },
@@ -813,6 +1132,13 @@
         "ios"
       ],
       "sfSymbol": "chevron.right"
+    },
+    "chevronDown": {
+      "description": "Opens a list of choices.",
+      "platforms": [
+        "web"
+      ],
+      "sfSymbol": null
     },
     "clock": {
       "description": "Times, history, and recent items.",
@@ -1167,6 +1493,7 @@
     "color.surfaceRaisedTranslucent": "Nearly opaque raised surface, such as the sign-in card.",
     "color.skeletonHighlight": "Moving highlight of loading placeholders.",
     "color.borderFaint": "Dividers lighter than the default border.",
+    "color.paletteBorder": "Edge of the command palette: the strong border, slightly see-through.",
     "color.inkUnderline": "Underlines of inline links.",
     "color.scrollbar": "Scrollbar thumbs.",
     "color.scrimFaint": "Faint scrim behind a light popover.",
@@ -1179,20 +1506,40 @@
     "color.onInkKeyBorder": "Border of a keyboard key inside a dark tooltip.",
     "color.map.pin": "Interactive map pins and clusters.",
     "color.map.pinInk": "Pin borders and counts.",
+    "color.brand.ring": "The brand mark's outer ring.",
+    "color.brand.accent": "The brand mark's clay arc.",
+    "color.brand.innerRing": "The brand mark's inner ring.",
     "font.family.sans": "Interface text: labels, body, and controls.",
     "font.family.serif": "Page, section, card, and dialog titles, and the wordmark.",
     "font.family.mono": "Date stamps and code.",
+    "font.size.nano": "Tiny uppercase markers.",
+    "font.size.fine": "The smallest readable text: attribution, counts, and helper notes.",
+    "font.size.micro": "Dense metadata, tooltips, and key hints.",
+    "font.size.bodySmall": "Secondary paragraphs and compact editors.",
+    "font.size.callout": "Small headings and emphasized lines; the iOS callout size.",
+    "font.size.inlineCode": "Inline code in rich text, relative to the text around it.",
+    "lineHeight.none": "Single-line glyphs such as key caps, counts, and tooltips.",
     "lineHeight.tight": "Headings, labels, and single-line text.",
+    "lineHeight.title": "Wrapped serif titles on Dashboard memory cards.",
+    "lineHeight.titleRelaxed": "Wrapped titles and notes in Library results, pending captures, and Timeline options.",
+    "lineHeight.message": "Short status and error messages on the sign-in screen.",
     "lineHeight.body": "Paragraphs and multi-line text.",
+    "lineHeight.paragraph": "Paragraphs in record details and photo date notes.",
+    "lineHeight.prose": "Explanatory paragraphs in export settings.",
     "lineHeight.relaxed": "Long-form reading on the sign-in screen.",
+    "lineHeight.story": "An Entry's story on its detail page.",
     "type.hero": "Sign-in story headline.",
     "type.heroCompact": "Sign-in story headline on narrow screens.",
     "type.display": "Page titles.",
     "type.title": "Section and onboarding titles.",
+    "type.welcomeTitle": "The sign-in welcome title.",
+    "type.goalCardTitle": "Goal card titles. iOS draws them at its title2 size in regular width.",
+    "type.recordCardTitle": "Large serif titles on Home, Vehicle, and First Time cards. iOS draws them at its title2 size in regular width.",
     "type.sheetTitle": "Sheet and dialog titles.",
     "type.recordTitle": "Record detail titles.",
     "type.titleSmall": "Card and panel titles.",
     "type.cardTitle": "Serif record, Collection, and empty-state titles.",
+    "type.composerTitle": "The serif title of the capture composer.",
     "type.wordmark": "The MemoTrail wordmark beside the brand mark.",
     "type.sectionTitle": "Settings section headings.",
     "type.heading": "Compact list and card headings.",
@@ -1203,15 +1550,75 @@
     "type.label": "Field labels, buttons, and navigation.",
     "type.listHeading": "Small uppercase headings above lists.",
     "type.caption": "Metadata and helper text.",
+    "type.tagline": "The tagline beside the sign-in wordmark.",
+    "type.pageEyebrow": "The uppercase context above a page title, such as a date or area name.",
+    "type.legend": "The uppercase legend set into the border of a record group, such as a Home's details.",
     "type.micro": "Dense badges and tooltips.",
+    "type.signInEyebrow": "Uppercase eyebrows on the sign-in screens, such as the line above the story headline.",
+    "type.menuHeading": "Uppercase group headings in the More menu.",
     "type.eyebrow": "Uppercase eyebrows above titles.",
+    "type.navigationLabel": "Uppercase section labels in the sidebar.",
+    "type.columnHeading": "Uppercase column headings in the Timeline grid.",
+    "type.filterLabel": "Uppercase labels above Library filters.",
+    "type.statusLabel": "Uppercase connection status in Settings.",
+    "type.factLabel": "The uppercase label above a fact in record details. iOS draws it at its 11 pt caption2 minimum.",
     "type.fine": "The smallest readable text, such as map attribution and inline actions.",
     "type.stamp": "Monospaced counts and dates.",
+    "type.dateStamp": "Uppercase monospaced dates on record cards, archive rows, and Goal targets. iOS draws them at its 11 pt caption2 minimum.",
+    "type.firstTimeDate": "The uppercase date above a First Time card title. iOS draws it at its 11 pt caption2 minimum.",
     "type.nano": "Tiny uppercase markers, such as the timeline today label and micro badges.",
+    "type.badgeMicro": "Micro badge labels, such as tags in record card footers. iOS draws them at its 11 pt caption2 minimum.",
+    "type.badgeSmall": "Small badge labels, the default size for statuses and tags. iOS draws them at its 11 pt caption2 minimum.",
+    "type.badgeMedium": "Medium badge labels, such as Dashboard tags.",
+    "type.badgeMicroCaps": "Uppercase micro badge labels, such as record kinds over photos. Tracking is 0.06 em on both platforms.",
+    "type.badgeSmallCaps": "Uppercase small badge labels. Tracking is 0.06 em on both platforms.",
+    "type.badgeMediumCaps": "Uppercase medium badge labels. Tracking is 0.06 em on both platforms.",
+    "textSpace.paragraphGap": "Space after a paragraph or list in a saved story.",
+    "textSpace.editorParagraphGap": "Space after a paragraph or list in the rich text editor.",
+    "textSpace.listIndent": "Indent of a list in a saved story.",
+    "textSpace.editorListIndent": "Indent of a list in the rich text editor.",
+    "textSpace.codePaddingBlock": "Space above and below inline code.",
+    "textSpace.codePaddingInline": "Space before and after inline code.",
+    "textSpace.separatorGap": "Space on each side of the dot between facts in a separated row.",
     "size.hitTarget": "Minimum pointer target: WCAG 2.2 target size on Web, the Human Interface Guidelines minimum on iOS.",
     "size.stroke.icon": "Stroke width of the Web line icons.",
+    "size.stroke.indicator": "Stroke width of the chevron a native select draws on Web.",
+    "size.badge.paddingBlock": "Space above and below a badge's label.",
+    "size.badge.minHeight": "Minimum height of a medium badge.",
+    "size.emptyState.icon": "The icon tile above an empty state's title.",
+    "size.emptyState.messageWidth": "The widest an empty state's description runs.",
+    "size.pageHeader.descriptionWidth": "The widest a page description runs before it wraps.",
+    "size.pageHeader.copyBasis": "The narrowest the title keeps beside its actions before they move below it.",
+    "size.skeleton.block": "The height of a block skeleton, such as a card or paragraph placeholder.",
+    "size.skeleton.line": "The height of a line skeleton, one line of text.",
+    "size.skeleton.circle": "The diameter of a circle skeleton, such as an avatar placeholder.",
+    "size.uploadProgress.ring": "The diameter of the upload ring.",
+    "size.uploadProgress.stroke": "The width of the ring's track and progress arc.",
+    "size.recordCard.visualHeight": "The photo or map band at the top of a record card.",
+    "size.recordCard.footerHeight": "The footer row of a record card, including its top padding.",
+    "size.capture.spark": "The sparkle circle beside the composer's question.",
+    "size.capture.statusHeight": "The shortest the voice and draft status strip above the actions gets.",
+    "size.capture.actionBarHeight": "The shortest the action bar gets.",
+    "size.capture.quietAction": "The height of an icon action in the action bar, and its width on phones.",
+    "size.capture.thumbnail": "A selected photo in the composer on phones.",
+    "size.capture.thumbnailRegular": "A selected photo in the composer in a wide window.",
+    "size.capture.removeButton": "The remove button on a selected photo.",
+    "size.focusedRecord.photoColumn": "The narrowest a column of a focused record's photos gets.",
+    "size.checkbox.small": "The box of a small checkbox, for dense option rows.",
+    "size.checkbox.medium": "The box of a medium checkbox.",
+    "size.toast.width": "The widest a toast gets.",
+    "size.toast.minHeight": "The shortest a toast gets.",
+    "size.toast.icon": "The tone icon column.",
+    "size.datePicker.width": "The calendar's width, narrowed to fit small screens.",
+    "radius.brandMarkTail": "The tail corner of the phone brand mark tile.",
+    "radius.xxsmall": "Key caps, inline code, and the small checkbox.",
+    "radius.checkbox": "The medium checkbox square.",
+    "radius.xsmall": "Editor toolbar buttons, tooltips, and compact inputs.",
     "radius.small": "Small buttons and fields, segmented choices, and calendar days.",
+    "radius.tile": "34px icon tiles and segmented options.",
+    "radius.notice": "Inline notices, and the 34px icon tile beside a Location's name.",
     "radius.medium": "Buttons, fields, menus, and toasts.",
+    "radius.panel": "Export settings panels.",
     "radius.large": "Cards, panels, dialogs, and empty states.",
     "radius.xlarge": "The sign-in story panel.",
     "radius.pill": "Badges, chips, the sync status, and the workspace dock.",
@@ -1222,6 +1629,8 @@
     "layout.pageGutter.regular": "Wide windows.",
     "layout.pageGutter.compact": "Phones and narrow windows.",
     "layout.pageGutter.narrow": "The narrowest phones.",
+    "layout.inset.dock": "Below the workspace, so the floating action dock never covers the last item.",
+    "layout.inset.palette": "Most room above the command palette, which otherwise sits 14% down the viewport.",
     "layout.layer.header": "The sticky top bar.",
     "layout.layer.dock": "The floating workspace action dock.",
     "layout.layer.progress": "Upload progress over the workspace.",
@@ -1230,10 +1639,20 @@
     "layout.layer.palette": "The command palette.",
     "layout.layer.nestedPopover": "Popovers opened from popovers.",
     "layout.layer.mapOverlay": "Overlays above the map library's own panes.",
+    "motion.labelFade": "Sidebar labels fading, and the wait before a faded label hides.",
     "motion.quick": "Hover, press, and focus transitions.",
+    "motion.composerEnter": "The bottom Quick Capture dialog rising into place.",
     "motion.standard": "Dialogs and the command palette as they open.",
+    "motion.sidebar": "The sidebar collapsing and expanding.",
     "motion.deliberate": "Slower reveals, such as the tag editor's expanding search.",
+    "motion.markTurn": "The brand mark's quarter turn, as the Web sidebar collapses.",
+    "motion.loadingSpin": "One turn of the Timeline editor's loading spinner.",
+    "motion.spin": "One turn of a busy button's spinner.",
+    "motion.progressSweep": "One sweep of the navigation progress bar.",
+    "motion.pulse": "One pulse of the syncing indicator.",
     "motion.shimmer": "One sweep of the loading placeholder shimmer.",
+    "motion.toast": "How long a success or info toast stays before it dismisses itself.",
+    "motion.toastError": "How long an error toast stays, long enough to read what went wrong.",
     "motion.easing.standard": "The CSS ease curve, the Web transition default.",
     "motion.easing.enter": "Ease out, for elements that appear. The native default.",
     "motion.easing.exit": "Ease in, for elements that leave.",
@@ -1277,8 +1696,15 @@
     "state.disabled.opacity.soft": "Provider sign-in and filter selects.",
     "state.disabled.opacity.toolbar": "Editor toolbar buttons.",
     "state.disabled.codeSurface": "Background of a disabled code block.",
+    "state.muted.opacity.outsideRange": "Calendar days outside the shown month.",
+    "state.muted.opacity.gridLine": "Year lines on the timeline.",
+    "state.muted.opacity.pulseLow": "Faintest point of the pending sync pulse.",
     "material.glass.saturation": "Backdrop saturation multiplier.",
     "material.glass.key": "A key cap inside a glass control.",
+    "material.glass.shadowColor": "The glass drop shadow, ink at low strength.",
+    "material.glass.hoverRing": "The accent ring around a hovered glass control.",
+    "material.glass.hoverGlow": "The accent glow around a hovered glass control.",
+    "material.glass.hoverShadowColor": "The drop shadow of a hovered glass control.",
     "material.glass.shadow": "Top sheen, bottom sheen, and a soft ink drop shadow.",
     "material.glassPanel.saturation": "Backdrop saturation multiplier."
   }

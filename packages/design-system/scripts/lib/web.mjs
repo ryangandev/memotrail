@@ -5,6 +5,7 @@ import {
   hexString,
   indent,
   kebabCase,
+  pascalCase,
   setPath,
 } from "./util.mjs";
 
@@ -17,6 +18,7 @@ export const groupOrder = [
   "lineHeight",
   "type",
   "space",
+  "textSpace",
   "size",
   "radius",
   "layout",
@@ -68,7 +70,7 @@ export function orderedPaths(tokens) {
 
 // CSS
 
-export function makeCss(system, sourceLabel) {
+export function makeCss(system, sourceLabel, icons) {
   const web = webTokens(system);
   const shared = [];
   const light = [];
@@ -82,6 +84,18 @@ export function makeCss(system, sourceLabel) {
     } else {
       shared.push(...cssDeclarations(web.light.get(path), web.light));
       if (derived.has(path)) shared.push(derived.get(path));
+    }
+  }
+
+  for (const image of icons?.cssImages ?? []) {
+    const [lightImage, darkImage] = [web.light, web.dark].map((tokens) =>
+      cssImage(image, tokens, icons.viewBox),
+    );
+    if (lightImage === darkImage) {
+      shared.push(lightImage);
+    } else {
+      light.push(lightImage);
+      dark.push(darkImage);
     }
   }
 
@@ -139,7 +153,24 @@ function cssReferenceOrValue(token, tokens) {
   if (token.type === "color" && token.extension.mix && !token.overridden) {
     return cssMix(token, tokens);
   }
-  return cssValue(token);
+  if (token.type === "shadow") {
+    // A layer that names a public color token draws through it, so a mixed color stays a
+    // color-mix() inside the shadow too.
+    return cssShadow(token.value, (layer) =>
+      layer.colorAlias &&
+      isPublic(layer.colorAlias) &&
+      tokens.has(layer.colorAlias)
+        ? `var(${cssName(layer.colorAlias)})`
+        : cssColor(layer),
+    );
+  }
+  return relativeValue(token) ?? cssValue(token);
+}
+
+// A Web-only number with a unit, such as 0.65em, measures against the surrounding text.
+export function relativeValue(token) {
+  const unit = token.extension.web?.unit;
+  return unit ? `${formatNumber(token.value)}${unit}` : undefined;
 }
 
 // A mixed color stays a color-mix() of its sources. Chrome keeps full precision for the
@@ -208,23 +239,27 @@ export function cssValue({ type, value }) {
     case "cubicBezier":
       return `cubic-bezier(${value.map(formatNumber).join(", ")})`;
     case "shadow":
-      return value
-        .map((layer) =>
-          [
-            layer.inset ? "inset" : null,
-            cssLength(layer.x),
-            cssLength(layer.y),
-            cssLength(layer.blur),
-            layer.spread === 0 ? null : cssLength(layer.spread),
-            cssColor(layer),
-          ]
-            .filter(Boolean)
-            .join(" "),
-        )
-        .join(", ");
+      return cssShadow(value, cssColor);
     default:
       return String(value);
   }
+}
+
+function cssShadow(layers, color) {
+  return layers
+    .map((layer) =>
+      [
+        layer.inset ? "inset" : null,
+        cssLength(layer.x),
+        cssLength(layer.y),
+        cssLength(layer.blur),
+        layer.spread === 0 ? null : cssLength(layer.spread),
+        color(layer),
+      ]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .join(", ");
 }
 
 export function cssColor({ channels, alpha }) {
@@ -261,6 +296,35 @@ function cssFontFamily(family) {
 }
 
 // Each material with a blur also gets a ready backdrop-filter value, emitted after its parts.
+// A Web icon as an SVG data URL in one theme's color, for CSS that cannot use currentColor,
+// such as the indicator a native select draws as its background image.
+function cssImage(image, tokens, viewBox) {
+  const color = tokens.get(image.color).value;
+  if (color.alpha !== 1) {
+    throw new Error(`cssImages.${image.name} color must be opaque.`);
+  }
+  const size = tokens.get(image.size).value;
+  const paint = {
+    stroke: hexString(color.channels),
+    "stroke-width": formatNumber(tokens.get(image.strokeWidth).value),
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+  };
+  const attributes = (entries) =>
+    Object.entries(entries)
+      .map(([name, value]) => `${name}='${value}'`)
+      .join(" ");
+  const element = ([tag, own], paintHere) =>
+    `<${tag} ${attributes(paintHere ? { ...own, ...paint } : own)}/>`;
+  const body =
+    image.svg.length === 1
+      ? element(image.svg[0], true)
+      : `<g ${attributes(paint)}>${image.svg.map((part) => element(part, false)).join("")}</g>`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' fill='none' viewBox='${viewBox}'>${body}</svg>`;
+  const encoded = svg.replace(/[<>#]/g, (char) => encodeURIComponent(char));
+  return `${cssName(`image.${image.name}`)}: url("data:image/svg+xml,${encoded}");`;
+}
+
 function materialFilters(web) {
   const filters = new Map();
   const groups = new Map();
@@ -371,13 +435,13 @@ function catalogValue(token) {
       };
     }
     default:
-      return token.value;
+      return relativeValue(token) ?? token.value;
   }
 }
 
 // TypeScript
 
-export function makeTypeScript(system, icons, sourceLabel) {
+export function makeTypeScript(system, icons, sourceLabel, components = []) {
   const web = webTokens(system);
   const webIcons = icons.icons.filter((icon) => icon.platforms.includes("web"));
   const children = (group) =>
@@ -405,6 +469,11 @@ export function makeTypeScript(system, icons, sourceLabel) {
     }),
   );
   const typeRoles = children("type").map(([name]) => name);
+  const durations = Object.fromEntries(
+    children("motion")
+      .filter(([, token]) => token.type === "duration")
+      .map(([name, token]) => [name, token.value]),
+  );
 
   return `// Generated from ${sourceLabel}. Do not edit directly.
 
@@ -424,6 +493,11 @@ export type IconElement = readonly [
 export const iconViewBox = ${JSON.stringify(icons.viewBox)};
 
 export const iconStrokeWidth = ${icons.strokeWidth};
+
+/** Icon sizes in px. An icon's size must be one of these, so it stays on the size.icon scale. */
+${tsConst("iconSizes", numbers("size.icon"))}
+
+export type IconSize = keyof typeof iconSizes;
 
 export type IconElements = Readonly<Record<IconName, readonly IconElement[]>>;
 
@@ -449,16 +523,94 @@ ${tsConst("breakpoints", numbers("layout.breakpoint"))}
 /** Container query widths in px. */
 ${tsConst("containerWidths", numbers("layout.container"))}
 
+/** Durations in ms, for code that times itself rather than reading a CSS variable, such as a toast. */
+${tsConst("durations", durations)}
+
 /** Stacking order (z-index) by layer. */
 ${tsConst("layers", numbers("layout.layer"))}
 
 /** Resolved semantic colors for code that cannot read CSS variables, such as server-rendered images. */
 ${tsConst("themeColors", colors)}
+${componentTypeScript(components, sourceLabel)}`;
+}
+
+// Each enum prop becomes a value list and a union type, each spec a defaults object, and every
+// spec's specimens join one list that the gallery and its e2e test share. A spec Web does not
+// implement emits nothing, so its specimens never reach the Web gallery's list.
+function componentTypeScript(allComponents, sourceLabel) {
+  const components = allComponents.filter((spec) =>
+    spec.implemented.includes("web"),
+  );
+  if (components.length === 0) return "";
+  // A spec without props on this platform has no types, only specimens.
+  const blocks = components.flatMap((spec) => {
+    const props = spec.props.filter((prop) => prop.platforms.includes("web"));
+    if (props.length === 0) return [];
+    const lines = [
+      `// ${spec.name}, from ${sourceLabel}/components/${spec.file}.`,
+    ];
+    for (const prop of props.filter(({ kind }) => kind === "enum")) {
+      const name = prop.names.web;
+      const list = `${lowerFirst(spec.name)}${pascalCase(plural(name))}`;
+      lines.push(
+        "",
+        `/** ${prop.description} */`,
+        tsConst(list, prop.values),
+        "",
+        `export type ${spec.name}${pascalCase(name)} = (typeof ${list})[number];`,
+      );
+    }
+    lines.push(
+      "",
+      `/** ${spec.name} prop defaults. */`,
+      tsConst(
+        `${lowerFirst(spec.name)}Defaults`,
+        Object.fromEntries(props.map((prop) => [prop.names.web, prop.default])),
+      ),
+    );
+    return lines.join("\n");
+  });
+  // A specimen covers only the props Web has, so the e2e test never looks for an iOS-only value.
+  const specimens = components.flatMap((spec) =>
+    spec.specimens.map((specimen) => ({
+      component: spec.name,
+      id: specimen.id,
+      description: specimen.description,
+      covers: Object.fromEntries(
+        Object.entries(specimen.covers).filter(([name]) =>
+          spec.props
+            .find((prop) => prop.name === name)
+            .platforms.includes("web"),
+        ),
+      ),
+    })),
+  );
+  return `
+${blocks.join("\n\n")}
+
+/** Every spec's gallery specimens. The gallery marks each with data-specimen="<id>". */
+${tsConst("componentSpecimens", specimens)}
+
+export type ComponentSpecimen = (typeof componentSpecimens)[number];
+
+export type ComponentSpecimenId = ComponentSpecimen["id"];
 `;
 }
 
+function lowerFirst(value) {
+  return value[0].toLowerCase() + value.slice(1);
+}
+
+// English plurals for prop names: tone -> tones, status -> statuses, emphasis -> emphases.
+export function plural(word) {
+  if (/[^aeiou]is$/.test(word)) return word.replace(/is$/, "es");
+  if (/(s|x|z|ch|sh)$/.test(word)) return `${word}es`;
+  if (/[^aeiou]y$/.test(word)) return word.replace(/y$/, "ies");
+  return `${word}s`;
+}
+
 // Prints an exported constant, `as const` unless another suffix is given.
-function tsConst(declaration, value, suffix = " as const") {
+export function tsConst(declaration, value, suffix = " as const") {
   const prefix = `export const ${declaration} = `;
   return `${prefix}${tsValue(value, 0, prefix.length, suffix.length + 1)}${suffix};`;
 }
@@ -491,6 +643,7 @@ function tsValue(value, depth = 0, lead = 0, tail = 1) {
 function tsInline(value) {
   if (Array.isArray(value)) return `[${value.map(tsInline).join(", ")}]`;
   if (value !== null && typeof value === "object") {
+    if (Object.keys(value).length === 0) return "{}";
     return `{ ${Object.entries(value)
       .map(([key, item]) => `${tsKey(key)}: ${tsInline(item)}`)
       .join(", ")} }`;

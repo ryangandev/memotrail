@@ -1,35 +1,14 @@
 import SwiftUI
 
-enum MTButtonVariant: CaseIterable, Sendable {
-  case primary, secondary, ghost, danger
-
-  var title: String {
-    switch self {
-    case .primary: "primary"
-    case .secondary: "secondary"
-    case .ghost: "ghost"
-    case .danger: "danger"
-    }
-  }
-}
-
-enum MTButtonSize: CaseIterable, Sendable {
-  case small, medium, large
-
-  var title: String {
-    switch self {
-    case .small: "small"
-    case .medium: "medium"
-    case .large: "large"
-    }
-  }
-
+// MTButtonVariant, MTButtonSize, and MTButtonDefaults are generated from
+// packages/design-system/components/button.yaml, which also lists each size's tokens.
+extension MTButtonSize {
   // Heights keep the Web proportions while meeting native touch-target guidance.
   fileprivate var height: CGFloat {
     switch self {
-    case .small: 34
-    case .medium: 44
-    case .large: 52
+    case .small: MTSize.Control.small
+    case .medium: MTSize.Control.medium
+    case .large: MTSize.Control.large
     }
   }
 
@@ -47,19 +26,20 @@ enum MTButtonSize: CaseIterable, Sendable {
     switch self {
     case .small: MTFont.caption
     case .medium: MTFont.label
-    case .large: MTFont.body.weight(.medium)
+    case .large: MTFont.bodyEmphasis
     }
   }
 }
 
 /// The shared action style: primary, secondary, ghost, and danger variants in three sizes.
 /// Pair `isLoading` with `.mtButtonStyle(_:size:isLoading:)` so the button is also disabled.
+/// Specified in packages/design-system/components/button.yaml.
 struct MTButtonStyle: ButtonStyle {
-  var variant: MTButtonVariant = .primary
-  var size: MTButtonSize = .medium
-  var isLoading = false
+  var variant: MTButtonVariant = MTButtonDefaults.variant
+  var size: MTButtonSize = MTButtonDefaults.size
+  var isLoading = MTButtonDefaults.isLoading
   var isIconOnly = false
-  var fillsWidth = false
+  var fillsWidth = MTButtonDefaults.fillsWidth
   @Environment(\.isEnabled) private var isEnabled
 
   func makeBody(configuration: Configuration) -> some View {
@@ -83,26 +63,29 @@ struct MTButtonStyle: ButtonStyle {
     )
     .overlay {
       if let border = colors(pressed: pressed).border {
-        RoundedRectangle(cornerRadius: size.radius).stroke(border, lineWidth: 1)
+        RoundedRectangle(cornerRadius: size.radius)
+          .strokeBorder(border, lineWidth: MTSize.Stroke.thin)
       }
     }
     .contentShape(RoundedRectangle(cornerRadius: size.radius))
-    .opacity(isEnabled ? 1 : 0.5)
-    .animation(.easeOut(duration: MTMotion.quick), value: pressed)
+    .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.button)
+    .animation(MTEasing.standard.animation(duration: MTMotion.quick), value: pressed)
   }
 
   private func colors(pressed: Bool) -> (foreground: Color, background: Color, border: Color?) {
     switch variant {
     case .primary:
-      (MTColor.accentInk, pressed ? MTColor.accentHover : MTColor.accent, nil)
+      (MTColor.accentInk, pressed ? MTState.Hover.primary : MTColor.accent, nil)
     case .secondary:
       pressed
-        ? (MTColor.accent, MTColor.accentSubtle, MTColor.accent)
+        ? (MTColor.accent, MTState.Hover.accentSurface, MTColor.accent)
         : (MTColor.inkMuted, MTColor.surfaceRaised, MTColor.borderStrong)
     case .ghost:
-      (pressed ? MTColor.ink : MTColor.inkMuted, pressed ? MTColor.surfaceSubtle : .clear, nil)
+      pressed
+        ? (MTState.Hover.ink, MTState.Hover.surface, nil)
+        : (MTColor.inkMuted, .clear, nil)
     case .danger:
-      (MTColor.warm, MTColor.warmSubtle, pressed ? MTColor.warm : MTColor.warm.opacity(0.34))
+      (MTColor.danger, MTColor.dangerSubtle, pressed ? MTColor.danger : MTColor.dangerBorder)
     }
   }
 }
@@ -110,8 +93,10 @@ struct MTButtonStyle: ButtonStyle {
 extension View {
   /// Applies `MTButtonStyle`, disabling the button and announcing progress while loading.
   func mtButtonStyle(
-    _ variant: MTButtonVariant = .primary, size: MTButtonSize = .medium, isLoading: Bool = false,
-    fillsWidth: Bool = false
+    _ variant: MTButtonVariant = MTButtonDefaults.variant,
+    size: MTButtonSize = MTButtonDefaults.size,
+    isLoading: Bool = MTButtonDefaults.isLoading,
+    fillsWidth: Bool = MTButtonDefaults.fillsWidth
   ) -> some View {
     buttonStyle(
       MTButtonStyle(variant: variant, size: size, isLoading: isLoading, fillsWidth: fillsWidth)
@@ -121,21 +106,47 @@ extension View {
   }
 }
 
-/// A square icon action with a required accessibility label.
+// MTIconButtonVariant, MTIconButtonSize, and MTIconButtonDefaults are generated from
+// packages/design-system/components/icon-button.yaml. Each draws as the Button value it names.
+extension MTButtonVariant {
+  fileprivate init(_ variant: MTIconButtonVariant) {
+    switch variant {
+    case .primary: self = .primary
+    case .secondary: self = .secondary
+    case .ghost: self = .ghost
+    case .danger: self = .danger
+    }
+  }
+}
+
+extension MTButtonSize {
+  fileprivate init(_ size: MTIconButtonSize) {
+    switch size {
+    case .small: self = .small
+    case .medium: self = .medium
+    case .large: self = .large
+    }
+  }
+}
+
+/// A square icon action with a required accessibility label, ghost unless a variant is given.
+/// Specified in packages/design-system/components/icon-button.yaml.
 struct MTIconButton: View {
   let label: String
   let icon: MTIcon
-  var variant: MTButtonVariant = .ghost
-  var size: MTButtonSize = .medium
-  var isLoading = false
+  var variant: MTIconButtonVariant = MTIconButtonDefaults.variant
+  var size: MTIconButtonSize = MTIconButtonDefaults.size
+  var isLoading = MTIconButtonDefaults.isLoading
   let action: () -> Void
 
   var body: some View {
     Button(action: action) {
-      Image(icon).font(.system(size: size == .small ? 14 : 17, weight: .medium))
+      Image(icon).font(.mtIcon(size == .small ? MTSize.Icon.s14 : MTSize.Icon.s17, weight: .medium))
     }
     .buttonStyle(
-      MTButtonStyle(variant: variant, size: size, isLoading: isLoading, isIconOnly: true)
+      MTButtonStyle(
+        variant: MTButtonVariant(variant), size: MTButtonSize(size), isLoading: isLoading,
+        isIconOnly: true)
     )
     .disabled(isLoading)
     .accessibilityLabel(label)
@@ -155,7 +166,7 @@ struct MTFilterChip: View {
         .foregroundStyle(isSelected ? MTColor.accentInk : MTColor.inkMuted)
         .padding(.horizontal, MTSpacing.s3)
         .padding(.vertical, MTSpacing.s2)
-        .frame(minHeight: 44)
+        .frame(minHeight: MTSize.hitTarget)
         .background(isSelected ? MTColor.accent : MTColor.surfaceSubtle, in: Capsule())
     }
     .buttonStyle(.plain)

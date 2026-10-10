@@ -32,6 +32,27 @@
     "size": {
       "$type": "dimension",
       "$description": "Base font sizes that the text roles reference.",
+      "nano": {
+        "$description": "Tiny uppercase markers.",
+        "$value": {
+          "value": 9,
+          "unit": "px"
+        }
+      },
+      "fine": {
+        "$description": "The smallest readable text: attribution, counts, and helper notes.",
+        "$value": {
+          "value": 10,
+          "unit": "px"
+        }
+      },
+      "micro": {
+        "$description": "Dense metadata, tooltips, and key hints.",
+        "$value": {
+          "value": 11,
+          "unit": "px"
+        }
+      },
       "caption": {
         "$value": {
           "value": 12,
@@ -44,9 +65,23 @@
           "unit": "px"
         }
       },
+      "bodySmall": {
+        "$description": "Secondary paragraphs and compact editors.",
+        "$value": {
+          "value": 14,
+          "unit": "px"
+        }
+      },
       "body": {
         "$value": {
           "value": 15,
+          "unit": "px"
+        }
+      },
+      "callout": {
+        "$description": "Small headings and emphasized lines; the iOS callout size.",
+        "$value": {
+          "value": 16,
           "unit": "px"
         }
       },
@@ -73,6 +108,19 @@
           "value": 42,
           "unit": "px"
         }
+      },
+      "inlineCode": {
+        "$type": "number",
+        "$description": "Inline code in rich text, relative to the text around it.",
+        "$value": 0.9,
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"],
+            "web": {
+              "unit": "em"
+            }
+          }
+        }
       }
     },
     "weight": {
@@ -95,17 +143,80 @@
   "lineHeight": {
     "$type": "number",
     "$description": "Line height multipliers that the text roles reference.",
+    "none": {
+      "$description": "Single-line glyphs such as key caps, counts, and tooltips.",
+      "$value": 1,
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "tight": {
       "$description": "Headings, labels, and single-line text.",
       "$value": 1.15
+    },
+    "title": {
+      "$description": "Wrapped serif titles on Dashboard memory cards.",
+      "$value": 1.3,
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "titleRelaxed": {
+      "$description": "Wrapped titles and notes in Library results, pending captures, and Timeline options.",
+      "$value": 1.35,
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "message": {
+      "$description": "Short status and error messages on the sign-in screen.",
+      "$value": 1.5,
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
     },
     "body": {
       "$description": "Paragraphs and multi-line text.",
       "$value": 1.55
     },
+    "paragraph": {
+      "$description": "Paragraphs in record details and photo date notes.",
+      "$value": 1.6,
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "prose": {
+      "$description": "Explanatory paragraphs in export settings.",
+      "$value": 1.65,
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "relaxed": {
       "$description": "Long-form reading on the sign-in screen.",
       "$value": 1.7
+    },
+    "story": {
+      "$description": "An Entry's story on its detail page.",
+      "$value": 1.75,
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
     }
   }
 }

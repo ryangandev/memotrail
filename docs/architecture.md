@@ -11,7 +11,7 @@ Last reviewed: 2026-09-28.
 | Native client     | SwiftUI screens, controllers, device drafts and queues, native integrations | `apps/ios/MemoTrail/Features`, `apps/ios/MemoTrail/Models`, `apps/ios/MemoTrail/App`               |
 | Shared data       | Postgres schema, RLS, Storage policies, atomic RPCs, and search             | `supabase/migrations`                                                                              |
 | Data verification | Ownership, denial, concurrency, lifecycle, and contract tests               | `supabase/tests`                                                                                   |
-| Design tokens     | DTCG token source and generated Web and Swift outputs                       | `packages/design-system`                                                                           |
+| Design tokens     | DTCG token source, component specs, and generated Web and Swift outputs     | `packages/design-system`                                                                           |
 | Web design system | Reusable Web components and the development-only audit gallery              | `apps/web/src/components`, `apps/web/src/app/design-system`                                        |
 | Media runtime     | Deployable image and metadata decoder dependencies                          | `packages/media-runtime`                                                                           |
 | Delivery          | Web, iOS, and database CI                                                   | `.github/workflows/ci.yml`                                                                         |
@@ -36,7 +36,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                           | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                         |
 | Timeline, Homes, Vehicles, Goals, or First Times         | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                   |
 | Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules           | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests |
-| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens` and generator                           |
+| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator      |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
 The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
@@ -303,20 +303,51 @@ Pair it with the test file carrying the same feature name.
 - `packages/design-system/tokens` is the token source of truth, written in the DTCG 2025.10 format.
   `soft-ledger.resolver.json` merges the foundation files and selects the light or dark color file through its `theme` modifier.
   The `palette` group holds raw colors that only semantic tokens reference; generated outputs never include it, so components use semantic roles.
-  The semantic groups are `color`, `font`, `lineHeight`, `type` text roles, `space`, `size`, `radius`, `layout`, `motion` durations and easing, `shadow`, `state`, `material`, and `elevation`.
+  The semantic groups are `color`, `font`, `lineHeight`, `type` text roles, `space`, `textSpace`, `size`, `radius`, `layout`, `motion` durations and easing, `shadow`, `state`, `material`, and `elevation`.
+  `textSpace` is Web spacing in `em`, such as list indents and inline code padding, so it scales with the text it sits in.
+  Both platforms share the numeric `space` scale, including hyphenated half steps such as `space.1-5`, which Swift names `MTSpacing.s1_5`; a semantic spacing token exists only where both platforms use it for the same purpose.
   Values reproduce what each platform renders today, so a group may hold several near values rather than a snapped scale.
 - `$extensions["com.memotrail"]` carries what DTCG cannot express.
   `platforms` limits a token or group to Web or iOS, and the generator emits it only there; `web` and `ios` override a value on one platform.
+  A design decision both platforms make is one token that both read, never a Web-only and an iOS-only copy; when a platform draws it differently, such as a text role at an iOS Dynamic Type size, that token carries the difference as an override.
+  `web.unit: "em"` writes a Web-only number token as a length relative to the surrounding text.
   A text role names its iOS Dynamic Type style in `ios.textStyle`, and a material names its iOS system material in `ios.material`.
   `mix` records the colors a translucent or mixed color comes from, and the generator verifies the value against them.
   Web CSS writes such a color as the `color-mix()` it replaces, because Chrome draws a rounded `rgb()` or hex value up to one level differently; a color without `mix` keeps its `rgb()` or hex form.
+  A shadow layer that names a color token draws through that token's variable on Web, so a mixed shadow color stays a `color-mix()` too.
 - `packages/design-system/icons.json` names each icon once, with its Web SVG and its SF Symbol.
   The generator writes the Web `IconName` type and the Swift `MTIcon` enum from it; an icon drawn on only one platform lists that platform.
+  Web `Icon` sizes are typed as `IconSize`, the `size.icon` scale.
+  Its `cssImages` section turns a Web icon, a color token, and size tokens into a themed `--mt-image-*` data URL, for CSS that cannot use `currentColor`, such as the native select chevron.
 - `packages/design-system/contrast.json` lists the text and background pairs held to WCAG AA in both themes on both platforms: 4.5:1 for body text and 3:1 for large text, judged from each pair's text role.
   A pair that fails today needs a named exception with a reason, and an exception that no longer fails is reported as stale.
 - Generated Web CSS variables, the Web gallery catalog and typed `design-system.ts` in `apps/web/src/generated`, and Swift values are never edited directly.
 - Token changes run `pnpm design-system:generate` and `pnpm design-system:check`; the check also rejects invalid DTCG values, unresolved or circular references, themes that define different tokens, and contrast failures without an exception.
   `pnpm --filter @memotrail/design-system test` covers the generator.
+- `packages/design-system/components/*.yaml` specifies each shared component once for Web and iOS, and is where to look up which files implement a component.
+  A spec names the implementing files and symbols on each platform, its purpose and when to use or avoid it, its anatomy, props, and states, the semantic tokens that draw each part, its content and accessibility rules, every intended platform difference with its reason, and the specimens both galleries show.
+  `packages/design-system/schema/component-spec.schema.json` is its JSON Schema.
+  The control and overlay specs map Web to native as follows: IconButton to `MTIconButton`, Icon to `MTIcon`, TextField, SearchField, and Checkbox to their `MTFields.swift` fields, SelectField to `MTSelectField` with `MTSelectGroup`, DateField to Web `DatePickerField` and `MTDateField`, and TimeZoneField to Web `TimezoneSelect` and `MTTimeZoneField`.
+  One Dialog spec covers Web `Dialog` and `ConfirmationDialog` with `MTSheet` and `confirmationDialog`, and one Toast spec covers Web `AppToaster` with `MTToast` and `MTToastCenter`.
+  CommandPalette, SyncStatus, and WorkspaceActionDock are Web-only, so their specs mark iOS `unavailable` and give the reason.
+  `pnpm design-system:check` validates every spec against the schema, then checks what a schema cannot: that the files declare the symbols, that every token exists on the platforms that use it with the type its property needs, that token rules name only real props, values, parts, and states, and that specimen ids are unique.
+- Specs pair these Web components with their native counterparts, and a spec named differently from the Web component says so.
+  `badge.yaml` pairs Badge with `MTBadge`, and `button.yaml` pairs Button with `mtButtonStyle`.
+  `empty-state.yaml`, `page-header.yaml`, and `page-frame.yaml` pair EmptyState, PageHeader, and PageFrame with `MTEmptyState`, `MTPageHeader`, and `MTPage`.
+  `section-header.yaml` pairs SectionHeader with `MTSectionHeader`, whose `list` variant is the uppercase list heading on both platforms.
+  `image.yaml` pairs ProgressiveImage with `MTRemoteImage`, `skeleton.yaml` pairs Skeleton with `MTLoadingSkeleton`, and `upload-progress.yaml` pairs PhotoUploadProgress with `MTUploadProgress`.
+  `separated-list.yaml` pairs SeparatedList with `MTFlowLayout` and `MTFlowSeparator`.
+  `record-card.yaml` pairs RecordCard with `MTRecordCard`, `MTEntityCard`, and `MTCollectionCard`.
+  `capture-composer.yaml` pairs CaptureComposer with `CaptureCard`, `focused-record.yaml` pairs FocusedRecordDetail with `MTFocusedRecordPage`, and `photo-viewer.yaml` pairs PhotoPreviewDialog with `MTPhotoPreview`.
+  `rich-text.yaml` pairs EntryRichTextContent and RichTextEditor with `MTRichTextContent` and `MTRichTextEditor`.
+- The generator writes each spec's enum values as lists and union types, its prop defaults, and the specimen list into `apps/web/src/generated/design-system.ts`, and the same as Swift enums, `MT<Name>Defaults`, and `MTComponentSpecimen` into `apps/ios/MemoTrail/DesignSystem/Generated/ComponentVariants.swift`.
+  Web props and native parameters take those types and defaults, so a value removed from a spec stops both platforms compiling; component unit tests catch the other direction, a value the spec adds that a Web stylesheet does not draw.
+- Both galleries show every specimen a spec lists: Web wraps each in `SpecimenCase`, marked `data-specimen="<id>"`, and iOS in `GalleryCase`, with the accessibility identifier `specimen-<id>`.
+  The `/design-system` e2e test and the native `testGalleryShowsEveryComponentSpecimen` UI test iterate the generated lists, and the Web test also checks that each specimen draws every prop value it covers.
+- Native Swift reads every visual value from a token, and the check enforces it because CI does not build iOS.
+  `scripts/check-swift.mjs` scans `apps/ios/MemoTrail` for literal fonts, colors, opacity, spacing, sizes, radii, strokes, shadows, gradients, animation timing, and materials, and prints each one's file, line, and the tokens with the same value.
+  Only `DesignTokens.swift` and `MTFoundations.swift` may hold literals; a value no token has gets a semantic token, iOS-only through `platforms` when Web has no counterpart.
+  The commented allowances in `scripts/lib/swift-guard.mjs` name each deliberate exception, such as a writer's bold or code mark, a system spring, gradient stops that stay with their drawing as they do in Web CSS, or the gallery's specimen diagrams, and an allowance that matches nothing fails the check.
 - The SVGs in `assets/brand` are the source of the iOS app icon.
   `apps/ios/scripts/render-app-icon.swift` writes the light, dark, and tinted PNGs in `AppIcon.appiconset`, which are never exported by hand; `AppIconTests` checks their alpha layout.
 - The development-only `/design-system` route renders production Web components and current generated tokens for review; it is unavailable in Production.
@@ -324,7 +355,10 @@ Pair it with the test file carrying the same feature name.
   The copy is a display copy regenerated from this repository: `tokens.json` names each token like its Web variable without `--`, resolves mixed colors to `rgba()`, and takes each usage from `$description`, so every token or its group needs one.
   `README.md` is the brand book, rendered from the hand-written `scripts/claude-design/brand-book.md` with tables generated from the tokens, `contrast.json`, and `icons.json`.
   `components/` holds an esbuild bundle of the Web components that render from props alone, exposed as `window.MemoTrail` for React 18, plus a README and a preview card per component from `scripts/claude-design/specimens` and any spec in `packages/design-system/components`.
-  `scripts/claude-design/catalog.mjs` lists every Web component file as bundled or excluded with a reason, and `pnpm design-system:test:previews` renders every card in both themes in Chromium.
+  `components/index.d.ts` declares them with the types they import from the app, such as the unions generated from the specs, written out as literal unions so the file stands alone.
+  `scripts/claude-design/catalog.mjs` lists every Web component file as bundled or excluded with a reason.
+  A bundled component whose spec has another name, such as DatePickerField for DateField, names it in `spec`, and a spec with no bundled component gets a card in the group `specOnlyGroups` gives it.
+  `pnpm design-system:test:previews` renders every card in both themes in Chromium and checks that each spec specimen draws every prop value it covers.
 - The Web Dashboard route loads `getHomeWorkspace` on the server and renders `components/home-dashboard.tsx` with component-owned CSS.
   Dashboard composes the shared PageFrame, PageHeader, CaptureComposer, EmptyState, ProgressiveImage, and Badge; Memory and Recent Entries share one Entry card renderer.
   Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the ribbon, rows, and cards.
@@ -342,6 +376,7 @@ Pair it with the test file carrying the same feature name.
   Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
+  `packages/design-system/components/button.yaml` specifies Button and ButtonLink with native `mtButtonStyle`.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
   Editor forms retain their handlers; footer submit actions use native form associations.
   Quick Capture uses a native HTML dialog anchored to the workspace bottom, preserving photo-picker cancellation, nested overlays, and focus restoration; its mobile geometry follows the visual viewport when the keyboard opens.
@@ -349,10 +384,18 @@ Pair it with the test file carrying the same feature name.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
+- `apps/web/scripts/check-design-system.mjs`, part of `pnpm lint`, rejects any visual value Web CSS or scripts write by hand instead of reading a generated token; the rules live in `design-system-rules.mjs` with unit tests beside it.
+  It fails on literal font sizes, line heights, letter spacing, weights, and families; hex, `rgb()`, `hsl()`, and named colors other than `transparent` and `currentColor`, including colors inside data URLs; `color-mix()` outside the generated tokens; literal z-index, opacity, durations, easing curves, and backdrop filters; and literal spacing, radii, stroke widths, focus offsets, shadow lengths, and icon sizes.
+  It also rejects a fallback inside `var(--mt-*, ...)`, which would hide a literal.
+  Each finding names the file and line and, when a token renders the same value in both themes, the token to use.
+  CSS cannot read variables in media queries, so a media query width must be a `--mt-layout-breakpoint-*` value as `max-width` or one pixel above it as `min-width`, and a container query must be a `--mt-layout-container-*` value.
+  That rule stands in for `@custom-media`, which Next.js leaves untranspiled and, with its Lightning CSS option, resolves only within one stylesheet, so a definition in the generated file cannot reach the modules.
+  Scripts read colors from `themeColors` in the generated `design-system.ts`; the checker's allow list keeps only the Google sign-in mark's brand colors.
 - Noninteractive status, type, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
-- Checkbox, SectionHeader, and Skeleton are the Web counterparts of `MTCheckbox`, `MTSectionHeader` with `MTListHeader`, and `MTLoadingSkeleton`.
+  `packages/design-system/components/badge.yaml` specifies it with native `MTBadge`.
+- Checkbox, SectionHeader, and Skeleton are the Web counterparts of `MTCheckbox`, `MTSectionHeader`, and `MTLoadingSkeleton`.
   `components/checkbox.tsx` is a native `input type="checkbox"` that submits like any other, named by its label and described by an optional explanation, with a `small` and a `medium` size.
-  `components/section-header.tsx` is one component whose `variant` is `section` (a serif title, like `MTSectionHeader`) or `list` (the small uppercase heading above a list, like `MTListHeader`); both take a detail, a description, an action, and a heading level chosen by the caller, because the two differ only in typography.
+  `components/section-header.tsx` is one component whose `variant` is `section` (a serif title) or `list` (the small uppercase heading above a list), like `MTSectionHeader`; both take a detail, a description, an action, and a heading level chosen by the caller, because the two differ only in typography.
   `components/skeleton.tsx` is a decorative placeholder hidden from assistive technology that stops its shimmer for reduced motion; `ProgressiveImage` and the route loading fallback use it, and the surrounding region announces the loading state.
   Feature code does not hand-roll checkbox markup, uppercase list headings, or shimmer placeholders; the `/design-system` specimens `checkbox`, `section-header`, and `skeleton` show every variant and state.
 - Dot-separated summary and metadata rows use Web `components/separated-list.tsx` and native `MTFlowLayout` with `MTFlowSeparator`, or `MTWordFlow` for facts that read like a sentence.
@@ -365,10 +408,10 @@ Pair it with the test file carrying the same feature name.
 - Cross-platform components preserve meaning and state while allowing native interaction differences.
 - Native `DesignSystem/Components` owns reusable presentation components.
   Generated `DesignTokens.swift` supplies semantic colors, the `MTTextRole` and `MTFont` text roles that follow Dynamic Type, `MTIcon`, `MTPageWidth`, spacing, sizes, layout, radius, motion and easing, line heights, shadow layers, state, materials, elevation, and the catalogs the gallery lists.
-  `MTFoundations.swift` holds the view helpers that apply them, such as `mtTextRole`, `mtShadow`, `mtLineSpacing`, and the `MTIcon` image and label initializers.
+  `MTFoundations.swift` holds the view helpers that apply them, such as `mtTextRole`, `mtIcon`, `mtShadow`, `mtMaterial`, `mtLineSpacing`, and the `MTIcon` image and label initializers.
   Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, SectionHeader, and EmptyState.
   `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library and People.
-  `MTListHeader` and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
+  `MTSectionHeader` with the `list` variant and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
   `MTSheet` is the Web Dialog: its eyebrow, serif title, close action, scrolling content, failure message, and footer actions.
   A form sheet opens at full height with room to push detail such as Version history, and a fitted sheet sizes itself to short content; `MTSheetOption` is the Web dialog's icon, title, and description choice.
   `confirmationDialog` stands in for the Web confirmation shell.

@@ -35,12 +35,13 @@ struct MTFormSection<Content: View>: View {
       .padding(.top, MTSpacing.s1)
       .background {
         shape.fill(MTColor.surface)
-          .overlay(shape.fill(MTColor.accentSubtle.opacity(isAccent ? 0.42 : 0)))
+          .overlay(shape.fill(isAccent ? MTColor.accentNotice : .clear))
       }
       .overlay {
-        shape.strokeBorder(MTColor.border, lineWidth: 1)
+        shape.strokeBorder(MTColor.border, lineWidth: MTSize.Stroke.thin)
           .overlay(
-            shape.strokeBorder(MTColor.accent.opacity(isAccent ? 0.38 : 0), lineWidth: 1)
+            shape.strokeBorder(
+              isAccent ? MTColor.accentGroupBorder : .clear, lineWidth: MTSize.Stroke.thin)
           )
           .mask {
             Rectangle()
@@ -57,8 +58,7 @@ struct MTFormSection<Content: View>: View {
 
   private var legend: some View {
     Text(title.uppercased())
-      .font(MTFont.caption.weight(.semibold))
-      .tracking(0.7)
+      .mtTextRole(.legend)
       .foregroundStyle(MTColor.inkMuted)
       .padding(.horizontal, MTSpacing.s2)
   }
@@ -84,7 +84,7 @@ struct MTFormNote: View {
 
   var body: some View {
     Text(text)
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(color)
       .mtLineSpacing(MTLineHeight.body)
       .fixedSize(horizontal: false, vertical: true)
@@ -100,7 +100,7 @@ struct MTFactList: View {
       ForEach(Array(visibleFacts.enumerated()), id: \.offset) { _, fact in
         VStack(alignment: .leading, spacing: MTSpacing.s2) {
           Text(fact.label)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
           Text(fact.value)
             .font(MTFont.bodyLarge)
@@ -126,7 +126,7 @@ struct MTFactList: View {
   }
 }
 
-/// Web focused-record `section`: a serif heading under a rule, such as Story or Organize.
+/// Web focused-record `section`: a section header under a rule, such as Story or Organize.
 struct MTDetailSection<Content: View>: View {
   let title: String
   private let content: Content
@@ -138,10 +138,7 @@ struct MTDetailSection<Content: View>: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      Text(title)
-        .font(.system(.title3, design: .serif))
-        .foregroundStyle(MTColor.ink)
-        .accessibilityAddTraits(.isHeader)
+      MTSectionHeader(title)
       content
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -159,7 +156,7 @@ struct MTRecordPhotos: View {
 
   var body: some View {
     LazyVGrid(
-      columns: [GridItem(.adaptive(minimum: 220), spacing: MTSpacing.s3)],
+      columns: [GridItem(.adaptive(minimum: MTSize.FocusedRecord.photoColumn), spacing: MTSpacing.s3)],
       spacing: MTSpacing.s3
     ) {
       ForEach(Array(photos.enumerated()), id: \.element.id) { index, photo in
@@ -193,9 +190,9 @@ struct MTRecordMark: View {
   var body: some View {
     let isRegular = horizontalSizeClass == .regular
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      Image(icon).font(.system(size: 22, weight: .medium)).foregroundStyle(MTColor.accent)
+      Image(icon).font(.mtIcon(MTSize.Icon.s22, weight: .medium)).foregroundStyle(MTColor.accent)
       Text(title)
-        .font(.system(isRegular ? .title3 : .subheadline, design: .serif))
+        .font(isRegular ? MTFont.quietTitle : MTFont.quietTitleSmall)
         .foregroundStyle(MTColor.inkMuted)
         .lineLimit(2)
     }
@@ -218,10 +215,35 @@ struct MTRecordMark: View {
   }
 }
 
-/// Web `FocusedRecordDetail`: a record's own page with its photos, facts, Story, and Organize,
-/// an Edit action beside the title, and Version history. `extra` follows Organize, such as a
-/// Goal's connected items.
+/// Web `FocusedRecordDetail`: a record's own scrolling page, holding its `MTFocusedRecordView`.
 struct MTFocusedRecordPage<Extra: View>: View {
+  let kind: String
+  let title: String
+  var photos: [MTPhotoField.SavedPhoto] = []
+  let facts: [(label: String, value: String?)]
+  var story: String?
+  var storyTitle = "Story"
+  var collectionNames: [String] = []
+  var tagNames: [String] = []
+  let edit: () -> Void
+  var history: (() -> Void)?
+  @ViewBuilder var extra: Extra
+
+  var body: some View {
+    MTPage(width: .compact, spacing: MTSpacing.s6) {
+      MTFocusedRecordView(
+        kind: kind, title: title, photos: photos, facts: facts, story: story,
+        storyTitle: storyTitle, collectionNames: collectionNames, tagNames: tagNames, edit: edit,
+        history: history
+      ) { extra }
+    }
+  }
+}
+
+/// Web `FocusedRecordView`: a record's own page with its photos, facts, Story, and Organize,
+/// an Edit action beside the title, and Version history. `extra` follows Organize, such as a
+/// Goal's connected items. Specified in packages/design-system/components/focused-record.yaml.
+struct MTFocusedRecordView<Extra: View>: View {
   let kind: String
   let title: String
   var photos: [MTPhotoField.SavedPhoto] = []
@@ -238,7 +260,7 @@ struct MTFocusedRecordPage<Extra: View>: View {
   private var slug: String { kind.lowercased().replacingOccurrences(of: " ", with: "-") }
 
   var body: some View {
-    MTPage(width: .compact, spacing: MTSpacing.s6) {
+    VStack(alignment: .leading, spacing: MTSpacing.s6) {
       MTPageHeader(eyebrow: kind, title: title) {
         Button(action: edit) {
           Label("Edit", icon: .edit)
@@ -284,6 +306,21 @@ struct MTFocusedRecordPage<Extra: View>: View {
 }
 
 extension MTFocusedRecordPage where Extra == EmptyView {
+  init(
+    kind: String, title: String, photos: [MTPhotoField.SavedPhoto] = [],
+    facts: [(label: String, value: String?)], story: String? = nil, storyTitle: String = "Story",
+    collectionNames: [String] = [], tagNames: [String] = [], edit: @escaping () -> Void,
+    history: (() -> Void)? = nil
+  ) {
+    self.init(
+      kind: kind, title: title, photos: photos, facts: facts, story: story,
+      storyTitle: storyTitle, collectionNames: collectionNames, tagNames: tagNames, edit: edit,
+      history: history
+    ) { EmptyView() }
+  }
+}
+
+extension MTFocusedRecordView where Extra == EmptyView {
   init(
     kind: String, title: String, photos: [MTPhotoField.SavedPhoto] = [],
     facts: [(label: String, value: String?)], story: String? = nil, storyTitle: String = "Story",

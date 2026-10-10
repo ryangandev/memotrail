@@ -1,0 +1,499 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://memotrail.app/schema/component-spec.schema.json",
+  "title": "MemoTrail component spec",
+  "description": "One design-system component, described once for Web and iOS. `pnpm design-system:check` validates every packages/design-system/components/*.yaml against this schema, then checks what a schema cannot: that the platform files declare their symbols, that every token exists on the platforms that use it with the type its property needs, that rules only name real props, values, parts, and states, and that specimen ids are unique. The generator turns props and specimens into TypeScript and Swift, so a value that differs between the platforms fails to compile.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "platforms",
+    "purpose",
+    "use",
+    "avoid",
+    "anatomy",
+    "props",
+    "states",
+    "tokens",
+    "content",
+    "accessibility",
+    "platformDifferences",
+    "specimens"
+  ],
+  "properties": {
+    "name": {
+      "description": "The component's shared PascalCase name, such as Badge. The file is its kebab-case name, such as badge.yaml, and the generated Swift types take an MT prefix.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "platforms": {
+      "description": "Where each platform implements the component, or why it does not.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["web", "ios"],
+      "properties": {
+        "web": { "$ref": "#/$defs/platform" },
+        "ios": { "$ref": "#/$defs/platform" }
+      }
+    },
+    "purpose": {
+      "description": "One sentence: what the component is for.",
+      "$ref": "#/$defs/text"
+    },
+    "use": {
+      "description": "Situations the component is the right choice for.",
+      "$ref": "#/$defs/sentences"
+    },
+    "avoid": {
+      "description": "Situations it is the wrong choice for, each naming what to use instead.",
+      "$ref": "#/$defs/sentences"
+    },
+    "anatomy": {
+      "description": "The named parts, in drawing order from the outside in, each with what it is. Token rules can only style these parts.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "#/$defs/partName" },
+      "additionalProperties": { "$ref": "#/$defs/text" }
+    },
+    "props": {
+      "description": "The appearance and behavior axes callers choose. Each platform keeps its idiomatic prop name; the values must match, and the generator emits them as a TypeScript union and a Swift enum.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/identifier" },
+      "additionalProperties": {
+        "oneOf": [
+          { "$ref": "#/$defs/enumProp" },
+          { "$ref": "#/$defs/booleanProp" }
+        ]
+      }
+    },
+    "states": {
+      "description": "The interaction and validation states the component draws. Every component has default; invalid is a field whose value failed validation and shows why.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/state" },
+      "contains": { "const": "default" }
+    },
+    "tokens": {
+      "description": "Which semantic token draws each part property, as a list of rules. A rule without `when` applies always; a rule with `when` applies while every condition holds. Later rules override earlier ones for the same part property, like the CSS cascade.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/tokenRule" }
+    },
+    "content": {
+      "description": "How the component's text behaves.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lines", "overflow", "casing", "length"],
+      "properties": {
+        "lines": {
+          "description": "The most lines the label takes before it overflows, or unlimited.",
+          "oneOf": [
+            { "type": "integer", "minimum": 1 },
+            { "const": "unlimited" }
+          ]
+        },
+        "overflow": {
+          "description": "What happens to text that does not fit: truncateTail ends it with an ellipsis, wrap moves it to the next line, and per platform names a documented platform difference.",
+          "enum": ["truncateTail", "wrap", "perPlatform"]
+        },
+        "casing": {
+          "description": "How callers write the text: sentence case, title case, or as written, such as a person's tag.",
+          "enum": ["sentence", "title", "asWritten"]
+        },
+        "length": {
+          "description": "How long the text should be, in words or characters, and what to do with longer text.",
+          "$ref": "#/$defs/text"
+        },
+        "notes": {
+          "description": "Other writing guidance, such as which text keeps its own casing.",
+          "$ref": "#/$defs/sentences"
+        }
+      }
+    },
+    "accessibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "label", "focus", "minimumHitTarget", "dynamicType"],
+      "properties": {
+        "role": {
+          "description": "What assistive technology announces the component as on each platform.",
+          "$ref": "#/$defs/text"
+        },
+        "label": {
+          "description": "What a screen reader speaks, and where it comes from.",
+          "$ref": "#/$defs/text"
+        },
+        "focus": {
+          "description": "Whether the component takes focus, where it sits in the focus order, and how focus is drawn.",
+          "$ref": "#/$defs/text"
+        },
+        "minimumHitTarget": {
+          "description": "The size token every interactive instance must reach, or notInteractive.",
+          "oneOf": [
+            { "$ref": "#/$defs/tokenValue" },
+            { "const": "notInteractive" }
+          ]
+        },
+        "dynamicType": {
+          "description": "How the component responds to larger text: iOS Dynamic Type and Web zoom.",
+          "$ref": "#/$defs/text"
+        }
+      }
+    },
+    "platformDifferences": {
+      "description": "Every way the platforms intentionally differ, with the reason. A difference that is not listed here is a bug.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["difference", "reason"],
+        "properties": {
+          "difference": { "$ref": "#/$defs/text" },
+          "reason": { "$ref": "#/$defs/text" }
+        }
+      }
+    },
+    "specimens": {
+      "description": "Named combinations both galleries must show. Web marks each with data-specimen=\"<id>\" and iOS with the accessibility identifier specimen-<id>; generated lists drive a Web e2e test and a native UI test that fail until both galleries show every specimen.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description"],
+        "properties": {
+          "id": {
+            "description": "A stable kebab-case id that starts with the component's kebab-case name, such as badge-tones. Ids are unique across every spec.",
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)+$"
+          },
+          "description": {
+            "description": "What the specimen shows, for a reviewer comparing the galleries.",
+            "$ref": "#/$defs/text"
+          },
+          "covers": {
+            "description": "Values of enum props the specimen must draw, each value at least once, or all of them. The Web e2e test checks them through the component's data attributes.",
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": { "$ref": "#/$defs/identifier" },
+            "additionalProperties": {
+              "oneOf": [
+                { "const": "all" },
+                {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": { "$ref": "#/$defs/identifier" }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": {
+      "description": "Prose that ends like a sentence. Quote text that contains \" #\", which YAML otherwise reads as the start of a comment, so a cut-off sentence fails here.",
+      "type": "string",
+      "pattern": "^\\S[\\s\\S]*[.?!)]$"
+    },
+    "sentences": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/text" }
+    },
+    "identifier": {
+      "description": "A camelCase name.",
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9]*$"
+    },
+    "partName": {
+      "description": "A camelCase part name. `when` is reserved for token rules.",
+      "type": "string",
+      "pattern": "^[a-z][A-Za-z0-9]*$",
+      "not": { "const": "when" }
+    },
+    "platformName": { "enum": ["web", "ios"] },
+    "sourcePath": {
+      "description": "An implementation file, relative to the repository root.",
+      "type": "string",
+      "pattern": "^apps/[^\\s]+\\.(tsx|ts|swift)$"
+    },
+    "symbols": {
+      "description": "The functions, components, or types the file declares for this component.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      }
+    },
+    "platform": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "symbols"],
+          "properties": {
+            "path": { "$ref": "#/$defs/sourcePath" },
+            "symbols": { "$ref": "#/$defs/symbols" },
+            "files": {
+              "description": "Further files that implement parts of the component, such as a rich-text renderer and its editor, each with the symbols it declares.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "symbols"],
+                "properties": {
+                  "path": { "$ref": "#/$defs/sourcePath" },
+                  "symbols": { "$ref": "#/$defs/symbols" }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["unavailable"],
+          "properties": {
+            "unavailable": {
+              "description": "Why this platform has no implementation.",
+              "$ref": "#/$defs/text"
+            }
+          }
+        }
+      ]
+    },
+    "propCommon": {
+      "description": "Fields every prop may have.",
+      "type": "object",
+      "properties": {
+        "platforms": {
+          "description": "Limits the prop to some platforms; list the reason in platformDifferences. Without it, the prop exists on every platform that implements the component.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/platformName" }
+        },
+        "platformNames": {
+          "description": "A platform's own name for the prop when it differs from the spec's, such as isLoading on iOS.",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "web": { "$ref": "#/$defs/identifier" },
+            "ios": { "$ref": "#/$defs/identifier" }
+          }
+        }
+      }
+    },
+    "enumProp": {
+      "description": "A prop that takes one of a fixed list of values.",
+      "type": "object",
+      "allOf": [{ "$ref": "#/$defs/propCommon" }],
+      "required": ["description", "values", "default"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "description": {
+          "description": "What the prop changes and when to choose each value.",
+          "$ref": "#/$defs/text"
+        },
+        "values": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/identifier" }
+        },
+        "default": { "$ref": "#/$defs/identifier" }
+      }
+    },
+    "booleanProp": {
+      "description": "A prop that is on or off.",
+      "type": "object",
+      "allOf": [{ "$ref": "#/$defs/propCommon" }],
+      "required": ["description", "type", "default"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "description": {
+          "description": "What the prop changes when it is on.",
+          "$ref": "#/$defs/text"
+        },
+        "type": { "const": "boolean" },
+        "default": { "type": "boolean" }
+      }
+    },
+    "state": {
+      "enum": [
+        "default",
+        "hover",
+        "pressed",
+        "focus",
+        "disabled",
+        "loading",
+        "selected",
+        "invalid"
+      ]
+    },
+    "tokenReference": {
+      "description": "A DTCG-style reference to a semantic token, or to a material or elevation group, such as {color.accent}, {space.1-5}, or {material.chip}.",
+      "type": "string",
+      "pattern": "^\\{[a-z][A-Za-z0-9]*(\\.[A-Za-z0-9-]+)+\\}$"
+    },
+    "tokenValue": {
+      "description": "One reference for every platform, or a reference per platform when they draw the property from different tokens. Leaving a platform out means that platform does not draw the property; say why in platformDifferences.",
+      "oneOf": [
+        { "$ref": "#/$defs/tokenReference" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "web": { "$ref": "#/$defs/tokenReference" },
+            "ios": { "$ref": "#/$defs/tokenReference" }
+          }
+        }
+      ]
+    },
+    "partTokens": {
+      "description": "The token for each property of one part.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "description": "Fill color.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "color": {
+          "description": "Text or icon color.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "border": {
+          "description": "Border color.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "borderWidth": {
+          "description": "Border or stroke width, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "radius": {
+          "description": "Corner radius, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "paddingInline": {
+          "description": "Leading and trailing padding, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "paddingBlock": {
+          "description": "Top and bottom padding, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "gap": {
+          "description": "Space between children, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "size": {
+          "description": "Width and height of a square part, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "width": {
+          "description": "Width, or the widest a part that shrinks with its container gets, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "height": {
+          "description": "Fixed height of a part that is not square, such as a placeholder line, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "minHeight": {
+          "description": "Minimum height, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "minWidth": {
+          "description": "The narrowest a part gets before its neighbors wrap below it, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "maxWidth": {
+          "description": "The widest a part gets, such as a readable line length or a page width, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "type": {
+          "description": "A text role from the type group.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "fontFamily": {
+          "description": "A font family, for text that does not use a whole text role.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "fontSize": {
+          "description": "A font size, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "fontWeight": {
+          "description": "A font weight.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "lineHeight": {
+          "description": "A unitless line-height multiplier.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "opacity": {
+          "description": "Opacity from 0 to 1, a number.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "shadow": {
+          "description": "A shadow.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "material": {
+          "description": "A material group: its tint and blur on Web, its tint and system material on iOS.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "offset": {
+          "description": "Distance from the part it surrounds, such as a focus ring's gap, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "duration": {
+          "description": "How long a change animates.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "easing": {
+          "description": "The timing curve of that animation.",
+          "$ref": "#/$defs/tokenValue"
+        }
+      }
+    },
+    "tokenRule": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "when": {
+          "description": "Conditions on props and state. An enum prop takes a value or a list of values, a boolean prop takes true or false, and state takes one of the spec's states other than default.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "$ref": "#/$defs/identifier" },
+          "additionalProperties": {
+            "oneOf": [
+              { "$ref": "#/$defs/identifier" },
+              { "type": "boolean" },
+              {
+                "type": "array",
+                "minItems": 2,
+                "uniqueItems": true,
+                "items": { "$ref": "#/$defs/identifier" }
+              }
+            ]
+          }
+        }
+      },
+      "propertyNames": {
+        "anyOf": [{ "const": "when" }, { "$ref": "#/$defs/partName" }]
+      },
+      "additionalProperties": { "$ref": "#/$defs/partTokens" }
+    }
+  }
+}

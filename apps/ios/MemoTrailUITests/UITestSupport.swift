@@ -12,8 +12,9 @@ extension XCTestCase {
       guard let footer, footer.exists else { return true }
       return element.frame.maxY < footer.frame.minY
     }
-    // Long gallery sections at accessibility text sizes can take many screens to reach.
-    for _ in 0..<24 where !isClear() { app.swipeUp() }
+    // Long gallery sections at accessibility text sizes can take many screens to reach; the
+    // Containers section puts some elements more than 24 swipes down.
+    for _ in 0..<48 where !isClear() { app.swipeUp() }
     // Let scroll momentum settle, or the next tap only stops the scroll.
     var frame = element.frame
     for _ in 0..<10 {
@@ -29,7 +30,9 @@ extension XCTestCase {
   @MainActor @discardableResult
   func revealWhole(_ element: XCUIElement, in app: XCUIApplication) -> XCUIElement {
     let visible = clearArea(of: app)
-    for _ in 0..<20 {
+    // Each drag moves at most 300 points, and long gallery sections at accessibility text sizes
+    // put some elements more than 20 drags down.
+    for _ in 0..<48 {
       let frame = element.frame
       // How far the content should move up; negative moves it down.
       let distance: CGFloat

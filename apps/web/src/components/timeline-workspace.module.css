@@ -15,7 +15,7 @@
   gap: var(--mt-space-4);
   margin-top: var(--mt-space-8);
   padding: var(--mt-space-8);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-accent);
   background: var(--mt-color-surface);
@@ -40,7 +40,7 @@
 .desktopTimeline {
   margin-top: var(--mt-space-8);
   overflow: hidden;
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-raised);
@@ -53,7 +53,7 @@
   justify-content: space-between;
   gap: var(--mt-space-4);
   padding: 0 var(--mt-space-4);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface);
   font-size: var(--mt-font-size-caption);
@@ -87,11 +87,11 @@
   top: 0;
   bottom: 0;
   left: calc(var(--timeline-lane-label-width) + var(--timeline-today-offset));
-  z-index: 1;
-  width: 1px;
+  z-index: var(--mt-layout-layer-local1);
+  width: var(--mt-size-stroke-thin);
   background: repeating-linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--mt-color-accent) 62%, transparent) 0 5px,
+    var(--mt-color-accent-stripe) 0 5px,
     transparent 5px 10px
   );
   pointer-events: none;
@@ -101,36 +101,36 @@
   position: absolute;
   top: 7px;
   right: 6px;
-  padding: 1px var(--mt-space-1);
+  padding: var(--mt-space-0-25) var(--mt-space-1);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-accent);
   background: var(--mt-color-surface);
-  font-size: 9px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-nano-font-size);
+  font-weight: var(--mt-type-nano-font-weight);
+  letter-spacing: var(--mt-type-nano-letter-spacing);
+  text-transform: var(--mt-type-nano-text-transform);
   content: "Today";
 }
 
 .axisCorner,
 .axis {
   height: 48px;
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   background: var(--mt-color-surface);
 }
 
 .axisCorner {
   position: sticky;
   left: 0;
-  z-index: 4;
+  z-index: var(--mt-layout-layer-local4);
   display: flex;
   align-items: center;
   padding: 0 var(--mt-space-4);
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-column-heading-font-size);
+  font-weight: var(--mt-type-column-heading-font-weight);
+  letter-spacing: var(--mt-type-column-heading-letter-spacing);
+  text-transform: var(--mt-type-column-heading-text-transform);
 }
 
 .axis {
@@ -143,7 +143,7 @@
   transform: translateX(-50%);
   color: var(--mt-color-ink-faint);
   font-family: var(--mt-font-family-mono);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .axis span:first-child {
@@ -157,7 +157,7 @@
 .laneLabel {
   position: sticky;
   left: 0;
-  z-index: 3;
+  z-index: var(--mt-layout-layer-local3);
   display: flex;
   min-height: 70px;
   align-items: flex-start;
@@ -165,14 +165,14 @@
   gap: var(--mt-space-2);
   padding: var(--mt-space-4) var(--mt-space-3) var(--mt-space-3)
     var(--mt-space-4);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   background: var(--mt-color-surface-raised);
 }
 
 .laneLabel > span {
   display: grid;
   min-width: 0;
-  gap: 3px;
+  gap: var(--mt-space-0-75);
 }
 
 .laneLabel strong {
@@ -186,7 +186,7 @@
 
 .laneLabel small {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .laneLabel
@@ -203,7 +203,7 @@
   height: 27px;
   flex: 0 0 auto;
   place-items: center;
-  border: 1px solid transparent;
+  border: var(--mt-size-stroke-thin) solid transparent;
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-faint);
   background: transparent;
@@ -225,24 +225,20 @@
 }
 
 .laneCanvas {
-  --timeline-lane-surface: color-mix(
-    in srgb,
-    var(--mt-color-surface-raised) 94%,
-    var(--mt-color-accent-subtle)
-  );
+  --timeline-lane-surface: var(--mt-color-lane-surface);
   position: relative;
   min-height: 70px;
   overflow: hidden;
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   background: var(--timeline-lane-surface);
 }
 
 .yearLine {
   position: absolute;
   inset: 0 auto 0 0;
-  width: 1px;
+  width: var(--mt-size-stroke-thin);
   background: var(--mt-color-border);
-  opacity: 0.66;
+  opacity: var(--mt-state-muted-opacity-grid-line);
 }
 
 .periodItem,
@@ -250,10 +246,10 @@
   position: absolute;
   top: calc(16px + var(--item-row) * 49px);
   left: var(--item-left);
-  z-index: 2;
+  z-index: var(--mt-layout-layer-local2);
   height: 34px;
   color: var(--mt-color-ink);
-  font-size: 11px;
+  font-size: var(--mt-font-size-micro);
   font-weight: var(--mt-font-weight-medium);
   text-align: left;
   text-decoration: none;
@@ -265,7 +261,7 @@
   display: flex;
   width: var(--item-width);
   align-items: center;
-  gap: 7px;
+  gap: var(--mt-space-1-75);
   transform: translateX(var(--item-offset));
   padding: 0;
   background: transparent;
@@ -296,13 +292,13 @@
 /* A Period wide enough for its title draws the bar itself, with the title inside. */
 .periodItem[data-label="inside"],
 .periodBar {
-  border: 1px solid color-mix(in srgb, var(--mt-color-accent) 42%, transparent);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-accent-border-strong);
   border-radius: var(--mt-radius-small);
   background: var(--mt-color-accent-subtle);
 }
 
 .periodItem[data-label="inside"] {
-  padding: 0 10px;
+  padding: 0 var(--mt-space-2-5);
 }
 
 .periodBar {
@@ -313,28 +309,24 @@
 
 .periodItem[data-label="inside"][data-ongoing="true"],
 .periodItem[data-ongoing="true"] .periodBar {
-  border-right: 2px solid var(--mt-color-accent);
+  border-right: var(--mt-size-stroke-medium) solid var(--mt-color-accent);
   border-radius: var(--mt-radius-small) 0 0 var(--mt-radius-small);
 }
 
 .periodItem[data-label="inside"]:hover,
 .periodItem:hover .periodBar {
   border-color: var(--mt-color-accent);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-accent-subtle) 72%,
-    var(--mt-color-accent)
-  );
+  background: var(--mt-state-hover-period-bar);
 }
 
 .momentDot {
   width: 12px;
   height: 12px;
   flex: 0 0 auto;
-  border: 3px solid var(--mt-color-surface-raised);
+  border: var(--mt-size-stroke-thick) solid var(--mt-color-surface-raised);
   border-radius: 50%;
   background: var(--mt-color-warm);
-  box-shadow: 0 0 0 1px var(--mt-color-warm);
+  box-shadow: 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-warm);
 }
 
 .periodItem:not([data-label="inside"]):hover,
@@ -346,7 +338,7 @@
 .labelProbe {
   position: absolute;
   visibility: hidden;
-  font-size: 11px;
+  font-size: var(--mt-font-size-micro);
   font-weight: var(--mt-font-weight-medium);
   pointer-events: none;
 }
@@ -355,11 +347,11 @@
   position: absolute;
   top: 18px;
   left: var(--mt-space-4);
-  padding: 7px 10px;
+  padding: var(--mt-space-1-75) var(--mt-space-2-5);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-faint);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--mt-font-size-micro);
   cursor: pointer;
 }
 
@@ -375,12 +367,12 @@
 .dialogBackdrop {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: var(--mt-layout-layer-panel);
   display: grid;
   place-items: center;
   padding: var(--mt-space-6);
-  background: color-mix(in srgb, var(--mt-color-scrim) 48%, transparent);
-  backdrop-filter: blur(5px);
+  background: var(--mt-material-sheet-scrim-tint);
+  backdrop-filter: var(--mt-material-sheet-scrim-backdrop-filter);
 }
 
 .editorLoading {
@@ -388,7 +380,7 @@
   align-items: center;
   gap: var(--mt-space-3);
   padding: var(--mt-space-5) var(--mt-space-6);
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
@@ -399,10 +391,11 @@
 .editorLoading > span {
   width: 16px;
   height: 16px;
-  border: 2px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-medium) solid var(--mt-color-border-strong);
   border-top-color: var(--mt-color-accent);
   border-radius: 50%;
-  animation: editor-loading-spin 700ms linear infinite;
+  animation: editor-loading-spin var(--mt-motion-loading-spin)
+    var(--mt-motion-easing-linear) infinite;
 }
 
 @keyframes editor-loading-spin {
@@ -423,16 +416,16 @@
   gap: var(--mt-space-3);
   min-height: 76px;
   padding: var(--mt-space-3) var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    transform 120ms ease;
+    border-color var(--mt-motion-quick) var(--mt-motion-easing-standard),
+    background var(--mt-motion-quick) var(--mt-motion-easing-standard),
+    transform var(--mt-motion-quick) var(--mt-motion-easing-standard);
 }
 
 .creationOption:hover {
@@ -453,7 +446,7 @@
 
 .creationOption > span:nth-child(2) {
   display: grid;
-  gap: 3px;
+  gap: var(--mt-space-0-75);
   min-width: 0;
 }
 
@@ -465,7 +458,7 @@
 .creationOption small {
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
-  line-height: 1.35;
+  line-height: var(--mt-line-height-title-relaxed);
 }
 
 .creationOption > svg {
@@ -491,7 +484,7 @@
 
 .mobileLane {
   overflow: hidden;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
 }
@@ -503,7 +496,7 @@
   justify-content: space-between;
   gap: var(--mt-space-3);
   padding: var(--mt-space-3) var(--mt-space-4);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .mobileLane header:not([data-ui-page-header]) h2 {
@@ -514,7 +507,7 @@
 
 .mobileLane header:not([data-ui-page-header]) span {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .mobileEmpty {
@@ -534,7 +527,7 @@
   gap: var(--mt-space-3);
   min-height: 62px;
   padding: var(--mt-space-3) var(--mt-space-4);
-  border-bottom: 1px solid var(--mt-color-border);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-muted);
   background: transparent;
   text-align: left;
@@ -553,7 +546,7 @@
 .mobileItems > a > span:nth-child(2) {
   display: grid;
   min-width: 0;
-  gap: 3px;
+  gap: var(--mt-space-0-75);
 }
 
 .mobileItems strong {
@@ -567,7 +560,7 @@
 
 .mobileItems small {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .mobilePeriodMarker {
@@ -580,7 +573,7 @@
 .mobileMomentMarker {
   width: 10px;
   height: 10px;
-  margin-left: 2px;
+  margin-left: var(--mt-space-0-5);
   border-radius: 50%;
   background: var(--mt-color-warm);
 }
@@ -622,7 +615,7 @@
   }
 }
 .undatedItems {
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   padding: var(--mt-space-6);
   display: grid;
   gap: var(--mt-space-4);
@@ -652,7 +645,7 @@
   text-align: left;
   color: inherit;
   background: transparent;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   padding: var(--mt-space-3) var(--mt-space-4);
   cursor: pointer;

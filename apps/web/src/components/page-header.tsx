@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import styles from "./page-header.module.css";
 
+/**
+ * A page's title block: an optional eyebrow, the serif title, a description, and actions.
+ * Specified in packages/design-system/components/page-header.yaml.
+ */
 export function PageHeader({
   title,
   eyebrow,

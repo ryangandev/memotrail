@@ -13,13 +13,20 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { after, before, describe, test } from "node:test";
 import vm from "node:vm";
-import { bundled, cardGroups, excluded } from "./claude-design/catalog.mjs";
+import {
+  bundled,
+  cardGroups,
+  cardName,
+  excluded,
+  specName,
+} from "./claude-design/catalog.mjs";
 import { componentNames } from "./claude-design/declarations.mjs";
 import {
   checkSpecAgainstComponent,
+  loadSpecs,
   normalizeSpec,
 } from "./claude-design/docs.mjs";
-import { specimenOrder } from "./claude-design/previews.mjs";
+import { specimenOrder, specPreviewHeight } from "./claude-design/previews.mjs";
 import { tokenNamePattern } from "./claude-design/tokens.mjs";
 import {
   cardMarker,
@@ -51,7 +58,7 @@ before(async () => {
   await mkdir(join(project, "components/Cover"), { recursive: true });
   await writeFile(
     join(project, "components/Cover/preview.html"),
-    '<!-- @dsCard group="Foundations" height=400 -->\n<div id="root"></div>\n',
+    '<!-- @dsCard height=288 -->\n<div class="cover"></div>\n',
   );
   await mkdir(join(project, "components/Removed"), { recursive: true });
   await writeFile(join(project, "components/Removed/README.md"), "Stale.\n");
@@ -106,6 +113,14 @@ describe("tokens.json", () => {
     for (const [family, value] of extras) {
       assert.ok(value.tokens.length <= 60, `${family} has at most 60 tokens`);
     }
+  });
+
+  test("keeps one component's geometry apart from the shared size scale", () => {
+    const names = (family) => tokens[family].tokens.map(({ name }) => name);
+    assert.ok(names("size").includes("mt-size-icon-16"));
+    assert.ok(names("size").includes("mt-size-hit-target"));
+    assert.ok(names("componentSize").includes("mt-size-checkbox-small"));
+    assert.ok(!names("size").includes("mt-size-checkbox-small"));
   });
 
   test("names match the copy's pattern, the Web variables, and are unique", async () => {
@@ -359,6 +374,47 @@ describe("components", () => {
     }
   });
 
+  test("index.d.ts writes out the generated unions the components use, in their order", async () => {
+    const text = await readFile(join(project, "components/index.d.ts"), "utf8");
+    const generated = await readFile(
+      resolve(repositoryRoot, "apps/web/src/generated/design-system.ts"),
+      "utf8",
+    );
+    const lists = new Map(
+      [
+        ...generated.matchAll(
+          /^export const (\w+) = \[([^\]]*)\] as const;$/gm,
+        ),
+      ].map((match) => [match[1], [...match[2].matchAll(/"([^"]*)"/g)]]),
+    );
+    const aliases = [
+      ...generated.matchAll(
+        /^export type (\w+) = \(typeof (\w+)\)\[number\];$/gm,
+      ),
+    ];
+    const copied = aliases.filter(([, alias]) =>
+      text.includes(`export type ${alias} =`),
+    );
+    for (const name of ["IconName", "BadgeTone", "ButtonVariant"]) {
+      assert.ok(
+        copied.some(([, alias]) => alias === name),
+        `copies ${name}`,
+      );
+    }
+    for (const [, alias, list] of copied) {
+      const declared = text.match(
+        new RegExp(`export type ${alias} =([^;]*);`),
+      )[1];
+      assert.deepEqual(
+        [...declared.matchAll(/"([^"]*)"/g)].map((match) => match[1]),
+        lists.get(list).map((match) => match[1]),
+        alias,
+      );
+    }
+    assert.doesNotMatch(text, /typeof \w+\)\[number\]/);
+    assert.doesNotMatch(text, /from "@\//);
+  });
+
   test("the catalog lists every Web component file exactly once", async () => {
     const files = (await readdir(webComponents)).filter(
       (file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file),
@@ -409,6 +465,78 @@ describe("README.md", () => {
   });
 });
 
+test("exports with the repository's own component specs", async () => {
+  const own = await mkdtemp(join(tmpdir(), "memotrail-claude-design-specs-"));
+  try {
+    const exported = await exportClaudeDesign({ output: own });
+    const specs = await loadSpecs(
+      resolve(packageRoot, "components"),
+      repositoryRoot,
+    );
+    assert.ok(specs.length > 0);
+    for (const spec of specs) {
+      const readme = await readFile(
+        join(exported.project, `components/${cardName(spec.name)}/README.md`),
+        "utf8",
+      );
+      for (const specimen of spec.specimens) {
+        assert.match(readme, new RegExp(`^- \`${specimen.id}\`: `, "m"));
+      }
+      // The spec's props, then the Web props of the component and each part that takes the prop,
+      // list every value, and Web defaults show the literal read from the generated constants.
+      // A spec-only card has no bundled component, so it lists only the spec's rows.
+      const specOnly = exported.specOnly.includes(spec.name);
+      for (const [name, prop] of Object.entries(spec.props)) {
+        if (!prop.values || prop.platforms?.includes("web") === false) continue;
+        const rows = readme
+          .split("\n")
+          .filter((line) => line.startsWith(`| \`${name}\` |`));
+        const [specRow, ...webRows] = rows;
+        assert.ok(specRow, `${spec.name} ${name} has a spec row`);
+        assert.equal(
+          webRows.length > 0,
+          !specOnly,
+          `${spec.name} ${name} has Web rows only when bundled`,
+        );
+        for (const value of prop.values) {
+          assert.ok(specRow.includes(`\`${value}\``), `${name} ${value}`);
+          for (const row of webRows) {
+            assert.ok(row.includes(`"${value}"`), `Web ${name} ${value}`);
+          }
+        }
+        for (const row of webRows) {
+          assert.ok(row.includes(`| \`"${prop.default}"\` |`), row);
+        }
+      }
+    }
+  } finally {
+    await rm(own, { recursive: true, force: true });
+  }
+});
+
+test("a bundled component can follow a spec with another name", async () => {
+  // DatePickerField is the Web side of the DateField spec, so its card shows that spec.
+  const datePicker = bundled.find(({ name }) => name === "DatePickerField");
+  assert.equal(specName(datePicker), "DateField");
+  assert.equal(cardName("DateField"), "DatePickerField");
+  assert.equal(cardName("Badge"), "Badge");
+  assert.equal(cardName("Toast"), "Toast");
+  const own = await mkdtemp(
+    join(tmpdir(), "memotrail-claude-design-spec-name-"),
+  );
+  try {
+    const exported = await exportClaudeDesign({ output: own });
+    assert.ok(!exported.specOnly.includes("DateField"));
+    const readme = await readFile(
+      join(exported.project, "components/DatePickerField/README.md"),
+      "utf8",
+    );
+    assert.match(readme, /^- `date-field-precision`: /m);
+  } finally {
+    await rm(own, { recursive: true, force: true });
+  }
+});
+
 test("no exported text uses the em dash", async () => {
   for (const file of result.files) {
     if (file.endsWith("bundle.js")) continue;
@@ -420,6 +548,37 @@ test("no exported text uses the em dash", async () => {
 test("the exported project passes the format check", async () => {
   const { problems } = await validateProject(project);
   assert.deepEqual(problems, []);
+});
+
+test("the format check holds the cover to its own marker and height", async () => {
+  const cover = join(project, "components/Cover/preview.html");
+  const kept = await readFile(cover, "utf8");
+  const problemsWith = async (marker) => {
+    await writeFile(cover, `${marker}\n<div class="cover"></div>\n`);
+    return (await validateProject(project)).problems;
+  };
+  try {
+    for (const marker of [
+      "<!-- @dsCard height=240 -->",
+      "<!-- @dsCard height=360 -->",
+    ])
+      assert.deepEqual(await problemsWith(marker), [], marker);
+    for (const marker of [
+      '<!-- @dsCard group="Foundations" height=288 -->',
+      "<!-- @dsCard height=400 -->",
+      "<!-- @dsCard height=200 -->",
+      '<div class="cover"></div>',
+    ])
+      assert.deepEqual(
+        await problemsWith(marker),
+        [
+          "Cover/preview.html needs <!-- @dsCard height=N --> with N from 240 to 360.",
+        ],
+        marker,
+      );
+  } finally {
+    await writeFile(cover, kept);
+  }
 });
 
 describe("spec checks", () => {
@@ -447,6 +606,22 @@ describe("spec checks", () => {
         specimenOrder("Badge", [{ id: "badge-sizes", title: "Sizes" }], spec()),
       /list different specimens\. Render these in specimens\/Badge\.jsx: badge-tones\. List these in the spec, or remove them: badge-sizes\./,
     );
+  });
+
+  test("sizes a spec-only card to the lines its text wraps to", () => {
+    const card = (purpose, reason, ...descriptions) =>
+      specPreviewHeight({
+        purpose,
+        reason,
+        specimens: descriptions.map((description) => ({ description })),
+      });
+    const short = card("Short.", "Short.", "One.");
+    assert.equal(short, 112 + 22 + 2 * 18);
+    // A purpose that wraps adds a body line, and a reason or specimen that wraps adds a caption line.
+    assert.equal(card("x".repeat(79), "Short.", "One."), short + 22);
+    assert.equal(card("Short.", "x".repeat(91), "One."), short + 18);
+    assert.equal(card("Short.", "Short.", "x".repeat(87)), short + 18);
+    assert.equal(card("Short.", "Short.", "One.", "Two."), short + 18);
   });
 
   test("follows the spec's specimen order and descriptions", () => {

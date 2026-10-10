@@ -25,6 +25,8 @@
 		B00000000000000000000004 /* CaptureCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000004 /* CaptureCard.swift */; };
 		B80000000000000000000001 /* MemoTrailMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = C80000000000000000000001 /* MemoTrailMark.swift */; };
 		B00000000000000000000006 /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000006 /* DesignTokens.swift */; };
+		B50000000000000000000001 /* ComponentVariants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C50000000000000000000001 /* ComponentVariants.swift */; };
+		B50000000000000000000002 /* ComponentVariants.swift in Sources */ = {isa = PBXBuildFile; fileRef = C50000000000000000000001 /* ComponentVariants.swift */; };
 		B00000000000000000000007 /* InboxEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000007 /* InboxEntry.swift */; };
 		B0000000000000000000003A /* EntryOccurrence.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000041 /* EntryOccurrence.swift */; };
 		B0000000000000000000003B /* OccurrenceEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = C00000000000000000000042 /* OccurrenceEditor.swift */; };
@@ -190,6 +192,7 @@
 		C00000000000000000000004 /* CaptureCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureCard.swift; sourceTree = "<group>"; };
 		C80000000000000000000001 /* MemoTrailMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoTrailMark.swift; sourceTree = "<group>"; };
 		C00000000000000000000006 /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		C50000000000000000000001 /* ComponentVariants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComponentVariants.swift; sourceTree = "<group>"; };
 		C00000000000000000000007 /* InboxEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxEntry.swift; sourceTree = "<group>"; };
 		C00000000000000000000041 /* EntryOccurrence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryOccurrence.swift; sourceTree = "<group>"; };
 		C00000000000000000000042 /* OccurrenceEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OccurrenceEditor.swift; sourceTree = "<group>"; };
@@ -494,6 +497,7 @@
 		A10000000000000000000009 /* Generated */ = {
 			isa = PBXGroup;
 			children = (
+				C50000000000000000000001 /* ComponentVariants.swift */,
 				C00000000000000000000006 /* DesignTokens.swift */,
 			);
 			path = Generated;
@@ -906,6 +910,7 @@
 				B00000000000000000000004 /* CaptureCard.swift in Sources */,
 				B80000000000000000000001 /* MemoTrailMark.swift in Sources */,
 				B00000000000000000000006 /* DesignTokens.swift in Sources */,
+				B50000000000000000000001 /* ComponentVariants.swift in Sources */,
 				B00000000000000000000007 /* InboxEntry.swift in Sources */,
 				B0000000000000000000003A /* EntryOccurrence.swift in Sources */,
 				B0000000000000000000003E /* MediaDelivery.swift in Sources */,
@@ -985,7 +990,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		AF0000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E10000000000000000000018, E10000000000000000000017, BF0000000000000000000001); runOnlyForDeploymentPostprocessing = 0; };
+		AF0000000000000000000002 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (E10000000000000000000018, E10000000000000000000017, BF0000000000000000000001, B50000000000000000000002); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */

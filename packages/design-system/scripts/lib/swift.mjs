@@ -136,28 +136,13 @@ export function makeSwift(system, icons, sourceLabel) {
     ]);
   });
 
-  // Fixed typography sizes and text roles
-  const fontSize = (name) => {
-    const path = `font.size.${name}`;
-    if (!light.has(path))
-      throw new Error(`Swift typography needs the token {${path}}.`);
-    return token(path).value;
-  };
-  const typographyLines = [
-    `  static let display = Font.system(size: ${fontSize("display")}, weight: .medium, design: .serif)`,
-    `  static let title = Font.system(size: ${fontSize("title")}, weight: .medium, design: .serif)`,
-    `  static let titleSmall = Font.system(size: ${fontSize("titleSmall")}, weight: .semibold)`,
-    `  static let bodyLarge = Font.system(size: ${fontSize("bodyLarge")})`,
-    `  static let body = Font.system(size: ${fontSize("body")})`,
-    `  static let label = Font.system(size: ${fontSize("label")}, weight: .medium)`,
-    `  static let caption = Font.system(size: ${fontSize("caption")}, weight: .medium)`,
-  ];
+  // Text roles
   for (const path of [
     ...under("font.size"),
     ...under("font.family"),
     ...under("font.weight"),
   ]) {
-    // Text roles consume families and weights; MTTypography keeps the size scale.
+    // Text roles consume the font families, sizes, and weights.
     emitted.add(path);
   }
 
@@ -175,6 +160,7 @@ export function makeSwift(system, icons, sourceLabel) {
         `tracking: ${formatNumber(role.tracking)}`,
         `isUppercase: ${role.isUppercase}`,
         `textStyle: ${role.textStyle ? `.${role.textStyle}` : "nil"}`,
+        `font: ${role.font ? `MTFont.${role.name}` : "nil"}`,
       ],
       "",
     ),
@@ -194,10 +180,10 @@ export function makeSwift(system, icons, sourceLabel) {
   });
 
   // Scales
-  const spacing = children("space").map((path) => [
-    path.split(".")[1],
-    token(path).value,
-  ]);
+  // Ordered by size: JavaScript lists whole-number keys before fractional steps like 1-5.
+  const spacing = children("space")
+    .map((path) => [path.split(".")[1], token(path).value])
+    .sort((a, b) => a[1] - b[1]);
   const radius = children("radius").map((path) => [
     path.split(".")[1],
     token(path).value,
@@ -376,10 +362,6 @@ ${colorCatalogLines.join("\n")}
   ]
 }
 
-enum MTTypography {
-${typographyLines.join("\n")}
-}
-
 /// A text role: the font, tracking, and case shared with the Web --mt-type-* variables.
 struct MTTextRole: Sendable {
   let name: String
@@ -391,6 +373,8 @@ struct MTTextRole: Sendable {
   let isUppercase: Bool
   /// The Dynamic Type style the size scales with, or nil for a fixed size.
   let textStyle: Font.TextStyle?
+  /// The role's static MTFont, or nil when it scales a custom size with its text style.
+  let font: Font?
 
 ${roleLines.join("\n")}
 
@@ -759,7 +743,7 @@ function nestedEnum(name, entries, value, depth = 0) {
   return lines;
 }
 
-function textRole(token) {
+export function textRole(token) {
   const { value, extension } = token;
   const familyAlias = value.aliases.fontFamily;
   const family = familyAlias?.match(/^font\.family\.(\w+)$/)?.[1];
@@ -854,11 +838,172 @@ function swiftNumberTokens(entries) {
   );
 }
 
-// Names that start with a digit get an s prefix, like MTSpacing.s4 and MTSize.Icon.s18.
+const swiftGroups = {
+  color: "MTColor",
+  elevation: "MTElevation",
+  layout: "MTLayout",
+  lineHeight: "MTLineHeight",
+  material: "MTMaterial",
+  radius: "MTRadius",
+  shadow: "MTShadow",
+  size: "MTSize",
+  space: "MTSpacing",
+  state: "MTState",
+  type: "MTFont",
+};
+
+// The Swift expression that reads a token's value, the way DesignTokens.swift names it.
+export function swiftReference(path) {
+  const [group, ...rest] = path.split(".");
+  if (group === "color") return `MTColor.${camelCase(rest)}`;
+  if (group === "motion") {
+    return rest[0] === "easing"
+      ? `MTEasing.${swiftIdentifier(rest[1])}`
+      : `MTMotion.${swiftIdentifier(rest[0])}`;
+  }
+  if (group === "layout" && rest[0] === "pageWidth") {
+    return `MTPageWidth.${swiftCase(rest[1])}.rawValue`;
+  }
+  if (["material", "elevation"].includes(group)) {
+    return `${swiftGroups[group]}.${rest[0]}`;
+  }
+  if (!swiftGroups[group]) return null;
+  const enums = rest.slice(0, -1).map(pascalCase);
+  return [swiftGroups[group], ...enums, swiftIdentifier(rest.at(-1))].join(".");
+}
+
+// Names that start with a digit get an s prefix, like MTSpacing.s4 and MTSize.Icon.s18, and a
+// fractional step's hyphen becomes an underscore, like MTSpacing.s1_5.
 function swiftIdentifier(name) {
-  return /^\d/.test(name) ? `s${name}` : name;
+  return /^\d/.test(name) ? `s${name.replaceAll("-", "_")}` : name;
 }
 
 function swiftCase(name) {
   return swiftKeywords.has(name) ? `\`${name}\`` : name;
+}
+
+// Writes ComponentVariants.swift: an enum per enum prop, a defaults enum per spec, and the
+// specimens the iOS gallery shows. The app and its UI tests both compile it. A spec iOS does not
+// implement emits nothing, so its specimens never reach the native gallery's list.
+export function makeComponentSwift(allComponents, sourceLabel) {
+  const components = allComponents.filter((spec) =>
+    spec.implemented.includes("ios"),
+  );
+  // A spec without props on this platform has no types, only specimens.
+  const blocks = components.flatMap((spec) => {
+    const props = spec.props.filter((prop) => prop.platforms.includes("ios"));
+    if (props.length === 0) return [];
+    const lines = [
+      `// ${spec.name}, from ${sourceLabel}/components/${spec.file}.`,
+    ];
+    for (const prop of props.filter(({ kind }) => kind === "enum")) {
+      lines.push(
+        "",
+        ...docComment(prop.description, 0),
+        `enum ${enumName(spec, prop)}: String, CaseIterable, Sendable {`,
+        ...prop.values.map((value) => `  case ${swiftCase(value)}`),
+        "}",
+      );
+    }
+    lines.push(
+      "",
+      `/// ${spec.name} parameter defaults.`,
+      `enum MT${spec.name}Defaults {`,
+      ...props.map((prop) => {
+        const value =
+          prop.kind === "enum"
+            ? `${enumName(spec, prop)}.${swiftCase(prop.default)}`
+            : String(prop.default);
+        return `  static let ${swiftCase(prop.names.ios)} = ${value}`;
+      }),
+      "}",
+    );
+    return lines.join("\n");
+  });
+
+  const specimens = components.flatMap((spec) =>
+    spec.specimens.map((specimen) => ({
+      ...specimen,
+      component: spec.name,
+      name: specimen.id.replace(/-([a-z0-9])/g, (_, letter) =>
+        letter.toUpperCase(),
+      ),
+    })),
+  );
+  const switchLines = (property, value) => [
+    `  var ${property}: String {`,
+    "    switch self {",
+    ...specimens.flatMap((specimen) =>
+      switchCase(`.${swiftCase(specimen.name)}`, value(specimen)),
+    ),
+    "    }",
+    "  }",
+  ];
+
+  return `// Generated from ${sourceLabel}/components. Do not edit directly.
+
+${blocks.join("\n\n")}
+
+/// A gallery specimen from a component spec. The Web gallery marks it with data-specimen and
+/// the iOS gallery with \`accessibilityIdentifier\`, so UI tests find every specimen on both.
+enum MTComponentSpecimen: String, CaseIterable, Sendable {
+${specimens.map((specimen) => `  case ${swiftCase(specimen.name)} = "${specimen.id}"`).join("\n")}
+
+  /// The component the specimen shows.
+${switchLines("component", (specimen) => specimen.component).join("\n")}
+
+  /// What the specimen shows, from its spec's description.
+${switchLines("summary", (specimen) => specimen.description).join("\n")}
+
+  var accessibilityIdentifier: String { "specimen-\\(rawValue)" }
+}
+`;
+}
+
+// Writes a switch case returning text within swift-format's 100 columns: on the case line,
+// on its own line, or as a multiline literal whose lines a trailing backslash joins.
+function switchCase(pattern, text) {
+  if (/[\u0000-\u001f]/.test(text)) {
+    throw new Error(`Swift strings cannot hold control characters: ${text}`);
+  }
+  const escaped = text.replaceAll("\\", "\\\\");
+  const quoted = `"${escaped.replaceAll('"', '\\"')}"`;
+  const caseLine = `    case ${pattern}:`;
+  if (caseLine.length + 1 + quoted.length <= 100) {
+    return [`${caseLine} ${quoted}`];
+  }
+  if (6 + quoted.length <= 100) return [caseLine, `      ${quoted}`];
+  const lines = [];
+  let line = "";
+  for (const word of escaped.replaceAll('"""', '\\"""').split(" ")) {
+    // Leaves room for the trailing " \".
+    if (line && 6 + line.length + 1 + word.length + 2 > 100) {
+      lines.push(`      ${line} \\`);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  return [caseLine, '      """', ...lines, `      ${line}`, '      """'];
+}
+
+function enumName(spec, prop) {
+  return `MT${spec.name}${pascalCase(prop.names.ios)}`;
+}
+
+// Wraps text into /// lines that fit swift-format's 100 columns.
+function docComment(text, indentation) {
+  const prefix = `${" ".repeat(indentation)}/// `;
+  const lines = [];
+  let line = "";
+  for (const word of text.split(/\s+/)) {
+    if (line && prefix.length + line.length + 1 + word.length > 100) {
+      lines.push(`${prefix}${line}`);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  }
+  if (line) lines.push(`${prefix}${line}`);
+  return lines;
 }

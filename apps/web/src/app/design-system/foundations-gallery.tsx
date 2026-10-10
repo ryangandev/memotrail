@@ -1,8 +1,11 @@
 import type { CSSProperties } from "react";
 import type tokenCatalog from "@/generated/design-tokens.json";
 import { Icon, iconNames } from "@/components/icon";
+import { PageFrame } from "@/components/page-frame";
+import { iconSizes, pageFrameVariants } from "@/generated/design-system";
 import styles from "./page.module.css";
-import { capitalize, kebab, Specimen } from "./specimen";
+import controls from "./controls-gallery.module.css";
+import { capitalize, kebab, Specimen, SpecimenCase } from "./specimen";
 
 export type TokenSet = typeof tokenCatalog;
 
@@ -65,7 +68,13 @@ export function FoundationTokens({ tokens }: { tokens: TokenSet }) {
     ([, value]) => typeof value === "string",
   );
   const darkState = new Map(leaves(tokens.state.dark));
-  const opacities = Object.entries(tokens.state.light.disabled.opacity);
+  const opacities = (["disabled", "muted"] as const).flatMap((kind) =>
+    Object.entries(tokens.state.light[kind].opacity).map(([name, value]) => ({
+      kind,
+      name,
+      value,
+    })),
+  );
   const focusOffsets = Object.entries(tokens.state.light.focus).filter(
     (entry): entry is [string, number] =>
       entry[0].startsWith("ringOffset") && typeof entry[1] === "number",
@@ -201,6 +210,22 @@ export function FoundationTokens({ tokens }: { tokens: TokenSet }) {
       </div>
 
       <Specimen
+        description="Web spacing in em, so it follows the size of the text it sits in."
+        id="text-space"
+        title="Text spacing"
+      >
+        <div className={styles.layerList}>
+          {Object.entries(tokens.textSpace).map(([name, value]) => (
+            <div key={name}>
+              <code>{name}</code>
+              <strong>{value}</strong>
+              <small>{descriptions[`textSpace.${name}`]}</small>
+            </div>
+          ))}
+        </div>
+      </Specimen>
+
+      <Specimen
         description="Heights of controls and fields, the minimum hit target, icon glyph sizes, and stroke widths."
         id="size"
         title="Size"
@@ -236,7 +261,7 @@ export function FoundationTokens({ tokens }: { tokens: TokenSet }) {
             </div>
           </div>
           <div className={styles.iconSizes}>
-            {Object.entries(tokens.size.icon).map(([name, value]) => (
+            {Object.entries(iconSizes).map(([name, value]) => (
               <div key={name}>
                 <Icon name="star" size={value} />
                 <code>icon.{name}</code>
@@ -259,7 +284,7 @@ export function FoundationTokens({ tokens }: { tokens: TokenSet }) {
       </Specimen>
 
       <Specimen
-        description="Focus, hover, selected, and disabled treatments. Swatches follow the gallery theme; values list light then dark."
+        description="Focus, hover, selected, disabled, and muted treatments. Swatches follow the gallery theme; values list light then dark."
         id="state"
         title="State"
       >
@@ -299,18 +324,19 @@ export function FoundationTokens({ tokens }: { tokens: TokenSet }) {
             ))}
           </div>
           <div className={styles.opacityList}>
-            {opacities.map(([name, value]) => (
+            {opacities.map(({ kind, name, value }) => (
               <div
-                key={name}
-                title={descriptions[`state.disabled.opacity.${name}`]}
+                key={`${kind}.${name}`}
+                title={descriptions[`state.${kind}.opacity.${name}`]}
               >
                 <span
                   aria-hidden="true"
+                  data-opacity={`${kind}.${name}`}
                   style={{
-                    opacity: cssVar("state-disabled-opacity", name),
+                    opacity: cssVar(`state-${kind}-opacity`, name),
                   }}
                 >
-                  Disabled
+                  {capitalize(kind)}
                 </span>
                 <code>{name}</code>
                 <small>{value}</small>
@@ -394,22 +420,61 @@ export function IconTokens({ tokens }: { tokens: TokenSet }) {
   );
   return (
     <>
-      <div className={styles.iconGrid}>
-        {iconNames.map((name) => {
-          const icon = tokens.icon[name];
-          return (
-            <div
-              data-icon={name}
-              key={name}
-              title={`${icon.description} SF Symbol: ${icon.sfSymbol}`}
-            >
-              <Icon name={name} size={20} />
-              <code>{name}</code>
-              {icon.platforms.includes("ios") ? null : <small>Web only</small>}
+      <Specimen
+        api="name · size: a size.icon value, 18 by default"
+        description="Icons are aria-hidden and take the color of the text around them, so the label beside them names the action."
+        title="Icon"
+      >
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="icon-set">
+            <div className={`${styles.iconGrid} ${controls.iconSet}`}>
+              {iconNames.map((name) => {
+                const icon = tokens.icon[name];
+                return (
+                  <div
+                    data-icon={name}
+                    key={name}
+                    title={`${icon.description} SF Symbol: ${icon.sfSymbol}`}
+                  >
+                    <Icon name={name} size={20} />
+                    <code>{name}</code>
+                    {icon.platforms.includes("ios") ? null : (
+                      <small>Web only</small>
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
-      </div>
+          </SpecimenCase>
+          <SpecimenCase id="icon-sizes">
+            <div className={controls.iconRow}>
+              {([14, 16, 18, 24] as const).map((size) => (
+                <div key={size}>
+                  <Icon name="calendar" size={size} />
+                  <code>{size}</code>
+                </div>
+              ))}
+            </div>
+          </SpecimenCase>
+          <SpecimenCase id="icon-color">
+            <div className={controls.iconColors}>
+              {(
+                [
+                  ["ink", "timeline", "Timeline"],
+                  ["muted", "archive", "Library"],
+                  ["accent", "plus", "Add entry"],
+                  ["warm", "refresh", "Retry sync"],
+                ] as const
+              ).map(([color, icon, label]) => (
+                <span data-color={color} key={color}>
+                  <Icon name={icon} size={18} />
+                  {label}
+                </span>
+              ))}
+            </div>
+          </SpecimenCase>
+        </div>
+      </Specimen>
       <Specimen
         description="These names draw only on iOS, as the SF Symbol shown. Web has no glyph for them yet."
         id="native-icons"
@@ -430,19 +495,37 @@ export function IconTokens({ tokens }: { tokens: TokenSet }) {
 
 export function LayoutTokens({ tokens }: { tokens: TokenSet }) {
   const descriptions: Record<string, string | undefined> = tokens.descriptions;
-  const { breakpoint, container, layer, pageGutter, pageWidth } = tokens.layout;
+  const { breakpoint, container, inset, layer, pageGutter, pageWidth } =
+    tokens.layout;
   return (
     <>
-      <div className={styles.variantTable}>
-        {Object.entries(pageWidth).map(([name, value]) => (
-          <div data-page-width={name} key={name}>
-            <strong>{name}</strong>
-            <span>
-              {value}px · {descriptions[`layout.pageWidth.${name}`]}
-            </span>
+      <Specimen
+        api="variant: compact | standard | wide | canvas · className · div props"
+        description="The centered column that holds a page. Phones use the full width inside the page gutters; wider windows center the page at its variant width. This gallery uses canvas."
+        id="page-frame"
+        title="PageFrame"
+      >
+        <SpecimenCase id="page-frame-widths">
+          <div className={styles.pageFrameTrack}>
+            <div>
+              {pageFrameVariants.map((variant) => (
+                <PageFrame
+                  className={styles.pageFrameSample}
+                  data-page-width={variant}
+                  key={variant}
+                  variant={variant}
+                >
+                  <strong>{variant}</strong>
+                  <span>
+                    {pageWidth[variant]}px ·{" "}
+                    {descriptions[`layout.pageWidth.${variant}`]}
+                  </span>
+                </PageFrame>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        </SpecimenCase>
+      </Specimen>
       <div className={styles.foundationGrid}>
         <Specimen
           description="Horizontal page padding at each window class."
@@ -468,7 +551,7 @@ export function LayoutTokens({ tokens }: { tokens: TokenSet }) {
         </Specimen>
 
         <Specimen
-          description="Viewport widths where Web layouts change. Media queries use max-width at a value and min-width one pixel above it. CSS cannot read variables in media queries, so these document the literal values."
+          description="Viewport widths where Web layouts change. CSS cannot read variables in media queries, so Web lint holds every media query to max-width at one of these values or min-width one pixel above it, and every container query to a container value."
           id="breakpoints"
           title="Breakpoints and containers"
         >
@@ -487,6 +570,21 @@ export function LayoutTokens({ tokens }: { tokens: TokenSet }) {
           </div>
         </Specimen>
       </div>
+      <Specimen
+        description="Room Web keeps around floating controls and overlays."
+        id="insets"
+        title="Insets"
+      >
+        <div className={styles.layerList}>
+          {Object.entries(inset).map(([name, value]) => (
+            <div key={name}>
+              <code>{name}</code>
+              <strong>{value}px</strong>
+              <small>{descriptions[`layout.inset.${name}`]}</small>
+            </div>
+          ))}
+        </div>
+      </Specimen>
       <Specimen
         description="Web stacking order, from local layering inside a component to overlays above the map."
         id="layers"

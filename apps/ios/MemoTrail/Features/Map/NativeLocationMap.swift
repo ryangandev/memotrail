@@ -60,7 +60,10 @@ struct NativeLocationMap: UIViewRepresentable {
             return result.union(MKMapRect(origin: point, size: MKMapSize(width: 1, height: 1)))
           }
           map.setVisibleMapRect(
-            rect, edgePadding: UIEdgeInsets(top: 64, left: 72, bottom: 80, right: 72),
+            rect,
+            edgePadding: UIEdgeInsets(
+              top: MTLayout.Map.edgeTop, left: MTLayout.Map.edgeSide,
+              bottom: MTLayout.Map.edgeBottom, right: MTLayout.Map.edgeSide),
             animated: false)
         }
       }

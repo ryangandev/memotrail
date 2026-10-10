@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
+import { componentSpecimens } from "../src/generated/design-system";
 import tokens from "../src/generated/design-tokens.json";
 import {
   expectSeparatorsBetweenWords,
@@ -139,6 +140,30 @@ test("Foundations draw every generated token in both themes", async ({
   }
   await expect(page.locator("#layers code")).toHaveText(
     Object.keys(tokens.layout.layer),
+  );
+  await expect(page.locator("#insets code")).toHaveText(
+    Object.keys(tokens.layout.inset),
+  );
+  await expect(page.locator("#text-space code")).toHaveText(
+    Object.keys(tokens.textSpace),
+  );
+  // Disabled and muted opacities each draw a sample at their own strength.
+  expect(
+    await page
+      .locator("#state [data-opacity]")
+      .evaluateAll((samples) =>
+        samples.map((sample) => [
+          sample.getAttribute("data-opacity"),
+          getComputedStyle(sample).opacity,
+        ]),
+      ),
+  ).toEqual(
+    (["disabled", "muted"] as const).flatMap((kind) =>
+      Object.entries(tokens.state.light[kind].opacity).map(([name, value]) => [
+        `${kind}.${name}`,
+        String(value),
+      ]),
+    ),
   );
   // Every focus offset draws a ring at its own gap.
   const offsets = Object.entries(tokens.state.light.focus).filter(([name]) =>
@@ -288,6 +313,58 @@ test("selected brand motion previews both panel directions and respects reduced 
   expect(hydrationWarnings).toEqual([]);
 });
 
+test("the gallery shows every specimen the component specs list", async ({
+  page,
+}) => {
+  const kebab = (value: string) =>
+    value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+  await page.goto("/design-system");
+
+  // Each listed specimen appears exactly once, and nothing claims an id no spec lists.
+  const shown = await page
+    .locator("[data-specimen]")
+    .evaluateAll((elements) =>
+      elements.map((element) => element.getAttribute("data-specimen")),
+    );
+  expect(shown.toSorted()).toEqual(
+    componentSpecimens.map(({ id }) => id).toSorted(),
+  );
+
+  for (const specimen of componentSpecimens) {
+    const section = page.locator(`[data-specimen="${specimen.id}"]`);
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).toBeVisible();
+    await expect(
+      section.getByRole("heading", { name: specimen.id, exact: true }),
+    ).toBeVisible();
+    await expect(section).toContainText(specimen.description);
+
+    // An overlay specimen draws its component once its opener is pressed. A dialog may render
+    // outside the specimen, so an opened component is found anywhere on the page.
+    const component = `[data-ui-${kebab(specimen.component)}]`;
+    const opener = section.locator("[data-specimen-open]");
+    const opens = (await opener.count()) > 0;
+    const closed = await page.locator(component).count();
+    if (opens) await opener.click();
+    const scope = opens ? page.locator("body") : section;
+
+    // It draws the spec's component, in every value the spec says it covers.
+    await expect(scope.locator(component).first()).toBeVisible();
+    for (const [prop, values] of Object.entries(specimen.covers)) {
+      for (const value of values as readonly string[]) {
+        await expect(
+          scope.locator(`${component}[data-${kebab(prop)}="${value}"]`).first(),
+          `${specimen.id} draws ${prop} ${value}`,
+        ).toBeVisible();
+      }
+    }
+    if (opens) {
+      await page.keyboard.press("Escape");
+      await expect(page.locator(component)).toHaveCount(closed);
+    }
+  }
+});
+
 test("shared badges keep long labels on one line across sizes", async ({
   page,
 }) => {
@@ -349,13 +426,18 @@ test("Toast uses the shared feedback surface without an inline message", async (
   await page.goto("/design-system#feedback");
   const feedback = page.locator("#feedback");
   await feedback.getByRole("button", { name: "Show success" }).click();
-  const success = page.locator('[data-sonner-toast][data-type="success"]');
+  // The gallery also draws static toasts, so find the live ones by their messages.
+  const success = page
+    .locator('[data-sonner-toast][data-type="success"]')
+    .filter({ hasText: "Changes saved." });
   await expect(success).toContainText("Changes saved.");
   await expect(success).toHaveCSS("border-left-width", "3px");
   await success.getByRole("button", { name: "Close toast" }).click();
   await expect(success).toHaveCount(0);
   await feedback.getByRole("button", { name: "Show error" }).click();
-  const error = page.locator('[data-sonner-toast][data-type="error"]');
+  const error = page
+    .locator('[data-sonner-toast][data-type="error"]')
+    .filter({ hasText: "Could not save. Try again." });
   await expect(error).toContainText("Could not save. Try again.");
   await expect(error).toHaveCSS("border-left-width", "3px");
   await page.setViewportSize({ width: 390, height: 844 });
@@ -729,24 +811,29 @@ test("Shared primitives support actions, modal focus, nested calendars, and busy
   await page.goto("/design-system");
   const review = page.locator("#shared-primitives");
   await review
-    .getByRole("button", { name: "Continue", exact: true })
-    .first()
+    .locator('[data-specimen="button-variants"]')
+    .getByRole("button", { name: "Danger", exact: true })
     .click();
   await expect(review.getByRole("status")).toHaveText(
-    "primary button activated.",
+    "danger button activated.",
   );
-  await expect(
-    review.getByRole("button", { name: "Disabled", exact: true }).first(),
-  ).toBeDisabled();
-  await expect(
-    review.getByRole("button", { name: "Saving", exact: true }).first(),
-  ).toBeDisabled();
+  for (const button of await review
+    .locator('[data-specimen="button-disabled"] button')
+    .all()) {
+    await expect(button).toBeDisabled();
+  }
+  for (const button of await review
+    .locator('[data-specimen="button-loading"] button')
+    .all()) {
+    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute("aria-busy", "true");
+  }
   await review
-    .getByRole("button", { name: "Clear filters", exact: true })
+    .getByRole("button", { name: /Start with a first worth remembering/ })
     .click();
-  await expect(
-    review.getByRole("heading", { name: "Filters cleared" }),
-  ).toBeVisible();
+  await expect(review.getByRole("status")).toHaveText(
+    "Empty state action activated.",
+  );
 
   const confirmation = review.getByRole("button", {
     name: "Open confirmation",
@@ -1006,7 +1093,6 @@ test("SectionHeader renders section and list headings at the level the caller pi
     block!.y + block!.height / 2,
     0,
   );
-  await expect(header("list-description").getByText("Connected")).toBeVisible();
 
   // A long heading wraps instead of overflowing, and the action stays reachable.
   for (const width of [1280, 390, 320]) {
@@ -1049,7 +1135,7 @@ test("Skeleton is decorative, shimmers, and stands still for reduced motion", as
     specimen.locator(`[data-skeleton="${name}"] [data-ui-skeleton]`).first();
 
   // Placeholders add nothing to the accessibility tree.
-  await expect(skeletons).toHaveCount(10);
+  await expect(skeletons).toHaveCount(11);
   for (const skeleton of await skeletons.all())
     await expect(skeleton).toHaveAttribute("aria-hidden", "true");
   await expect(specimen.getByRole("img")).toHaveCount(0);
@@ -1057,9 +1143,9 @@ test("Skeleton is decorative, shimmers, and stands still for reduced motion", as
 
   // Shapes: a circle is square and round, a line is thin, fill takes its frame.
   const circle = await shape("circle").boundingBox();
-  expect(circle!.width).toBeCloseTo(48, 0);
-  expect(circle!.height).toBeCloseTo(48, 0);
-  await expect(shape("circle")).toHaveCSS("border-radius", "50%");
+  expect(circle!.width).toBeCloseTo(40, 0);
+  expect(circle!.height).toBeCloseTo(40, 0);
+  await expect(shape("circle")).toHaveCSS("border-radius", "999px");
   expect((await shape("line").boundingBox())!.height).toBeCloseTo(14, 0);
   const frame = await specimen
     .locator('[data-skeleton="fill"] > div')
@@ -1067,7 +1153,7 @@ test("Skeleton is decorative, shimmers, and stands still for reduced motion", as
   const fill = await shape("fill").boundingBox();
   expect(fill!.width).toBeCloseTo(frame!.width, 0);
   expect(fill!.height).toBeCloseTo(frame!.height, 0);
-  expect((await shape("block").boundingBox())!.height).toBeCloseTo(64, 0);
+  expect((await shape("block").boundingBox())!.height).toBeCloseTo(96, 0);
 
   // The shimmer runs by default, stops on request, and stops for reduced motion.
   await expect(shape("block")).toHaveCSS("animation-name", /shimmer/);

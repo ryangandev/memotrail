@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node ./scripts/generate.mjs --check",
+    "check": "node ./scripts/generate.mjs --check && node ./scripts/check-swift.mjs",
     "export": "node ./scripts/export-claude-design.mjs",
     "generate": "node ./scripts/generate.mjs",
     "test": "node --test",
@@ -13,6 +13,7 @@
   "devDependencies": {
     "@playwright/test": "1.63.0",
     "@types/react": "19.2.18",
+    "ajv": "8.20.0",
     "esbuild": "0.28.2",
     "react": "18.3.1",
     "react-dom": "18.3.1",

@@ -28,7 +28,7 @@ struct EntryHistoryIndexView: View {
           ProgressView().tint(MTColor.accent)
           Text("Loading version history...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
         }
-        .frame(maxWidth: .infinity, minHeight: 180)
+        .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
       } else if let errorMessage {
         MTEmptyState(title: "History unavailable", message: errorMessage, icon: .history) {
           Button("Try again") { Task { await load() } }
@@ -65,7 +65,7 @@ struct EntryHistoryIndexView: View {
   private var search: some View {
     let layout =
       horizontalSizeClass == .regular
-      ? AnyLayout(HStackLayout(alignment: .bottom, spacing: 10))
+      ? AnyLayout(HStackLayout(alignment: .bottom, spacing: MTSpacing.s2_5))
       : AnyLayout(VStackLayout(alignment: .leading, spacing: MTSpacing.s2))
     return layout {
       MTSearchField(
@@ -133,7 +133,7 @@ private struct HistoryIndexRow: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       Text(row.displayTitle)
-        .font(MTFont.body.weight(.semibold))
+        .font(MTFont.bodyStrong)
         .foregroundStyle(MTColor.ink)
         .multilineTextAlignment(.leading)
       MTWordFlow(.caption1) {
@@ -145,11 +145,11 @@ private struct HistoryIndexRow: View {
           Text("In Trash")
         }
       }
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       if let excerpt = row.excerpt.trimmed.nonEmpty {
         Text(excerpt)
-          .font(MTFont.label.weight(.regular))
+          .font(MTFont.supporting)
           .foregroundStyle(MTColor.ink)
           .lineLimit(3)
           .multilineTextAlignment(.leading)
@@ -217,7 +217,7 @@ struct EntryHistoryDetailView: View {
           ProgressView().tint(MTColor.accent)
           Text("Loading version history...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
         }
-        .frame(maxWidth: .infinity, minHeight: 180)
+        .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
       } else if controller.loadFailed {
         MTEmptyState(
           title: "History unavailable", message: "History could not load. Refresh to try again.",
@@ -268,7 +268,7 @@ struct EntryHistoryDetailView: View {
   @ViewBuilder
   private func content(_ record: EntryHistoryRecord) -> some View {
     Text(record.title)
-      .font(.system(size: 26, design: .serif).weight(.medium))
+      .font(MTFont.recordTitle)
       .foregroundStyle(MTColor.ink)
       .accessibilityAddTraits(.isHeader)
     WikiItemActions(record: record, isItemPage: false, isBusy: controller.isWorking) {
@@ -374,7 +374,7 @@ struct EntryHistoryDetailView: View {
       Text(
         "People, Collection, and track definitions stay current. Historical Location links return to their original snapshots. Photo files are not deleted. Missing historical links or originals stop the restore safely."
       )
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
       .fixedSize(horizontal: false, vertical: true)
@@ -397,14 +397,14 @@ struct EntryHistoryDetailView: View {
   @ViewBuilder
   private func pagination(_ record: EntryHistoryRecord) -> some View {
     if controller.page > 0 || controller.hasOlderVersions {
-      HStack(spacing: 14) {
+      HStack(spacing: MTSpacing.s3_5) {
         if controller.page > 0 {
           Button("Newer versions") { Task { await controller.load(page: controller.page - 1) } }
             .mtButtonStyle(.ghost, size: .small)
         }
         Spacer(minLength: 0)
         Text("Page \(controller.page + 1)")
-          .font(MTFont.label.weight(.regular))
+          .font(MTFont.supporting)
           .foregroundStyle(MTColor.inkMuted)
         Spacer(minLength: 0)
         if controller.hasOlderVersions {

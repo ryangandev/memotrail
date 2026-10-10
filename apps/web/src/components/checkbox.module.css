@@ -12,7 +12,7 @@
   min-height: 28px;
   align-items: center;
   gap: var(--mt-space-2);
-  padding: 2px 0;
+  padding: var(--mt-space-0-5) 0;
   cursor: pointer;
 }
 
@@ -21,11 +21,11 @@
   position: absolute;
   top: 50%;
   left: 0;
-  width: 20px;
-  height: 20px;
+  width: var(--mt-size-checkbox-medium);
+  height: var(--mt-size-checkbox-medium);
   margin: 0;
   padding: 0;
-  z-index: 1;
+  z-index: var(--mt-layout-layer-local1);
   opacity: 0;
   transform: translateY(-50%);
   cursor: inherit;
@@ -33,12 +33,12 @@
 
 .box {
   display: grid;
-  width: 20px;
-  height: 20px;
+  width: var(--mt-size-checkbox-medium);
+  height: var(--mt-size-checkbox-medium);
   flex: none;
   place-items: center;
-  border: 1px solid var(--mt-color-border-strong);
-  border-radius: 5px;
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-checkbox);
   color: var(--mt-state-selected-on-fill);
   background: var(--mt-color-surface);
   transition:
@@ -79,7 +79,7 @@
   min-width: 0;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 6px;
+  gap: var(--mt-space-1-5);
 }
 
 .label {
@@ -96,12 +96,12 @@
 
 .checkbox[data-size="small"] .input,
 .checkbox[data-size="small"] .box {
-  width: 16px;
-  height: 16px;
+  width: var(--mt-size-checkbox-small);
+  height: var(--mt-size-checkbox-small);
 }
 
 .checkbox[data-size="small"] .box {
-  border-radius: 4px;
+  border-radius: var(--mt-radius-xxsmall);
 }
 
 .checkbox[data-size="small"] .label {

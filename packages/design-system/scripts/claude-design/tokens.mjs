@@ -3,6 +3,7 @@ import {
   cssName,
   cssValue,
   makeCss,
+  relativeValue,
   textCase,
   webTokens,
 } from "../lib/web.mjs";
@@ -25,11 +26,21 @@ export const maximumExtraTokens = 60;
 const familyRules = [
   ["color", (path, type) => type === "color"],
   ["shadow", (path, type) => type === "shadow"],
-  ["spacing", (path) => path.startsWith("space.")],
+  [
+    "spacing",
+    (path) => path.startsWith("space.") || path.startsWith("textSpace."),
+  ],
   ["radius", (path) => path.startsWith("radius.")],
   ["fontSize", (path) => path.startsWith("font.size.")],
   ["fontWeight", (path) => path.startsWith("font.weight.")],
   ["lineHeight", (path) => path.startsWith("lineHeight.")],
+  // One component's geometry, such as size.recordCard.visualHeight, stays apart from the shared
+  // scale so neither family outgrows the copy's limit as more components are specified.
+  [
+    "componentSize",
+    (path) =>
+      path.startsWith("size.") && !sharedSizes.includes(path.split(".")[1]),
+  ],
   [
     "size",
     (path, type) =>
@@ -40,7 +51,8 @@ const familyRules = [
     "layout",
     (path) =>
       path.startsWith("layout.pageWidth.") ||
-      path.startsWith("layout.pageGutter."),
+      path.startsWith("layout.pageGutter.") ||
+      path.startsWith("layout.inset."),
   ],
   [
     "breakpoint",
@@ -49,7 +61,12 @@ const familyRules = [
       path.startsWith("layout.container."),
   ],
   ["zIndex", (path) => path.startsWith("layout.layer.")],
-  ["opacity", (path) => path.startsWith("state.disabled.opacity.")],
+  [
+    "opacity",
+    (path) =>
+      path.startsWith("state.disabled.opacity.") ||
+      path.startsWith("state.muted.opacity."),
+  ],
   ["duration", (path, type) => type === "duration"],
   ["easing", (path, type) => type === "cubicBezier"],
   [
@@ -59,13 +76,16 @@ const familyRules = [
   ],
 ];
 
+// The size groups every component draws from; any other size group belongs to one component.
+const sharedSizes = ["control", "field", "hitTarget", "icon", "stroke"];
+
 const typeGroupNames = { serif: "Serif", sans: "Sans", mono: "Mono" };
 
 export function tokenName(path) {
   return cssName(path).slice(2);
 }
 
-export function makeTokens({ system, contrast, meta, title }) {
+export function makeTokens({ system, icons, contrast, meta, title }) {
   const web = webTokens(system);
   const families = Object.fromEntries(
     familyRules.map(([family]) => [family, []]),
@@ -148,7 +168,7 @@ export function makeTokens({ system, contrast, meta, title }) {
 
   return {
     tokens,
-    stylesheet: unexpressedVariables(system, new Set(names)),
+    stylesheet: unexpressedVariables(system, new Set(names), icons),
   };
 }
 
@@ -158,7 +178,8 @@ function tokenValue(path, family, web) {
   const values = themes.map((theme) =>
     family === "color"
       ? colorValue(web[theme].get(path), web[theme])
-      : plainValue(web[theme].get(path)),
+      : (relativeValue(web[theme].get(path)) ??
+        plainValue(web[theme].get(path))),
   );
   if (family === "color") {
     return Object.fromEntries(
@@ -417,9 +438,11 @@ function typeStyle(path, token, system) {
 
 // The generated Web CSS declares one variable per line. Variables tokens.json already declares
 // are left to the copy's compiled tokens.css; the rest, such as text role properties, font
-// stacks, and material backdrop filters, go into a :root block at the top of bundle.css.
-export function unexpressedVariables(system, declared) {
-  const blocks = cssBlocks(makeCss(system, "packages/design-system/tokens"));
+// stacks, material backdrop filters, and icon images, go into a :root block at the top of bundle.css.
+export function unexpressedVariables(system, declared, icons) {
+  const blocks = cssBlocks(
+    makeCss(system, "packages/design-system/tokens", icons),
+  );
   const light = new Map([...blocks.shared, ...blocks.light]);
   const rootLines = [];
   const darkLines = [];

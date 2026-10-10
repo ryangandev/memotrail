@@ -1,7 +1,20 @@
+.mark [data-brand-part="outer-ring"] {
+  stroke: var(--mt-color-brand-ring);
+}
+
+.mark [data-brand-part="accent"] {
+  stroke: var(--mt-color-brand-accent);
+}
+
+.mark [data-brand-part="inner-ring"] {
+  stroke: var(--mt-color-brand-inner-ring);
+}
+
 .counterRotation [data-brand-part] {
   transform-box: view-box;
   transform-origin: center;
-  transition: transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform var(--mt-motion-mark-turn)
+    var(--mt-motion-easing-emphasized);
 }
 
 .counterRotation[data-collapsed="true"] [data-brand-part="outer-ring"],

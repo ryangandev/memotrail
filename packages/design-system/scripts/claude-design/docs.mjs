@@ -69,7 +69,22 @@ export function normalizeSpec(spec, label) {
   if (new Set(ids).size !== ids.length) {
     throw new Error(`${label}: specimen ids must be unique.`);
   }
-  return { ...spec, label };
+  // covers names the prop values a specimen draws; all means every value the prop allows.
+  const specimens = spec.specimens.map((specimen) => ({
+    ...specimen,
+    covers: Object.fromEntries(
+      Object.entries(specimen.covers ?? {}).map(([prop, values]) => {
+        const allowed = spec.props?.[prop]?.values;
+        if (!Array.isArray(allowed)) {
+          throw new Error(
+            `${label}: specimen ${specimen.id} covers ${prop}, which is not a prop with values.`,
+          );
+        }
+        return [prop, values === "all" ? [...allowed] : values];
+      }),
+    ),
+  }));
+  return { ...spec, specimens, label };
 }
 
 // A spec describes a bundled component when it has the same name. Its Web platform must point at
@@ -363,15 +378,19 @@ function content(value, format) {
 
 function sources(spec) {
   if (!spec.platforms || typeof spec.platforms !== "object") return [];
+  const source = (file) => {
+    const symbols = Array.isArray(file.symbols)
+      ? ` (${file.symbols.join(", ")})`
+      : "";
+    return `\`${file.path}\`${symbols}`;
+  };
   return Object.entries(spec.platforms).map(([platform, item]) => {
     const label = platformLabel(platform);
     if (item?.unavailable)
       return `- ${label}: not available. ${paragraph(item.unavailable)}`;
     if (item?.path) {
-      const symbols = Array.isArray(item.symbols)
-        ? ` (${item.symbols.join(", ")})`
-        : "";
-      return `- ${label}: \`${item.path}\`${symbols}`;
+      const files = [item, ...(Array.isArray(item.files) ? item.files : [])];
+      return `- ${label}: ${files.map(source).join(", and ")}`;
     }
     return `- ${label}: ${typeof item === "string" ? `\`${item}\`` : paragraph(JSON.stringify(item))}`;
   });

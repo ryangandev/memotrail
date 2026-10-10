@@ -82,6 +82,10 @@ test("authenticated pages use the shared responsive page frame", async ({
     await page.setViewportSize({ width: 1800, height: 900 });
     for (const family of pageFamilies) {
       await page.goto(family.path);
+      // The route loading fallback is a wide PageFrame too; measure the page, not the fallback.
+      await expect(
+        page.getByRole("status", { name: "Loading page" }),
+      ).toHaveCount(0);
       const frame = page
         .locator(`[data-page-frame="${family.variant}"]`)
         .filter({ visible: true });
@@ -113,6 +117,9 @@ test("authenticated pages use the shared responsive page frame", async ({
     await page.setViewportSize({ width: 390, height: 844 });
     for (const family of pageFamilies) {
       await page.goto(family.path);
+      await expect(
+        page.getByRole("status", { name: "Loading page" }),
+      ).toHaveCount(0);
       const frame = page
         .locator(`[data-page-frame="${family.variant}"]`)
         .filter({ visible: true });

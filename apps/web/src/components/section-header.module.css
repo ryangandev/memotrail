@@ -15,7 +15,7 @@
   display: grid;
   min-width: 0;
   flex: 1 1 auto;
-  gap: 3px;
+  gap: var(--mt-space-0-75);
 }
 
 .heading {

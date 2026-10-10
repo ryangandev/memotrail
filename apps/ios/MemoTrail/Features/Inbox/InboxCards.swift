@@ -18,12 +18,12 @@ struct InboxMessage<Actions: View>: View {
   var body: some View {
     HStack(alignment: .top, spacing: MTSpacing.s3) {
       Image(icon)
-        .font(.system(size: 18, weight: .medium))
+        .font(.mtIcon(MTSize.Icon.s18, weight: .medium))
         .foregroundStyle(MTColor.accent)
         .accessibilityHidden(true)
       VStack(alignment: .leading, spacing: MTSpacing.s1) {
         Text(title)
-          .font(.system(.body, design: .serif).weight(.medium))
+          .font(MTFont.itemTitle)
           .foregroundStyle(MTColor.ink)
         Text(message)
           .font(MTFont.body)
@@ -75,10 +75,10 @@ struct InboxCaptureRow: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       Text(entry.occurrence.displayLabel)
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkFaint)
       Text(entry.displayTitle)
-        .font(.system(.body, design: .serif).weight(.medium))
+        .font(MTFont.itemTitle)
         .foregroundStyle(MTColor.ink)
         .padding(.top, MTSpacing.s2)
       if let excerpt = entry.displayExcerpt {
@@ -86,9 +86,9 @@ struct InboxCaptureRow: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body)
-          .padding(.top, 6)
+          .padding(.top, MTSpacing.s1_5)
       }
-      MTFlowLayout(spacing: 6) {
+      MTFlowLayout(spacing: MTSpacing.s1_5) {
         MTBadge(title: "Needs review", tone: .warm)
         if entry.itemKind != .entry || entry.itemSubtype == "first_time" {
           MTBadge(title: entry.itemKind.displayName, tone: .neutral)
@@ -115,7 +115,7 @@ struct InboxCaptureRow: View {
         Button(action: organize) {
           HStack(spacing: MTSpacing.s2) {
             Text("Organize")
-            Image(.chevron).font(.system(size: 12, weight: .semibold))
+            Image(.chevron).font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
           }
         }
         .mtButtonStyle(.secondary)
@@ -143,10 +143,10 @@ struct PendingCaptureRow: View {
     let presented = entry.presentedEntry
     VStack(alignment: .leading, spacing: 0) {
       Text(presented.occurrence.displayLabel)
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkFaint)
       Text(presented.displayTitle)
-        .font(.system(.body, design: .serif).weight(.medium))
+        .font(MTFont.itemTitle)
         .foregroundStyle(MTColor.ink)
         .padding(.top, MTSpacing.s2)
       if let excerpt = presented.displayExcerpt {
@@ -155,9 +155,9 @@ struct PendingCaptureRow: View {
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body)
           .lineLimit(3)
-          .padding(.top, 6)
+          .padding(.top, MTSpacing.s1_5)
       }
-      MTFlowLayout(spacing: 6) {
+      MTFlowLayout(spacing: MTSpacing.s1_5) {
         if entry.rejection == nil {
           MTBadge(title: "On this iPhone")
         } else {
@@ -176,7 +176,7 @@ struct PendingCaptureRow: View {
     }
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(MTSpacing.s4)
-    .background(entry.rejection == nil ? Color.clear : MTColor.warmSubtle.opacity(0.32))
+    .background(entry.rejection == nil ? Color.clear : MTColor.captureRefused)
     .accessibilityElement(children: entry.rejection == nil ? .combine : .contain)
   }
 

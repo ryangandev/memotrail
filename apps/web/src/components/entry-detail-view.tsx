@@ -130,7 +130,9 @@ export function EntryDetailView({
           />
         )}
         {active && entry.item_kind === "goal" && (
-          <ButtonLink href={`/goals/${entry.id}`}>Open in Someday</ButtonLink>
+          <ButtonLink href={`/goals/${entry.id}`} variant="secondary">
+            Open in Someday
+          </ButtonLink>
         )}
         {active ? (
           <Button

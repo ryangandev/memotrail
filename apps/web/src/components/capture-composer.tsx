@@ -3,6 +3,10 @@ import captureComposerStyles from "@/components/capture-composer.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
 import { Button } from "@/components/button";
 import { notify } from "@/components/app-toast";
+import {
+  captureComposerDefaults,
+  type CaptureComposerVariant,
+} from "@/generated/design-system";
 
 import {
   type ChangeEvent,
@@ -53,20 +57,21 @@ const idleFeedback: CaptureFeedback = { isError: false, message: "" };
 /**
  * Composes a capture in the workspace's shared draft: every composer in the
  * tab shows the same writing, date, photos, and voice capture, so a save or a
- * discard in one is reflected in all of them.
+ * discard in one is reflected in all of them. Specified in
+ * packages/design-system/components/capture-composer.yaml.
  */
 export function CaptureComposer({
   active = true,
   embedded = false,
   idPrefix = "capture",
   onNativePhotoPickerChange,
-  variant = "page",
+  variant = captureComposerDefaults.variant,
 }: {
   active?: boolean;
   embedded?: boolean;
   idPrefix?: string;
   onNativePhotoPickerChange?: (state: NativePhotoPickerState) => void;
-  variant?: "dialog" | "page";
+  variant?: CaptureComposerVariant;
 }) {
   const captureQueue = useCaptureQueue();
   const { isSyncing } = captureQueue;
@@ -282,6 +287,8 @@ export function CaptureComposer({
       <form
         className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""} ${embedded ? captureComposerStyles.embeddedCaptureCard : ""}`}
         aria-label="Quick capture"
+        data-ui-capture-composer
+        data-variant={variant}
         onKeyDownCapture={(event) => {
           if (
             !active ||
@@ -332,7 +339,7 @@ export function CaptureComposer({
                 placeholder="What is on your mind?"
                 richText={bodyRich}
                 text={body}
-                variant={variant}
+                variant="embedded"
               />
             ) : (
               <div

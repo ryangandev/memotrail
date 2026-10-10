@@ -1,8 +1,46 @@
 {
   "space": {
+    "$type": "dimension",
+    "$description": "Spacing for padding, gaps, and margins on both platforms, named by 4px step: space.N is N × 4px. Hyphenated fractional steps, such as 1-5 for 6px, hold the finer gaps between small elements; Swift names them like MTSpacing.s1_5.",
+    "0-25": {
+      "$value": {
+        "value": 1,
+        "unit": "px"
+      }
+    },
+    "0-5": {
+      "$value": {
+        "value": 2,
+        "unit": "px"
+      }
+    },
+    "0-75": {
+      "$value": {
+        "value": 3,
+        "unit": "px"
+      }
+    },
     "1": {
       "$value": {
         "value": 4,
+        "unit": "px"
+      }
+    },
+    "1-25": {
+      "$value": {
+        "value": 5,
+        "unit": "px"
+      }
+    },
+    "1-5": {
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      }
+    },
+    "1-75": {
+      "$value": {
+        "value": 7,
         "unit": "px"
       }
     },
@@ -12,9 +50,33 @@
         "unit": "px"
       }
     },
+    "2-25": {
+      "$value": {
+        "value": 9,
+        "unit": "px"
+      }
+    },
+    "2-5": {
+      "$value": {
+        "value": 10,
+        "unit": "px"
+      }
+    },
+    "2-75": {
+      "$value": {
+        "value": 11,
+        "unit": "px"
+      }
+    },
     "3": {
       "$value": {
         "value": 12,
+        "unit": "px"
+      }
+    },
+    "3-5": {
+      "$value": {
+        "value": 14,
         "unit": "px"
       }
     },
@@ -24,9 +86,21 @@
         "unit": "px"
       }
     },
+    "4-5": {
+      "$value": {
+        "value": 18,
+        "unit": "px"
+      }
+    },
     "5": {
       "$value": {
         "value": 20,
+        "unit": "px"
+      }
+    },
+    "5-5": {
+      "$value": {
+        "value": 22,
         "unit": "px"
       }
     },
@@ -48,6 +122,12 @@
         "unit": "px"
       }
     },
+    "11": {
+      "$value": {
+        "value": 44,
+        "unit": "px"
+      }
+    },
     "12": {
       "$value": {
         "value": 48,
@@ -60,7 +140,23 @@
         "unit": "px"
       }
     },
-    "$description": "Spacing for padding, gaps, and margins, named by 4px step.",
-    "$type": "dimension"
+    "18": {
+      "$value": {
+        "value": 72,
+        "unit": "px"
+      }
+    },
+    "23": {
+      "$value": {
+        "value": 92,
+        "unit": "px"
+      }
+    },
+    "32": {
+      "$value": {
+        "value": 128,
+        "unit": "px"
+      }
+    }
   }
 }

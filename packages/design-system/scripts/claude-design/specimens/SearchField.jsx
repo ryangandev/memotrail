@@ -1,35 +1,65 @@
 import { Stack } from "./runtime.jsx";
 
-const { Badge, SearchField } = MemoTrail;
+const { SearchField } = MemoTrail;
+
+const key = {
+  padding: "var(--mt-space-0-75) var(--mt-space-1-75)",
+  border: "var(--mt-size-stroke-thin) solid var(--mt-color-border)",
+  borderRadius: "var(--mt-radius-xsmall)",
+  color: "var(--mt-color-ink-muted)",
+  background: "var(--mt-color-surface-subtle)",
+  fontFamily: "var(--mt-font-family-sans)",
+  fontSize: "var(--mt-font-size-fine)",
+};
 
 export const specimens = {
-  "search-field-default": {
-    title: "Labeled search",
+  "search-field-sizes": {
+    title: "Small, medium, and large",
     render: () => (
       <Stack width="420px">
         <SearchField
-          label="Search Library"
+          label="Compact search"
+          placeholder="Search your trail"
+          size="small"
+        />
+        <SearchField
+          label="Search Locations"
+          placeholder="Search for an address"
+        />
+        <SearchField
+          label="Search your Life Wiki"
           placeholder="A phrase, date, or question about your life..."
+          size="large"
         />
       </Stack>
     ),
   },
   "search-field-hidden-label": {
-    title: "Hidden label, small and large, with a trailing element",
+    title: "Hidden label, with a shortcut hint",
     render: () => (
       <Stack width="420px">
         <SearchField
           hideLabel
-          label="Find a tag"
-          placeholder="Find or create tag"
-          size="small"
-        />
-        <SearchField
-          hideLabel
-          label="Search your trail"
-          placeholder="Search your trail"
+          label="Search your archive"
+          placeholder="Search your archive or jump somewhere..."
           size="large"
-          trailing={<Badge tone="outline">⌘ K</Badge>}
+          trailing={
+            <kbd aria-hidden="true" style={key}>
+              esc
+            </kbd>
+          }
+        />
+      </Stack>
+    ),
+  },
+  "search-field-disabled": {
+    title: "Disabled",
+    render: () => (
+      <Stack width="420px">
+        <SearchField
+          disabled
+          label="Disabled search"
+          placeholder="Search unavailable"
         />
       </Stack>
     ),

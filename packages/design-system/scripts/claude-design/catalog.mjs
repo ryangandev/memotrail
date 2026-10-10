@@ -6,7 +6,9 @@
 //
 // `group` places the preview card, `height` is the card height in px at the preview width, and
 // its specimens live in ./specimens/<name>.jsx. `parts` are further exports documented with the
-// component, sharing its README and preview, each with a note on how it relates.
+// component, sharing its README and preview, each with a note on how it relates. `spec` names the
+// component spec it follows when that differs from its own name, as when one spec names the shared
+// component on both platforms.
 
 export const cardGroups = [
   "Foundations",
@@ -23,7 +25,7 @@ export const bundled = [
     name: "Icon",
     source: "icon.tsx",
     group: "Foundations",
-    height: 620,
+    height: 720,
     summary:
       "Icon draws one line icon from the shared icon set at a given pixel size.",
   },
@@ -43,7 +45,7 @@ export const bundled = [
     parts: [
       {
         name: "ButtonLink",
-        note: "ButtonLink draws navigation with Button's variants and sizes and stays a link, so it has no loading state. It defaults to the secondary variant.",
+        note: "ButtonLink draws navigation with Button's variants and sizes and stays a link, so it has no loading state. It shares Button's defaults.",
       },
     ],
     summary:
@@ -53,7 +55,7 @@ export const bundled = [
     name: "IconButton",
     source: "button.tsx",
     group: "Actions",
-    height: 240,
+    height: 350,
     summary:
       "IconButton is a Button that shows only an icon and names its action with a required label.",
   },
@@ -61,14 +63,15 @@ export const bundled = [
     name: "TextField",
     source: "text-field.tsx",
     group: "Inputs",
-    height: 540,
-    summary: "TextField is a labeled single-line text input in three sizes.",
+    height: 710,
+    summary:
+      "TextField is a labeled single-line text input in three sizes, with an inline error that says how to fix the value.",
   },
   {
     name: "SearchField",
     source: "search-field.tsx",
     group: "Inputs",
-    height: 320,
+    height: 560,
     summary:
       "SearchField is a labeled search input with a leading search icon and an optional trailing element.",
   },
@@ -76,7 +79,7 @@ export const bundled = [
     name: "SelectField",
     source: "select-field.tsx",
     group: "Inputs",
-    height: 360,
+    height: 550,
     summary:
       "SelectField is a labeled native select with the shared field surface and a chevron.",
   },
@@ -84,15 +87,16 @@ export const bundled = [
     name: "Checkbox",
     source: "checkbox.tsx",
     group: "Inputs",
-    height: 340,
+    height: 470,
     summary:
-      "Checkbox is a native checkbox with a visible label and an optional explanation.",
+      "Checkbox is a native checkbox in two sizes with a visible label and an optional explanation.",
   },
   {
     name: "DatePickerField",
+    spec: "DateField",
     source: "date-picker-field.tsx",
     group: "Inputs",
-    height: 420,
+    height: 1060,
     summary:
       "DatePickerField is the shared calendar date field, with day, month, and year precision and an optional time.",
   },
@@ -100,7 +104,7 @@ export const bundled = [
     name: "Skeleton",
     source: "skeleton.tsx",
     group: "Feedback",
-    height: 200,
+    height: 740,
     summary:
       "Skeleton is a decorative shimmering placeholder for content that is still loading.",
   },
@@ -108,12 +112,13 @@ export const bundled = [
     name: "EmptyState",
     source: "empty-state.tsx",
     group: "Feedback",
-    height: 740,
+    height: 790,
     summary:
       "EmptyState explains why a region has nothing to show and, optionally, offers the next step.",
   },
   {
     name: "PhotoUploadProgress",
+    spec: "UploadProgress",
     source: "photo-upload-progress.tsx",
     group: "Feedback",
     height: 320,
@@ -124,7 +129,7 @@ export const bundled = [
     name: "PageFrame",
     source: "page-frame.tsx",
     group: "Layout",
-    height: 280,
+    height: 370,
     summary:
       "PageFrame sets a page's maximum width, centering, responsive gutters, and vertical rhythm.",
   },
@@ -140,7 +145,7 @@ export const bundled = [
     name: "SectionHeader",
     source: "section-header.tsx",
     group: "Layout",
-    height: 220,
+    height: 490,
     summary:
       "SectionHeader titles a region of a page, with an optional detail, description, and action.",
   },
@@ -156,15 +161,16 @@ export const bundled = [
     name: "SeparatedList",
     source: "separated-list.tsx",
     group: "Content",
-    height: 220,
+    height: 950,
     summary:
       "SeparatedList is a wrapping row of short facts with a dot between neighbors on the same line.",
   },
   {
     name: "ProgressiveImage",
+    spec: "Image",
     source: "progressive-image.tsx",
     group: "Content",
-    height: 260,
+    height: 420,
     summary:
       "ProgressiveImage shows a photo over a reserved skeleton, fades it in once decoded, and explains a failure.",
   },
@@ -172,7 +178,7 @@ export const bundled = [
     name: "RecordCard",
     source: "record-card.tsx",
     group: "Content",
-    height: 460,
+    height: 860,
     parts: [
       {
         name: "RecordCardVisual",
@@ -290,7 +296,26 @@ export const excluded = {
 // The card group of each component that has a spec but stays out of the bundle. Its card shows the
 // spec in place of the component, and a spec for a component missing here stops the export.
 export const specOnlyGroups = {
-  ConfirmationDialog: "Patterns",
+  CaptureComposer: "Patterns",
+  CommandPalette: "Patterns",
   Dialog: "Patterns",
+  FocusedRecord: "Patterns",
+  PhotoViewer: "Patterns",
+  RichText: "Content",
+  SyncStatus: "Feedback",
+  TimeZoneField: "Inputs",
   Toast: "Feedback",
+  WorkspaceActionDock: "Patterns",
 };
+
+/** The name of the spec a bundled component follows. */
+export function specName(component) {
+  return component.spec ?? component.name;
+}
+
+/** The card that shows a spec: its bundled component's, or its own when the bundle leaves it out. */
+export function cardName(spec) {
+  return (
+    bundled.find((component) => specName(component) === spec)?.name ?? spec
+  );
+}

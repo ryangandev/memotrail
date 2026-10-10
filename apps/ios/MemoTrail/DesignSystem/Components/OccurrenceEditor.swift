@@ -104,7 +104,7 @@ struct OccurrenceEditor: View {
       ? TimelineDatePrecision.allCases.filter { $0 != .range } : TimelineDatePrecision.allCases
   }
 
-  private var granularity: MTDateGranularity {
+  private var granularity: MTDateFieldGranularity {
     switch precision {
     case .year: .year
     case .month: .month

@@ -5,22 +5,44 @@ import { Button, ButtonLink, IconButton } from "@/components/button";
 import { DatePickerField } from "@/components/date-picker-field";
 import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
-import { Icon } from "@/components/icon";
+import { Icon, type IconName } from "@/components/icon";
 import { PageHeader } from "@/components/page-header";
+import {
+  buttonSizes,
+  buttonVariants,
+  iconButtonSizes,
+  iconButtonVariants,
+  type IconButtonVariant,
+} from "@/generated/design-system";
+import { TextField } from "@/components/text-field";
 import styles from "./page.module.css";
 import review from "./pending-component-review.module.css";
+import controls from "./controls-gallery.module.css";
+import { capitalize, SpecimenCase } from "./specimen";
+
+const iconButtonSamples: Record<
+  IconButtonVariant,
+  { icon: IconName; label: string }
+> = {
+  primary: { icon: "plus", label: "Add entry" },
+  secondary: { icon: "edit", label: "Edit entry" },
+  ghost: { icon: "more", label: "More actions for Travel" },
+  danger: { icon: "trash", label: "Move entry to Trash" },
+};
 
 export function SharedPrimitivesGallery() {
-  const portal = useRef<HTMLDivElement>(null);
+  const confirmationPortal = useRef<HTMLDivElement>(null);
+  const formDialogPortal = useRef<HTMLDivElement>(null);
+  const choicePortal = useRef<HTMLDivElement>(null);
+  const longPortal = useRef<HTMLDivElement>(null);
   const formPortal = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [active, setActive] = useState<"compact" | "standard" | "wide" | null>(
-    null,
-  );
+  const [active, setActive] = useState<
+    "compact" | "standard" | "choice" | "wide" | null
+  >(null);
   const [busy, setBusy] = useState(false);
   const [date, setDate] = useState("2026-09-18");
   const [message, setMessage] = useState("No demo actions yet.");
-  const [filtered, setFiltered] = useState(true);
   useEffect(
     () => () => {
       if (timer.current) clearTimeout(timer.current);
@@ -38,34 +60,39 @@ export function SharedPrimitivesGallery() {
   }
 
   return (
-    <div className={review.stack} ref={portal}>
+    <div className={review.stack}>
       <Sample
         title="Button"
-        api="primary · secondary · ghost · danger · small / medium / large"
+        api="variant · size · loading · disabled · ButtonLink · IconButton"
       >
-        <div className={review.stack}>
-          {(["primary", "secondary", "ghost", "danger"] as const).map(
-            (variant) => (
-              <div className={review.row} key={variant}>
-                <span className={review.rowLabel}>{variant}</span>
-                <Button
-                  variant={variant}
-                  onClick={() => setMessage(`${variant} button activated.`)}
-                >
-                  Continue
-                </Button>
-                <Button variant={variant} disabled>
-                  Disabled
-                </Button>
-                <Button variant={variant} loading>
-                  Saving
-                </Button>
-              </div>
-            ),
-          )}
-          <div className={review.row}>
-            <span className={review.rowLabel}>Sizes</span>
-            {(["small", "medium", "large"] as const).map((size) => (
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="button-variants">
+            {buttonVariants.map((variant) => (
+              <Button
+                key={variant}
+                variant={variant}
+                onClick={() => setMessage(`${variant} button activated.`)}
+              >
+                {capitalize(variant)}
+              </Button>
+            ))}
+          </SpecimenCase>
+          <SpecimenCase id="button-disabled">
+            {buttonVariants.map((variant) => (
+              <Button disabled key={variant} variant={variant}>
+                {capitalize(variant)}
+              </Button>
+            ))}
+          </SpecimenCase>
+          <SpecimenCase id="button-loading">
+            {buttonVariants.map((variant) => (
+              <Button key={variant} loading variant={variant}>
+                Saving
+              </Button>
+            ))}
+          </SpecimenCase>
+          <SpecimenCase id="button-sizes">
+            {buttonSizes.map((size) => (
               <Button
                 key={size}
                 size={size}
@@ -73,12 +100,47 @@ export function SharedPrimitivesGallery() {
                 onClick={() => setMessage(`${size} button activated.`)}
               >
                 <Icon name="plus" size={16} />
-                {size}
+                {capitalize(size)}
               </Button>
             ))}
-          </div>
-          <div className={review.row}>
-            <span className={review.rowLabel}>Icon / link</span>
+          </SpecimenCase>
+          <SpecimenCase id="button-link">
+            <ButtonLink href="#foundations">View foundations</ButtonLink>
+            <ButtonLink href="#shared-primitives" variant="secondary">
+              Back to primitives
+            </ButtonLink>
+          </SpecimenCase>
+          <SpecimenCase id="icon-button-variants">
+            {iconButtonVariants.map((variant) => (
+              <IconButton
+                key={variant}
+                label={iconButtonSamples[variant].label}
+                onClick={() =>
+                  setMessage(`${iconButtonSamples[variant].label} activated.`)
+                }
+                variant={variant}
+              >
+                <Icon name={iconButtonSamples[variant].icon} size={18} />
+              </IconButton>
+            ))}
+          </SpecimenCase>
+          <SpecimenCase id="icon-button-sizes">
+            <div className={controls.iconRow}>
+              {iconButtonSizes.map((size) => (
+                <div key={size}>
+                  <IconButton
+                    label={`Close entry editor, ${size}`}
+                    onClick={() => setMessage(`${size} close activated.`)}
+                    size={size}
+                  >
+                    <Icon name="close" size={size === "small" ? 16 : 18} />
+                  </IconButton>
+                  <code>{size}</code>
+                </div>
+              ))}
+            </div>
+          </SpecimenCase>
+          <SpecimenCase id="icon-button-states">
             <IconButton
               label="Add demo entry"
               onClick={() => setMessage("Add icon activated.")}
@@ -91,8 +153,7 @@ export function SharedPrimitivesGallery() {
             <IconButton label="Saving entry" loading>
               <Icon name="plus" size={18} />
             </IconButton>
-            <ButtonLink href="#foundations">View foundations</ButtonLink>
-          </div>
+          </SpecimenCase>
           <p className={styles.stateNote} role="status">
             {message}
           </p>
@@ -101,101 +162,170 @@ export function SharedPrimitivesGallery() {
 
       <Sample
         title="Dialog"
-        api="compact · standard · wide · busy · keyboard / focus / dismissal"
+        api="size: compact | standard | wide · busy · eyebrow · description · footer · keyboard / focus / dismissal"
       >
-        <div className={review.row}>
-          <Dialog
-            title="Remove this memory?"
-            description="A compact confirmation example. This demo does not delete anything."
-            size="compact"
-            open={active === "compact"}
-            onOpenChange={(open) => setActive(open ? "compact" : null)}
-            portalContainer={portal}
-            trigger={<Button variant="danger">Open confirmation</Button>}
-            footer={
-              <>
-                <Button variant="secondary" onClick={() => setActive(null)}>
-                  Cancel
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="dialog-confirmation">
+            <div className={controls.portal} ref={confirmationPortal} />
+            <Dialog
+              title="Remove this memory?"
+              description="It moves to Trash, where you can restore it later. This demo does not delete anything."
+              size="compact"
+              open={active === "compact"}
+              onOpenChange={(open) => setActive(open ? "compact" : null)}
+              portalContainer={confirmationPortal}
+              trigger={
+                <Button data-specimen-open variant="danger">
+                  Open confirmation
                 </Button>
-                <Button
-                  variant="danger"
-                  onClick={() => {
-                    setActive(null);
-                    setMessage("Demo removal confirmed. Nothing was deleted.");
-                  }}
-                >
-                  Remove memory
+              }
+              footer={
+                <>
+                  <Button variant="secondary" onClick={() => setActive(null)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      setActive(null);
+                      setMessage(
+                        "Demo removal confirmed. Nothing was deleted.",
+                      );
+                    }}
+                  >
+                    Remove memory
+                  </Button>
+                </>
+              }
+            />
+          </SpecimenCase>
+          <SpecimenCase id="dialog-form">
+            <div className={controls.portal} ref={formDialogPortal} />
+            <Dialog
+              title="Edit a memory"
+              description="Try the calendar, keyboard focus, Escape, outside click, and the saving state."
+              open={active === "standard"}
+              onOpenChange={(open) => setActive(open ? "standard" : null)}
+              busy={busy}
+              portalContainer={formDialogPortal}
+              trigger={
+                <Button data-specimen-open variant="secondary">
+                  Open form dialog
                 </Button>
-              </>
-            }
-          >
-            The memory will be moved to Recently deleted, where it can be
-            restored.
-          </Dialog>
-          <Dialog
-            title="Edit a memory"
-            description="Try the calendar, keyboard focus, Escape, outside click, and the saving state."
-            open={active === "standard"}
-            onOpenChange={(open) => setActive(open ? "standard" : null)}
-            busy={busy}
-            portalContainer={portal}
-            trigger={<Button variant="secondary">Open form dialog</Button>}
-            footer={
-              <>
-                <Button
-                  variant="secondary"
-                  disabled={busy}
-                  onClick={() => setActive(null)}
-                >
-                  Cancel
-                </Button>
-                <Button form="review-memory-form" type="submit" loading={busy}>
-                  {busy ? "Saving memory" : "Save memory"}
-                </Button>
-              </>
-            }
-          >
-            <form
-              ref={formPortal}
-              id="review-memory-form"
-              onSubmit={(event) => {
-                event.preventDefault();
-                save();
-              }}
+              }
+              footer={
+                <>
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => setActive(null)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    form="review-memory-form"
+                    type="submit"
+                    loading={busy}
+                  >
+                    {busy ? "Saving memory" : "Save memory"}
+                  </Button>
+                </>
+              }
             >
-              <DatePickerField
-                portalContainer={formPortal}
-                label="Memory date"
-                value={date}
-                onChange={setDate}
-                disabled={busy}
-                required
-              />
-            </form>
-          </Dialog>
-          <Dialog
-            title="A longer story"
-            description="Wide dialog with a scrolling body and a footer that stays visible."
-            size="wide"
-            open={active === "wide"}
-            onOpenChange={(open) => setActive(open ? "wide" : null)}
-            portalContainer={portal}
-            trigger={<Button variant="secondary">Open long content</Button>}
-            footer={
-              <Button onClick={() => setActive(null)}>Done reading</Button>
-            }
-          >
-            <div className={review.stack}>
-              {Array.from({ length: 12 }, (_, index) => (
-                <p className={review.paragraph} key={index}>
-                  <strong>Chapter {index + 1}.</strong> Small details give a
-                  memory its shape: the place, the people, and the things we
-                  noticed along the way. This sample exercises long content
-                  without changing the page behind it.
-                </p>
-              ))}
-            </div>
-          </Dialog>
+              <form
+                className={review.stack}
+                ref={formPortal}
+                id="review-memory-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  save();
+                }}
+              >
+                <TextField
+                  defaultValue="A moment worth keeping"
+                  disabled={busy}
+                  label="Title"
+                  required
+                />
+                <DatePickerField
+                  portalContainer={formPortal}
+                  label="Memory date"
+                  value={date}
+                  onChange={setDate}
+                  disabled={busy}
+                  required
+                />
+              </form>
+            </Dialog>
+          </SpecimenCase>
+          <SpecimenCase id="dialog-short-choice">
+            <div className={controls.portal} ref={choicePortal} />
+            <Dialog
+              eyebrow="New entry"
+              title="What are you adding?"
+              closeLabel="Close entry type chooser"
+              size="compact"
+              open={active === "choice"}
+              onOpenChange={(open) => setActive(open ? "choice" : null)}
+              portalContainer={choicePortal}
+              trigger={
+                <Button data-specimen-open variant="secondary">
+                  Open short choice
+                </Button>
+              }
+            >
+              <div className={controls.choices}>
+                {(
+                  [
+                    ["timeline", "Moment"],
+                    ["home", "Home"],
+                  ] as const
+                ).map(([icon, title]) => (
+                  <Button
+                    key={title}
+                    onClick={() => {
+                      setActive(null);
+                      setMessage(`Demo ${title} chosen. Nothing was created.`);
+                    }}
+                    variant="secondary"
+                  >
+                    <Icon name={icon} size={16} />
+                    {title}
+                  </Button>
+                ))}
+              </div>
+            </Dialog>
+          </SpecimenCase>
+          <SpecimenCase id="dialog-long-content">
+            <div className={controls.portal} ref={longPortal} />
+            <Dialog
+              title="A longer story"
+              description="Wide dialog with a scrolling body and a footer that stays visible."
+              size="wide"
+              open={active === "wide"}
+              onOpenChange={(open) => setActive(open ? "wide" : null)}
+              portalContainer={longPortal}
+              trigger={
+                <Button data-specimen-open variant="secondary">
+                  Open long content
+                </Button>
+              }
+              footer={
+                <Button onClick={() => setActive(null)}>Done reading</Button>
+              }
+            >
+              <div className={review.stack}>
+                {Array.from({ length: 12 }, (_, index) => (
+                  <p className={review.paragraph} key={index}>
+                    <strong>Chapter {index + 1}.</strong> Small details give a
+                    memory its shape: the place, the people, and the things we
+                    noticed along the way. This sample exercises long content
+                    without changing the page behind it.
+                  </p>
+                ))}
+              </div>
+            </Dialog>
+          </SpecimenCase>
         </div>
         <p className={styles.stateNote}>
           Saving is simulated for 1.5 seconds. While saving, dismissal and
@@ -207,75 +337,68 @@ export function SharedPrimitivesGallery() {
         title="PageHeader"
         api="eyebrow · title · description · optional actions · responsive"
       >
-        <div className={review.stack}>
-          <PageHeader
-            headingLevel={2}
-            eyebrow="Your life, remembered"
-            title="Memories"
-            description="The moments, people, and places that make up your story."
-            actions={
-              <>
-                <Button
-                  variant="secondary"
-                  onClick={() => setMessage("Header filter activated.")}
-                >
-                  Filter
-                </Button>
-                <Button onClick={() => setActive("standard")}>
-                  <Icon name="plus" size={16} />
-                  Add memory
-                </Button>
-              </>
-            }
-          />
-          <div className={review.separator} />
-          <PageHeader
-            headingLevel={2}
-            title="A lifetime of small moments and meaningful places"
-            description="A longer heading without actions, to review wrapping at narrow widths."
-          />
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="page-header-full">
+            <PageHeader
+              headingLevel={2}
+              eyebrow="Your life, remembered"
+              title="Memories"
+              description="The moments, people, and places that make up your story."
+              actions={
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setMessage("Header filter activated.")}
+                  >
+                    Filter
+                  </Button>
+                  <Button onClick={() => setActive("standard")}>
+                    <Icon name="plus" size={16} />
+                    Add memory
+                  </Button>
+                </>
+              }
+            />
+          </SpecimenCase>
+          <SpecimenCase id="page-header-title-only">
+            <PageHeader headingLevel={2} title="First sourdough loaf at home" />
+          </SpecimenCase>
         </div>
       </Sample>
 
       <Sample
         title="EmptyState"
-        api="initial · filtered · no action · optional icon"
+        api="title · description · icon · actions · onClick"
       >
-        <div className={review.stack}>
-          <EmptyState
-            headingLevel={3}
-            icon={<Icon name="plus" size={24} />}
-            title="Your story starts here"
-            description="Capture a memory to begin building your trail."
-            actions={
-              <Button onClick={() => setActive("standard")}>
-                Add your first memory
-              </Button>
-            }
-          />
-          <EmptyState
-            headingLevel={3}
-            icon={<Icon name="search" size={24} />}
-            title={filtered ? "No matching memories" : "Filters cleared"}
-            description={
-              filtered
-                ? "Try another search or clear your filters."
-                : "This gallery uses local demo state, so no records are fetched."
-            }
-            actions={
-              <Button
-                variant="secondary"
-                onClick={() => setFiltered(!filtered)}
-              >
-                {filtered ? "Clear filters" : "Reset demo filters"}
-              </Button>
-            }
-          />
-          <EmptyState
-            headingLevel={3}
-            title="Nothing here yet"
-            description="A quiet, informational state without an action or decorative icon."
-          />
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="empty-state-with-action">
+            <EmptyState
+              headingLevel={3}
+              icon={<Icon name="plus" size={24} />}
+              title="Your Life Wiki is empty"
+              description="Capture a memory to begin building your trail."
+              actions={
+                <Button onClick={() => setActive("standard")}>
+                  Add your first memory
+                </Button>
+              }
+            />
+          </SpecimenCase>
+          <SpecimenCase id="empty-state-informational">
+            <EmptyState
+              headingLevel={3}
+              title="No photos yet"
+              description="Photos you add to this Home appear here."
+            />
+          </SpecimenCase>
+          <SpecimenCase id="empty-state-button">
+            <EmptyState
+              icon={<Icon name="star" size={24} />}
+              title="Start with a first worth remembering"
+              description="Add the first time you did something new."
+              onClick={() => setMessage("Empty state action activated.")}
+            />
+          </SpecimenCase>
         </div>
       </Sample>
     </div>

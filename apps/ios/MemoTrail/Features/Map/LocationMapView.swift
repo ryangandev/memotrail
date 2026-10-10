@@ -70,7 +70,7 @@ struct LocationMapView: View {
       }
       .onChange(of: selectedIDs) { _, ids in
         guard ids != nil else { return }
-        withAnimation(.easeOut(duration: MTMotion.standard)) {
+        withAnimation(MTEasing.enter.animation(duration: MTMotion.standard)) {
           proxy.scrollTo(Self.recordsID, anchor: .bottom)
         }
       }
@@ -105,7 +105,7 @@ struct LocationMapView: View {
         yearField("To year", text: $toYear, identifier: "map-to-year")
       }
       Text(countLabel(filtered.count, "Entry Location"))
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
         .accessibilityIdentifier("map-count")
     }
@@ -134,9 +134,9 @@ struct LocationMapView: View {
           .accessibilityAddTraits(.isHeader)
         Spacer(minLength: 0)
         Button("View all") { resetFocus() }
-          .font(MTFont.caption.weight(.regular))
+          .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
-          .frame(minHeight: 32)
+          .frame(minHeight: MTLayout.InlineAction.height)
           .contentShape(Rectangle())
           .accessibilityIdentifier("map-view-all")
       }
@@ -183,7 +183,7 @@ struct LocationMapView: View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       HStack(spacing: MTSpacing.s2) {
         Image(.map)
-          .font(.system(size: 17))
+          .font(.mtIcon(MTSize.Icon.s17))
           .foregroundStyle(MTColor.accent)
           .accessibilityHidden(true)
         Text(
@@ -199,7 +199,7 @@ struct LocationMapView: View {
             ? "No current Entries match these filters. Add a Location in an Entry to place it on this map."
             : "Pan, zoom, or select a pin to see what happened there."
         )
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
         .mtLineSpacing(MTLineHeight.body)
         .fixedSize(horizontal: false, vertical: true)
@@ -257,9 +257,9 @@ private struct MapAreaPill: View {
       Text(area.title).foregroundStyle(MTColor.ink)
       Text("\(area.entryCount)").foregroundStyle(MTColor.inkMuted)
     }
-    .font(MTFont.caption.weight(.regular))
+    .font(MTFont.detail)
     .padding(.horizontal, MTSpacing.s3)
-    .frame(minHeight: 36)
+    .frame(minHeight: MTSize.Field.small)
     .background(isFocused ? MTColor.accentSubtle : MTColor.surfaceRaised, in: Capsule())
     .overlay { Capsule().strokeBorder(isFocused ? MTColor.accent : MTColor.border) }
     .contentShape(Capsule())
@@ -288,7 +288,7 @@ private struct MapRecordRow: View {
               Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: .gmt)))
         }
       }
-      .font(MTFont.caption.weight(.regular))
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .multilineTextAlignment(.leading)
     }
@@ -305,7 +305,7 @@ private struct MapNotice<Action: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       Text(text)
-        .font(MTFont.caption.weight(.regular))
+        .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)
         .fixedSize(horizontal: false, vertical: true)
       action

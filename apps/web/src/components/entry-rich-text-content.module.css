@@ -8,7 +8,7 @@
 .content pre,
 .content ul,
 .content ol {
-  margin: 0 0 0.65em;
+  margin: 0 0 var(--mt-text-space-paragraph-gap);
 }
 
 .content > :last-child {
@@ -21,22 +21,23 @@
 
 .content ul,
 .content ol {
-  padding-left: 1.5em;
+  padding-left: var(--mt-text-space-list-indent);
 }
 
 .content blockquote {
   padding-left: var(--mt-space-3);
-  border-left: 2px solid var(--mt-color-accent);
+  border-left: var(--mt-size-stroke-medium) solid var(--mt-color-accent);
   color: var(--mt-color-ink-muted);
 }
 
 .content code {
-  padding: 0.12em 0.35em;
-  border-radius: 4px;
+  padding: var(--mt-text-space-code-padding-block)
+    var(--mt-text-space-code-padding-inline);
+  border-radius: var(--mt-radius-xxsmall);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-subtle);
-  font-family: var(--mt-font-family-mono, ui-monospace, monospace);
-  font-size: 0.9em;
+  font-family: var(--mt-font-family-mono);
+  font-size: var(--mt-font-size-inline-code);
 }
 
 .content pre {

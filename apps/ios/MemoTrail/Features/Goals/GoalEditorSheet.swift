@@ -151,7 +151,7 @@ struct GoalEditorSheet: View {
       MTFormNote(
         "Link memories, ideas, or learning that give this Goal context.", color: MTColor.inkFaint)
       if !relatedEntryIDs.isEmpty {
-        MTFlowLayout(spacing: 6) {
+        MTFlowLayout(spacing: MTSpacing.s1_5) {
           ForEach(relatedEntryIDs, id: \.self) { id in
             Button {
               relatedEntryIDs.removeAll { $0 == id }
@@ -159,7 +159,7 @@ struct GoalEditorSheet: View {
               HStack(spacing: MTSpacing.s2) {
                 Text(relatedTitle(id))
                 Text("×")
-                  .font(.system(size: 16))
+                  .font(.mtIcon(MTSize.Icon.s16))
                   .foregroundStyle(MTColor.inkFaint)
                   .accessibilityHidden(true)
               }
@@ -216,19 +216,19 @@ struct GoalEditorSheet: View {
       MTFormSection("Bucket List milestone", tone: .accent) {
         HStack(alignment: .top, spacing: MTSpacing.s3) {
           Image(.star)
-            .font(.system(size: 17, weight: .medium))
+            .font(.mtIcon(MTSize.Icon.s17, weight: .medium))
             .foregroundStyle(MTColor.accent)
-            .frame(width: 36, height: 36)
+            .frame(width: MTLayout.IconTile.small, height: MTLayout.IconTile.small)
             .background(MTColor.surfaceRaised, in: Circle())
             .accessibilityHidden(true)
-          VStack(alignment: .leading, spacing: 3) {
+          VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
             Text("Turn this achievement into a First Time")
-              .font(.system(.body, design: .serif).weight(.medium))
+              .font(MTFont.itemTitle)
               .foregroundStyle(MTColor.ink)
             Text(
               "MemoTrail will mark the Goal Achieved and create a linked First Time with the same title. Your private reflection stays here."
             )
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body)
           }
@@ -238,13 +238,13 @@ struct GoalEditorSheet: View {
         OccurrenceEditor(value: $achievementOccurrence)
         if let achievementError {
           Text(achievementError)
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.warm)
             .accessibilityAddTraits(.updatesFrequently)
         }
         if hasUnsavedChanges {
           Text("Save your other Goal changes before recording this milestone.")
-            .font(MTFont.caption.weight(.regular))
+            .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
         }
         Button {
