@@ -90,7 +90,7 @@ export function checkContrast(manifest, system) {
   };
 }
 
-function parseManifest(manifest) {
+export function parseManifest(manifest) {
   if (!isObject(manifest)) throw new Error(`${label} must be an object.`);
   for (const key of Object.keys(manifest)) {
     if (!["$description", "checks", "exceptions"].includes(key)) {

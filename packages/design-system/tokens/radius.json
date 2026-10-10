@@ -1,31 +1,37 @@
 {
   "radius": {
     "$type": "dimension",
+    "$description": "Corner radii, from small controls to pills.",
     "small": {
+      "$description": "Small buttons and fields, segmented choices, and calendar days.",
       "$value": {
         "value": 8,
         "unit": "px"
       }
     },
     "medium": {
+      "$description": "Buttons, fields, menus, and toasts.",
       "$value": {
         "value": 12,
         "unit": "px"
       }
     },
     "large": {
+      "$description": "Cards, panels, dialogs, and empty states.",
       "$value": {
         "value": 18,
         "unit": "px"
       }
     },
     "xlarge": {
+      "$description": "The sign-in story panel.",
       "$value": {
         "value": 24,
         "unit": "px"
       }
     },
     "pill": {
+      "$description": "Badges, chips, the sync status, and the workspace dock.",
       "$value": {
         "value": 999,
         "unit": "px"

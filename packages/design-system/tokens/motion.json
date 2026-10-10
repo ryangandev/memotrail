@@ -2,18 +2,21 @@
   "motion": {
     "$type": "duration",
     "quick": {
+      "$description": "Hover, press, and focus transitions.",
       "$value": {
         "value": 120,
         "unit": "ms"
       }
     },
     "standard": {
+      "$description": "Dialogs and the command palette as they open.",
       "$value": {
         "value": 180,
         "unit": "ms"
       }
     },
     "deliberate": {
+      "$description": "Slower reveals, such as the tag editor's expanding search.",
       "$value": {
         "value": 280,
         "unit": "ms"

@@ -1,0 +1,47 @@
+# A test fixture for a spec whose component the bundle leaves out.
+name: Dialog
+
+platforms:
+  web:
+    path: apps/web/src/components/dialog.tsx
+    symbols: [Dialog]
+  ios:
+    unavailable: iOS presents the same content as a sheet.
+
+purpose: A modal surface for a focused task over a blurred scrim.
+
+use:
+  - Editing or confirming one thing without leaving the page.
+
+avoid:
+  - Long forms. Use a page.
+
+anatomy:
+  scrim: The blurred layer behind the dialog.
+  surface: The raised panel.
+
+props: {}
+
+states: [default]
+
+tokens:
+  - surface: { background: "{elevation.overlay.surface}" }
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: sentence
+  length: A short title and one or two sentences.
+
+accessibility:
+  role: A dialog with a title.
+  label: The title.
+  focus: Traps focus and returns it on close.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Web text grows with zoom.
+
+platformDifferences: []
+
+specimens:
+  - id: dialog-confirm
+    description: A confirmation with a danger action.

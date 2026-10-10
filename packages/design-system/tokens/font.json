@@ -2,7 +2,9 @@
   "font": {
     "family": {
       "$type": "fontFamily",
+      "$description": "System font stacks. Web downloads no font files; iOS draws the matching system fonts.",
       "sans": {
+        "$description": "Interface text: labels, body, and controls.",
         "$value": [
           "ui-sans-serif",
           "-apple-system",
@@ -12,6 +14,7 @@
         ]
       },
       "serif": {
+        "$description": "Page, section, card, and dialog titles, and the wordmark.",
         "$value": [
           "ui-serif",
           "Iowan Old Style",
@@ -22,11 +25,13 @@
         ]
       },
       "mono": {
+        "$description": "Date stamps and code.",
         "$value": ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"]
       }
     },
     "size": {
       "$type": "dimension",
+      "$description": "Base font sizes that the text roles reference.",
       "caption": {
         "$value": {
           "value": 12,
@@ -72,6 +77,7 @@
     },
     "weight": {
       "$type": "fontWeight",
+      "$description": "Font weights that the text roles reference.",
       "regular": {
         "$value": 400
       },
@@ -88,13 +94,17 @@
   },
   "lineHeight": {
     "$type": "number",
+    "$description": "Line height multipliers that the text roles reference.",
     "tight": {
+      "$description": "Headings, labels, and single-line text.",
       "$value": 1.15
     },
     "body": {
+      "$description": "Paragraphs and multi-line text.",
       "$value": 1.55
     },
     "relaxed": {
+      "$description": "Long-form reading on the sign-in screen.",
       "$value": 1.7
     }
   }

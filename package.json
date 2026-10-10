@@ -9,7 +9,9 @@
   "scripts": {
     "build": "pnpm design-system:check && turbo run build",
     "design-system:check": "pnpm --filter @memotrail/design-system check",
+    "design-system:export": "pnpm --filter @memotrail/design-system export",
     "design-system:generate": "pnpm --filter @memotrail/design-system generate",
+    "design-system:test:previews": "pnpm --filter @memotrail/design-system test:previews",
     "dev": "turbo run dev",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

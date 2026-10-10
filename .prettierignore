@@ -7,6 +7,7 @@ pnpm-lock.yaml
 apps/ios/**/Generated
 apps/web/src/styles/generated-tokens.css
 apps/web/src/generated
+packages/design-system/dist
 # Standalone design explorations use their own authored formatting.
 timeline-ideas/
 # Agent worktrees nested in this checkout are separate checkouts of the repository.
