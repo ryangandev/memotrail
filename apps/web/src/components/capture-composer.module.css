@@ -94,18 +94,12 @@
 }
 
 .captureEditorLoading {
+  display: grid;
   min-height: calc(
     3 * var(--mt-line-height-body) * var(--mt-font-size-body) + 38px
   );
+  overflow: hidden;
   border-radius: var(--mt-radius-small);
-  background: linear-gradient(
-    100deg,
-    transparent 20%,
-    var(--mt-color-surface-subtle) 45%,
-    transparent 70%
-  );
-  background-size: 220% 100%;
-  animation: capture-editor-loading 1.2s ease-in-out infinite;
 }
 
 .capturePhotoStrip {
@@ -312,6 +306,12 @@
   margin-top: var(--mt-space-8);
 }
 
+/* The Retry button sets the row height, so the title centers on it. */
+.pendingHeader[data-ui-section-header] {
+  align-items: center;
+  margin-bottom: var(--mt-space-3);
+}
+
 /* Inside Quick Capture, the list aligns with the composer's inline padding. */
 .pendingSection.dialogPendingSection {
   margin-top: var(--mt-space-2);
@@ -381,22 +381,8 @@
   .saveShortcutTooltip {
     transition: none;
   }
-
-  .captureEditorLoading {
-    animation: none;
-  }
 }
 .captureOccurrencePanel {
   padding: var(--mt-space-4) var(--capture-inline-padding);
   border-top: 1px solid var(--mt-color-border);
-}
-
-@keyframes capture-editor-loading {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -100% 0;
-  }
 }

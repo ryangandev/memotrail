@@ -2,36 +2,11 @@
   position: relative;
 }
 
-.loadingEyebrow,
-.loadingTitle,
-.loadingIntro,
-.loadingCards span {
-  display: block;
-  border-radius: var(--mt-radius-medium);
-  background: linear-gradient(
-    100deg,
-    var(--mt-color-surface-subtle) 20%,
-    var(--mt-color-surface) 42%,
-    var(--mt-color-surface-subtle) 64%
-  );
-  background-size: 240% 100%;
-  animation: routeLoadingPulse 1.4s ease-in-out infinite;
-}
-
-.loadingEyebrow {
-  width: 112px;
-  height: 11px;
-}
-
 .loadingTitle {
-  width: min(68%, 460px);
-  height: 42px;
   margin-top: var(--mt-space-3);
 }
 
 .loadingIntro {
-  width: min(82%, 620px);
-  height: 16px;
   margin-top: var(--mt-space-4);
 }
 
@@ -42,7 +17,7 @@
   margin-top: var(--mt-space-10);
 }
 
-.loadingCards span {
+.loadingCards > * {
   min-height: 180px;
   border: 1px solid var(--mt-color-border);
 }
@@ -96,7 +71,7 @@
     grid-template-columns: 1fr;
   }
 
-  .loadingCards span {
+  .loadingCards > * {
     min-height: 116px;
   }
 
@@ -108,24 +83,5 @@
 @media (max-width: 390px) {
   .inboxMessage {
     padding: var(--mt-space-6) var(--mt-space-4);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loadingEyebrow,
-  .loadingTitle,
-  .loadingIntro,
-  .loadingCards span {
-    animation: none;
-  }
-}
-
-@keyframes routeLoadingPulse {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -100% 0;
   }
 }

@@ -1,7 +1,6 @@
 "use client";
 import captureComposerStyles from "@/components/capture-composer.module.css";
 import entryFormStyles from "@/components/entry-form.module.css";
-import entryListStyles from "@/components/entry-list.module.css";
 import { Button } from "@/components/button";
 import { notify } from "@/components/app-toast";
 
@@ -20,6 +19,8 @@ import { Icon } from "@/components/icon";
 import { PendingCaptureList } from "@/components/pending-captures";
 import { PhotoUploadProgress } from "@/components/photo-upload-progress";
 import { RichTextEditor } from "@/components/rich-text-editor";
+import { SectionHeader } from "@/components/section-header";
+import { Skeleton } from "@/components/skeleton";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
 import { OccurrenceEditor } from "./occurrence-editor";
 import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
@@ -338,7 +339,9 @@ export function CaptureComposer({
                 aria-label="Preparing writing space"
                 className={captureComposerStyles.captureEditorLoading}
                 role="status"
-              />
+              >
+                <Skeleton height="auto" shape="fill" />
+              </div>
             )}
           </div>
         </div>
@@ -519,24 +522,27 @@ export function CaptureComposer({
           className={`${captureComposerStyles.pendingSection} ${variant === "dialog" ? captureComposerStyles.dialogPendingSection : ""}`}
           aria-labelledby={`${idPrefix}-pending-heading`}
         >
-          <div className={entryListStyles.sectionHeader}>
-            <div>
-              <h2 id={`${idPrefix}-pending-heading`}>Pending sync</h2>
-              <span>{countLabel(captureQueue.items.length, "Entry")}</span>
-            </div>
-            {/* Captures MemoTrail did not accept are never retried. */}
-            {countPendingCaptures(captureQueue.items).waiting > 0 ? (
-              <Button
-                variant="secondary"
-                disabled={isSyncing}
-                onClick={() => void captureQueue.synchronize()}
-                type="button"
-              >
-                <Icon name="refresh" size={14} />
-                {isSyncing ? "Syncing…" : "Retry now"}
-              </Button>
-            ) : null}
-          </div>
+          <SectionHeader
+            action={
+              // Captures MemoTrail did not accept are never retried.
+              countPendingCaptures(captureQueue.items).waiting > 0 ? (
+                <Button
+                  variant="secondary"
+                  disabled={isSyncing}
+                  onClick={() => void captureQueue.synchronize()}
+                  type="button"
+                >
+                  <Icon name="refresh" size={14} />
+                  {isSyncing ? "Syncing…" : "Retry now"}
+                </Button>
+              ) : null
+            }
+            className={captureComposerStyles.pendingHeader}
+            detail={countLabel(captureQueue.items.length, "Entry")}
+            headingId={`${idPrefix}-pending-heading`}
+            title="Pending sync"
+            variant="list"
+          />
           <PendingCaptureList items={captureQueue.items} />
         </section>
       ) : null}

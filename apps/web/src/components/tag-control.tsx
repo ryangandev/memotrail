@@ -14,6 +14,7 @@ import {
   saveTag,
 } from "@/app/organization/actions";
 import { Icon } from "@/components/icon";
+import { Skeleton } from "@/components/skeleton";
 import {
   tagNameLengthLimit,
   validTagInput,
@@ -325,9 +326,9 @@ function TagEntryList({
           className={styles.entryLoading}
           role="status"
         >
-          <span />
-          <span />
-          <span />
+          <Skeleton height="34px" shape="line" />
+          <Skeleton height="34px" shape="line" width="86%" />
+          <Skeleton height="34px" shape="line" width="72%" />
         </div>
       ) : preview.error ? (
         <p className={styles.entryError} role="alert">

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { PhotoPreviewDialog } from "@/components/photo-preview-dialog";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { Skeleton } from "@/components/skeleton";
 import styles from "./selected-photo-preview.module.css";
 
 type PreviewState =
@@ -91,9 +92,14 @@ export function SelectedPhotoPreview({
       className={styles.placeholder}
       role="status"
     >
-      {currentPreview.status === "loading"
-        ? "Preparing preview..."
-        : "Preview unavailable. Photo is still selected."}
+      {currentPreview.status === "loading" ? (
+        <Skeleton className={styles.placeholderSkeleton} shape="fill" />
+      ) : null}
+      <span className={styles.placeholderText}>
+        {currentPreview.status === "loading"
+          ? "Preparing preview..."
+          : "Preview unavailable. Photo is still selected."}
+      </span>
     </span>
   );
 }

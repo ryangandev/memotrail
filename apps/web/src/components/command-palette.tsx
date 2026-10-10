@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Icon, type IconName } from "@/components/icon";
 import { SearchField } from "@/components/search-field";
+import { Skeleton } from "@/components/skeleton";
 import {
   parseQuickSearchResult,
   type QuickSearchResult,
@@ -285,9 +286,9 @@ export function CommandPalette({
                 </div>
               ) : searching ? (
                 <div className={styles.searching} aria-hidden="true">
-                  <span />
-                  <span />
-                  <span />
+                  <Skeleton height="44px" />
+                  <Skeleton height="44px" />
+                  <Skeleton height="44px" />
                 </div>
               ) : (
                 <p className={styles.empty}>No archive matches yet.</p>

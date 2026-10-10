@@ -33,16 +33,6 @@
   position: absolute;
   z-index: 1;
   inset: 0;
-  background:
-    linear-gradient(
-      105deg,
-      transparent 35%,
-      color-mix(in srgb, var(--mt-color-surface-raised) 72%, transparent) 50%,
-      transparent 65%
-    ),
-    var(--mt-color-surface-subtle);
-  background-size: 220% 100%;
-  animation: image-loading-shimmer 1.25s ease-in-out infinite;
   transition: opacity 180ms ease-out;
 }
 
@@ -50,7 +40,6 @@
 .frame[data-image-status="failed"] .skeleton {
   opacity: 0;
   pointer-events: none;
-  animation: none;
 }
 
 .fallback {
@@ -65,23 +54,9 @@
   text-align: center;
 }
 
-@keyframes image-loading-shimmer {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -100% 0;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .image,
   .skeleton {
     transition: none;
-  }
-
-  .skeleton {
-    animation: none;
   }
 }

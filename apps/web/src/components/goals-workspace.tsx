@@ -30,6 +30,7 @@ import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SectionHeader } from "@/components/section-header";
 import {
   entryPhotoLimit,
   entryPhotoSizeLimit,
@@ -197,10 +198,13 @@ function GoalSection({
 }) {
   return (
     <section className={common.homeSection}>
-      <header>
-        <h2>{title}</h2>
-        <span>{detail}</span>
-      </header>
+      <SectionHeader
+        className={common.homeSectionHeader}
+        detail={<span className={common.homeSectionDetail}>{detail}</span>}
+        detailAlign="end"
+        title={title}
+        variant="list"
+      />
       <div className={styles.goalGrid}>
         {goals.map((goal) => (
           <GoalCard goal={goal} key={goal.id} onSelect={() => onSelect(goal)} />

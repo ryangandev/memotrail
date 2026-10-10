@@ -333,6 +333,11 @@ Pair it with the test file carrying the same feature name.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
 - Noninteractive status, type, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
+- Checkbox, SectionHeader, and Skeleton are the Web counterparts of `MTCheckbox`, `MTSectionHeader` with `MTListHeader`, and `MTLoadingSkeleton`.
+  `components/checkbox.tsx` is a native `input type="checkbox"` that submits like any other, named by its label and described by an optional explanation, with a `small` and a `medium` size.
+  `components/section-header.tsx` is one component whose `variant` is `section` (a serif title, like `MTSectionHeader`) or `list` (the small uppercase heading above a list, like `MTListHeader`); both take a detail, a description, an action, and a heading level chosen by the caller, because the two differ only in typography.
+  `components/skeleton.tsx` is a decorative placeholder hidden from assistive technology that stops its shimmer for reduced motion; `ProgressiveImage` and the route loading fallback use it, and the surrounding region announces the loading state.
+  Feature code does not hand-roll checkbox markup, uppercase list headings, or shimmer placeholders; the `/design-system` specimens `checkbox`, `section-header`, and `skeleton` show every variant and state.
 - Dot-separated summary and metadata rows use Web `components/separated-list.tsx` and native `MTFlowLayout` with `MTFlowSeparator`, or `MTWordFlow` for facts that read like a sentence.
   Facts wrap whole, and a "·" shows only between two facts on the same line, hidden from assistive technology.
   Web clips the separator of a fact that starts a line one gap outside the list, so focus rings stay whole; native line breaking leaves that separator out.
@@ -344,7 +349,7 @@ Pair it with the test file carrying the same feature name.
 - Native `DesignSystem/Components` owns reusable presentation components.
   `MTFoundations.swift` maps each Web text role to the iOS Dynamic Type style with the same default size and defines the shared icon vocabulary, page widths, shadow, and line-height helpers.
   Generated Swift tokens supply semantic colors, spacing, radius, motion, line heights, shadow layers, and the catalogs the gallery lists.
-  Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, and EmptyState.
+  Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, SectionHeader, and EmptyState.
   `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library and People.
   `MTListHeader` and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
   `MTSheet` is the Web Dialog: its eyebrow, serif title, close action, scrolling content, failure message, and footer actions.
