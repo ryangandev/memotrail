@@ -332,7 +332,8 @@ Pair it with the test file carrying the same feature name.
   The copy is a display copy regenerated from this repository: `tokens.json` names each token like its Web variable without `--`, resolves mixed colors to `rgba()`, and takes each usage from `$description`, so every token or its group needs one.
   `README.md` is the brand book, rendered from the hand-written `scripts/claude-design/brand-book.md` with tables generated from the tokens, `contrast.json`, and `icons.json`.
   `components/` holds an esbuild bundle of the Web components that render from props alone, exposed as `window.MemoTrail` for React 18, plus a README and a preview card per component from `scripts/claude-design/specimens` and any spec in `packages/design-system/components`.
-  `scripts/claude-design/catalog.mjs` lists every Web component file as bundled or excluded with a reason, and `pnpm design-system:test:previews` renders every card in both themes in Chromium.
+  `components/index.d.ts` declares them with the types they import from the app, such as the unions generated from the specs, written out as literal unions so the file stands alone.
+  `scripts/claude-design/catalog.mjs` lists every Web component file as bundled or excluded with a reason, and `pnpm design-system:test:previews` renders every card in both themes in Chromium and checks that each spec specimen draws every prop value it covers.
 - The Web Dashboard route loads `getHomeWorkspace` on the server and renders `components/home-dashboard.tsx` with component-owned CSS.
   Dashboard composes the shared PageFrame, PageHeader, CaptureComposer, EmptyState, ProgressiveImage, and Badge; Memory and Recent Entries share one Entry card renderer.
   Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the ribbon, rows, and cards.

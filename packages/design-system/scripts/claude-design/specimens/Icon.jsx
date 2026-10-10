@@ -1,8 +1,8 @@
+import { iconNames } from "./generated.js";
 import { Row } from "./runtime.jsx";
 
 const { Icon } = MemoTrail;
 
-// The exporter defines ICON_NAMES from the Web icons in icons.json.
 const grid = {
   display: "grid",
   gridTemplateColumns: "repeat(auto-fill, minmax(96px, 1fr))",
@@ -23,7 +23,7 @@ export const specimens = {
     title: "Every Web icon at 20px",
     render: () => (
       <div style={grid}>
-        {ICON_NAMES.map((name) => (
+        {iconNames.map((name) => (
           <span key={name} style={cell}>
             <Icon name={name} size={20} />
             <span style={{ color: "var(--mt-color-ink-muted)" }}>{name}</span>

@@ -1,17 +1,22 @@
+import { badgeSizes, badgeTones } from "./generated.js";
 import { Row, Stack } from "./runtime.jsx";
 
 const { Badge } = MemoTrail;
 
-const tones = [
-  ["accent", "Memory"],
-  ["neutral", "Note"],
-  ["warm", "First Time"],
-  ["outline", "Someday"],
-  ["inverse", "Home"],
-  ["solidAccent", "Achieved"],
-  ["glassAccent", "Current"],
-  ["glassNeutral", "Vehicle"],
-];
+// A real label for each tone, in the place the app uses it. A tone added to badge.yaml shows its
+// own name until it gets one here.
+const labels = {
+  accent: "Memory",
+  neutral: "Note",
+  warm: "First Time",
+  success: "Connected",
+  danger: "Upload failed",
+  outline: "Someday",
+  inverse: "Home",
+  solidAccent: "Achieved",
+  glassAccent: "Current",
+  glassNeutral: "Vehicle",
+};
 
 const photo = {
   display: "flex",
@@ -30,9 +35,9 @@ export const specimens = {
     title: "Every tone at the default small size",
     render: () => (
       <Row>
-        {tones.map(([tone, label]) => (
+        {badgeTones.map((tone) => (
           <Badge key={tone} tone={tone}>
-            {label}
+            {labels[tone] ?? tone}
           </Badge>
         ))}
       </Row>
@@ -42,7 +47,7 @@ export const specimens = {
     title: "Every size, beside the uppercase treatment at each size",
     render: () => (
       <Stack gap="var(--mt-space-2)">
-        {["micro", "small", "medium"].map((size) => (
+        {badgeSizes.map((size) => (
           <Row key={size}>
             <Badge size={size}>Period</Badge>
             <Badge size={size} uppercase>

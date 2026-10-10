@@ -3,6 +3,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import vm from "node:vm";
 import * as esbuild from "esbuild";
+import { kebabCase } from "../lib/util.mjs";
 import { cardGroups } from "./catalog.mjs";
 
 // Builds each component's preview card from its specimen file in ./specimens.
@@ -20,7 +21,7 @@ const specimenId = /^[a-z][a-z0-9]*(-[a-z0-9]+)+$/;
 
 // Specimen ids start with the component's kebab-case name, as spec ids do, such as badge-tones.
 export function specimenPrefix(name) {
-  return `${name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase()}-`;
+  return `${kebabCase(name)}-`;
 }
 
 export function specimenFile(name) {
@@ -45,13 +46,12 @@ const jsxOptions = {
 };
 
 // Reads the specimen ids and titles without rendering anything.
-export async function readSpecimens(name, iconNames) {
+export async function readSpecimens(name) {
   const result = await esbuild.build({
     ...jsxOptions,
     entryPoints: [specimenFile(name)],
     format: "iife",
     globalName: "specimenModule",
-    define: { ICON_NAMES: JSON.stringify(iconNames) },
   });
   const stub = new Proxy({}, { get: () => () => null });
   const context = vm.createContext({
@@ -115,7 +115,7 @@ export function specimenOrder(name, available, spec) {
   }));
 }
 
-export async function buildPreview({ component, order, iconNames }) {
+export async function buildPreview({ component, order }) {
   if (!Number.isInteger(component.height) || component.height <= 0) {
     throw new Error(`${component.name} needs a whole-pixel card height.`);
   }
@@ -132,7 +132,6 @@ export async function buildPreview({ component, order, iconNames }) {
       loader: "jsx",
     },
     format: "iife",
-    define: { ICON_NAMES: JSON.stringify(iconNames) },
   });
   return previewDocument(component, result.outputFiles[0].text);
 }

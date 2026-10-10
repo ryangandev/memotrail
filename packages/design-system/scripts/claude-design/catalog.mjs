@@ -43,7 +43,7 @@ export const bundled = [
     parts: [
       {
         name: "ButtonLink",
-        note: "ButtonLink draws navigation with Button's variants and sizes and stays a link, so it has no loading state. It defaults to the secondary variant.",
+        note: "ButtonLink draws navigation with Button's variants and sizes and stays a link, so it has no loading state. It shares Button's defaults.",
       },
     ],
     summary:

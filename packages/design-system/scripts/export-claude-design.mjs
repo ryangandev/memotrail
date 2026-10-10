@@ -66,9 +66,6 @@ export async function exportClaudeDesign({
   const contrast = parseManifest(
     await readJson(resolve(packageRoot, "contrast.json"), repositoryRoot),
   );
-  const iconNames = icons.icons
-    .filter((icon) => icon.platforms.includes("web"))
-    .map((icon) => icon.name);
 
   const { tokens, stylesheet } = makeTokens({
     system,
@@ -96,18 +93,17 @@ export async function exportClaudeDesign({
     webRoot,
     packageRoot,
     components: bundled,
-    iconNames,
   });
 
   const files = new Map();
   for (const component of bundled) {
     const spec = specsByName.get(component.name);
     if (spec) checkSpecAgainstComponent(spec, component);
-    const available = await readSpecimens(component.name, iconNames);
+    const available = await readSpecimens(component.name);
     const order = specimenOrder(component.name, available, spec);
     files.set(
       `components/${component.name}/preview.html`,
-      await buildPreview({ component, order, iconNames }),
+      await buildPreview({ component, order }),
     );
     files.set(
       `components/${component.name}/README.md`,

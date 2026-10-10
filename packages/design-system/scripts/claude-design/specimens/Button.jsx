@@ -1,13 +1,20 @@
+import { buttonSizes, buttonVariants } from "./generated.js";
 import { Row } from "./runtime.jsx";
 
 const { Button, ButtonLink, Icon } = MemoTrail;
 
-const variants = [
-  ["primary", "Save to Library"],
-  ["secondary", "Cancel"],
-  ["ghost", "Edit"],
-  ["danger", "Move to Trash"],
-];
+// A real label for each variant. A variant added to button.yaml shows its own name until it gets
+// one here.
+const labels = {
+  primary: "Save to Library",
+  secondary: "Cancel",
+  ghost: "Edit",
+  danger: "Move to Trash",
+};
+const variants = buttonVariants.map((variant) => [
+  variant,
+  labels[variant] ?? variant,
+]);
 
 export const specimens = {
   "button-variants": {
@@ -50,7 +57,7 @@ export const specimens = {
     title: "Every size in the secondary variant, with a leading icon",
     render: () => (
       <Row>
-        {["small", "medium", "large"].map((size) => (
+        {buttonSizes.map((size) => (
           <Button key={size} size={size} variant="secondary">
             <Icon name="plus" size={size === "small" ? 14 : 16} />
             Add tag
@@ -63,7 +70,7 @@ export const specimens = {
     title: "Navigation drawn as a button with ButtonLink",
     render: () => (
       <Row>
-        <ButtonLink href="#library">
+        <ButtonLink href="#library" variant="secondary">
           <Icon name="arrowLeft" size={16} />
           Back to Library
         </ButtonLink>
