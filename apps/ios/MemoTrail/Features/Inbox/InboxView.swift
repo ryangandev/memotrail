@@ -81,8 +81,8 @@ struct InboxView: View {
   private var pendingSection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       // Like Web's Pending sync, it also holds captures MemoTrail refused, which never retry.
-      MTListHeader(
-        "Pending sync", detail: "\(captureCount(controller.pendingEntries.count)) on this iPhone"
+      MTSectionHeader(
+        "Pending sync", variant: .list, detail: "\(captureCount(controller.pendingEntries.count)) on this iPhone"
       ) {
         if controller.waitingEntryCount > 0 {
           Button {
@@ -108,7 +108,7 @@ struct InboxView: View {
 
   private var entrySection: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      MTListHeader("Ready to organize", detail: captureCount(controller.entries.count)) {
+      MTSectionHeader("Ready to organize", variant: .list, detail: captureCount(controller.entries.count)) {
         if controller.isLoading, controller.hasLoaded {
           ProgressView().controlSize(.small).tint(MTColor.accent)
         }

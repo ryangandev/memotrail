@@ -52,7 +52,7 @@ struct MTLocationSnapshot<Fallback: View>: View {
         } else if position == nil || failedPosition == position {
           fallback
         } else {
-          MTLoadingSkeleton()
+          MTLoadingSkeleton(shape: .fill)
         }
       }
       .frame(width: proxy.size.width, height: proxy.size.height)

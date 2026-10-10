@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: PhotoViewer
+
+platforms:
+  web:
+    path: apps/web/src/components/photo-preview-dialog.tsx
+    symbols: [PhotoPreviewDialog]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTMedia.swift
+    symbols: [MTPhotoPreview]
+
+purpose: Shows saved photos whole, one at a time, titled with the photo's name, and pages through a set with Previous, Next, and the position.
+
+use:
+  - Checking a record's or an Entry's saved photos at full size from its page.
+  - Checking a photo in a draft before saving it, on Web.
+
+avoid:
+  - Choosing or removing photos. Use the photo field, which opens this viewer from its tiles.
+  - A photo that is decoration on a card. Show it with Image.
+
+anatomy:
+  container: The wide dialog on Web and the full-screen sheet on iOS, titled with the photo's name.
+  image: The photo fitted whole inside its frame, through Image with the contain fit.
+  navigation: Previous, the position such as 2 of 3, and Next, shown only for more than one photo.
+  close: Close in the dialog footer on Web and Done in the navigation bar on iOS.
+
+props: {}
+
+states: [default, loading, disabled]
+
+tokens:
+  - image:
+      background: { web: "{color.surfaceSubtle}", ios: "{color.photoBackdrop}" }
+      radius: { web: "{radius.medium}" }
+    navigation:
+      gap: "{space.3}"
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.label}"
+  - when: { state: disabled }
+    navigation:
+      opacity: "{state.disabled.opacity.button}"
+
+content:
+  lines: unlimited
+  overflow: perPlatform
+  casing: asWritten
+  length: The title is the photo's own name, or its record's name and its number, such as Blue Civic photo 2.
+  notes:
+    - The position reads n of m, such as 2 of 3.
+    - A photo that cannot load says Photo unavailable. Close this preview and try again.
+
+accessibility:
+  role: A modal dialog on Web and a sheet on iOS, with the photo as an image.
+  label: The photo's name labels both the title and the image; Previous and Next are buttons, and the position is announced when it changes.
+  focus: Focus moves into the viewer when it opens and returns to the photo that opened it when it closes. On Web the arrow keys page through the set and Escape closes it.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: The title and navigation scale with Dynamic Type on iOS and browser zoom on Web; the photo keeps fitting its frame.
+
+platformDifferences:
+  - difference: Web shows the photo in a wide dialog, inside a rounded subtle frame up to 680 px tall; iOS fills a full-screen sheet with the photo on a black backdrop in dark appearance.
+    reason: A phone screen is small enough that every point goes to the photo, and the dark backdrop is how iOS shows photos whole; a large window keeps the page visible around the dialog.
+  - difference: People swipe between photos on iOS as well as using Previous and Next; Web pages with Previous, Next, and the arrow keys.
+    reason: Swiping is the native way to page photos on a touch screen, and the arrow keys are the keyboard's.
+  - difference: iOS closes the viewer with Done in the navigation bar, and Web with Close in the dialog footer, the close button, or Escape.
+    reason: Each platform's own way to dismiss a sheet or a dialog.
+  - difference: A long photo name wraps in the Web dialog title and truncates at the tail in the iOS navigation bar.
+    reason: The inline navigation bar title holds one line, and a dialog title wraps like other Web headings.
+  - difference: iOS draws Previous and Next at the small button size; Web uses the medium size of its other dialog footer actions.
+    reason: The iOS navigation sits in a compact bar under the photo, which the medium buttons would crowd on the narrowest iPhone.
+
+specimens:
+  - id: photo-viewer-paged
+    description: Three saved Home photos that open on the second, with Previous, the position, and Next.

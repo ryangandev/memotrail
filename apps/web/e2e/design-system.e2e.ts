@@ -339,27 +339,28 @@ test("the gallery shows every specimen the component specs list", async ({
     ).toBeVisible();
     await expect(section).toContainText(specimen.description);
 
-    // An overlay specimen draws its component once its opener is pressed.
+    // An overlay specimen draws its component once its opener is pressed. A dialog may render
+    // outside the specimen, so an opened component is found anywhere on the page.
+    const component = `[data-ui-${kebab(specimen.component)}]`;
     const opener = section.locator("[data-specimen-open]");
     const opens = (await opener.count()) > 0;
+    const closed = await page.locator(component).count();
     if (opens) await opener.click();
+    const scope = opens ? page.locator("body") : section;
 
     // It draws the spec's component, in every value the spec says it covers.
-    const component = `[data-ui-${kebab(specimen.component)}]`;
-    await expect(section.locator(component).first()).toBeVisible();
+    await expect(scope.locator(component).first()).toBeVisible();
     for (const [prop, values] of Object.entries(specimen.covers)) {
       for (const value of values as readonly string[]) {
         await expect(
-          section
-            .locator(`${component}[data-${kebab(prop)}="${value}"]`)
-            .first(),
+          scope.locator(`${component}[data-${kebab(prop)}="${value}"]`).first(),
           `${specimen.id} draws ${prop} ${value}`,
         ).toBeVisible();
       }
     }
     if (opens) {
       await page.keyboard.press("Escape");
-      await expect(section.locator(component)).toHaveCount(0);
+      await expect(page.locator(component)).toHaveCount(closed);
     }
   }
 });
@@ -828,11 +829,11 @@ test("Shared primitives support actions, modal focus, nested calendars, and busy
     await expect(button).toHaveAttribute("aria-busy", "true");
   }
   await review
-    .getByRole("button", { name: "Clear filters", exact: true })
+    .getByRole("button", { name: /Start with a first worth remembering/ })
     .click();
-  await expect(
-    review.getByRole("heading", { name: "Filters cleared" }),
-  ).toBeVisible();
+  await expect(review.getByRole("status")).toHaveText(
+    "Empty state action activated.",
+  );
 
   const confirmation = review.getByRole("button", {
     name: "Open confirmation",
@@ -1092,7 +1093,6 @@ test("SectionHeader renders section and list headings at the level the caller pi
     block!.y + block!.height / 2,
     0,
   );
-  await expect(header("list-description").getByText("Connected")).toBeVisible();
 
   // A long heading wraps instead of overflowing, and the action stays reachable.
   for (const width of [1280, 390, 320]) {
@@ -1135,7 +1135,7 @@ test("Skeleton is decorative, shimmers, and stands still for reduced motion", as
     specimen.locator(`[data-skeleton="${name}"] [data-ui-skeleton]`).first();
 
   // Placeholders add nothing to the accessibility tree.
-  await expect(skeletons).toHaveCount(10);
+  await expect(skeletons).toHaveCount(11);
   for (const skeleton of await skeletons.all())
     await expect(skeleton).toHaveAttribute("aria-hidden", "true");
   await expect(specimen.getByRole("img")).toHaveCount(0);
@@ -1143,9 +1143,9 @@ test("Skeleton is decorative, shimmers, and stands still for reduced motion", as
 
   // Shapes: a circle is square and round, a line is thin, fill takes its frame.
   const circle = await shape("circle").boundingBox();
-  expect(circle!.width).toBeCloseTo(48, 0);
-  expect(circle!.height).toBeCloseTo(48, 0);
-  await expect(shape("circle")).toHaveCSS("border-radius", "50%");
+  expect(circle!.width).toBeCloseTo(40, 0);
+  expect(circle!.height).toBeCloseTo(40, 0);
+  await expect(shape("circle")).toHaveCSS("border-radius", "999px");
   expect((await shape("line").boundingBox())!.height).toBeCloseTo(14, 0);
   const frame = await specimen
     .locator('[data-skeleton="fill"] > div')
@@ -1153,7 +1153,7 @@ test("Skeleton is decorative, shimmers, and stands still for reduced motion", as
   const fill = await shape("fill").boundingBox();
   expect(fill!.width).toBeCloseTo(frame!.width, 0);
   expect(fill!.height).toBeCloseTo(frame!.height, 0);
-  expect((await shape("block").boundingBox())!.height).toBeCloseTo(64, 0);
+  expect((await shape("block").boundingBox())!.height).toBeCloseTo(96, 0);
 
   // The shimmer runs by default, stops on request, and stops for reduced motion.
   await expect(shape("block")).toHaveCSS("animation-name", /shimmer/);

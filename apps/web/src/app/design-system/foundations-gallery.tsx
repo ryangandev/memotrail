@@ -1,7 +1,8 @@
 import type { CSSProperties } from "react";
 import type tokenCatalog from "@/generated/design-tokens.json";
 import { Icon, iconNames } from "@/components/icon";
-import { iconSizes } from "@/generated/design-system";
+import { PageFrame } from "@/components/page-frame";
+import { iconSizes, pageFrameVariants } from "@/generated/design-system";
 import styles from "./page.module.css";
 import controls from "./controls-gallery.module.css";
 import { capitalize, kebab, Specimen, SpecimenCase } from "./specimen";
@@ -498,16 +499,33 @@ export function LayoutTokens({ tokens }: { tokens: TokenSet }) {
     tokens.layout;
   return (
     <>
-      <div className={styles.variantTable}>
-        {Object.entries(pageWidth).map(([name, value]) => (
-          <div data-page-width={name} key={name}>
-            <strong>{name}</strong>
-            <span>
-              {value}px · {descriptions[`layout.pageWidth.${name}`]}
-            </span>
+      <Specimen
+        api="variant: compact | standard | wide | canvas · className · div props"
+        description="The centered column that holds a page. Phones use the full width inside the page gutters; wider windows center the page at its variant width. This gallery uses canvas."
+        id="page-frame"
+        title="PageFrame"
+      >
+        <SpecimenCase id="page-frame-widths">
+          <div className={styles.pageFrameTrack}>
+            <div>
+              {pageFrameVariants.map((variant) => (
+                <PageFrame
+                  className={styles.pageFrameSample}
+                  data-page-width={variant}
+                  key={variant}
+                  variant={variant}
+                >
+                  <strong>{variant}</strong>
+                  <span>
+                    {pageWidth[variant]}px ·{" "}
+                    {descriptions[`layout.pageWidth.${variant}`]}
+                  </span>
+                </PageFrame>
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
+        </SpecimenCase>
+      </Specimen>
       <div className={styles.foundationGrid}>
         <Specimen
           description="Horizontal page padding at each window class."

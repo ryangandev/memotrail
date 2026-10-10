@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: UploadProgress
+
+platforms:
+  web:
+    path: apps/web/src/components/photo-upload-progress.tsx
+    symbols: [PhotoUploadProgress]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTMedia.swift
+    symbols: [MTUploadProgress]
+
+purpose: Shows how many of the selected photos have uploaded, as a ring with a percentage and a count.
+
+use:
+  - A photo upload in an editor or capture, counting finished files rather than bytes.
+  - Laid over the first new photo's tile while that upload runs, in the overlay variant.
+
+avoid:
+  - Waiting for a save with no countable steps. Use the Button loading state.
+  - Content that is loading. Use Skeleton or the Image placeholder.
+
+anatomy:
+  container: The row that holds the ring and the copy, or the scrim over a tile in the overlay variant.
+  ring: The circle that holds the track, the arc, and the percentage on a raised surface.
+  track: The full circle the arc grows along.
+  arc: The accent stroke that grows clockwise from the top with the uploaded share.
+  percentage: The rounded percentage at the ring's center.
+  label: Uploading photos, beside the ring in the inline variant.
+  count: The finished and total files, such as 3 of 5, after the label.
+
+props:
+  variant:
+    description: Where the progress shows. Inline sits in a form beside its label and count; overlay covers a photo tile with a scrim and shows only the ring.
+    values: [inline, overlay]
+    default: inline
+
+states: [default]
+
+tokens:
+  - container:
+      gap: "{space.3}"
+    ring:
+      size: "{size.uploadProgress.ring}"
+      background: "{color.surfaceRaised}"
+    track:
+      border: "{color.surfaceSubtle}"
+      borderWidth: "{size.uploadProgress.stroke}"
+    arc:
+      border: "{color.accent}"
+      borderWidth: "{size.uploadProgress.stroke}"
+      duration: "{motion.standard}"
+    percentage:
+      fontSize: "{font.size.fine}"
+      fontWeight: "{font.weight.semibold}"
+      color: "{color.ink}"
+    label:
+      type: "{type.caption}"
+      color: "{color.inkMuted}"
+    count:
+      fontSize: { web: "{font.size.fine}" }
+      type: { ios: "{type.note}" }
+      color: "{color.inkFaint}"
+  - when: { variant: overlay }
+    container:
+      background: "{color.scrimMedium}"
+    ring:
+      shadow: "{shadow.mediaControl}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: The label is always Uploading photos and the count is two numbers, so the text never grows.
+
+accessibility:
+  role: A progress bar on Web and one combined element on iOS, labeled Photo upload progress.
+  label: Photo upload progress, with the value read as finished of total photos and the percentage, such as 3 of 5 photos, 60%.
+  focus: Never focusable; it reports progress without taking part in the focus order.
+  minimumHitTarget: notInteractive
+  dynamicType: The ring and its percentage keep their size so the arc stays legible. The label scales with Dynamic Type on iOS and browser zoom on Web.
+
+platformDifferences:
+  - difference: The count is 10 px on Web and 11 pt on iOS.
+    reason: 11 pt caption2 is the smallest Dynamic Type style iOS offers. Its color and tabular figures match.
+
+specimens:
+  - id: upload-progress-inline
+    description: Three of five photos uploaded, with the label and count beside the ring.
+    covers: { variant: [inline] }
+  - id: upload-progress-overlay
+    description: The ring alone over a photo tile, as a new photo's tile shows while it uploads.
+    covers: { variant: [overlay] }

@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import styles from "./record-card.module.css";
 
+/**
+ * The clickable card that opens one record: a media band on top, then the record's own body.
+ * Specified in packages/design-system/components/record-card.yaml.
+ */
 export function RecordCard({
   ariaLabel,
   children,
@@ -17,6 +21,7 @@ export function RecordCard({
       aria-label={ariaLabel}
       className={classes(styles.card, className)}
       data-record-card="true"
+      data-ui-record-card
       onClick={onClick}
       type="button"
     >

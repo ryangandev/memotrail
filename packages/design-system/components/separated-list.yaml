@@ -1,0 +1,73 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: SeparatedList
+
+platforms:
+  web:
+    path: apps/web/src/components/separated-list.tsx
+    symbols: [SeparatedList]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTFoundations.swift
+    symbols: [MTFlowLayout, MTFlowSeparator, MTWordFlow]
+
+purpose: A wrapping row of short facts with a quiet dot between neighbors on the same line, so no line starts or ends with a separator.
+
+use:
+  - Short facts about a record, such as a date, a place, and a count, on a card or a row.
+  - A row of small links or actions that wraps on narrow screens, such as search result filters or attribution links.
+
+avoid:
+  - Badges or chips. Use a wrapping row without separators, such as MTFlowLayout alone on iOS.
+  - Sentences. Write the facts as one sentence of text instead.
+
+anatomy:
+  container: The wrapping row that clips separators falling outside it.
+  item: One fact, link, or action.
+  separator: The dot between two items on the same line, hidden from assistive technology.
+
+props:
+  align:
+    description: Which edge the lines share. Start fits facts read from the leading edge; end lines them up with a trailing edge, such as attribution under a list.
+    values: [start, end]
+    default: start
+  spacing:
+    description: The gap around each separator. Default leaves room for focus rings, for links and buttons; word reads like a sentence, for plain text.
+    values: [default, word]
+    default: default
+    platforms: [web]
+
+states: [default]
+
+tokens:
+  - container:
+      gap: "{space.2}"
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: asWritten
+  length: Each item is a fact of one to four words or a short link; three to five items read best.
+  notes:
+    - Items keep their own text; the separator is drawn, so never type a dot between them.
+    - Word spacing is one word space of the surrounding text, the textSpace.separatorGap em multiplier on Web and a measured space on iOS.
+
+accessibility:
+  role: Inline text. Assistive technology reads only the items, in order, and skips every separator.
+  label: The items' own text.
+  focus: The list never takes focus; links and buttons inside it keep their own focus order and rings, which the clip leaves room for.
+  minimumHitTarget: notInteractive
+  dynamicType: Items and separators scale with the surrounding text. Word spacing on iOS measures a word space at the current Dynamic Type size; Web grows with browser zoom and rewraps.
+
+platformDifferences:
+  - difference: iOS chooses word spacing with a separate view, MTWordFlow, instead of a spacing parameter, and callers place an MTFlowSeparator between items where Web inserts the dot itself.
+    reason: MTWordFlow measures a word space at a Dynamic Type text style, which needs a view's environment that a Layout such as MTFlowLayout cannot read; SwiftUI layouts cannot add children, so the separator is a child the caller writes.
+
+specimens:
+  - id: separated-list-default
+    description: Facts and links with the default spacing, wrapping in narrower frames without a separator at a line's edge.
+    covers: { align: [start], spacing: [default] }
+  - id: separated-list-word
+    description: Plain facts with word spacing, reading like a sentence.
+    covers: { spacing: [word] }
+  - id: separated-list-end-aligned
+    description: Attribution links whose lines share the trailing edge.
+    covers: { align: [end] }

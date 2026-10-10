@@ -35,7 +35,7 @@
   }
 
   .embeddedCaptureCard .quietButton {
-    width: 36px;
+    width: var(--mt-size-capture-quiet-action);
     padding: 0;
     justify-content: center;
     font-size: 0;
@@ -77,8 +77,8 @@
 
 .captureSpark {
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: var(--mt-size-capture-spark);
+  height: var(--mt-size-capture-spark);
   flex: 0 0 auto;
   place-items: center;
   border-radius: 50%;
@@ -113,8 +113,8 @@
 
 .capturePhoto {
   position: relative;
-  width: 88px;
-  height: 88px;
+  width: var(--mt-size-capture-thumbnail-regular);
+  height: var(--mt-size-capture-thumbnail-regular);
   flex: 0 0 auto;
   overflow: hidden;
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
@@ -133,8 +133,8 @@
   top: 6px;
   right: 6px;
   display: grid;
-  width: 24px;
-  height: 24px;
+  width: var(--mt-size-capture-remove-button);
+  height: var(--mt-size-capture-remove-button);
   place-items: center;
   padding: 0;
   border: var(--mt-size-stroke-thin) solid var(--mt-color-media-control-border);
@@ -150,7 +150,7 @@
 
 .captureVoiceStatus {
   display: flex;
-  min-height: 42px;
+  min-height: var(--mt-size-capture-status-height);
   align-items: center;
   gap: var(--mt-space-2);
   margin: 0;
@@ -168,7 +168,7 @@
 
 .captureActions {
   display: flex;
-  min-height: 58px;
+  min-height: var(--mt-size-capture-action-bar-height);
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
@@ -269,7 +269,7 @@
 
 .quietButton {
   display: flex;
-  height: 36px;
+  height: var(--mt-size-capture-quiet-action);
   align-items: center;
   gap: var(--mt-space-1-75);
   padding: 0 var(--mt-space-3);
@@ -350,12 +350,12 @@
   }
 
   .capturePhoto {
-    width: 76px;
-    height: 76px;
+    width: var(--mt-size-capture-thumbnail);
+    height: var(--mt-size-capture-thumbnail);
   }
 
   .quietButton {
-    width: 36px;
+    width: var(--mt-size-capture-quiet-action);
     padding: 0;
     justify-content: center;
     font-size: 0;

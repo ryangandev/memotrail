@@ -192,7 +192,7 @@ struct OrganizationEditorSheet: View {
         case nil:
           VStack(spacing: MTSpacing.s2) {
             ForEach(0..<3, id: \.self) { _ in
-              MTLoadingSkeleton().frame(height: MTSize.Control.medium)
+              MTLoadingSkeleton(shape: .fill).frame(height: MTSize.Control.medium)
                 .clipShape(RoundedRectangle(cornerRadius: MTRadius.small))
             }
           }

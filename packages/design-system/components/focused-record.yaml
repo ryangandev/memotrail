@@ -1,0 +1,100 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: FocusedRecord
+
+platforms:
+  web:
+    path: apps/web/src/components/focused-record-detail.tsx
+    symbols: [FocusedRecordDetail, FocusedRecordView]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTRecordDetail.swift
+    symbols:
+      [
+        MTFocusedRecordPage,
+        MTFocusedRecordView,
+        MTRecordPhotos,
+        MTFactList,
+        MTDetailSection,
+      ]
+
+purpose: A record's own page, with its Kind and title, an Edit action, its photos, its facts, its Story, and its tags.
+
+use:
+  - The page a Home, Vehicle, or Someday item opens to from its card.
+  - Any record whose page shows labeled facts and writing rather than an Entry's rich text.
+
+avoid:
+  - An Entry's Item page, which shows rich text, dates, and Location. Use the Entry detail view.
+  - A record that cannot be opened. Use the focused unavailable page.
+
+anatomy:
+  container: The compact page frame that holds the page.
+  header: The page header with the Kind as its eyebrow, the record's title, and a small ghost Edit button at the trailing edge.
+  body: The column under the header that holds the photos, facts, and sections.
+  photos: The record's saved photos at 4:3 in columns at least 220 points wide, each opening the photo viewer.
+  facts: Labeled values, each under a hairline; empty values are left out.
+  story: The record's writing under a rule and a Story section header, or Notes for a Someday item.
+  organize: The record's tags as neutral badges under a rule and an Organize section header.
+  extra: Further sections that belong to one Kind, such as the First Time a Someday item became.
+
+props: {}
+
+states: [default]
+
+tokens:
+  - container:
+      maxWidth: "{layout.pageWidth.compact}"
+      gap: "{space.6}"
+    body:
+      gap: "{space.8}"
+    photos:
+      minWidth: "{size.focusedRecord.photoColumn}"
+      radius: "{radius.large}"
+      gap: "{space.3}"
+    facts:
+      gap: "{space.5}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.caption}"
+    story:
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+      lineHeight: "{lineHeight.relaxed}"
+      color: "{color.ink}"
+    organize:
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+      gap: "{space.2}"
+
+content:
+  lines: unlimited
+  overflow: wrap
+  casing: asWritten
+  length: The title is the record's own name; fact labels are one to four words, such as Why you moved in.
+  notes:
+    - Section titles name what the section holds, such as Story, Notes, or Organize.
+    - "Tags show with their leading #, such as #family."
+    - A fact sits 12 points under its rule and a section 20 points under its rule, so the space separates it from the one before.
+
+accessibility:
+  role: A page whose title is its heading, with Story and Organize as section headings, and a description list of facts on Web.
+  label: The title; Edit names its record, such as Edit Home, and each photo button names its photo, such as Preview Blue Civic photo 2.
+  focus: Edit comes first, then each photo, then any links in the sections.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Text scales with Dynamic Type on iOS and browser zoom on Web; photo columns reflow, and facts stack in one column on phones.
+
+platformDifferences:
+  - difference: Facts sit in two columns on Web wider than 600 px and in one column below it; iOS always uses one column.
+    reason: The iOS app runs only on iPhone, which is always the narrow layout.
+  - difference: Fact values and the Story are 17 pt body large text on iOS and the 16 px page text on Web.
+    reason: 17 pt is the iOS reading size at the default Dynamic Type setting, while Web pages read at the browser's 16 px default.
+  - difference: Selecting a photo opens a paged dialog with Previous, Next, and the arrow keys on Web and a full-screen sheet people swipe through on iOS.
+    reason: Each platform's own photo viewer; see the PhotoViewer spec.
+  - difference: iOS still offers Version history at the foot of the page; Web has none.
+    reason: docs/product.md retires version history. The iOS History screens read the retired schema and go with its move to the current one.
+  - difference: Edit opens the record's editor in place on Web and as a sheet on iOS.
+    reason: Each platform's own editing presentation, the same as for every other editor.
+
+specimens:
+  - id: focused-record-home
+    description: A Home's page with its photos, facts, Story, and tags, and Edit beside the title.

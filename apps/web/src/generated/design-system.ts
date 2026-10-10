@@ -649,6 +649,16 @@ export const buttonDefaults = {
   loading: false,
 } as const;
 
+// CaptureComposer, from packages/design-system/components/capture-composer.yaml.
+
+/** Where the composer sits. Page is a raised card with its own question, on the Home Dashboard; dialog is the open body of Quick Capture, which titles it. */
+export const captureComposerVariants = ["page", "dialog"] as const;
+
+export type CaptureComposerVariant = (typeof captureComposerVariants)[number];
+
+/** CaptureComposer prop defaults. */
+export const captureComposerDefaults = { variant: "page" } as const;
+
 // Checkbox, from packages/design-system/components/checkbox.yaml.
 
 /** The box and text size. Small fits dense option rows under a field, and medium stands on its own. */
@@ -715,6 +725,41 @@ export const iconButtonDefaults = {
   loading: false,
 } as const;
 
+// Image, from packages/design-system/components/image.yaml.
+
+/** How the photo fills the frame. Cover crops it to fill, for thumbnails and cards; contain shows it whole, for viewing a photo. */
+export const imageFits = ["cover", "contain"] as const;
+
+export type ImageFit = (typeof imageFits)[number];
+
+/** Image prop defaults. */
+export const imageDefaults = { fit: "cover" } as const;
+
+// PageFrame, from packages/design-system/components/page-frame.yaml.
+
+/** The page's maximum width. Compact suits forms and focused reading, standard lists and search, wide dashboards and card grids, and canvas dense spatial views. */
+export const pageFrameVariants = [
+  "compact",
+  "standard",
+  "wide",
+  "canvas",
+] as const;
+
+export type PageFrameVariant = (typeof pageFrameVariants)[number];
+
+/** PageFrame prop defaults. */
+export const pageFrameDefaults = { variant: "standard" } as const;
+
+// RichText, from packages/design-system/components/rich-text.yaml.
+
+/** How the editor sits on its surface. Form is a bordered field among other fields; embedded draws no field, because a host such as the capture composer already draws the surface. */
+export const richTextVariants = ["form", "embedded"] as const;
+
+export type RichTextVariant = (typeof richTextVariants)[number];
+
+/** RichText prop defaults. */
+export const richTextDefaults = { variant: "form" } as const;
+
 // SearchField, from packages/design-system/components/search-field.yaml.
 
 /** The control's height and corner radius, from the size.field scale. Small fits filter panels, and large leads a page or the command palette. */
@@ -726,6 +771,24 @@ export type SearchFieldSize = (typeof searchFieldSizes)[number];
 export const searchFieldDefaults = {
   size: "medium",
   hideLabel: false,
+} as const;
+
+// SectionHeader, from packages/design-system/components/section-header.yaml.
+
+/** The heading's weight. Section is a serif title for a region of content; list is the small uppercase heading above a list. */
+export const sectionHeaderVariants = ["section", "list"] as const;
+
+export type SectionHeaderVariant = (typeof sectionHeaderVariants)[number];
+
+/** Where the detail sits. Start keeps it beside the title, for a count; end moves it to the far edge, for a total that lines up with the list below. */
+export const sectionHeaderDetailAligns = ["start", "end"] as const;
+
+export type SectionHeaderDetailAlign = (typeof sectionHeaderDetailAligns)[number];
+
+/** SectionHeader prop defaults. */
+export const sectionHeaderDefaults = {
+  variant: "section",
+  detailAlign: "start",
 } as const;
 
 // SelectField, from packages/design-system/components/select-field.yaml.
@@ -741,6 +804,34 @@ export const selectFieldDefaults = {
   required: false,
   hideLabel: false,
 } as const;
+
+// SeparatedList, from packages/design-system/components/separated-list.yaml.
+
+/** Which edge the lines share. Start fits facts read from the leading edge; end lines them up with a trailing edge, such as attribution under a list. */
+export const separatedListAligns = ["start", "end"] as const;
+
+export type SeparatedListAlign = (typeof separatedListAligns)[number];
+
+/** The gap around each separator. Default leaves room for focus rings, for links and buttons; word reads like a sentence, for plain text. */
+export const separatedListSpacings = ["default", "word"] as const;
+
+export type SeparatedListSpacing = (typeof separatedListSpacings)[number];
+
+/** SeparatedList prop defaults. */
+export const separatedListDefaults = {
+  align: "start",
+  spacing: "default",
+} as const;
+
+// Skeleton, from packages/design-system/components/skeleton.yaml.
+
+/** The placeholder's shape. Fill takes the whole container, like a photo still arriving; block is a card or paragraph; line is one line of text; circle is an avatar. */
+export const skeletonShapes = ["fill", "block", "line", "circle"] as const;
+
+export type SkeletonShape = (typeof skeletonShapes)[number];
+
+/** Skeleton prop defaults. */
+export const skeletonDefaults = { shape: "block", animated: true } as const;
 
 // TextField, from packages/design-system/components/text-field.yaml.
 
@@ -765,6 +856,16 @@ export type ToastTone = (typeof toastTones)[number];
 
 /** Toast prop defaults. */
 export const toastDefaults = { tone: "info" } as const;
+
+// UploadProgress, from packages/design-system/components/upload-progress.yaml.
+
+/** Where the progress shows. Inline sits in a form beside its label and count; overlay covers a photo tile with a scrim and shows only the ring. */
+export const uploadProgressVariants = ["inline", "overlay"] as const;
+
+export type UploadProgressVariant = (typeof uploadProgressVariants)[number];
+
+/** UploadProgress prop defaults. */
+export const uploadProgressDefaults = { variant: "inline" } as const;
 
 /** Every spec's gallery specimens. The gallery marks each with data-specimen="<id>". */
 export const componentSpecimens = [
@@ -842,6 +943,18 @@ export const componentSpecimens = [
     covers: {},
   },
   {
+    component: "CaptureComposer",
+    id: "capture-composer-page",
+    description: "The Dashboard composer as a raised card with its question, an empty note, and its actions.",
+    covers: { variant: ["page"] },
+  },
+  {
+    component: "CaptureComposer",
+    id: "capture-composer-dialog",
+    description: "The Quick Capture body without a card or question, sharing the same draft.",
+    covers: { variant: ["dialog"] },
+  },
+  {
     component: "Checkbox",
     id: "checkbox-sizes",
     description: "Both sizes, unchecked and checked, with a description on each checked one.",
@@ -908,6 +1021,30 @@ export const componentSpecimens = [
     covers: { size: ["wide"] },
   },
   {
+    component: "EmptyState",
+    id: "empty-state-with-action",
+    description: "An icon, a title, a description, and one action, as an empty Library shows.",
+    covers: {},
+  },
+  {
+    component: "EmptyState",
+    id: "empty-state-informational",
+    description: "A title and a description without an icon or action, for a section that fills in on its own.",
+    covers: {},
+  },
+  {
+    component: "EmptyState",
+    id: "empty-state-button",
+    description: "The whole state as one button that starts the missing record.",
+    covers: {},
+  },
+  {
+    component: "FocusedRecord",
+    id: "focused-record-home",
+    description: "A Home's page with its photos, facts, Story, and tags, and Edit beside the title.",
+    covers: {},
+  },
+  {
     component: "IconButton",
     id: "icon-button-variants",
     description: "Every variant at the default medium size, with add, edit, more, and remove icons.",
@@ -944,6 +1081,72 @@ export const componentSpecimens = [
     covers: {},
   },
   {
+    component: "Image",
+    id: "image-states",
+    description: "A loaded photo, one still loading, and one that failed to load, side by side.",
+    covers: {},
+  },
+  {
+    component: "Image",
+    id: "image-fit",
+    description: "The same tall photo cropped to fill a wide frame and shown whole inside it.",
+    covers: { fit: ["cover", "contain"] },
+  },
+  {
+    component: "PageFrame",
+    id: "page-frame-widths",
+    description: "Every width variant with its maximum width and the pages it suits.",
+    covers: { variant: ["compact", "standard", "wide", "canvas"] },
+  },
+  {
+    component: "PageHeader",
+    id: "page-header-full",
+    description: "An eyebrow, a title, a description, and two actions beside the copy.",
+    covers: {},
+  },
+  {
+    component: "PageHeader",
+    id: "page-header-title-only",
+    description: "A title alone, as a focused page with nothing else to say opens.",
+    covers: {},
+  },
+  {
+    component: "PhotoViewer",
+    id: "photo-viewer-paged",
+    description: "Three saved Home photos that open on the second, with Previous, the position, and Next.",
+    covers: {},
+  },
+  {
+    component: "RecordCard",
+    id: "record-card-photo",
+    description: "A Home card with a cover photo and a Current badge, then its dates, name, a fact, and its organization.",
+    covers: {},
+  },
+  {
+    component: "RecordCard",
+    id: "record-card-mark",
+    description: "A Vehicle card without a photo or map, showing its mark over a soft accent wash.",
+    covers: {},
+  },
+  {
+    component: "RichText",
+    id: "rich-text-content",
+    description: "A saved note with a paragraph, emphasis, a link, a quote, and a list.",
+    covers: {},
+  },
+  {
+    component: "RichText",
+    id: "rich-text-form",
+    description: "The bordered editor with a placeholder, as in the Entry editor.",
+    covers: { variant: ["form"] },
+  },
+  {
+    component: "RichText",
+    id: "rich-text-embedded",
+    description: "The editor without a field, as inside the capture composer.",
+    covers: { variant: ["embedded"] },
+  },
+  {
     component: "SearchField",
     id: "search-field-sizes",
     description: "Every size, from the compact filter search to the large page search.",
@@ -962,6 +1165,24 @@ export const componentSpecimens = [
     covers: { size: ["medium"] },
   },
   {
+    component: "SectionHeader",
+    id: "section-header-section",
+    description: "Section headers alone, with a count beside the title, with a description, and with a trailing action.",
+    covers: { variant: ["section"] },
+  },
+  {
+    component: "SectionHeader",
+    id: "section-header-list",
+    description: "List headers with a count beside the title and at the far edge, and with a trailing action.",
+    covers: { variant: ["list"], detailAlign: ["start", "end"] },
+  },
+  {
+    component: "SectionHeader",
+    id: "section-header-long",
+    description: "A long section title and its trailing action in a narrow column.",
+    covers: { variant: ["section"] },
+  },
+  {
     component: "SelectField",
     id: "select-field-sizes",
     description: "Every size, from a compact sort order to a standalone default view.",
@@ -978,6 +1199,42 @@ export const componentSpecimens = [
     id: "select-field-disabled",
     description: "A disabled small select, faded to the field opacity.",
     covers: { size: ["small"] },
+  },
+  {
+    component: "SeparatedList",
+    id: "separated-list-default",
+    description: "Facts and links with the default spacing, wrapping in narrower frames without a separator at a line's edge.",
+    covers: { align: ["start"], spacing: ["default"] },
+  },
+  {
+    component: "SeparatedList",
+    id: "separated-list-word",
+    description: "Plain facts with word spacing, reading like a sentence.",
+    covers: { spacing: ["word"] },
+  },
+  {
+    component: "SeparatedList",
+    id: "separated-list-end-aligned",
+    description: "Attribution links whose lines share the trailing edge.",
+    covers: { align: ["end"] },
+  },
+  {
+    component: "Skeleton",
+    id: "skeleton-shapes",
+    description: "Every shape at its default size, with a fill skeleton inside a photo-sized frame.",
+    covers: { shape: ["fill", "block", "line", "circle"] },
+  },
+  {
+    component: "Skeleton",
+    id: "skeleton-still",
+    description: "A block and two lines with the shimmer turned off, as reduced motion draws them.",
+    covers: {},
+  },
+  {
+    component: "Skeleton",
+    id: "skeleton-composed",
+    description: "A circle beside two lines and a block below them, the way a loading record row is built.",
+    covers: { shape: ["block", "line", "circle"] },
   },
   {
     component: "SyncStatus",
@@ -1014,6 +1271,18 @@ export const componentSpecimens = [
     id: "toast-long-message",
     description: "An error long enough to wrap onto a second line.",
     covers: { tone: ["error"] },
+  },
+  {
+    component: "UploadProgress",
+    id: "upload-progress-inline",
+    description: "Three of five photos uploaded, with the label and count beside the ring.",
+    covers: { variant: ["inline"] },
+  },
+  {
+    component: "UploadProgress",
+    id: "upload-progress-overlay",
+    description: "The ring alone over a photo tile, as a new photo's tile shows while it uploads.",
+    covers: { variant: ["overlay"] },
   },
   {
     component: "WorkspaceActionDock",

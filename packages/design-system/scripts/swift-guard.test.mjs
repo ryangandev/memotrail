@@ -248,7 +248,7 @@ describe("suggest", () => {
     );
     assert.ok(
       suggestFor(`view.frame(height: 190)`).includes(
-        "MTLayout.RecordCard.visualHeight",
+        "MTSize.RecordCard.visualHeight",
       ),
     );
   });

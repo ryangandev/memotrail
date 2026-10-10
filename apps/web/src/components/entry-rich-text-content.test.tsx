@@ -70,7 +70,7 @@ describe("EntryRichTextContent", () => {
       />,
     );
 
-    expect(html).toContain("<p>Current body</p>");
+    expect(html).toContain('<p data-ui-rich-text="true">Current body</p>');
     expect(html).not.toContain("Old body");
   });
 });

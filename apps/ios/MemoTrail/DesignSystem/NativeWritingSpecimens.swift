@@ -4,6 +4,8 @@
 
   struct NativeWritingSpecimens: View {
     @State private var text = NSAttributedString(string: "")
+    @State private var formNote = NSAttributedString(string: "")
+    @State private var embeddedNote = NSAttributedString(string: "")
     @State private var savedData: Data?
     @State private var savedText: NSAttributedString?
     @State private var message: String?
@@ -22,6 +24,9 @@
               .mtButtonStyle().accessibilityIdentifier("design-save-writing")
           }
         }
+        // The RichText specimens below draw the same controls, so tests find these by the card.
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("design-writing-editor")
         if let savedText {
           MTCard {
             VStack(alignment: .leading, spacing: MTSpacing.s3) {
@@ -54,6 +59,35 @@
         }
         Text("This gallery saves a local preview for this visit. It does not create an Entry.")
           .font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+        // The specimens follow the interactive editor, so tests reach it without scrolling.
+        GallerySpecimen(
+          title: "RichText",
+          api:
+            "MTRichTextContent · text · richText · lineLimit; MTRichTextEditor · text · placeholder · variant: form | embedded"
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.richTextContent) {
+              MTRichTextContent(
+                text: GallerySamples.richText?.text ?? "", richText: GallerySamples.richText)
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.richTextForm) {
+              VStack(alignment: .leading, spacing: MTSpacing.s2) {
+                MTFieldLabel(title: "Note")
+                MTRichTextEditor(
+                  text: $formNote, placeholder: "Write what you want to remember",
+                  accessibilityIdentifier: "design-rich-text-form")
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.richTextEmbedded) {
+              MTRichTextEditor(
+                text: $embeddedNote, placeholder: "What is on your mind?",
+                accessibilityIdentifier: "design-rich-text-embedded", variant: .embedded,
+                minimumHeight: MTLayout.RichText.captureMinHeight)
+            }
+          }
+        }
       }
       .sheet(isPresented: $showsSheet) {
         NativeWritingSheet(initialText: text) { value in

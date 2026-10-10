@@ -165,7 +165,7 @@ struct MTRecordCardFooter: View {
         .font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
         .foregroundStyle(MTColor.inkFaint)
     }
-    .frame(minHeight: MTLayout.RecordCard.footerHeight - MTSpacing.s3, alignment: .bottom)
+    .frame(minHeight: MTSize.RecordCard.footerHeight - MTSpacing.s3, alignment: .bottom)
     .padding(.top, MTSpacing.s3)
     .overlay(alignment: .top) { MTListDivider() }
     .padding(.top, MTSpacing.s2)

@@ -32,8 +32,7 @@
   background: var(--mt-state-disabled-code-surface);
 }
 
-.page,
-.dialog {
+.embedded {
   background: transparent;
 }
 

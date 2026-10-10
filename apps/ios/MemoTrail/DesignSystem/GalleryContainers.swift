@@ -6,6 +6,10 @@
     @State private var collectionMessage = "No Collection opened yet."
     @State private var chinese = false
     @State private var hasLocation = true
+    @State private var captureNote = NSAttributedString(string: "")
+    @State private var captureOccurrence: OccurrenceDraft?
+    @State private var capturePhotos: [FirstTimePhotoDraft] = []
+    @State private var captureMessage = "Nothing captured yet."
 
     private let collections: [(name: String, entries: Int, inbox: Int, updated: String?)] = [
       ("Early years", 12, 0, "Latest Sep 18"),
@@ -25,18 +29,24 @@
           api:
             "accessibilityLabel · action; composable MTRecordCardVisual and MTRecordCardBody · MTCardButtonStyle"
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTRecordCard(accessibilityLabel: "Open sample memory") {
-              recordMessage = "RecordCard action fired."
-            } content: {
-              MTRecordCardVisual { GallerySampleArtwork() }
-              MTRecordCardBody {
-                MTEyebrow(text: "Memory")
-                Text("First trip to the coast").font(MTFont.cardTitle).foregroundStyle(
-                  MTColor.ink)
-                Text("A production RecordCard composed with its real subparts.")
-                  .font(MTFont.body).foregroundStyle(MTColor.inkMuted)
-              }
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.recordCardPhoto) {
+              MTEntityCard(
+                title: "Maple Street flat", range: "Since Jun 1, 2021", duration: "5 years",
+                isCurrent: true, coverURL: GallerySamples.artworkURL, photoCount: 3,
+                markIcon: .home, markTitle: "Portland",
+                facts: [MTEntityCard.Fact(icon: .map, text: "Portland, Oregon, United States")],
+                tagNames: ["home", "family"]
+              ) { recordMessage = "Opened the Maple Street flat." }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.recordCardMark) {
+              MTEntityCard(
+                title: "Red touring bike", range: "2012 - 2016", duration: "About 4 years",
+                isCurrent: false, markIcon: .car, markTitle: "2012 Trek 520 · Red",
+                facts: [MTEntityCard.Fact(icon: .car, text: "2012 Trek 520 · Red")],
+                tagNames: ["cycling"]
+              ) { recordMessage = "Opened the red touring bike." }
             }
             Text(recordMessage).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
               .accessibilityIdentifier("design-record-status")
@@ -118,33 +128,24 @@
         }
 
         GallerySpecimen(
-          title: "Record detail",
-          api: "MTRecordPhotos · MTFactList · MTDetailSection",
+          title: "FocusedRecord",
+          api:
+            "MTFocusedRecordView · kind · title · photos · facts · story · tagNames · edit · extra; MTFocusedRecordPage scrolls it",
           description:
             "The focused Home, Vehicle, First Time, and Goal page: photos, labeled facts that skip empty values, then Story and Organize."
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s8) {
-            MTRecordPhotos(
-              recordLabel: "Home",
-              photos: [
-                MTPhotoField.SavedPhoto(
-                  id: UUID(), url: GallerySamples.artworkURL, name: "coast-memory.jpg")
-              ])
-            MTFactList(facts: [
-              ("When", "Since Jun 1, 2021"), ("Location", "Portland, Oregon, United States"),
-              ("Address", "120 Maple Street"), ("Why you moved in", "Closer to work"),
-              ("Why you left", nil),
-            ])
-            MTDetailSection("Story") {
-              Text("Sunny kitchen and a creaky staircase.")
-                .font(MTFont.bodyLarge).foregroundStyle(MTColor.ink)
-            }
-            MTDetailSection("Organize") {
-              MTFlowLayout(spacing: MTSpacing.s2) {
-                MTBadge(title: "Early years", tone: .neutral)
-                MTBadge(title: "#home", tone: .neutral)
-              }
-            }
+          GalleryCase(.focusedRecordHome) {
+            MTFocusedRecordView(
+              kind: "Home", title: "Maple Street flat",
+              photos: GallerySamples.homePhotos,
+              facts: [
+                ("When", "Since Jun 1, 2021"), ("Location", "Portland, Oregon, United States"),
+                ("Address", "120 Maple Street"), ("Why you moved in", "Closer to work"),
+                ("Why you left", nil),
+              ],
+              story: "Sunny kitchen, a creaky staircase, and the maple that turned red each October.",
+              tagNames: ["home", "family"],
+              edit: { recordMessage = "Edit Home activated." })
           }
         }
 
@@ -214,35 +215,15 @@
         }
 
         GallerySpecimen(
-          title: "RichTextContent",
-          api: "text · richText · font · color · lineLimit · falls back to the plain body",
-          description:
-            "Renders Web-authored writing: emphasis, code, links, quotes, lists, and code blocks. A line limit flows it into a clamped preview."
-        ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            MTRichTextContent(
-              text: GallerySamples.richText?.text ?? "", richText: GallerySamples.richText)
-            MTListDivider()
-            MTRichTextContent(
-              text: GallerySamples.richText?.text ?? "", richText: GallerySamples.richText,
-              font: MTFont.body, textStyle: .subheadline, color: MTColor.inkMuted, lineLimit: 4)
-            MTListDivider()
-            MTRichTextContent(
-              text: "A plain body renders as one paragraph when no valid rich document is stored.")
-          }
-        }
-
-        GallerySpecimen(
-          title: "FlowSeparator",
-          api: "MTFlowLayout { MTFlowSeparator() } · MTWordFlow(textStyle)",
+          title: "SeparatedList",
+          api:
+            "MTFlowLayout · align: start | end { MTFlowSeparator() } · MTWordFlow(textStyle, align:)",
           description:
             "Summary and metadata rows, like Web SeparatedList. As the frames narrow, facts wrap whole and a separator shows only between two facts on the same line."
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s4) {
-            ForEach(
-              [("Wide", nil), ("Medium", 240), ("Narrow", 150)] as [(String, CGFloat?)], id: \.0
-            ) { name, width in
-              VStack(alignment: .leading, spacing: MTSpacing.s3) {
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.separatedListDefault) {
+              separatedFrames { name in
                 MTFlowLayout(spacing: MTSpacing.s2) {
                   Button("Manage tracks") {}
                     .buttonStyle(.plain)
@@ -254,6 +235,11 @@
                 }
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("\(name) separated facts")
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.separatedListWord) {
+              separatedFrames { name in
                 MTWordFlow(.caption1) {
                   Text("First Time")
                   MTFlowSeparator()
@@ -264,18 +250,59 @@
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("\(name) word-spaced facts")
               }
-              .font(MTFont.detail)
-              .foregroundStyle(MTColor.inkFaint)
-              .padding(MTSpacing.s4)
-              .frame(width: width)
-              .overlay {
-                RoundedRectangle(cornerRadius: MTRadius.medium)
-                  .strokeBorder(
-                    MTColor.borderStrong,
-                    style: StrokeStyle(
-                      lineWidth: MTSize.Stroke.thin,
-                      dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap]))
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.separatedListEndAligned) {
+              separatedFrames { name in
+                MTFlowLayout(spacing: MTSpacing.s2, align: .end) {
+                  Text("Powered by Geoapify")
+                  MTFlowSeparator()
+                  Text("© OpenStreetMap contributors")
+                }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("\(name) attribution")
               }
+            }
+          }
+        }
+
+        GallerySpecimen(
+          title: "SectionHeader",
+          api:
+            "title · variant: section | list · detail · detailAlign: start | end · description · trailing"
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.sectionHeaderSection) {
+              VStack(alignment: .leading, spacing: MTSpacing.s4) {
+                MTSectionHeader("Recent Entries", detail: "12 entries")
+                MTSectionHeader("Favorites", description: "Pinned to the top of your Library.") {
+                  Button("Edit") { recordMessage = "Section action activated." }
+                    .mtButtonStyle(.secondary, size: .small)
+                }
+                MTSectionHeader("A memory for today") {
+                  MTSectionLink(title: "View all") { recordMessage = "Section link activated." }
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.sectionHeaderList) {
+              VStack(alignment: .leading, spacing: MTSpacing.s4) {
+                MTSectionHeader("All items", variant: .list, detail: "12 items")
+                MTSectionHeader(
+                  "All items", variant: .list, detail: "12 items", detailAlign: .end
+                ) {
+                  MTSectionLink(title: "3 need organizing") {
+                    recordMessage = "List link activated."
+                  }
+                }
+              }
+            }
+            GalleryCaseSeparator()
+            GalleryCase(.sectionHeaderLong) {
+              MTSectionHeader("Letters, photos, and notes from the summer at the coast house") {
+                MTSectionLink(title: "View all") { recordMessage = "Section link activated." }
+              }
+              .frame(width: MTLayout.Gallery.photoSampleWidth)
             }
           }
         }
@@ -316,12 +343,12 @@
 
         GallerySpecimen(
           title: "List",
-          api: "MTListHeader · title · detail · alignsDetailTrailing · trailing; MTListSurface",
+          api: "MTSectionHeader · variant: .list · detail · detailAlign; MTListSurface",
           description:
             "The uppercase list heading and bordered row surface shared by the Inbox and Library, with pressable whole-row links."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTListHeader("Results", detail: "2 items")
+            MTSectionHeader("Results", variant: .list, detail: "2 items")
             MTListSurface {
               ForEach(["Letters from the coast house", "Hike the coast trail"], id: \.self) {
                 title in
@@ -338,8 +365,57 @@
                 if title == "Letters from the coast house" { MTListDivider() }
               }
             }
-            MTListHeader("All items", detail: "9 items", alignsDetailTrailing: true)
+            MTSectionHeader("All items", variant: .list, detail: "9 items", detailAlign: .end)
           }
+        }
+
+        GallerySpecimen(
+          title: "CaptureComposer",
+          api:
+            "CaptureCard · note · occurrence · photos · style: page | dialog · isSaving · hasLocalDraft · error · save",
+          description:
+            "The Home Dashboard composer and the Quick Capture body. Both share this gallery's draft, and nothing is saved."
+        ) {
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            GalleryCase(.captureComposerPage) { captureCard(.page) }
+            GalleryCaseSeparator()
+            GalleryCase(.captureComposerDialog) { captureCard(.dialog) }
+            Text(captureMessage).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+          }
+        }
+      }
+    }
+
+    private func captureCard(_ style: MTCaptureComposerStyle) -> some View {
+      CaptureCard(
+        note: $captureNote, occurrence: $captureOccurrence, photos: $capturePhotos, style: style,
+        isSaving: false, hasLocalDraft: false, error: nil,
+        addPhoto: { capturePhotos.append($0) },
+        removePhoto: { id in capturePhotos.removeAll { $0.id == id } },
+        save: { captureMessage = "Capture saved in the gallery only. Nothing was uploaded." })
+    }
+
+    /// The same list in a wide, a medium, and a narrow frame, outlined so its wrapping shows.
+    private func separatedFrames(@ViewBuilder _ list: @escaping (String) -> some View) -> some View
+    {
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        ForEach(
+          [("Wide", nil), ("Medium", 240), ("Narrow", 150)]
+            as [(String, CGFloat?)], id: \.0
+        ) { name, width in
+          list(name)
+            .font(MTFont.detail)
+            .foregroundStyle(MTColor.inkFaint)
+            .padding(MTSpacing.s4)
+            .frame(maxWidth: width ?? .infinity, alignment: .leading)
+            .overlay {
+              RoundedRectangle(cornerRadius: MTRadius.medium)
+                .strokeBorder(
+                  MTColor.borderStrong,
+                  style: StrokeStyle(
+                    lineWidth: MTSize.Stroke.thin,
+                    dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap]))
+            }
         }
       }
     }

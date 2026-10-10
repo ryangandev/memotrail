@@ -78,7 +78,7 @@
 
 .goalCardBody footer {
   display: flex;
-  min-height: 31px;
+  min-height: var(--mt-size-record-card-footer-height);
   align-items: flex-end;
   justify-content: space-between;
   gap: var(--mt-space-3);

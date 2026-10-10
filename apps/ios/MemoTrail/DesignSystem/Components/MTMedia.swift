@@ -3,9 +3,10 @@ import SwiftUI
 
 /// The Web ProgressiveImage: a shimmer while the photo loads, a short fade when it arrives,
 /// and a quiet fallback when it cannot load. It fills the frame it is given.
+/// Specified in packages/design-system/components/image.yaml.
 struct MTRemoteImage: View {
   let url: URL?
-  var fit: ContentMode = .fill
+  var fit = MTImageDefaults.fit
   var accessibilityLabel: String?
   var fallback = "Photo unavailable"
   var background: Color = MTColor.surfaceSubtle
@@ -21,14 +22,14 @@ struct MTRemoteImage: View {
         ) { phase in
           switch phase {
           case .success(let image):
-            image.resizable().aspectRatio(contentMode: fit).transition(.opacity)
+            image.resizable().aspectRatio(contentMode: contentMode).transition(.opacity)
               .accessibilityLabel(accessibilityLabel ?? "Photo")
               .accessibilityAddTraits(.isImage)
               .accessibilityHidden(accessibilityLabel == nil)
           case .failure: fallbackView
           case .empty:
-            if url == nil { fallbackView } else { MTLoadingSkeleton() }
-          @unknown default: MTLoadingSkeleton()
+            if url == nil { fallbackView } else { loadingView }
+          @unknown default: loadingView
           }
         }
       }
@@ -39,9 +40,23 @@ struct MTRemoteImage: View {
       .contentShape(Rectangle())
   }
 
+  private var contentMode: ContentMode {
+    switch fit {
+    case .cover: .fill
+    case .contain: .fit
+    }
+  }
+
+  /// The decorative skeleton, named for VoiceOver like Web's busy image frame.
+  private var loadingView: some View {
+    MTLoadingSkeleton(shape: .fill)
+      .accessibilityElement()
+      .accessibilityLabel("Loading photo")
+  }
+
   private var fallbackView: some View {
     Text(fallback)
-      .font(MTFont.caption)
+      .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .multilineTextAlignment(.center)
       .padding(MTSpacing.s3)
@@ -50,15 +65,59 @@ struct MTRemoteImage: View {
   }
 }
 
-/// The loading shimmer shared by photos and other media that is still arriving.
+/// Web `Skeleton`: a decorative shimmering placeholder in the shape of content that is still
+/// loading. The region around it announces the loading state, so VoiceOver skips it.
+/// Specified in packages/design-system/components/skeleton.yaml.
 struct MTLoadingSkeleton: View {
+  var shape = MTSkeletonDefaults.shape
+  var isAnimated = MTSkeletonDefaults.isAnimated
+  /// Overrides the shape's width, which otherwise fills its container. A circle uses it for both
+  /// sides.
+  var width: CGFloat?
+  /// Overrides the shape's height.
+  var height: CGFloat?
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @State private var isShimmering = false
 
   var body: some View {
+    sized(surface)
+      .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
+      .accessibilityHidden(true)
+  }
+
+  private var cornerRadius: CGFloat {
+    switch shape {
+    case .fill: 0
+    case .block: MTRadius.medium
+    case .line: MTRadius.small
+    case .circle: MTRadius.pill
+    }
+  }
+
+  @ViewBuilder private func sized(_ content: some View) -> some View {
+    switch shape {
+    case .fill:
+      content.frame(width: width, height: height)
+        .frame(maxWidth: width == nil ? .infinity : nil, maxHeight: height == nil ? .infinity : nil)
+    case .block, .line:
+      content
+        .frame(
+          width: width,
+          height: height ?? (shape == .block ? MTSize.Skeleton.block : MTSize.Skeleton.line)
+        )
+        .frame(maxWidth: width == nil ? .infinity : nil)
+    case .circle:
+      let side = width ?? MTSize.Skeleton.circle
+      content.frame(width: side, height: side)
+    }
+  }
+
+  /// The highlight sweeps from the leading edge, as on Web: the band starts a width before the
+  /// surface and ends past it.
+  private var surface: some View {
     MTColor.surfaceSubtle
       .overlay {
-        if !reduceMotion {
+        if isAnimated && !reduceMotion {
           GeometryReader { proxy in
             LinearGradient(
               stops: [
@@ -68,31 +127,29 @@ struct MTLoadingSkeleton: View {
               ], startPoint: UnitPoint(x: 0, y: 0.4), endPoint: UnitPoint(x: 1, y: 0.6)
             )
             .frame(width: proxy.size.width * 2.2)
-            .offset(x: isShimmering ? -proxy.size.width * 1.2 : 0)
+            .offset(x: isShimmering ? proxy.size.width * 1.2 : -proxy.size.width * 1.2)
           }
         }
       }
       .clipped()
       .contentShape(Rectangle())
       .onAppear {
+        guard isAnimated else { return }
         withAnimation(
           MTEasing.inOut.animation(duration: MTMotion.shimmer).repeatForever(autoreverses: false)
         ) {
           isShimmering = true
         }
       }
-      .accessibilityElement()
-      .accessibilityLabel("Loading photo")
   }
 }
 
-/// Batch photo upload progress as a ring, counting completed files rather than bytes.
+/// Web `PhotoUploadProgress`: batch photo upload progress as a ring, counting completed files
+/// rather than bytes. Specified in packages/design-system/components/upload-progress.yaml.
 struct MTUploadProgress: View {
-  enum Variant { case inline, overlay }
-
   let completed: Int
   let total: Int
-  var variant: Variant = .inline
+  var variant = MTUploadProgressDefaults.variant
 
   private var fraction: Double {
     total > 0 ? min(1, max(0, Double(completed) / Double(total))) : 0
@@ -127,18 +184,19 @@ struct MTUploadProgress: View {
   private var ring: some View {
     ZStack {
       Circle().fill(MTColor.surfaceRaised)
-      Circle().stroke(MTColor.surfaceSubtle, lineWidth: MTLayout.UploadRing.stroke)
-        .padding(MTLayout.UploadRing.inset)
+      // Half the stroke keeps the ring inside its frame.
+      Circle().stroke(MTColor.surfaceSubtle, lineWidth: MTSize.UploadProgress.stroke)
+        .padding(MTSize.UploadProgress.stroke / 2)
       Circle().trim(from: 0, to: fraction)
-        .stroke(MTColor.accent, lineWidth: MTLayout.UploadRing.stroke)
+        .stroke(MTColor.accent, lineWidth: MTSize.UploadProgress.stroke)
         .rotationEffect(.degrees(-90))
-        .padding(MTLayout.UploadRing.inset)
+        .padding(MTSize.UploadProgress.stroke / 2)
       Text("\(percentage)%")
         .font(.mtIcon(MTSize.Icon.s10, weight: .semibold))
         .monospacedDigit()
         .foregroundStyle(MTColor.ink)
     }
-    .frame(width: MTSize.hitTarget, height: MTSize.hitTarget)
+    .frame(width: MTSize.UploadProgress.ring, height: MTSize.UploadProgress.ring)
     .animation(MTEasing.enter.animation(duration: MTMotion.standard), value: fraction)
   }
 }
@@ -267,6 +325,7 @@ struct MTPhotoField: View {
 
 /// Saved photos shown whole, one at a time, like Web's photo viewer: swipe, or use Previous and
 /// Next beside the position, to check them before removing or keeping them.
+/// Specified in packages/design-system/components/photo-viewer.yaml.
 struct MTPhotoPreview: View {
   struct Photo: Identifiable, Hashable {
     let id: UUID
@@ -299,7 +358,9 @@ struct MTPhotoPreview: View {
       TabView(selection: $selectedID) {
         ForEach(photos) { photo in
           MTRemoteImage(
-            url: photo.url, fit: .fit, accessibilityLabel: photo.name, background: .black
+            url: photo.url, fit: .contain, accessibilityLabel: photo.name,
+            fallback: "Photo unavailable. Close this preview and try again.",
+            background: MTColor.photoBackdrop
           )
           .tag(photo.id)
         }
@@ -312,7 +373,7 @@ struct MTPhotoPreview: View {
       .environment(\.colorScheme, .dark)
       .navigationTitle(photos.indices.contains(index) ? photos[index].name : "Photo")
       .navigationBarTitleDisplayMode(.inline)
-      .toolbarBackground(.black, for: .navigationBar)
+      .toolbarBackground(MTColor.photoBackdrop, for: .navigationBar)
       .toolbarBackground(.visible, for: .navigationBar)
       .toolbarColorScheme(.dark, for: .navigationBar)
       .toolbar {
@@ -331,7 +392,7 @@ struct MTPhotoPreview: View {
         .accessibilityLabel("Previous photo")
       Spacer(minLength: 0)
       Text("\(index + 1) of \(photos.count)")
-        .font(MTFont.caption)
+        .font(MTFont.supporting)
         .foregroundStyle(MTColor.inkMuted)
         .monospacedDigit()
       Spacer(minLength: 0)

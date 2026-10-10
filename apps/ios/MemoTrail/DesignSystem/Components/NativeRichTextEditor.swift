@@ -1,13 +1,15 @@
 import SwiftUI
 import UIKit
 
-/// Native writing surface. The binding contains formatting as well as readable plaintext.
+/// Web `RichTextEditor`: the native writing surface with its emphasis, undo, and keyboard
+/// actions. The binding contains formatting as well as readable plaintext. The form variant is
+/// a bordered field; the embedded variant sits inside a host card that already draws the
+/// surface. Specified in packages/design-system/components/rich-text.yaml.
 struct MTRichTextEditor: View {
   @Binding var text: NSAttributedString
   var placeholder = "Write a note..."
   var accessibilityIdentifier = "rich-editor"
-  /// Embedded editors sit inside a host card that already draws the surface and border.
-  var isEmbedded = false
+  var variant = MTRichTextDefaults.variant
   var minimumHeight = MTLayout.RichText.minHeight
   /// Each increase moves keyboard focus into the editor; a positive start focuses on appear.
   var focusRequest = 0
@@ -109,12 +111,14 @@ struct MTRichTextEditor: View {
       .font(.mtIcon(MTSize.Icon.s18)).buttonStyle(.plain).foregroundStyle(MTColor.inkMuted)
       .padding(.horizontal, MTSpacing.s2)
     }
-    .background(isEmbedded ? Color.clear : MTColor.surface)
-    .clipShape(RoundedRectangle(cornerRadius: isEmbedded ? 0 : MTRadius.medium))
+    .background(variant == .form ? MTColor.surface : Color.clear)
+    .clipShape(RoundedRectangle(cornerRadius: variant == .form ? MTRadius.medium : 0))
     .overlay {
-      if !isEmbedded {
-        RoundedRectangle(cornerRadius: MTRadius.medium).stroke(
-          MTColor.border, lineWidth: MTSize.Stroke.thin)
+      switch variant {
+      case .form:
+        RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
+          MTColor.borderStrong, lineWidth: MTSize.Stroke.thin)
+      case .embedded: EmptyView()
       }
     }
   }

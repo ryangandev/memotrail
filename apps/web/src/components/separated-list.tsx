@@ -1,14 +1,19 @@
 import { Children, isValidElement, type ComponentPropsWithoutRef } from "react";
+import {
+  separatedListDefaults,
+  type SeparatedListAlign,
+  type SeparatedListSpacing,
+} from "@/generated/design-system";
 import styles from "./separated-list.module.css";
 
 type SeparatedListProps = ComponentPropsWithoutRef<"span"> & {
   /** Lines start at the inline start, or end flush with the inline end. */
-  align?: "start" | "end";
+  align?: SeparatedListAlign;
   /**
    * The default gap leaves room for focus rings. Word spacing reads like a
    * sentence, so keep it for plain text without links or buttons.
    */
-  spacing?: "default" | "word";
+  spacing?: SeparatedListSpacing;
 };
 
 /**
@@ -16,12 +21,13 @@ type SeparatedListProps = ComponentPropsWithoutRef<"span"> & {
  * No line starts or ends with a separator, and assistive technology reads only
  * the facts. Set `--separated-list-gap`, `--separated-list-row-gap`, and
  * `--separated-list-separator-color` on `className` to adjust it further.
+ * Specified in packages/design-system/components/separated-list.yaml.
  */
 export function SeparatedList({
-  align = "start",
+  align = separatedListDefaults.align,
   children,
   className,
-  spacing = "default",
+  spacing = separatedListDefaults.spacing,
   ...props
 }: SeparatedListProps) {
   const items = Children.toArray(children);

@@ -4,6 +4,7 @@ import SwiftUI
 /// its structure and emphasis, or the plain body when no valid rich document is present.
 /// With a `lineLimit`, the writing flows into one clamped preview that keeps its emphasis,
 /// list markers, and line breaks, like the Web search result excerpt.
+/// Specified in packages/design-system/components/rich-text.yaml, with MTRichTextEditor.
 struct MTRichTextContent: View {
   /// The plain Entry body, which a valid rich document must match exactly.
   let text: String

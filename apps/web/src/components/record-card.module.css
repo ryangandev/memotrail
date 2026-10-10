@@ -27,7 +27,7 @@
 
 .visual {
   position: relative;
-  height: 190px;
+  height: var(--mt-size-record-card-visual-height);
   overflow: hidden;
   border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   background: var(--mt-color-surface-subtle);

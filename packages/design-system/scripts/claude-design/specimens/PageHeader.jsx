@@ -1,5 +1,6 @@
-const { Button, ButtonLink, Icon, PageHeader } = MemoTrail;
+const { Button, Icon, PageHeader } = MemoTrail;
 
+// The same headers the Web and iOS galleries show.
 export const specimens = {
   "page-header-full": {
     title: "Eyebrow, title, description, and actions",
@@ -7,21 +8,21 @@ export const specimens = {
       <PageHeader
         actions={
           <>
-            <ButtonLink href="#timeline">Open Timeline</ButtonLink>
+            <Button variant="secondary">Filter</Button>
             <Button>
               <Icon name="plus" size={16} />
-              New entry
+              Add memory
             </Button>
           </>
         }
-        description="Every Entry, Home, Vehicle, and Someday item in one place."
-        eyebrow="Life Wiki"
-        title="Library"
+        description="The moments, people, and places that make up your story."
+        eyebrow="Your life, remembered"
+        title="Memories"
       />
     ),
   },
   "page-header-title-only": {
-    title: "A second-level header with only a title",
-    render: () => <PageHeader headingLevel={2} title="Settings" />,
+    title: "A title alone",
+    render: () => <PageHeader title="First sourdough loaf at home" />,
   },
 };

@@ -260,11 +260,11 @@ private struct LibraryBrowse: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      MTListHeader(
-        "All items",
+      MTSectionHeader(
+        "All items", variant: .list,
         detail: controller.hasLoaded
           ? countLabel(controller.totalCount, "item") : nil,
-        alignsDetailTrailing: true)
+        detailAlign: .end)
       if !controller.hasLoaded {
         ProgressView("Loading your Life Wiki...")
           .font(MTFont.caption)
@@ -375,8 +375,8 @@ private struct LibraryResults: View {
       }
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
-        MTListHeader(
-          "Results",
+        MTSectionHeader(
+          "Results", variant: .list,
           detail: countLabel(controller.resultCount, "item")
         ) {
           if controller.isSearching {

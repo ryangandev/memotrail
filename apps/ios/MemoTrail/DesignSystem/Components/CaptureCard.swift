@@ -3,16 +3,15 @@ import SwiftUI
 import UIKit
 
 /// The Web CaptureComposer: one formatted note, an optional relevant date, voice, and photos,
-/// saved to the Inbox through the offline queue.
+/// saved to the Inbox through the offline queue. The page style is a raised card on the
+/// Dashboard; the dialog style is the open body of Quick Capture.
+/// Specified in packages/design-system/components/capture-composer.yaml.
 struct CaptureCard: View {
-  /// Web's composer variants: a raised card on the Dashboard, or the open body of Quick Capture.
-  enum Style { case page, dialog }
-
   @Binding var note: NSAttributedString
   @Binding var occurrence: OccurrenceDraft?
   @Binding var photos: [FirstTimePhotoDraft]
 
-  var style = Style.page
+  var style = MTCaptureComposerDefaults.style
   let isSaving: Bool
   let hasLocalDraft: Bool
   let error: String?
@@ -46,7 +45,7 @@ struct CaptureCard: View {
 
       MTRichTextEditor(
         text: $note, placeholder: "What is on your mind?", accessibilityIdentifier: "capture-body",
-        isEmbedded: true, minimumHeight: MTLayout.RichText.captureMinHeight,
+        variant: .embedded, minimumHeight: MTLayout.RichText.captureMinHeight,
         focusRequest: focusRequest
       )
       .disabled(isSaving || voiceController.isActive)
@@ -92,7 +91,7 @@ struct CaptureCard: View {
           .fixedSize(horizontal: false, vertical: true)
           .padding(.horizontal, inlinePadding)
           .padding(.vertical, MTSpacing.s2)
-          .frame(maxWidth: .infinity, minHeight: MTLayout.Capture.statusHeight, alignment: .leading)
+          .frame(maxWidth: .infinity, minHeight: MTSize.Capture.statusHeight, alignment: .leading)
           .background(status.background)
           .overlay(alignment: .top) { MTListDivider() }
           .accessibilityIdentifier(status.identifier)
@@ -125,7 +124,7 @@ struct CaptureCard: View {
       .padding(.leading, inlinePadding - MTSpacing.s2)
       .padding(.trailing, inlinePadding)
       .padding(.vertical, MTSpacing.s2)
-      .frame(minHeight: MTLayout.Capture.actionBarHeight)
+      .frame(minHeight: MTSize.Capture.actionBarHeight)
       .background(MTColor.surface)
       .overlay(alignment: .top) { MTListDivider() }
     }
@@ -241,7 +240,7 @@ struct CaptureCard: View {
             .background(MTColor.surfaceSubtle)
         }
       }
-      .frame(width: MTLayout.PhotoTile.captureThumb, height: MTLayout.PhotoTile.captureThumb)
+      .frame(width: MTSize.Capture.thumbnail, height: MTSize.Capture.thumbnail)
       .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
       .overlay {
         RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(MTColor.borderStrong)
@@ -255,8 +254,8 @@ struct CaptureCard: View {
           .font(.mtIcon(MTSize.Icon.s11, weight: .semibold))
           .foregroundStyle(MTColor.inverseInk)
           .frame(
-            width: MTLayout.PhotoTile.captureRemoveButton,
-            height: MTLayout.PhotoTile.captureRemoveButton
+            width: MTSize.Capture.removeButton,
+            height: MTSize.Capture.removeButton
           )
           .background(
             MTColor.inverseSurface, in: Circle()
@@ -382,7 +381,7 @@ struct CaptureSpark: View {
     Image(.sparkle)
       .font(.mtIcon(MTSize.Icon.s15, weight: .medium))
       .foregroundStyle(MTColor.accent)
-      .frame(width: MTLayout.Capture.spark, height: MTLayout.Capture.spark)
+      .frame(width: MTSize.Capture.spark, height: MTSize.Capture.spark)
       .background(MTColor.accentSubtle, in: Circle())
       .accessibilityHidden(true)
   }
@@ -398,7 +397,7 @@ private struct CaptureQuietIcon: View {
     Image(icon)
       .font(.mtIcon(MTSize.Icon.s17))
       .foregroundStyle(isActive ? tint : MTColor.inkMuted)
-      .frame(width: MTLayout.Capture.quietIconWidth, height: MTLayout.Capture.quietIconHeight)
+      .frame(width: MTLayout.Capture.quietIconWidth, height: MTSize.Capture.quietAction)
       .background(
         isActive ? (tint == MTColor.warm ? MTColor.warmSubtle : MTColor.accentSubtle) : .clear,
         in: RoundedRectangle(cornerRadius: MTRadius.small)

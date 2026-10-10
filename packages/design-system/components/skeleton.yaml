@@ -1,0 +1,88 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: Skeleton
+
+platforms:
+  web:
+    path: apps/web/src/components/skeleton.tsx
+    symbols: [Skeleton]
+  ios:
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTMedia.swift
+    symbols: [MTLoadingSkeleton]
+
+purpose: A decorative shimmering placeholder in the shape of content that is still loading.
+
+use:
+  - Reserving the space of content that will arrive soon, such as a page's cards, a list's rows, or a photo.
+  - Composing a loading page from blocks, lines, and circles that echo the layout to come.
+
+avoid:
+  - Telling people that something is loading. The region around the skeleton announces it, such as with aria-busy on Web or a labeled loading row on iOS.
+  - Content that failed to load or does not exist. Use EmptyState or the Image fallback.
+  - A wait with no layout to echo, such as saving. Use the Button loading state.
+
+anatomy:
+  container: The placeholder surface in the shape of the content.
+  highlight: The soft light band that sweeps across the surface from the leading edge.
+
+props:
+  shape:
+    description: The placeholder's shape. Fill takes the whole container, like a photo still arriving; block is a card or paragraph; line is one line of text; circle is an avatar.
+    values: [fill, block, line, circle]
+    default: block
+  animated:
+    description: Sweeps the highlight across the surface. Turn it off for a placeholder that is about to be replaced; a skeleton is also still when people ask for reduced motion.
+    type: boolean
+    default: true
+    platformNames: { ios: isAnimated }
+
+states: [default]
+
+tokens:
+  - container:
+      background: "{color.surfaceSubtle}"
+  - when: { animated: true }
+    highlight:
+      color: "{color.skeletonHighlight}"
+      duration: "{motion.shimmer}"
+      easing: "{motion.easing.inOut}"
+  - when: { shape: block }
+    container:
+      height: "{size.skeleton.block}"
+      radius: "{radius.medium}"
+  - when: { shape: line }
+    container:
+      height: "{size.skeleton.line}"
+      radius: "{radius.small}"
+  - when: { shape: circle }
+    container:
+      size: "{size.skeleton.circle}"
+      radius: "{radius.pill}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: asWritten
+  length: A skeleton has no text.
+  notes:
+    - A caller can set a width and a height to echo the content, such as 72 percent of a line; a circle uses its width for both sides.
+
+accessibility:
+  role: None. Web marks the skeleton aria-hidden and iOS hides it from VoiceOver.
+  label: None of its own. The surrounding region says what is loading, such as Loading photo on an Image.
+  focus: Never focusable.
+  minimumHitTarget: notInteractive
+  dynamicType: Block, line, and circle keep their token sizes; a caller sizing a line to text sets its height to match.
+
+platformDifferences:
+  - difference: Web takes any CSS length for width and height, such as 72%; iOS takes points or a fraction of the available width.
+    reason: Each platform's own way to size a view. Both default to the full width and the shape's token height.
+
+specimens:
+  - id: skeleton-shapes
+    description: Every shape at its default size, with a fill skeleton inside a photo-sized frame.
+    covers: { shape: all }
+  - id: skeleton-still
+    description: A block and two lines with the shimmer turned off, as reduced motion draws them.
+  - id: skeleton-composed
+    description: A circle beside two lines and a block below them, the way a loading record row is built.
+    covers: { shape: [block, line, circle] }
