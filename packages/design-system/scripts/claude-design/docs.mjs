@@ -378,15 +378,19 @@ function content(value, format) {
 
 function sources(spec) {
   if (!spec.platforms || typeof spec.platforms !== "object") return [];
+  const source = (file) => {
+    const symbols = Array.isArray(file.symbols)
+      ? ` (${file.symbols.join(", ")})`
+      : "";
+    return `\`${file.path}\`${symbols}`;
+  };
   return Object.entries(spec.platforms).map(([platform, item]) => {
     const label = platformLabel(platform);
     if (item?.unavailable)
       return `- ${label}: not available. ${paragraph(item.unavailable)}`;
     if (item?.path) {
-      const symbols = Array.isArray(item.symbols)
-        ? ` (${item.symbols.join(", ")})`
-        : "";
-      return `- ${label}: \`${item.path}\`${symbols}`;
+      const files = [item, ...(Array.isArray(item.files) ? item.files : [])];
+      return `- ${label}: ${files.map(source).join(", and ")}`;
     }
     return `- ${label}: ${typeof item === "string" ? `\`${item}\`` : paragraph(JSON.stringify(item))}`;
   });

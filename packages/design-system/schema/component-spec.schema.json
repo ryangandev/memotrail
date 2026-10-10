@@ -216,6 +216,21 @@
       "not": { "const": "when" }
     },
     "platformName": { "enum": ["web", "ios"] },
+    "sourcePath": {
+      "description": "An implementation file, relative to the repository root.",
+      "type": "string",
+      "pattern": "^apps/[^\\s]+\\.(tsx|ts|swift)$"
+    },
+    "symbols": {
+      "description": "The functions, components, or types the file declares for this component.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+      }
+    },
     "platform": {
       "oneOf": [
         {
@@ -223,19 +238,20 @@
           "additionalProperties": false,
           "required": ["path", "symbols"],
           "properties": {
-            "path": {
-              "description": "The implementation file, relative to the repository root.",
-              "type": "string",
-              "pattern": "^apps/[^\\s]+\\.(tsx|ts|swift)$"
-            },
-            "symbols": {
-              "description": "The functions, components, or types the file declares for this component.",
+            "path": { "$ref": "#/$defs/sourcePath" },
+            "symbols": { "$ref": "#/$defs/symbols" },
+            "files": {
+              "description": "Further files that implement parts of the component, such as a rich-text renderer and its editor, each with the symbols it declares.",
               "type": "array",
               "minItems": 1,
-              "uniqueItems": true,
               "items": {
-                "type": "string",
-                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["path", "symbols"],
+                "properties": {
+                  "path": { "$ref": "#/$defs/sourcePath" },
+                  "symbols": { "$ref": "#/$defs/symbols" }
+                }
               }
             }
           }
@@ -389,8 +405,20 @@
           "description": "Width, or the widest a part that shrinks with its container gets, a dimension.",
           "$ref": "#/$defs/tokenValue"
         },
+        "height": {
+          "description": "Fixed height of a part that is not square, such as a placeholder line, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
         "minHeight": {
           "description": "Minimum height, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "minWidth": {
+          "description": "The narrowest a part gets before its neighbors wrap below it, a dimension.",
+          "$ref": "#/$defs/tokenValue"
+        },
+        "maxWidth": {
+          "description": "The widest a part gets, such as a readable line length or a page width, a dimension.",
           "$ref": "#/$defs/tokenValue"
         },
         "type": {

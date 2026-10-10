@@ -667,6 +667,10 @@ describe("component spec validation", async () => {
       join(root, "apps/ios/Chip.swift"),
       "struct MTChip {}\n\n@MainActor\nfinal class MTChipCenter {}\n",
     );
+    await writeFile(
+      join(root, "apps/web/chip-list.tsx"),
+      "export function ChipList() {}\n",
+    );
   });
   after(() => rm(root, { recursive: true, force: true }));
 
@@ -758,6 +762,38 @@ describe("component spec validation", async () => {
     });
   });
 
+  test("accepts width and height properties that name dimensions", async () => {
+    const [spec] = await loadChip((spec) => {
+      Object.assign(spec.tokens[0].container, {
+        height: "{size.hitTarget}",
+        minWidth: "{size.hitTarget}",
+        maxWidth: "{layout.pageWidth.compact}",
+      });
+    });
+    assert.equal(spec.name, "Chip");
+  });
+
+  for (const property of ["height", "minWidth", "maxWidth"]) {
+    test(`rejects a ${property} that names a color`, () =>
+      assert.rejects(
+        loadChip(
+          (spec) => (spec.tokens[0].container[property] = "{color.accent}"),
+        ),
+        /needs a dimension token, but \{color\.accent\} is a color/,
+      ));
+  }
+
+  test("accepts further files that declare their own symbols", async () => {
+    const [spec] = await loadChip((spec) => {
+      spec.platforms.web.files = [
+        { path: "apps/web/chip-list.tsx", symbols: ["ChipList"] },
+      ];
+    });
+    assert.deepEqual(spec.platforms.web.files, [
+      { path: "apps/web/chip-list.tsx", symbols: ["ChipList"] },
+    ]);
+  });
+
   const failures = [
     [
       "a field the schema does not know",
@@ -778,6 +814,38 @@ describe("component spec validation", async () => {
       "a symbol the file only mentions",
       (spec) => (spec.platforms.web.symbols = ["Chip", "ChipList"]),
       /does not declare ChipList/,
+    ],
+    [
+      "a further file that does not declare its symbol",
+      (spec) =>
+        (spec.platforms.web.files = [
+          { path: "apps/web/chip-list.tsx", symbols: ["ChipGroup"] },
+        ]),
+      /chip-list\.tsx does not declare ChipGroup/,
+    ],
+    [
+      "a further file that is missing",
+      (spec) =>
+        (spec.platforms.ios.files = [
+          { path: "apps/ios/ChipList.swift", symbols: ["MTChipList"] },
+        ]),
+      /platforms\.ios\.files\[0\]\.path apps\/ios\/ChipList\.swift does not exist/,
+    ],
+    [
+      "a further file from the other platform",
+      (spec) =>
+        (spec.platforms.ios.files = [
+          { path: "apps/web/chip-list.tsx", symbols: ["ChipList"] },
+        ]),
+      /files\[0\]\.path apps\/web\/chip-list\.tsx is not a ios source/,
+    ],
+    [
+      "a further file that repeats the main path",
+      (spec) =>
+        (spec.platforms.web.files = [
+          { path: "apps/web/chip.tsx", symbols: ["Chip"] },
+        ]),
+      /files\[0\]\.path apps\/web\/chip\.tsx is already listed/,
     ],
     [
       "an unknown token",
