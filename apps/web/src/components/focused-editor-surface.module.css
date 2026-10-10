@@ -10,7 +10,7 @@
 }
 
 .footer {
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   padding-top: var(--mt-space-5);
   min-width: 0;
 }

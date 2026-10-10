@@ -103,7 +103,7 @@ private struct MoreGroup<Content: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       Text(title)
-        .mtTextRole(.groupLabel)
+        .mtTextRole(.menuHeading)
         .foregroundStyle(MTColor.inkFaint)
         .accessibilityAddTraits(.isHeader)
       LazyVGrid(

@@ -25,7 +25,7 @@ struct EntryPhotoGalleryView: View {
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   var body: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.panelGap) {
+    VStack(alignment: .leading, spacing: MTSpacing.s3_5) {
       HStack(alignment: .center, spacing: MTSpacing.s3) {
         Text("Current photos")
           .font(MTFont.heading)
@@ -76,7 +76,7 @@ struct EntryPhotoGalleryView: View {
         }
       }
     }
-    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : MTSpacing.panelGap)
+    .padding(horizontalSizeClass == .regular ? MTSpacing.s5 : MTSpacing.s3_5)
     .frame(maxWidth: .infinity, alignment: .leading)
     .background(MTColor.surfaceRaised, in: RoundedRectangle(cornerRadius: MTRadius.large))
     .overlay {

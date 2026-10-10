@@ -1,6 +1,6 @@
 .entryList {
   overflow: hidden;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
 }

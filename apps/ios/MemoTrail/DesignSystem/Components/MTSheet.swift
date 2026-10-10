@@ -243,7 +243,7 @@ struct MTSheetOption: View {
           .frame(width: MTLayout.IconTile.medium, height: MTLayout.IconTile.medium)
           .background(MTColor.accentSubtle, in: RoundedRectangle(cornerRadius: MTRadius.small))
           .accessibilityHidden(true)
-        VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
+        VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
           Text(title)
             .font(MTFont.bodyStrong)
             .foregroundStyle(MTColor.ink)

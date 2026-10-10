@@ -107,8 +107,8 @@ enum MTColor {
     lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.48, darkOpacity: 0.48)
   static let labelDash = Color(
     lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.54, darkOpacity: 0.54)
-  static let markRing = Color(lightHex: "#82AD98", darkHex: "#82AD98")
   static let photoBackdrop = Color(lightHex: "#000000", darkHex: "#000000")
+  static let brandInnerRing = Color(lightHex: "#82AD98", darkHex: "#82AD98")
 
   static let catalog = [
     MTColorToken(name: "canvas", lightHex: "#F4F1E9", darkHex: "#171816", color: canvas),
@@ -246,9 +246,10 @@ enum MTColor {
     MTColorToken(
       name: "labelDash", lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.54,
       darkOpacity: 0.54, color: labelDash),
-    MTColorToken(name: "markRing", lightHex: "#82AD98", darkHex: "#82AD98", color: markRing),
     MTColorToken(
       name: "photoBackdrop", lightHex: "#000000", darkHex: "#000000", color: photoBackdrop),
+    MTColorToken(
+      name: "brandInnerRing", lightHex: "#82AD98", darkHex: "#82AD98", color: brandInnerRing),
   ]
 }
 
@@ -275,6 +276,15 @@ struct MTTextRole: Sendable {
   static let title = MTTextRole(
     name: "title", size: 28, weight: .medium, design: .serif, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: .title, font: MTFont.title)
+  static let welcomeTitle = MTTextRole(
+    name: "welcomeTitle", size: 28, weight: .medium, design: .serif, lineHeight: 1.15,
+    tracking: -0.6, isUppercase: false, textStyle: .title, font: MTFont.welcomeTitle)
+  static let goalCardTitle = MTTextRole(
+    name: "goalCardTitle", size: 22, weight: .medium, design: .serif, lineHeight: 1.15,
+    tracking: -0.5, isUppercase: false, textStyle: .title2, font: MTFont.goalCardTitle)
+  static let recordCardTitle = MTTextRole(
+    name: "recordCardTitle", size: 22, weight: .medium, design: .serif, lineHeight: 1.15,
+    tracking: -0.4, isUppercase: false, textStyle: .title2, font: MTFont.recordCardTitle)
   static let sheetTitle = MTTextRole(
     name: "sheetTitle", size: 22, weight: .medium, design: .serif, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: .title2, font: MTFont.sheetTitle)
@@ -311,21 +321,42 @@ struct MTTextRole: Sendable {
   static let caption = MTTextRole(
     name: "caption", size: 12, weight: .medium, design: .default, lineHeight: 1.55, tracking: 0,
     isUppercase: false, textStyle: .caption, font: MTFont.caption)
+  static let pageEyebrow = MTTextRole(
+    name: "pageEyebrow", size: 12, weight: .semibold, design: .default, lineHeight: 1.15,
+    tracking: 1, isUppercase: true, textStyle: .caption, font: MTFont.pageEyebrow)
+  static let legend = MTTextRole(
+    name: "legend", size: 12, weight: .semibold, design: .default, lineHeight: 1.15, tracking: 0.7,
+    isUppercase: true, textStyle: .caption, font: MTFont.legend)
   static let micro = MTTextRole(
     name: "micro", size: 11, weight: .semibold, design: .default, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: .caption2, font: MTFont.micro)
+  static let signInEyebrow = MTTextRole(
+    name: "signInEyebrow", size: 11, weight: .semibold, design: .default, lineHeight: 1.15,
+    tracking: 1.3, isUppercase: true, textStyle: .caption2, font: MTFont.signInEyebrow)
+  static let menuHeading = MTTextRole(
+    name: "menuHeading", size: 11, weight: .semibold, design: .default, lineHeight: 1.15,
+    tracking: 1.1, isUppercase: true, textStyle: .caption2, font: MTFont.menuHeading)
   static let code = MTTextRole(
     name: "code", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: nil, font: MTFont.code)
   static let eyebrow = MTTextRole(
     name: "eyebrow", size: 10, weight: .semibold, design: .default, lineHeight: 1.15, tracking: 1,
     isUppercase: true, textStyle: nil, font: MTFont.eyebrow)
+  static let factLabel = MTTextRole(
+    name: "factLabel", size: 11, weight: .regular, design: .default, lineHeight: 1.15,
+    tracking: 0.6, isUppercase: true, textStyle: .caption2, font: MTFont.factLabel)
   static let fine = MTTextRole(
     name: "fine", size: 10, weight: .regular, design: .default, lineHeight: 1.55, tracking: 0,
     isUppercase: false, textStyle: nil, font: MTFont.fine)
   static let stamp = MTTextRole(
     name: "stamp", size: 10, weight: .regular, design: .monospaced, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: nil, font: MTFont.stamp)
+  static let dateStamp = MTTextRole(
+    name: "dateStamp", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15,
+    tracking: 0.25, isUppercase: true, textStyle: .caption2, font: MTFont.dateStamp)
+  static let firstTimeDate = MTTextRole(
+    name: "firstTimeDate", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15,
+    tracking: 0.35, isUppercase: true, textStyle: .caption2, font: MTFont.firstTimeDate)
   static let badgeMicro = MTTextRole(
     name: "badgeMicro", size: 11, weight: .regular, design: .default, lineHeight: 1.2, tracking: 0,
     isUppercase: false, textStyle: .caption2, font: MTFont.badgeMicro)
@@ -347,9 +378,6 @@ struct MTTextRole: Sendable {
   static let note = MTTextRole(
     name: "note", size: 11, weight: .regular, design: .default, lineHeight: 1.55, tracking: 0,
     isUppercase: false, textStyle: .caption2, font: MTFont.note)
-  static let pageEyebrow = MTTextRole(
-    name: "pageEyebrow", size: 12, weight: .semibold, design: .default, lineHeight: 1.15,
-    tracking: 1, isUppercase: true, textStyle: .caption, font: MTFont.pageEyebrow)
   static let detail = MTTextRole(
     name: "detail", size: 12, weight: .regular, design: .default, lineHeight: 1.55, tracking: 0,
     isUppercase: false, textStyle: .caption, font: MTFont.detail)
@@ -383,39 +411,12 @@ struct MTTextRole: Sendable {
   static let settingsHeading = MTTextRole(
     name: "settingsHeading", size: 13, weight: .semibold, design: .default, lineHeight: 1.15,
     tracking: 0.6, isUppercase: true, textStyle: .footnote, font: MTFont.settingsHeading)
-  static let legend = MTTextRole(
-    name: "legend", size: 12, weight: .semibold, design: .default, lineHeight: 1.15, tracking: 0.7,
-    isUppercase: true, textStyle: .caption, font: MTFont.legend)
-  static let factLabel = MTTextRole(
-    name: "factLabel", size: 11, weight: .regular, design: .default, lineHeight: 1.15,
-    tracking: 0.6, isUppercase: true, textStyle: .caption2, font: MTFont.factLabel)
-  static let groupLabel = MTTextRole(
-    name: "groupLabel", size: 11, weight: .semibold, design: .default, lineHeight: 1.15,
-    tracking: 1.1, isUppercase: true, textStyle: .caption2, font: MTFont.groupLabel)
-  static let storyEyebrow = MTTextRole(
-    name: "storyEyebrow", size: 11, weight: .semibold, design: .default, lineHeight: 1.15,
-    tracking: 1.3, isUppercase: true, textStyle: .caption2, font: MTFont.storyEyebrow)
-  static let welcomeTitle = MTTextRole(
-    name: "welcomeTitle", size: 28, weight: .medium, design: .serif, lineHeight: 1.15,
-    tracking: -0.6, isUppercase: false, textStyle: .title, font: MTFont.welcomeTitle)
-  static let dateStamp = MTTextRole(
-    name: "dateStamp", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15,
-    tracking: 0.25, isUppercase: true, textStyle: .caption2, font: MTFont.dateStamp)
-  static let firstTimeDate = MTTextRole(
-    name: "firstTimeDate", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15,
-    tracking: 0.35, isUppercase: true, textStyle: .caption2, font: MTFont.firstTimeDate)
-  static let recordName = MTTextRole(
-    name: "recordName", size: 22, weight: .medium, design: .serif, lineHeight: 1.15, tracking: -0.4,
-    isUppercase: false, textStyle: .title2, font: MTFont.recordName)
-  static let recordNameCompact = MTTextRole(
-    name: "recordNameCompact", size: 20, weight: .medium, design: .serif, lineHeight: 1.15,
-    tracking: -0.4, isUppercase: false, textStyle: .title3, font: MTFont.recordNameCompact)
-  static let goalName = MTTextRole(
-    name: "goalName", size: 22, weight: .medium, design: .serif, lineHeight: 1.15, tracking: -0.5,
-    isUppercase: false, textStyle: .title2, font: MTFont.goalName)
-  static let goalNameCompact = MTTextRole(
-    name: "goalNameCompact", size: 20, weight: .medium, design: .serif, lineHeight: 1.15,
-    tracking: -0.5, isUppercase: false, textStyle: .title3, font: MTFont.goalNameCompact)
+  static let recordCardTitleCompact = MTTextRole(
+    name: "recordCardTitleCompact", size: 20, weight: .medium, design: .serif, lineHeight: 1.15,
+    tracking: -0.4, isUppercase: false, textStyle: .title3, font: MTFont.recordCardTitleCompact)
+  static let goalCardTitleCompact = MTTextRole(
+    name: "goalCardTitleCompact", size: 20, weight: .medium, design: .serif, lineHeight: 1.15,
+    tracking: -0.5, isUppercase: false, textStyle: .title3, font: MTFont.goalCardTitleCompact)
   static let avatarInitial = MTTextRole(
     name: "avatarInitial", size: 22, weight: .regular, design: .serif, lineHeight: 1.15,
     tracking: 0, isUppercase: false, textStyle: .title2, font: MTFont.avatarInitial)
@@ -445,6 +446,9 @@ struct MTTextRole: Sendable {
     hero,
     display,
     title,
+    welcomeTitle,
+    goalCardTitle,
+    recordCardTitle,
     sheetTitle,
     recordTitle,
     wordmarkLarge,
@@ -457,11 +461,18 @@ struct MTTextRole: Sendable {
     label,
     listHeading,
     caption,
+    pageEyebrow,
+    legend,
     micro,
+    signInEyebrow,
+    menuHeading,
     code,
     eyebrow,
+    factLabel,
     fine,
     stamp,
+    dateStamp,
+    firstTimeDate,
     badgeMicro,
     badgeSmall,
     badgeMedium,
@@ -469,7 +480,6 @@ struct MTTextRole: Sendable {
     badgeSmallCaps,
     badgeMediumCaps,
     note,
-    pageEyebrow,
     detail,
     supporting,
     bodyStrong,
@@ -481,17 +491,8 @@ struct MTTextRole: Sendable {
     cardEyebrow,
     archiveHeading,
     settingsHeading,
-    legend,
-    factLabel,
-    groupLabel,
-    storyEyebrow,
-    welcomeTitle,
-    dateStamp,
-    firstTimeDate,
-    recordName,
-    recordNameCompact,
-    goalName,
-    goalNameCompact,
+    recordCardTitleCompact,
+    goalCardTitleCompact,
     avatarInitial,
     quietTitle,
     listIndex,
@@ -512,6 +513,12 @@ enum MTFont {
   static let display = Font.system(.largeTitle, design: .serif).weight(.medium)
   /// Section and onboarding titles.
   static let title = Font.system(.title, design: .serif).weight(.medium)
+  /// The sign-in welcome title.
+  static let welcomeTitle = Font.system(.title, design: .serif).weight(.medium)
+  /// Goal card titles. iOS draws them at its title2 size in regular width.
+  static let goalCardTitle = Font.system(.title2, design: .serif).weight(.medium)
+  /// Large serif titles on Home, Vehicle, and First Time cards. iOS draws them at its title2 size in regular width.
+  static let recordCardTitle = Font.system(.title2, design: .serif).weight(.medium)
   /// Sheet and dialog titles.
   static let sheetTitle = Font.system(.title2, design: .serif).weight(.medium)
   /// Record detail titles.
@@ -536,16 +543,30 @@ enum MTFont {
   static let listHeading = Font.footnote.weight(.semibold)
   /// Metadata and helper text.
   static let caption = Font.caption.weight(.medium)
+  /// The uppercase context above a page title, such as a date or area name.
+  static let pageEyebrow = Font.caption.weight(.semibold)
+  /// The uppercase legend set into the border of a record group, such as a Home's details.
+  static let legend = Font.caption.weight(.semibold)
   /// Dense badges and tooltips.
   static let micro = Font.caption2.weight(.semibold)
+  /// Uppercase eyebrows on the sign-in screens, such as the line above the story headline.
+  static let signInEyebrow = Font.caption2.weight(.semibold)
+  /// Uppercase group headings in the More menu.
+  static let menuHeading = Font.caption2.weight(.semibold)
   /// Inline values in history diffs.
   static let code = Font.system(size: 11, design: .monospaced)
   /// Uppercase eyebrows above titles.
   static let eyebrow = Font.system(size: 10, weight: .semibold)
+  /// The uppercase label above a fact in record details. iOS draws it at its 11 pt caption2 minimum.
+  static let factLabel = Font.caption2
   /// The smallest readable text, such as map attribution and inline actions.
   static let fine = Font.system(size: 10)
   /// Monospaced counts and dates.
   static let stamp = Font.system(size: 10, design: .monospaced)
+  /// Uppercase monospaced dates on record cards, archive rows, and Goal targets. iOS draws them at its 11 pt caption2 minimum.
+  static let dateStamp = Font.system(.caption2, design: .monospaced)
+  /// The uppercase date above a First Time card title. iOS draws it at its 11 pt caption2 minimum.
+  static let firstTimeDate = Font.system(.caption2, design: .monospaced)
   /// Micro badge labels, such as tags in record card footers. iOS draws them at its 11 pt caption2 minimum.
   static let badgeMicro = Font.caption2
   /// Small badge labels, the default size for statuses and tags. iOS draws them at its 11 pt caption2 minimum.
@@ -560,8 +581,6 @@ enum MTFont {
   static let badgeMediumCaps = Font.caption.weight(.semibold)
   /// Small notes, timestamps, and counts beside other text.
   static let note = Font.caption2
-  /// The uppercase context above a page title, such as a date or area name.
-  static let pageEyebrow = Font.caption.weight(.semibold)
   /// Quiet counts, dates, and secondary lines at regular weight.
   static let detail = Font.caption
   /// Sentences that explain a heading, such as empty-state and card messages.
@@ -584,28 +603,10 @@ enum MTFont {
   static let archiveHeading = Font.footnote.weight(.semibold)
   /// The uppercase title of a Settings section.
   static let settingsHeading = Font.footnote.weight(.semibold)
-  /// The uppercase legend above a record detail group.
-  static let legend = Font.caption.weight(.semibold)
-  /// The uppercase label above a fact on an item page.
-  static let factLabel = Font.caption2
-  /// The uppercase label above a group of More destinations.
-  static let groupLabel = Font.caption2.weight(.semibold)
-  /// The uppercase line above the sign-in story headline.
-  static let storyEyebrow = Font.caption2.weight(.semibold)
-  /// The sign-in welcome title.
-  static let welcomeTitle = Font.system(.title, design: .serif).weight(.medium)
-  /// Uppercase monospaced dates on record cards and archive rows.
-  static let dateStamp = Font.system(.caption2, design: .monospaced)
-  /// The uppercase date above a First Time card title.
-  static let firstTimeDate = Font.system(.caption2, design: .monospaced)
-  /// Serif names on archive, First Time, and Person cards in regular width.
-  static let recordName = Font.system(.title2, design: .serif).weight(.medium)
-  /// Serif names on archive, First Time, and Person cards on phones.
-  static let recordNameCompact = Font.system(.title3, design: .serif).weight(.medium)
-  /// Goal card titles in regular width.
-  static let goalName = Font.system(.title2, design: .serif).weight(.medium)
+  /// Serif titles on record archive, First Time, and Person cards on phones.
+  static let recordCardTitleCompact = Font.system(.title3, design: .serif).weight(.medium)
   /// Goal card titles on phones.
-  static let goalNameCompact = Font.system(.title3, design: .serif).weight(.medium)
+  static let goalCardTitleCompact = Font.system(.title3, design: .serif).weight(.medium)
   /// A Person's initial inside their avatar.
   static let avatarInitial = Font.system(.title2, design: .serif)
   /// Regular-weight serif titles and counts, such as Dashboard ribbon counts.
@@ -625,54 +626,76 @@ enum MTFont {
 }
 
 enum MTSpacing {
+  static let s0_25: CGFloat = 1
+  static let s0_5: CGFloat = 2
+  static let s0_75: CGFloat = 3
   static let s1: CGFloat = 4
+  static let s1_25: CGFloat = 5
+  static let s1_5: CGFloat = 6
+  static let s1_75: CGFloat = 7
   static let s2: CGFloat = 8
+  static let s2_25: CGFloat = 9
+  static let s2_5: CGFloat = 10
+  static let s2_75: CGFloat = 11
   static let s3: CGFloat = 12
+  static let s3_5: CGFloat = 14
   static let s4: CGFloat = 16
+  static let s4_5: CGFloat = 18
   static let s5: CGFloat = 20
+  static let s5_5: CGFloat = 22
   static let s6: CGFloat = 24
   static let s8: CGFloat = 32
   static let s10: CGFloat = 40
+  static let s11: CGFloat = 44
   static let s12: CGFloat = 48
   static let s16: CGFloat = 64
-  static let lineGap: CGFloat = 2
-  static let headingGap: CGFloat = 3
-  static let detailGap: CGFloat = 5
-  static let chipGap: CGFloat = 6
-  static let actionGap: CGFloat = 10
-  static let badgeGap: CGFloat = 5
-  static let panelGap: CGFloat = 14
+  static let s18: CGFloat = 72
+  static let s23: CGFloat = 92
+  static let s32: CGFloat = 128
 
   static let catalog: [(name: String, value: CGFloat)] = [
+    ("0-25", s0_25),
+    ("0-5", s0_5),
+    ("0-75", s0_75),
     ("1", s1),
+    ("1-25", s1_25),
+    ("1-5", s1_5),
+    ("1-75", s1_75),
     ("2", s2),
+    ("2-25", s2_25),
+    ("2-5", s2_5),
+    ("2-75", s2_75),
     ("3", s3),
+    ("3-5", s3_5),
     ("4", s4),
+    ("4-5", s4_5),
     ("5", s5),
+    ("5-5", s5_5),
     ("6", s6),
     ("8", s8),
     ("10", s10),
+    ("11", s11),
     ("12", s12),
     ("16", s16),
-    ("lineGap", lineGap),
-    ("headingGap", headingGap),
-    ("detailGap", detailGap),
-    ("chipGap", chipGap),
-    ("actionGap", actionGap),
-    ("badgeGap", badgeGap),
-    ("panelGap", panelGap),
+    ("18", s18),
+    ("23", s23),
+    ("32", s32),
   ]
 }
 
 enum MTRadius {
+  static let checkbox: CGFloat = 5
   static let small: CGFloat = 8
+  static let notice: CGFloat = 10
   static let medium: CGFloat = 12
   static let large: CGFloat = 18
   static let xlarge: CGFloat = 24
   static let pill: CGFloat = 999
 
   static let catalog: [(name: String, value: CGFloat)] = [
+    ("checkbox", checkbox),
     ("small", small),
+    ("notice", notice),
     ("medium", medium),
     ("large", large),
     ("xlarge", xlarge),
@@ -684,13 +707,13 @@ enum MTMotion {
   static let quick = Double(120) / 1_000
   static let standard = Double(180) / 1_000
   static let deliberate = Double(280) / 1_000
+  static let markTurn = Double(320) / 1_000
   static let shimmer = Double(1250) / 1_000
   static let photoPage = Double(200) / 1_000
   static let markRing = Double(580) / 1_000
   static let markTrail = Double(340) / 1_000
   static let markTrailDelay = Double(220) / 1_000
   static let markInnerRing = Double(500) / 1_000
-  static let markTurn = Double(320) / 1_000
   static let splashFade = Double(300) / 1_000
   static let wordmarkReveal = Double(400) / 1_000
   static let wordmarkDelay = Double(420) / 1_000
@@ -699,13 +722,13 @@ enum MTMotion {
     ("quick", quick),
     ("standard", standard),
     ("deliberate", deliberate),
+    ("markTurn", markTurn),
     ("shimmer", shimmer),
     ("photoPage", photoPage),
     ("markRing", markRing),
     ("markTrail", markTrail),
     ("markTrailDelay", markTrailDelay),
     ("markInnerRing", markInnerRing),
-    ("markTurn", markTurn),
     ("splashFade", splashFade),
     ("wordmarkReveal", wordmarkReveal),
     ("wordmarkDelay", wordmarkDelay),
@@ -821,7 +844,6 @@ enum MTLayout {
 
   enum Checkbox {
     static let box: CGFloat = 20
-    static let radius: CGFloat = 5
     static let baselineOffset: CGFloat = 5
   }
 
@@ -882,7 +904,6 @@ enum MTLayout {
     static let large: CGFloat = 44
     static let emptyState: CGFloat = 48
     static let compact: CGFloat = 34
-    static let compactRadius: CGFloat = 10
   }
 
   enum OptionRow {

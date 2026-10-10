@@ -151,7 +151,7 @@ struct GoalEditorSheet: View {
       MTFormNote(
         "Link memories, ideas, or learning that give this Goal context.", color: MTColor.inkFaint)
       if !relatedEntryIDs.isEmpty {
-        MTFlowLayout(spacing: MTSpacing.chipGap) {
+        MTFlowLayout(spacing: MTSpacing.s1_5) {
           ForEach(relatedEntryIDs, id: \.self) { id in
             Button {
               relatedEntryIDs.removeAll { $0 == id }
@@ -221,7 +221,7 @@ struct GoalEditorSheet: View {
             .frame(width: MTLayout.IconTile.small, height: MTLayout.IconTile.small)
             .background(MTColor.surfaceRaised, in: Circle())
             .accessibilityHidden(true)
-          VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
+          VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
             Text("Turn this achievement into a First Time")
               .font(MTFont.itemTitle)
               .foregroundStyle(MTColor.ink)

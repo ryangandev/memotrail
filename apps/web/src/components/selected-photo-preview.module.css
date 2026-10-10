@@ -13,8 +13,8 @@
 }
 
 .trigger:focus-visible {
-  outline: 2px solid var(--mt-color-accent);
-  outline-offset: -3px;
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-inset-deep);
 }
 
 .placeholder {

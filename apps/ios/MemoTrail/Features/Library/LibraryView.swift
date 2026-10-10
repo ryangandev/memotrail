@@ -118,7 +118,7 @@ struct LibraryView: View {
       Button("Search", action: searchNow)
         .mtButtonStyle(fillsWidth: true)
         .accessibilityIdentifier("library-search")
-      VStack(alignment: .leading, spacing: MTSpacing.chipGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
         MTBadge(title: "Keyword search", size: .medium)
         Text("Titles, notes, local dates, Collections, tags, and structured details")
           .font(MTFont.detail)
@@ -149,7 +149,7 @@ struct LibraryView: View {
       Button {
         withAnimation(MTEasing.enter.animation(duration: MTMotion.quick)) { showsFilters.toggle() }
       } label: {
-        HStack(spacing: MTSpacing.chipGap) {
+        HStack(spacing: MTSpacing.s1_5) {
           Image(systemName: "arrowtriangle.right.fill")
             .font(.mtIcon(MTSize.Icon.s8))
             .rotationEffect(.degrees(showsFilters ? 90 : 0))
@@ -335,7 +335,7 @@ private struct LibraryItemRow: View {
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
-          .padding(.top, MTSpacing.lineGap)
+          .padding(.top, MTSpacing.s0_5)
         if !item.excerpt.trimmed.isEmpty {
           Text(item.excerpt)
             .font(MTFont.detail)
@@ -406,8 +406,8 @@ private struct LibraryResultCard: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: action) {
-        VStack(alignment: .leading, spacing: MTSpacing.chipGap) {
-          MTFlowLayout(spacing: MTSpacing.chipGap) {
+        VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
+          MTFlowLayout(spacing: MTSpacing.s1_5) {
             MTBadge(title: entry.identityLabel, tone: .neutral)
             if entry.isInInbox { MTBadge(title: "In Inbox", tone: .warm) }
           }
@@ -420,7 +420,7 @@ private struct LibraryResultCard: View {
             .underline(color: MTColor.inkUnderline)
             .multilineTextAlignment(.leading)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, MTSpacing.chipGap)
+            .padding(.top, MTSpacing.s1_5)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(Rectangle())
@@ -446,7 +446,7 @@ private struct LibraryResultCard: View {
             showsFullNote.toggle()
           }
         } label: {
-          HStack(spacing: MTSpacing.chipGap) {
+          HStack(spacing: MTSpacing.s1_5) {
             Image(systemName: "arrowtriangle.right.fill")
               .font(.mtIcon(MTSize.Icon.s7))
               .rotationEffect(.degrees(showsFullNote ? 90 : 0))
@@ -471,7 +471,7 @@ private struct LibraryResultCard: View {
         }
       }
       if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
-        MTFlowLayout(spacing: MTSpacing.chipGap) {
+        MTFlowLayout(spacing: MTSpacing.s1_5) {
           ForEach(entry.collectionNames, id: \.self) { MTBadge(title: $0, tone: .neutral) }
           ForEach(entry.tagNames, id: \.self) { MTBadge(title: "#\($0)", tone: .neutral) }
         }
@@ -487,7 +487,7 @@ private struct LibraryResultCard: View {
             .font(MTFont.note)
             .foregroundStyle(MTColor.inkFaint)
           // Web's reasons: 5 points apart, with quiet dots between neighbors on a line.
-          MTFlowLayout(spacing: MTSpacing.badgeGap) {
+          MTFlowLayout(spacing: MTSpacing.s1_25) {
             ForEach(entry.matchReasons, id: \.self) { reason in
               MTFlowSeparator().foregroundStyle(MTColor.borderStrong)
               Text(reason).foregroundStyle(MTColor.accent)

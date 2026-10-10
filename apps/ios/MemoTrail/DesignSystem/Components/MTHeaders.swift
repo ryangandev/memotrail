@@ -139,7 +139,7 @@ struct MTSectionHeader<Trailing: View>: View {
 
   var body: some View {
     HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
-      VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
         Text(title)
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)

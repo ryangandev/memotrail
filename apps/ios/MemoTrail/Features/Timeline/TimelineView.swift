@@ -382,7 +382,7 @@ private struct TimelineTrackCard: View {
   var body: some View {
     VStack(spacing: 0) {
       HStack(spacing: MTSpacing.s3) {
-        VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+        VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
           Text(track.name)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
@@ -444,7 +444,7 @@ private struct TimelineEntryRow: View {
         }
       }
       .frame(width: MTLayout.Timeline.stageWidth)
-      VStack(alignment: .leading, spacing: MTSpacing.headingGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
         Text(entry.title)
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)

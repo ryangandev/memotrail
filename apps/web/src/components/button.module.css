@@ -120,7 +120,7 @@
   border: var(--mt-size-stroke-medium) solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
-  animation: spin 800ms linear infinite;
+  animation: spin var(--mt-motion-spin) var(--mt-motion-easing-linear) infinite;
 }
 
 @keyframes spin {

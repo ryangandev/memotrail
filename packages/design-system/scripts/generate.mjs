@@ -68,7 +68,7 @@ async function main() {
   const outputs = [
     [
       output("apps/web/src/styles/generated-tokens.css"),
-      makeCss(system, sourceLabel),
+      makeCss(system, sourceLabel, icons),
     ],
     [
       output("apps/web/src/generated/design-tokens.json"),

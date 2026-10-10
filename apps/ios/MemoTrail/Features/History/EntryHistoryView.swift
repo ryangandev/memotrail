@@ -65,7 +65,7 @@ struct EntryHistoryIndexView: View {
   private var search: some View {
     let layout =
       horizontalSizeClass == .regular
-      ? AnyLayout(HStackLayout(alignment: .bottom, spacing: MTSpacing.actionGap))
+      ? AnyLayout(HStackLayout(alignment: .bottom, spacing: MTSpacing.s2_5))
       : AnyLayout(VStackLayout(alignment: .leading, spacing: MTSpacing.s2))
     return layout {
       MTSearchField(
@@ -397,7 +397,7 @@ struct EntryHistoryDetailView: View {
   @ViewBuilder
   private func pagination(_ record: EntryHistoryRecord) -> some View {
     if controller.page > 0 || controller.hasOlderVersions {
-      HStack(spacing: MTSpacing.panelGap) {
+      HStack(spacing: MTSpacing.s3_5) {
         if controller.page > 0 {
           Button("Newer versions") { Task { await controller.load(page: controller.page - 1) } }
             .mtButtonStyle(.ghost, size: .small)

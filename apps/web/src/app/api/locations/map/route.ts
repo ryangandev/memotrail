@@ -1,3 +1,4 @@
+import { themeColors } from "@/generated/design-system";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { locationProviderQuota } from "@/lib/locations/provider-quota";
 
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
   upstream.searchParams.set("zoom", "15");
   upstream.searchParams.set(
     "marker",
-    `lonlat:${longitude},${latitude};type:material;color:${theme === "dark" ? "#9cb6a5" : "#5c6f5d"};size:48;icon:map-marker-alt;icontype:awesome`,
+    `lonlat:${longitude},${latitude};type:material;color:${mapColors(theme).marker.toLowerCase()};size:48;icon:map-marker-alt;icontype:awesome`,
   );
   upstream.searchParams.set("apiKey", apiKey);
 
@@ -72,12 +73,13 @@ function coordinatePreview(
 ) {
   const lat = latitude.toFixed(5);
   const lon = longitude.toFixed(5);
-  const dark = theme === "dark";
-  const background = dark ? "#252824" : "#f3f1eb";
-  const grid = dark ? "#3e433f" : "#d9d5ca";
-  const labelBackground = dark ? "#343a35" : "#fff";
-  const labelColor = dark ? "#e4e7df" : "#4c514b";
-  const marker = dark ? "#9cb6a5" : "#5c6f5d";
+  const {
+    canvas: background,
+    grid,
+    labelSurface: labelBackground,
+    labelInk: labelColor,
+    marker,
+  } = mapColors(theme);
   const coordinateLabel = card
     ? ""
     : `<rect x="245" y="195" width="230" height="44" rx="22" fill="${labelBackground}"/><text x="360" y="222" text-anchor="middle" font-family="system-ui,sans-serif" font-size="15" fill="${labelColor}">${lat}, ${lon}</text>`;
@@ -88,4 +90,9 @@ function coordinatePreview(
       "Content-Type": "image/svg+xml; charset=utf-8",
     },
   });
+}
+
+// The map colors of the requested theme, light unless dark is asked for.
+function mapColors(theme: string | null) {
+  return themeColors[theme === "dark" ? "dark" : "light"].map;
 }

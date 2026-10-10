@@ -21,14 +21,10 @@
   height: 38px;
   flex: none;
   place-items: center;
-  border: 1px solid color-mix(in srgb, var(--mt-color-accent) 15%, transparent);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-accent-border-faint);
   border-radius: 50%;
   color: var(--mt-color-accent);
-  background: color-mix(
-    in srgb,
-    var(--mt-color-accent-subtle) 55%,
-    transparent
-  );
+  background: var(--mt-color-accent-halo);
 }
 
 .triggerPrompt {
@@ -51,41 +47,46 @@
   margin: 0 auto;
   overflow: auto;
   padding: 0;
-  border: 1px solid
-    color-mix(in srgb, var(--mt-color-border-strong) 80%, transparent);
+  border: var(--mt-size-stroke-thin) solid var(--mt-material-glass-panel-border);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-ink);
   background:
-    linear-gradient(135deg, rgb(255 255 255 / 6%), transparent 45%),
-    color-mix(in srgb, var(--mt-color-surface-raised) 76%, transparent);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 20%),
-    var(--mt-shadow-floating);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
+    linear-gradient(
+      135deg,
+      var(--mt-material-glass-panel-sheen),
+      transparent 45%
+    ),
+    var(--mt-material-glass-panel-tint);
+  box-shadow: var(--mt-material-glass-panel-shadow);
+  -webkit-backdrop-filter: var(--mt-material-glass-panel-backdrop-filter);
+  backdrop-filter: var(--mt-material-glass-panel-backdrop-filter);
   transform-origin: bottom center;
   pointer-events: auto;
 }
 
 .dialog[open][data-state="open"] {
-  animation: quick-capture-enter 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: quick-capture-enter var(--mt-motion-composer-enter)
+    var(--mt-motion-easing-emphasized) both;
 }
 
 .dialog[open][data-state="closing"] {
   pointer-events: none;
-  animation: quick-capture-exit 120ms ease-in both;
+  animation: quick-capture-exit var(--mt-motion-quick)
+    var(--mt-motion-easing-exit) both;
 }
 
 .dialog::backdrop {
-  background: color-mix(in srgb, var(--mt-color-scrim) 12%, transparent);
+  background: var(--mt-color-scrim-faint);
 }
 
 .dialog[open][data-state="open"]::backdrop {
-  animation: quick-capture-backdrop-enter 160ms ease-out both;
+  animation: quick-capture-backdrop-enter var(--mt-motion-composer-enter)
+    var(--mt-motion-easing-enter) both;
 }
 
 .dialog[open][data-state="closing"]::backdrop {
-  animation: quick-capture-backdrop-exit 120ms ease-in both;
+  animation: quick-capture-backdrop-exit var(--mt-motion-quick)
+    var(--mt-motion-easing-exit) both;
 }
 
 @keyframes quick-capture-enter {
@@ -135,7 +136,7 @@
 .dialogHeader {
   position: sticky;
   top: 0;
-  z-index: 2;
+  z-index: var(--mt-layout-layer-local2);
   display: flex;
   align-items: center;
   justify-content: space-between;

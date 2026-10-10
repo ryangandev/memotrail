@@ -561,6 +561,25 @@
         }
       }
     },
+    "paletteBorder": {
+      "$description": "Edge of the command palette: the strong border, slightly see-through.",
+      "$value": {
+        "colorSpace": "srgb",
+        "components": {
+          "$ref": "#/palette/paper/400/$value/components"
+        },
+        "alpha": 0.82
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "mix": {
+            "colors": ["{color.borderStrong}"],
+            "weight": 0.82
+          }
+        }
+      }
+    },
     "inkUnderline": {
       "$description": "Underlines of inline links.",
       "$value": {
@@ -907,15 +926,6 @@
         }
       }
     },
-    "markRing": {
-      "$description": "The brand mark's inner ring, the same in both themes.",
-      "$value": "{palette.green.400}",
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["ios"]
-        }
-      }
-    },
     "photoBackdrop": {
       "$description": "Behind photos in the full-screen viewer, in both themes.",
       "$value": "{palette.black}",
@@ -923,6 +933,31 @@
         "com.memotrail": {
           "platforms": ["ios"]
         }
+      }
+    },
+    "brand": {
+      "$description": "The brand mark's fixed colors, the same in both themes.",
+      "ring": {
+        "$description": "The brand mark's outer ring.",
+        "$value": "{palette.green.700}",
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "accent": {
+        "$description": "The brand mark's clay arc.",
+        "$value": "{palette.clay.600}",
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "innerRing": {
+        "$description": "The brand mark's inner ring.",
+        "$value": "{palette.green.400}"
       }
     }
   },
@@ -1075,6 +1110,82 @@
           }
         }
       },
+      "shadowColor": {
+        "$type": "color",
+        "$description": "The glass drop shadow, ink at low strength.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/paper/950/$value/components"
+          },
+          "alpha": 0.12
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.ink}"],
+              "weight": 0.12
+            }
+          }
+        }
+      },
+      "hoverRing": {
+        "$type": "color",
+        "$description": "The accent ring around a hovered glass control.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/green/700/$value/components"
+          },
+          "alpha": 0.12
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.accent}"],
+              "weight": 0.12
+            }
+          }
+        }
+      },
+      "hoverGlow": {
+        "$type": "color",
+        "$description": "The accent glow around a hovered glass control.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/green/700/$value/components"
+          },
+          "alpha": 0.16
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.accent}"],
+              "weight": 0.16
+            }
+          }
+        }
+      },
+      "hoverShadowColor": {
+        "$type": "color",
+        "$description": "The drop shadow of a hovered glass control.",
+        "$value": {
+          "colorSpace": "srgb",
+          "components": {
+            "$ref": "#/palette/paper/950/$value/components"
+          },
+          "alpha": 0.15
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "mix": {
+              "colors": ["{color.ink}"],
+              "weight": 0.15
+            }
+          }
+        }
+      },
       "shadow": {
         "$type": "shadow",
         "$description": "Top sheen, bottom sheen, and a soft ink drop shadow.",
@@ -1132,13 +1243,7 @@
             "inset": true
           },
           {
-            "color": {
-              "colorSpace": "srgb",
-              "components": {
-                "$ref": "#/palette/paper/950/$value/components"
-              },
-              "alpha": 0.12
-            },
+            "color": "{material.glass.shadowColor}",
             "offsetX": {
               "value": 0,
               "unit": "px"
@@ -1214,13 +1319,7 @@
             "inset": true
           },
           {
-            "color": {
-              "colorSpace": "srgb",
-              "components": {
-                "$ref": "#/palette/green/700/$value/components"
-              },
-              "alpha": 0.12
-            },
+            "color": "{material.glass.hoverRing}",
             "offsetX": {
               "value": 0,
               "unit": "px"
@@ -1239,13 +1338,7 @@
             }
           },
           {
-            "color": {
-              "colorSpace": "srgb",
-              "components": {
-                "$ref": "#/palette/green/700/$value/components"
-              },
-              "alpha": 0.16
-            },
+            "color": "{material.glass.hoverGlow}",
             "offsetX": {
               "value": 0,
               "unit": "px"
@@ -1264,13 +1357,7 @@
             }
           },
           {
-            "color": {
-              "colorSpace": "srgb",
-              "components": {
-                "$ref": "#/palette/paper/950/$value/components"
-              },
-              "alpha": 0.15
-            },
+            "color": "{material.glass.hoverShadowColor}",
             "offsetX": {
               "value": 0,
               "unit": "px"

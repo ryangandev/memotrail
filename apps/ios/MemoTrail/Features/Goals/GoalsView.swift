@@ -146,7 +146,7 @@ private struct GoalCard: View {
       }
       MTRecordCardBody {
         VStack(alignment: .leading, spacing: 0) {
-          HStack(spacing: MTSpacing.chipGap) {
+          HStack(spacing: MTSpacing.s1_5) {
             MTBadge(
               title: entry.status.displayName,
               tone: [.active, .achieved].contains(entry.status) ? .accent : .neutral,
@@ -154,7 +154,7 @@ private struct GoalCard: View {
             MTBadge(title: entry.horizon.displayName, tone: .neutral, size: .micro, uppercase: true)
           }
           Text(entry.title)
-            .mtTextRole(isRegular ? .goalName : .goalNameCompact)
+            .mtTextRole(isRegular ? .goalCardTitle : .goalCardTitleCompact)
             .foregroundStyle(MTColor.ink)
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s3)

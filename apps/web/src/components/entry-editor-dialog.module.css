@@ -13,7 +13,7 @@
   padding: var(--mt-space-3);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-warm);
-  background: color-mix(in srgb, var(--mt-color-warm) 10%, transparent);
+  background: var(--mt-color-danger-tint);
   font-size: var(--mt-font-size-caption);
 }
 

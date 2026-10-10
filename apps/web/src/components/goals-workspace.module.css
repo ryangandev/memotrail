@@ -33,20 +33,20 @@
 }
 
 .goalCardBody h3 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.025em;
-  line-height: var(--mt-line-height-tight);
+  font-family: var(--mt-type-goal-card-title-font-family);
+  font-size: var(--mt-type-goal-card-title-font-size);
+  font-weight: var(--mt-type-goal-card-title-font-weight);
+  letter-spacing: var(--mt-type-goal-card-title-letter-spacing);
+  line-height: var(--mt-type-goal-card-title-line-height);
 }
 
 .target {
   margin-top: var(--mt-space-2);
   color: var(--mt-color-accent);
-  font-family: var(--mt-font-family-mono);
-  font-size: 10px;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
+  font-family: var(--mt-type-date-stamp-font-family);
+  font-size: var(--mt-type-date-stamp-font-size);
+  letter-spacing: var(--mt-type-date-stamp-letter-spacing);
+  text-transform: var(--mt-type-date-stamp-text-transform);
 }
 
 .reflection {
@@ -67,7 +67,7 @@
   margin-top: auto;
   padding-top: var(--mt-space-4);
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .contextLine span {
@@ -84,27 +84,19 @@
   gap: var(--mt-space-3);
   margin-top: var(--mt-space-3);
   padding-top: var(--mt-space-3);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-faint);
 }
 
 .goalCardBody footer > div {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: var(--mt-space-1-25);
 }
 
 .achievementPanel {
-  border-color: color-mix(
-    in srgb,
-    var(--mt-color-accent) 38%,
-    var(--mt-color-border)
-  );
-  background: color-mix(
-    in srgb,
-    var(--mt-color-accent-subtle) 42%,
-    var(--mt-color-surface)
-  );
+  border-color: var(--mt-color-accent-panel-border);
+  background: var(--mt-color-accent-panel);
 }
 
 .achievementIntro {
@@ -142,7 +134,7 @@
 }
 
 .achievementIntro p {
-  margin-top: 3px;
+  margin-top: var(--mt-space-0-75);
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);

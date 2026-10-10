@@ -33,9 +33,9 @@
 
 .ring strong {
   position: relative;
-  z-index: 1;
+  z-index: var(--mt-layout-layer-local1);
   color: var(--mt-color-ink);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
   font-variant-numeric: tabular-nums;
   font-weight: var(--mt-font-weight-semibold);
 }
@@ -53,23 +53,23 @@
 
 .copy small {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
   font-variant-numeric: tabular-nums;
 }
 
 .overlay {
   position: absolute;
-  z-index: 1;
+  z-index: var(--mt-layout-layer-local1);
   inset: 0;
   pointer-events: none;
   display: grid;
   width: auto;
   place-items: center;
-  background: color-mix(in srgb, var(--mt-color-scrim) 34%, transparent);
+  background: var(--mt-color-scrim-medium);
 }
 
 .overlay .ring {
-  box-shadow: 0 4px 18px rgb(0 0 0 / 0.24);
+  box-shadow: var(--mt-shadow-media-control);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -63,7 +63,7 @@ struct TrashView: View {
   private var retentionBadge: some View {
     HStack(spacing: MTSpacing.s3) {
       Image(.clock).font(.mtIcon(MTSize.Icon.s17, weight: .medium))
-      VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
         Text("30-day retention")
           .font(MTFont.caption)
           .foregroundStyle(MTColor.ink)
@@ -195,7 +195,7 @@ private struct TrashItemCard: View {
               .font(MTFont.detail)
               .foregroundStyle(MTColor.inkMuted)
               .lineLimit(2)
-              .padding(.top, MTSpacing.detailGap)
+              .padding(.top, MTSpacing.s1_25)
           }
           retention
             .padding(.top, MTSpacing.s3)

@@ -15,7 +15,7 @@
   font-size: var(--mt-font-size-label);
 }
 .separator {
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 .paragraph {
   margin: 0;

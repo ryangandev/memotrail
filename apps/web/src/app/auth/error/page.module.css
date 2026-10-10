@@ -9,7 +9,7 @@
 .card {
   width: min(100%, 440px);
   padding: var(--mt-space-10);
-  border: 1px solid var(--mt-color-border-strong);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-xlarge);
   background: var(--mt-color-surface-raised);
   box-shadow: var(--mt-shadow-floating);
@@ -23,14 +23,14 @@
 .card p {
   margin-top: var(--mt-space-8);
   color: var(--mt-color-warm);
-  font-size: 11px;
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-sign-in-eyebrow-font-size);
+  font-weight: var(--mt-type-sign-in-eyebrow-font-weight);
+  letter-spacing: var(--mt-type-sign-in-eyebrow-letter-spacing);
+  text-transform: var(--mt-type-sign-in-eyebrow-text-transform);
 }
 
 .card h1 {
-  margin-top: 10px;
+  margin-top: var(--mt-space-2-5);
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title);
   font-weight: var(--mt-font-weight-medium);
@@ -40,7 +40,7 @@
   display: block;
   margin-top: var(--mt-space-3);
   color: var(--mt-color-ink-muted);
-  font-size: 14px;
+  font-size: var(--mt-font-size-body-small);
   line-height: var(--mt-line-height-body);
 }
 

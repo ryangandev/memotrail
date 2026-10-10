@@ -263,6 +263,18 @@
           "value": 1.7,
           "unit": "px"
         }
+      },
+      "indicator": {
+        "$description": "Stroke width of the chevron a native select draws on Web.",
+        "$value": {
+          "value": 1.8,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
       }
     },
     "badge": {

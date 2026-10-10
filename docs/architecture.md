@@ -303,15 +303,22 @@ Pair it with the test file carrying the same feature name.
 - `packages/design-system/tokens` is the token source of truth, written in the DTCG 2025.10 format.
   `soft-ledger.resolver.json` merges the foundation files and selects the light or dark color file through its `theme` modifier.
   The `palette` group holds raw colors that only semantic tokens reference; generated outputs never include it, so components use semantic roles.
-  The semantic groups are `color`, `font`, `lineHeight`, `type` text roles, `space`, `size`, `radius`, `layout`, `motion` durations and easing, `shadow`, `state`, `material`, and `elevation`.
+  The semantic groups are `color`, `font`, `lineHeight`, `type` text roles, `space`, `textSpace`, `size`, `radius`, `layout`, `motion` durations and easing, `shadow`, `state`, `material`, and `elevation`.
+  `textSpace` is Web spacing in `em`, such as list indents and inline code padding, so it scales with the text it sits in.
+  Both platforms share the numeric `space` scale, including hyphenated half steps such as `space.1-5`, which Swift names `MTSpacing.s1_5`; a semantic spacing token exists only where both platforms use it for the same purpose.
   Values reproduce what each platform renders today, so a group may hold several near values rather than a snapped scale.
 - `$extensions["com.memotrail"]` carries what DTCG cannot express.
   `platforms` limits a token or group to Web or iOS, and the generator emits it only there; `web` and `ios` override a value on one platform.
+  A design decision both platforms make is one token that both read, never a Web-only and an iOS-only copy; when a platform draws it differently, such as a text role at an iOS Dynamic Type size, that token carries the difference as an override.
+  `web.unit: "em"` writes a Web-only number token as a length relative to the surrounding text.
   A text role names its iOS Dynamic Type style in `ios.textStyle`, and a material names its iOS system material in `ios.material`.
   `mix` records the colors a translucent or mixed color comes from, and the generator verifies the value against them.
   Web CSS writes such a color as the `color-mix()` it replaces, because Chrome draws a rounded `rgb()` or hex value up to one level differently; a color without `mix` keeps its `rgb()` or hex form.
+  A shadow layer that names a color token draws through that token's variable on Web, so a mixed shadow color stays a `color-mix()` too.
 - `packages/design-system/icons.json` names each icon once, with its Web SVG and its SF Symbol.
   The generator writes the Web `IconName` type and the Swift `MTIcon` enum from it; an icon drawn on only one platform lists that platform.
+  Web `Icon` sizes are typed as `IconSize`, the `size.icon` scale.
+  Its `cssImages` section turns a Web icon, a color token, and size tokens into a themed `--mt-image-*` data URL, for CSS that cannot use `currentColor`, such as the native select chevron.
 - `packages/design-system/contrast.json` lists the text and background pairs held to WCAG AA in both themes on both platforms: 4.5:1 for body text and 3:1 for large text, judged from each pair's text role.
   A pair that fails today needs a named exception with a reason, and an exception that no longer fails is reported as stale.
 - Generated Web CSS variables, the Web gallery catalog and typed `design-system.ts` in `apps/web/src/generated`, and Swift values are never edited directly.
@@ -363,6 +370,13 @@ Pair it with the test file carrying the same feature name.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
+- `apps/web/scripts/check-design-system.mjs`, part of `pnpm lint`, rejects any visual value Web CSS or scripts write by hand instead of reading a generated token; the rules live in `design-system-rules.mjs` with unit tests beside it.
+  It fails on literal font sizes, line heights, letter spacing, weights, and families; hex, `rgb()`, `hsl()`, and named colors other than `transparent` and `currentColor`, including colors inside data URLs; `color-mix()` outside the generated tokens; literal z-index, opacity, durations, easing curves, and backdrop filters; and literal spacing, radii, stroke widths, focus offsets, shadow lengths, and icon sizes.
+  It also rejects a fallback inside `var(--mt-*, ...)`, which would hide a literal.
+  Each finding names the file and line and, when a token renders the same value in both themes, the token to use.
+  CSS cannot read variables in media queries, so a media query width must be a `--mt-layout-breakpoint-*` value as `max-width` or one pixel above it as `min-width`, and a container query must be a `--mt-layout-container-*` value.
+  That rule stands in for `@custom-media`, which Next.js leaves untranspiled and, with its Lightning CSS option, resolves only within one stylesheet, so a definition in the generated file cannot reach the modules.
+  Scripts read colors from `themeColors` in the generated `design-system.ts`; the checker's allow list keeps only the Google sign-in mark's brand colors.
 - Noninteractive status, type, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
   `packages/design-system/components/badge.yaml` specifies it with native `MTBadge`.
 - Checkbox, SectionHeader, and Skeleton are the Web counterparts of `MTCheckbox`, `MTSectionHeader` with `MTListHeader`, and `MTLoadingSkeleton`.

@@ -4,7 +4,7 @@
   align-items: center;
   gap: var(--mt-space-3);
   padding: var(--mt-space-3) var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   color: var(--mt-color-warm);
   background: var(--mt-color-warm-subtle);
@@ -12,7 +12,7 @@
 
 .retentionBadge > span {
   display: grid;
-  gap: 2px;
+  gap: var(--mt-space-0-5);
 }
 
 .retentionBadge strong {
@@ -23,7 +23,7 @@
 
 .retentionBadge small {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .retentionNote {
@@ -32,7 +32,7 @@
   gap: var(--mt-space-3);
   margin-top: var(--mt-space-6);
   padding: var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface);
@@ -40,7 +40,7 @@
 
 .retentionNote svg {
   flex: 0 0 auto;
-  margin-top: 1px;
+  margin-top: var(--mt-space-0-25);
   color: var(--mt-color-warm);
 }
 
@@ -83,10 +83,10 @@
   grid-template-columns: 124px minmax(0, 1fr) auto;
   min-height: 124px;
   overflow: hidden;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface-raised);
-  box-shadow: 0 1px 2px rgb(38 37 31 / 0.025);
+  box-shadow: var(--mt-shadow-hairline);
 }
 
 .itemImage,
@@ -96,11 +96,7 @@
   overflow: hidden;
   color: var(--mt-color-warm);
   background:
-    linear-gradient(
-      145deg,
-      color-mix(in srgb, var(--mt-color-warm-subtle) 65%, transparent),
-      transparent 62%
-    ),
+    linear-gradient(145deg, var(--mt-color-warm-wash), transparent 62%),
     var(--mt-color-surface-subtle);
 }
 
@@ -128,7 +124,7 @@
 
 .itemMeta time {
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .itemBody h2 {
@@ -144,7 +140,7 @@
 
 .itemBody > p {
   display: -webkit-box;
-  margin-top: 5px;
+  margin-top: var(--mt-space-1-25);
   overflow: hidden;
   -webkit-box-orient: vertical;
   color: var(--mt-color-ink-muted);
@@ -156,7 +152,7 @@
 .retentionLine {
   margin-top: var(--mt-space-3);
   color: var(--mt-color-ink-faint);
-  font-size: 10px;
+  font-size: var(--mt-font-size-fine);
 }
 
 .retentionLine time {
@@ -170,7 +166,7 @@
   justify-content: center;
   gap: var(--mt-space-2);
   padding: var(--mt-space-4);
-  border-left: 1px solid var(--mt-color-border);
+  border-left: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   white-space: nowrap;
 }
 
@@ -180,7 +176,7 @@
   align-items: center;
   margin-top: var(--mt-space-6);
   padding-top: var(--mt-space-4);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
 }
@@ -214,7 +210,7 @@
     grid-column: 1 / -1;
     flex-direction: row;
     padding: var(--mt-space-3);
-    border-top: 1px solid var(--mt-color-border);
+    border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
     border-left: 0;
   }
 }

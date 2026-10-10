@@ -86,9 +86,9 @@ struct InboxCaptureRow: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body)
-          .padding(.top, MTSpacing.chipGap)
+          .padding(.top, MTSpacing.s1_5)
       }
-      MTFlowLayout(spacing: MTSpacing.chipGap) {
+      MTFlowLayout(spacing: MTSpacing.s1_5) {
         MTBadge(title: "Needs review", tone: .warm)
         if entry.itemKind != .entry || entry.itemSubtype == "first_time" {
           MTBadge(title: entry.itemKind.displayName, tone: .neutral)
@@ -155,9 +155,9 @@ struct PendingCaptureRow: View {
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body)
           .lineLimit(3)
-          .padding(.top, MTSpacing.chipGap)
+          .padding(.top, MTSpacing.s1_5)
       }
-      MTFlowLayout(spacing: MTSpacing.chipGap) {
+      MTFlowLayout(spacing: MTSpacing.s1_5) {
         if entry.rejection == nil {
           MTBadge(title: "On this iPhone")
         } else {

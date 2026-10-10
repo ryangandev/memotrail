@@ -31,15 +31,21 @@
           }
         }
         GallerySpecimen(title: "Spacing") {
-          VStack(alignment: .leading, spacing: MTSpacing.s2) {
+          // A grid sizes the name column to the longest name, so names like space.0-25 never wrap.
+          Grid(
+            alignment: .leading, horizontalSpacing: MTSpacing.s3, verticalSpacing: MTSpacing.s2
+          ) {
             ForEach(MTSpacing.catalog, id: \.name) { token in
-              HStack(spacing: MTSpacing.s3) {
-                Text("space.\(token.name)").font(MTFont.identifier)
-                  .frame(width: 72, alignment: .leading)
-                RoundedRectangle(cornerRadius: 2).fill(MTColor.accent)
-                  .frame(width: token.value, height: 8)
-                Text("\(Int(token.value)) pt").font(MTFont.caption).foregroundStyle(
-                  MTColor.inkMuted)
+              GridRow {
+                Text("space.\(token.name)").font(MTFont.identifier).lineLimit(1)
+                HStack(spacing: MTSpacing.s3) {
+                  RoundedRectangle(cornerRadius: 2).fill(MTColor.accent)
+                    .frame(width: token.value, height: 8)
+                  Text("\(Int(token.value)) pt").font(MTFont.caption).foregroundStyle(
+                    MTColor.inkMuted
+                  )
+                  .fixedSize()
+                }
               }
             }
           }

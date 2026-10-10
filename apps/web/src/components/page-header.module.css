@@ -16,10 +16,10 @@
 .eyebrow {
   margin: 0;
   color: var(--mt-color-warm);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-page-eyebrow-font-size);
+  font-weight: var(--mt-type-page-eyebrow-font-weight);
+  letter-spacing: var(--mt-type-page-eyebrow-letter-spacing);
+  text-transform: var(--mt-type-page-eyebrow-text-transform);
 }
 
 .title {

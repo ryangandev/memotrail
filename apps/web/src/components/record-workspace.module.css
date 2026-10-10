@@ -1,6 +1,6 @@
 .message {
   min-height: 210px;
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
 }
@@ -91,10 +91,10 @@
   justify-content: space-between;
   gap: var(--mt-space-3);
   color: var(--mt-color-ink-faint);
-  font-family: var(--mt-font-family-mono);
-  font-size: 10px;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
+  font-family: var(--mt-type-date-stamp-font-family);
+  font-size: var(--mt-type-date-stamp-font-size);
+  letter-spacing: var(--mt-type-date-stamp-letter-spacing);
+  text-transform: var(--mt-type-date-stamp-text-transform);
 }
 
 .cardDates time {
@@ -103,17 +103,17 @@
 
 .cardBody h3 {
   margin-top: var(--mt-space-2);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title);
-  font-weight: var(--mt-font-weight-medium);
-  letter-spacing: -0.02em;
-  line-height: var(--mt-line-height-tight);
+  font-family: var(--mt-type-record-card-title-font-family);
+  font-size: var(--mt-type-record-card-title-font-size);
+  font-weight: var(--mt-type-record-card-title-font-weight);
+  letter-spacing: var(--mt-type-record-card-title-letter-spacing);
+  line-height: var(--mt-type-record-card-title-line-height);
 }
 
 .location {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--mt-space-1-5);
   margin-top: var(--mt-space-2);
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
@@ -138,14 +138,14 @@
   gap: var(--mt-space-3);
   margin-top: var(--mt-space-4);
   padding-top: var(--mt-space-3);
-  border-top: 1px solid var(--mt-color-border);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-faint);
 }
 
 .cardBody footer > div {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: var(--mt-space-1-25);
 }
 
 .formGrid {
@@ -160,7 +160,7 @@
   gap: var(--mt-space-4);
   margin: 0;
   padding: var(--mt-space-5);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-large);
   background: var(--mt-color-surface);
   --editor-textarea-height: 96px;
@@ -170,10 +170,10 @@
 .formSection > legend {
   padding: 0 var(--mt-space-2);
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  font-size: var(--mt-type-legend-font-size);
+  font-weight: var(--mt-type-legend-font-weight);
+  letter-spacing: var(--mt-type-legend-letter-spacing);
+  text-transform: var(--mt-type-legend-text-transform);
 }
 
 .fullField {
@@ -191,7 +191,7 @@
   padding: var(--mt-space-3);
   border-radius: var(--mt-radius-small);
   color: var(--mt-color-warm);
-  background: color-mix(in srgb, var(--mt-color-warm) 10%, transparent);
+  background: var(--mt-color-danger-tint);
   font-size: var(--mt-font-size-caption);
 }
 
@@ -232,7 +232,7 @@
     width: 132px;
     height: 100%;
     min-height: 210px;
-    border-right: 1px solid var(--mt-color-border);
+    border-right: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   }
 
   .homeMark {
@@ -286,7 +286,7 @@
     height: 148px;
     min-height: 148px;
     border-right: 0;
-    border-bottom: 1px solid var(--mt-color-border);
+    border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   }
 
   .homeMark {

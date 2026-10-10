@@ -141,6 +141,30 @@ test("Foundations draw every generated token in both themes", async ({
   await expect(page.locator("#layers code")).toHaveText(
     Object.keys(tokens.layout.layer),
   );
+  await expect(page.locator("#insets code")).toHaveText(
+    Object.keys(tokens.layout.inset),
+  );
+  await expect(page.locator("#text-space code")).toHaveText(
+    Object.keys(tokens.textSpace),
+  );
+  // Disabled and muted opacities each draw a sample at their own strength.
+  expect(
+    await page
+      .locator("#state [data-opacity]")
+      .evaluateAll((samples) =>
+        samples.map((sample) => [
+          sample.getAttribute("data-opacity"),
+          getComputedStyle(sample).opacity,
+        ]),
+      ),
+  ).toEqual(
+    (["disabled", "muted"] as const).flatMap((kind) =>
+      Object.entries(tokens.state.light[kind].opacity).map(([name, value]) => [
+        `${kind}.${name}`,
+        String(value),
+      ]),
+    ),
+  );
   // Every focus offset draws a ring at its own gap.
   const offsets = Object.entries(tokens.state.light.focus).filter(([name]) =>
     name.startsWith("ringOffset"),

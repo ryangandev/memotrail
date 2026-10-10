@@ -18,7 +18,7 @@
 
 .list[data-spacing="word"] {
   /* About one word space in the system sans. */
-  --separated-list-gap: 0.28em;
+  --separated-list-gap: var(--mt-text-space-separator-gap);
   --separated-list-row-gap: 0px;
 }
 

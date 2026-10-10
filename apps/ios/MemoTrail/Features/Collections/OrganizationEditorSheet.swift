@@ -209,7 +209,7 @@ struct OrganizationEditorSheet: View {
                 dismiss()
                 openEntry?(entry)
               } label: {
-                VStack(alignment: .leading, spacing: MTSpacing.lineGap) {
+                VStack(alignment: .leading, spacing: MTSpacing.s0_5) {
                   Text(entry.displayTitle)
                     .font(MTFont.listHeading)
                     .foregroundStyle(MTColor.ink)

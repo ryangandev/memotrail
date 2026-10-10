@@ -218,6 +218,29 @@
         "$type": "number",
         "$value": 0.99
       }
+    },
+    "muted": {
+      "opacity": {
+        "$type": "number",
+        "$description": "Opacity of content drawn at reduced emphasis, not disabled.",
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        },
+        "outsideRange": {
+          "$description": "Calendar days outside the shown month.",
+          "$value": 0.55
+        },
+        "gridLine": {
+          "$description": "Year lines on the timeline.",
+          "$value": 0.66
+        },
+        "pulseLow": {
+          "$description": "Faintest point of the pending sync pulse.",
+          "$value": 0.3
+        }
+      }
     }
   }
 }

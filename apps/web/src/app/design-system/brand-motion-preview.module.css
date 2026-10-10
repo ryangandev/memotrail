@@ -21,12 +21,15 @@
 }
 
 .study {
+  --rail-compact-width: 64px;
+  --rail-item-size: 40px;
+
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: var(--mt-space-4);
   padding: var(--mt-space-4);
-  border: 1px solid var(--mt-color-border);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface);
 }
@@ -71,20 +74,21 @@
   max-width: 100%;
   overflow: hidden;
   padding: var(--mt-space-3);
-  border-right: 1px solid var(--mt-color-border);
+  border-right: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   background: var(--mt-color-surface);
   transition:
-    width 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    padding 240ms cubic-bezier(0.22, 1, 0.36, 1);
+    width var(--mt-motion-sidebar) var(--mt-motion-easing-emphasized),
+    padding var(--mt-motion-sidebar) var(--mt-motion-easing-emphasized);
 }
 
 .railHeader {
   display: flex;
   height: 36px;
   align-items: center;
-  gap: 10px;
+  gap: var(--mt-space-2-5);
   padding-left: var(--mt-space-2);
-  transition: padding-left 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: padding-left var(--mt-motion-sidebar)
+    var(--mt-motion-easing-emphasized);
 }
 
 .railMark {
@@ -96,14 +100,15 @@
 .wordmark {
   color: var(--mt-color-ink);
   font-family: var(--mt-font-family-serif);
-  font-size: 19px;
+  font-size: var(--mt-type-wordmark-font-size);
 }
 
 .wordmark,
 .railItem > span {
   flex: none;
   white-space: nowrap;
-  transition: opacity 100ms ease;
+  transition: opacity var(--mt-motion-label-fade)
+    var(--mt-motion-easing-standard);
 }
 
 .railItem {
@@ -122,10 +127,10 @@
   background: var(--mt-color-accent-subtle);
   font-size: var(--mt-font-size-label);
   transition:
-    width 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    margin-left 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    padding-left 240ms cubic-bezier(0.22, 1, 0.36, 1),
-    gap 240ms cubic-bezier(0.22, 1, 0.36, 1);
+    width var(--mt-motion-sidebar) var(--mt-motion-easing-emphasized),
+    margin-left var(--mt-motion-sidebar) var(--mt-motion-easing-emphasized),
+    padding-left var(--mt-motion-sidebar) var(--mt-motion-easing-emphasized),
+    gap var(--mt-motion-sidebar) var(--mt-motion-easing-emphasized);
 }
 
 .railItem > svg {
@@ -133,18 +138,24 @@
 }
 
 .study[data-collapsed="true"] .rail {
-  width: 64px;
+  width: var(--rail-compact-width);
   padding-inline: var(--mt-space-2);
 }
 
 .study[data-collapsed="true"] .railHeader {
-  padding-left: 9px;
+  padding-left: var(--mt-space-2-25);
 }
 
 .study[data-collapsed="true"] .railItem {
-  width: 40px;
-  margin-left: 3.5px;
-  padding-left: 11px;
+  width: var(--rail-item-size);
+  margin-left: calc(
+    (
+        var(--rail-compact-width) - var(--mt-size-stroke-thin) - 2 *
+          var(--mt-space-2) - var(--rail-item-size)
+      ) /
+      2
+  );
+  padding-left: var(--mt-space-2-75);
   padding-right: 0;
   gap: 0;
 }

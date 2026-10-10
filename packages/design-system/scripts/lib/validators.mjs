@@ -153,6 +153,9 @@ export const validators = {
 
       return {
         ...nested(layer.color, "color"),
+        // A layer that names a color token keeps the name, so Web can draw that token,
+        // such as a color-mix(), instead of its rounded value.
+        colorAlias: aliasPath(layer.color) ?? null,
         x: nested(layer.offsetX, "dimension"),
         y: nested(layer.offsetY, "dimension"),
         blur,

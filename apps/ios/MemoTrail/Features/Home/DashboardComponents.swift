@@ -251,7 +251,7 @@ struct DashboardEntryRow: View {
 
   var body: some View {
     HStack(alignment: .center, spacing: MTSpacing.s3) {
-      VStack(alignment: .leading, spacing: MTSpacing.chipGap) {
+      VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
         HStack(spacing: MTSpacing.s2) {
           Text(entry.occurrence.displayLabel)
             .font(MTFont.noteStrong)
