@@ -32,6 +32,13 @@ function cssVar(group: string, name: string) {
   return `var(--mt-${group}-${name.split(".").map(kebab).join("-")})`;
 }
 
+/** "ringOffsetInsetDeep" reads as "Inset deep". */
+function offsetLabel(name: string) {
+  return name
+    .slice("ringOffset".length)
+    .replace(/(?!^)[A-Z]/g, (letter) => ` ${letter.toLowerCase()}`);
+}
+
 function typeStyle(role: string): CSSProperties {
   const variable = (property: string) =>
     `var(--mt-type-${kebab(role)}-${property})`;
@@ -59,6 +66,10 @@ export function FoundationTokens({ tokens }: { tokens: TokenSet }) {
   );
   const darkState = new Map(leaves(tokens.state.dark));
   const opacities = Object.entries(tokens.state.light.disabled.opacity);
+  const focusOffsets = Object.entries(tokens.state.light.focus).filter(
+    (entry): entry is [string, number] =>
+      entry[0].startsWith("ringOffset") && typeof entry[1] === "number",
+  );
   const materials = Object.entries(tokens.material.light);
 
   return (
@@ -254,7 +265,18 @@ export function FoundationTokens({ tokens }: { tokens: TokenSet }) {
       >
         <div className={styles.stateSpecimen}>
           <div className={styles.focusSamples}>
-            <span data-focus-sample="ring">Focus ring</span>
+            {focusOffsets.map(([name, value]) => (
+              <span
+                data-focus-sample="ring"
+                data-focus-offset={name}
+                key={name}
+                style={{ outlineOffset: cssVar("state-focus", name) }}
+                title={descriptions[`state.focus.${name}`]}
+              >
+                {name === "ringOffset" ? "Focus ring" : offsetLabel(name)}{" "}
+                <small>{value}px</small>
+              </span>
+            ))}
             <span data-focus-sample="halo">Focus halo</span>
           </div>
           <div className={styles.colorGrid}>

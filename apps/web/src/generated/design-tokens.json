@@ -298,6 +298,14 @@
       "letterSpacing": 0,
       "textCase": "none"
     },
+    "listHeading": {
+      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontSize": 13,
+      "fontWeight": 600,
+      "lineHeight": 1.15,
+      "letterSpacing": 0.65,
+      "textCase": "uppercase"
+    },
     "caption": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
       "fontSize": 12,
@@ -467,6 +475,7 @@
     "quick": 120,
     "standard": 180,
     "deliberate": 280,
+    "shimmer": 1250,
     "easing": {
       "standard": "cubic-bezier(0.25, 0.1, 0.25, 1)",
       "enter": "cubic-bezier(0, 0, 0.58, 1)",
@@ -495,6 +504,11 @@
         "halo": "#DDE8E1",
         "ringWidth": 2,
         "ringOffset": 3,
+        "ringOffsetSnug": 2,
+        "ringOffsetLoose": 4,
+        "ringOffsetHairline": 1,
+        "ringOffsetInset": -2,
+        "ringOffsetInsetDeep": -3,
         "haloWidth": 3
       },
       "hover": {
@@ -532,6 +546,11 @@
         "halo": "#273C33",
         "ringWidth": 2,
         "ringOffset": 3,
+        "ringOffsetSnug": 2,
+        "ringOffsetLoose": 4,
+        "ringOffsetHairline": 1,
+        "ringOffsetInset": -2,
+        "ringOffsetInsetDeep": -3,
         "haloWidth": 3
       },
       "hover": {
@@ -1158,6 +1177,7 @@
     "type.body": "Default interface text.",
     "type.bodySmall": "Secondary paragraphs and compact editors.",
     "type.label": "Field labels, buttons, and navigation.",
+    "type.listHeading": "Small uppercase headings above lists.",
     "type.caption": "Metadata and helper text.",
     "type.micro": "Dense badges and tooltips.",
     "type.eyebrow": "Uppercase eyebrows above titles.",
@@ -1181,6 +1201,7 @@
     "layout.layer.palette": "The command palette.",
     "layout.layer.nestedPopover": "Popovers opened from popovers.",
     "layout.layer.mapOverlay": "Overlays above the map library's own panes.",
+    "motion.shimmer": "One sweep of the loading placeholder shimmer.",
     "motion.easing.standard": "The CSS ease curve, the Web transition default.",
     "motion.easing.enter": "Ease out, for elements that appear. The native default.",
     "motion.easing.exit": "Ease in, for elements that leave.",
@@ -1197,6 +1218,12 @@
     "shadow.mediaControl": "Round controls over photos, such as the upload progress ring.",
     "state.focus.ring": "Keyboard focus outline.",
     "state.focus.halo": "Soft focus halo around fields.",
+    "state.focus.ringOffset": "Gap between a control and its focus outline.",
+    "state.focus.ringOffsetSnug": "Focus gap for links, photo tiles, checkboxes, and small choice controls.",
+    "state.focus.ringOffsetLoose": "Focus gap around Home dashboard links.",
+    "state.focus.ringOffsetHairline": "Focus gap for map attribution links.",
+    "state.focus.ringOffsetInset": "Focus outline inside list links, dock controls, and mobile navigation buttons.",
+    "state.focus.ringOffsetInsetDeep": "Focus outline inside photo preview triggers.",
     "state.hover.surface": "Hovered quiet buttons and rows.",
     "state.hover.ink": "Text of hovered quiet controls.",
     "state.hover.accentSurface": "Hovered accent chips.",

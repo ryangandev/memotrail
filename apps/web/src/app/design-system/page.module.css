@@ -442,7 +442,7 @@
 .iconGrid code {
   max-width: 100%;
   overflow: hidden;
-  font-size: 10px;
+  font-size: var(--mt-type-fine-font-size);
   text-overflow: ellipsis;
 }
 
@@ -562,7 +562,7 @@
 .separatedListAttribution {
   --separated-list-gap: 5px;
   --separated-list-row-gap: 0px;
-  font-size: 10px;
+  font-size: var(--mt-type-fine-font-size);
 }
 
 .checkboxGrid {

@@ -408,6 +408,33 @@
         }
       }
     },
+    "listHeading": {
+      "$description": "Small uppercase headings above lists.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.label}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.65,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "footnote",
+            "value": {
+              "letterSpacing": {
+                "value": 0.5,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
     "caption": {
       "$description": "Metadata and helper text.",
       "$value": {

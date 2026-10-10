@@ -20,9 +20,75 @@
       },
       "ringOffset": {
         "$type": "dimension",
+        "$description": "Gap between a control and its focus outline.",
         "$value": {
           "value": 3,
           "unit": "px"
+        }
+      },
+      "ringOffsetSnug": {
+        "$type": "dimension",
+        "$description": "Focus gap for links, photo tiles, checkboxes, and small choice controls.",
+        "$value": {
+          "value": 2,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetLoose": {
+        "$type": "dimension",
+        "$description": "Focus gap around Home dashboard links.",
+        "$value": {
+          "value": 4,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetHairline": {
+        "$type": "dimension",
+        "$description": "Focus gap for map attribution links.",
+        "$value": {
+          "value": 1,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetInset": {
+        "$type": "dimension",
+        "$description": "Focus outline inside list links, dock controls, and mobile navigation buttons.",
+        "$value": {
+          "value": -2,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "ringOffsetInsetDeep": {
+        "$type": "dimension",
+        "$description": "Focus outline inside photo preview triggers.",
+        "$value": {
+          "value": -3,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
         }
       },
       "haloWidth": {

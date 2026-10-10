@@ -309,6 +309,7 @@ Pair it with the test file carrying the same feature name.
   `platforms` limits a token or group to Web or iOS, and the generator emits it only there; `web` and `ios` override a value on one platform.
   A text role names its iOS Dynamic Type style in `ios.textStyle`, and a material names its iOS system material in `ios.material`.
   `mix` records the colors a translucent or mixed color comes from, and the generator verifies the value against them.
+  Web CSS writes such a color as the `color-mix()` it replaces, because Chrome draws a rounded `rgb()` or hex value up to one level differently; a color without `mix` keeps its `rgb()` or hex form.
 - `packages/design-system/icons.json` names each icon once, with its Web SVG and its SF Symbol.
   The generator writes the Web `IconName` type and the Swift `MTIcon` enum from it; an icon drawn on only one platform lists that platform.
 - `packages/design-system/contrast.json` lists the text and background pairs held to WCAG AA in both themes on both platforms: 4.5:1 for body text and 3:1 for large text, judged from each pair's text role.

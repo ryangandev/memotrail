@@ -19,6 +19,13 @@
         "unit": "ms"
       }
     },
+    "shimmer": {
+      "$description": "One sweep of the loading placeholder shimmer.",
+      "$value": {
+        "value": 1250,
+        "unit": "ms"
+      }
+    },
     "easing": {
       "$type": "cubicBezier",
       "standard": {

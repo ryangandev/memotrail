@@ -16,15 +16,30 @@ function leaves(group: object, prefix = ""): [string, string | number][] {
 }
 
 /** Converts a catalog color to the form getComputedStyle reports. */
-function computedColor(value: string | number) {
-  const hex = /^#([0-9A-F]{6})$/i.exec(String(value));
+// Reads a catalog or computed color as 0-255 channels and an alpha. Mixed tokens are
+// color-mix() values that compute to color(srgb ...), while the catalog lists them rounded.
+function colorKey(value: string | number) {
+  const text = String(value);
+  const alpha = (raw?: string) => Number(Number(raw ?? 1).toFixed(3));
+  const hex = /^#([0-9A-F]{6})$/i.exec(text);
   if (hex) {
     const n = Number.parseInt(hex[1], 16);
-    return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`;
+    return `${n >> 16} ${(n >> 8) & 255} ${n & 255} / 1`;
   }
-  const rgb = /^rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)$/.exec(String(value));
-  if (rgb) return `rgba(${rgb[1]}, ${rgb[2]}, ${rgb[3]}, ${rgb[4]})`;
-  throw new Error(`Unexpected catalog color ${value}`);
+  const rgb =
+    /^rgba?\((\d+)[, ]+(\d+)[, ]+(\d+)(?:\s*[,/]\s*([\d.]+))?\)$/.exec(text);
+  if (rgb) return `${rgb[1]} ${rgb[2]} ${rgb[3]} / ${alpha(rgb[4])}`;
+  const srgb =
+    /^color\(srgb ([\d.e-]+) ([\d.e-]+) ([\d.e-]+)(?: \/ ([\d.]+))?\)$/.exec(
+      text,
+    );
+  if (srgb) {
+    const channels = [srgb[1], srgb[2], srgb[3]].map((channel) =>
+      Math.round(Number(channel) * 255),
+    );
+    return `${channels.join(" ")} / ${alpha(srgb[4])}`;
+  }
+  throw new Error(`Unexpected color ${text}`);
 }
 
 const descriptions: Record<string, string | undefined> = tokens.descriptions;
@@ -33,7 +48,12 @@ const colorMap = (group: object) =>
   Object.fromEntries(
     leaves(group)
       .filter(([, value]) => typeof value === "string")
-      .map(([name, value]) => [name, computedColor(value)]),
+      .map(([name, value]) => [name, colorKey(value)]),
+  );
+
+const drawnColors = (drawn: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(drawn).map(([name, value]) => [name, colorKey(value)]),
   );
 
 test("Foundations draw every generated token in both themes", async ({
@@ -58,7 +78,7 @@ test("Foundations draw every generated token in both themes", async ({
           ]),
         ),
       );
-    expect(drawn).toEqual(colorMap(tokens.color[theme]));
+    expect(drawnColors(drawn)).toEqual(colorMap(tokens.color[theme]));
   }
 
   // Text roles resolve their whole typography through the role variables.
@@ -120,6 +140,20 @@ test("Foundations draw every generated token in both themes", async ({
   await expect(page.locator("#layers code")).toHaveText(
     Object.keys(tokens.layout.layer),
   );
+  // Every focus offset draws a ring at its own gap.
+  const offsets = Object.entries(tokens.state.light.focus).filter(([name]) =>
+    name.startsWith("ringOffset"),
+  );
+  expect(
+    await page
+      .locator("#state [data-focus-offset]")
+      .evaluateAll((samples) =>
+        samples.map((sample) => [
+          sample.getAttribute("data-focus-offset"),
+          getComputedStyle(sample).outlineOffset,
+        ]),
+      ),
+  ).toEqual(offsets.map(([name, value]) => [name, `${value}px`]));
   await expect(page.locator("#breakpoints [data-breakpoint]")).toHaveCount(
     Object.keys(tokens.layout.breakpoint).length,
   );
@@ -144,13 +178,14 @@ test("Foundations draw every generated token in both themes", async ({
               ]),
             ),
           );
-        expect(states).toEqual(colorMap(tokens.state[theme]));
-        await expect(
-          page.locator('#elevation [data-elevation="overlay"]'),
-        ).toHaveCSS(
-          "background-color",
-          computedColor(tokens.elevation[theme].overlay.scrim),
-        );
+        expect(drawnColors(states)).toEqual(colorMap(tokens.state[theme]));
+        expect(
+          colorKey(
+            await page
+              .locator('#elevation [data-elevation="overlay"]')
+              .evaluate((element) => getComputedStyle(element).backgroundColor),
+          ),
+        ).toBe(colorKey(tokens.elevation[theme].overlay.scrim));
         for (const material of await page
           .locator("#material [data-material]")
           .all()) {

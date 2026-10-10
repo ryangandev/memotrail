@@ -136,7 +136,27 @@ function cssReferenceOrValue(token, tokens) {
   if (token.alias && isPublic(token.alias) && tokens.has(token.alias)) {
     return `var(${cssName(token.alias)})`;
   }
+  if (token.type === "color" && token.extension.mix && !token.overridden) {
+    return cssMix(token, tokens);
+  }
   return cssValue(token);
+}
+
+// A mixed color stays a color-mix() of its sources. Chrome keeps full precision for the
+// result and blends gradients through it in Oklab, so this draws exactly what the CSS it
+// replaces drew; a rounded rgb() or hex value can be one level off.
+function cssMix(token, tokens) {
+  const { colors, weight } = token.extension.mix;
+  const operand = (reference) => {
+    const path = reference.slice(1, -1);
+    const source = tokens.get(path);
+    if (!source) {
+      throw new Error(`{${token.path}} mixes ${reference}, which Web lacks.`);
+    }
+    return isPublic(path) ? `var(${cssName(path)})` : cssColor(source.value);
+  };
+  const second = colors[1] ? operand(colors[1]) : "transparent";
+  return `color-mix(in srgb, ${operand(colors[0])} ${formatNumber(Number((weight * 100).toFixed(4)))}%, ${second})`;
 }
 
 function typographyValue(token, property, tokens) {

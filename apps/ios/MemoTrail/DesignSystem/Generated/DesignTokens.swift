@@ -273,6 +273,9 @@ struct MTTextRole: Sendable {
   static let label = MTTextRole(
     name: "label", size: 13, weight: .medium, design: .default, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: .footnote)
+  static let listHeading = MTTextRole(
+    name: "listHeading", size: 13, weight: .semibold, design: .default, lineHeight: 1.15,
+    tracking: 0.5, isUppercase: true, textStyle: .footnote)
   static let caption = MTTextRole(
     name: "caption", size: 12, weight: .medium, design: .default, lineHeight: 1.55, tracking: 0,
     isUppercase: false, textStyle: .caption)
@@ -306,6 +309,7 @@ struct MTTextRole: Sendable {
     bodyLarge,
     body,
     label,
+    listHeading,
     caption,
     micro,
     code,
@@ -344,6 +348,8 @@ enum MTFont {
   static let body = Font.subheadline
   /// Field labels, buttons, and navigation.
   static let label = Font.footnote.weight(.medium)
+  /// Small uppercase headings above lists.
+  static let listHeading = Font.footnote.weight(.semibold)
   /// Metadata and helper text.
   static let caption = Font.caption.weight(.medium)
   /// Dense badges and tooltips.
@@ -404,11 +410,13 @@ enum MTMotion {
   static let quick = Double(120) / 1_000
   static let standard = Double(180) / 1_000
   static let deliberate = Double(280) / 1_000
+  static let shimmer = Double(1250) / 1_000
 
   static let catalog: [(name: String, seconds: Double)] = [
     ("quick", quick),
     ("standard", standard),
     ("deliberate", deliberate),
+    ("shimmer", shimmer),
   ]
 }
 

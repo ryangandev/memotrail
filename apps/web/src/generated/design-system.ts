@@ -315,6 +315,7 @@ export const typeRoles = [
   "body",
   "bodySmall",
   "label",
+  "listHeading",
   "caption",
   "micro",
   "eyebrow",

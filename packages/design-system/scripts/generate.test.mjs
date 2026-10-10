@@ -133,6 +133,28 @@ describe("the Soft Ledger tokens", async () => {
     assert.equal(css.match(/--mt-color-canvas:/g).length >= 2, true);
   });
 
+  test("write mixed colors as the color-mix() they replace", () => {
+    assert.match(
+      css,
+      /--mt-color-skeleton-highlight: color-mix\(in srgb, var\(--mt-color-surface-raised\) 72%, transparent\);/,
+    );
+    assert.match(
+      css,
+      /--mt-color-chip-surface: color-mix\(in srgb, var\(--mt-color-surface\) 72%, var\(--mt-color-surface-raised\)\);/,
+    );
+    assert.match(
+      css,
+      /--mt-color-media-control: color-mix\(in srgb, #000000 64%, transparent\);/,
+    );
+    // Without a mix, a translucent color stays the rgb() its source wrote.
+    assert.match(css, /--mt-color-menu-scrim: rgb\(0 0 0 \/ 0\.48\);/);
+    // The catalog and Swift keep the resolved value.
+    assert.equal(
+      catalog.color.light.skeletonHighlight,
+      "rgb(255 255 255 / 0.72)",
+    );
+  });
+
   test("apply platform overrides only on their platform", () => {
     assert.equal(
       catalog.material.light.glassPanel.tint,
