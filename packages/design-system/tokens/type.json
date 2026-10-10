@@ -120,6 +120,42 @@
         }
       }
     },
+    "headline": {
+      "$description": "Large serif headlines on Goal cards and the sign-in card.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": "{font.size.title}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": -0.7,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "recordCardTitle": {
+      "$description": "Large serif titles on Home, Vehicle, and First Time cards.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": "{font.size.title}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": -0.56,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "sheetTitle": {
       "$description": "Sheet and dialog titles.",
       "$value": {
@@ -236,6 +272,24 @@
         }
       }
     },
+    "composerTitle": {
+      "$description": "The serif title of the capture composer.",
+      "$value": {
+        "fontFamily": "{font.family.serif}",
+        "fontSize": "{font.size.titleSmall}",
+        "fontWeight": "{font.weight.medium}",
+        "letterSpacing": {
+          "value": -0.3,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "wordmark": {
       "$description": "The MemoTrail wordmark beside the brand mark.",
       "$value": {
@@ -330,10 +384,7 @@
       "$description": "Settings subsection headings.",
       "$value": {
         "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 16,
-          "unit": "px"
-        },
+        "fontSize": "{font.size.callout}",
         "fontWeight": "{font.weight.bold}",
         "letterSpacing": {
           "value": 0,
@@ -371,10 +422,7 @@
       "$description": "Secondary paragraphs and compact editors.",
       "$value": {
         "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 14,
-          "unit": "px"
-        },
+        "fontSize": "{font.size.bodySmall}",
         "fontWeight": "{font.weight.regular}",
         "letterSpacing": {
           "value": 0,
@@ -455,14 +503,75 @@
         }
       }
     },
+    "tagline": {
+      "$description": "The tagline beside the sign-in wordmark.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.caption}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0.48,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.body}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "pageEyebrow": {
+      "$description": "The uppercase context above a page title, such as a date or area name.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.caption}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.96,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "caption",
+            "value": {
+              "letterSpacing": {
+                "value": 1,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "overline": {
+      "$description": "Small uppercase labels, such as record editor legends.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.caption}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.72,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
+        }
+      }
+    },
     "micro": {
       "$description": "Dense badges and tooltips.",
       "$value": {
         "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 11,
-          "unit": "px"
-        },
+        "fontSize": "{font.size.micro}",
         "fontWeight": "{font.weight.semibold}",
         "letterSpacing": {
           "value": 0,
@@ -475,6 +584,44 @@
           "ios": {
             "textStyle": "caption2"
           }
+        }
+      }
+    },
+    "signInEyebrow": {
+      "$description": "Uppercase eyebrows on the sign-in and sign-in error screens.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.micro}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 1.32,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
+        }
+      }
+    },
+    "menuHeading": {
+      "$description": "Uppercase group headings in the phone More menu.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.micro}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 1.1,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
         }
       }
     },
@@ -506,10 +653,7 @@
       "$description": "Uppercase eyebrows above titles.",
       "$value": {
         "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 10,
-          "unit": "px"
-        },
+        "fontSize": "{font.size.fine}",
         "fontWeight": "{font.weight.semibold}",
         "letterSpacing": {
           "value": 1,
@@ -526,14 +670,114 @@
         }
       }
     },
+    "navigationLabel": {
+      "$description": "Uppercase section labels in the sidebar.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.fine}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 1.2,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
+        }
+      }
+    },
+    "columnHeading": {
+      "$description": "Uppercase column headings in the Timeline grid.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.fine}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.8,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
+        }
+      }
+    },
+    "filterLabel": {
+      "$description": "Uppercase labels above Library filters.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.fine}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.5,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
+        }
+      }
+    },
+    "statusLabel": {
+      "$description": "Uppercase connection status in Settings.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.fine}",
+        "fontWeight": "{font.weight.semibold}",
+        "letterSpacing": {
+          "value": 0.4,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"],
+          "textCase": "uppercase"
+        }
+      }
+    },
+    "factLabel": {
+      "$description": "The uppercase label above a fact in record details. iOS draws it at its 11 pt caption2 minimum.",
+      "$value": {
+        "fontFamily": "{font.family.sans}",
+        "fontSize": "{font.size.fine}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0.6,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "caption2",
+            "value": {
+              "fontSize": {
+                "value": 11,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
     "fine": {
       "$description": "The smallest readable text, such as map attribution and inline actions.",
       "$value": {
         "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 10,
-          "unit": "px"
-        },
+        "fontSize": "{font.size.fine}",
         "fontWeight": "{font.weight.regular}",
         "letterSpacing": {
           "value": 0,
@@ -553,10 +797,7 @@
       "$description": "Monospaced counts and dates.",
       "$value": {
         "fontFamily": "{font.family.mono}",
-        "fontSize": {
-          "value": 10,
-          "unit": "px"
-        },
+        "fontSize": "{font.size.fine}",
         "fontWeight": "{font.weight.regular}",
         "letterSpacing": {
           "value": 0.25,
@@ -580,14 +821,65 @@
         }
       }
     },
+    "dateStamp": {
+      "$description": "Uppercase monospaced dates on record cards, archive rows, and Goal targets. iOS draws them at its 11 pt caption2 minimum.",
+      "$value": {
+        "fontFamily": "{font.family.mono}",
+        "fontSize": "{font.size.fine}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0.25,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "caption2",
+            "value": {
+              "fontSize": {
+                "value": 11,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
+    "firstTimeDate": {
+      "$description": "The uppercase date above a First Time card title. iOS draws it at its 11 pt caption2 minimum.",
+      "$value": {
+        "fontFamily": "{font.family.mono}",
+        "fontSize": "{font.size.fine}",
+        "fontWeight": "{font.weight.regular}",
+        "letterSpacing": {
+          "value": 0.35,
+          "unit": "px"
+        },
+        "lineHeight": "{lineHeight.tight}"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "textCase": "uppercase",
+          "ios": {
+            "textStyle": "caption2",
+            "value": {
+              "fontSize": {
+                "value": 11,
+                "unit": "px"
+              }
+            }
+          }
+        }
+      }
+    },
     "nano": {
       "$description": "Tiny uppercase markers, such as the timeline today label and micro badges.",
       "$value": {
         "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 9,
-          "unit": "px"
-        },
+        "fontSize": "{font.size.nano}",
         "fontWeight": "{font.weight.semibold}",
         "letterSpacing": {
           "value": 0.36,
@@ -789,31 +1081,6 @@
           "platforms": ["ios"],
           "ios": {
             "textStyle": "caption2"
-          }
-        }
-      }
-    },
-    "pageEyebrow": {
-      "$description": "The uppercase context above a page title, such as a date or area name.",
-      "$value": {
-        "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 12,
-          "unit": "px"
-        },
-        "fontWeight": "{font.weight.semibold}",
-        "letterSpacing": {
-          "value": 1,
-          "unit": "px"
-        },
-        "lineHeight": "{lineHeight.tight}"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["ios"],
-          "textCase": "uppercase",
-          "ios": {
-            "textStyle": "caption"
           }
         }
       }
@@ -1110,31 +1377,6 @@
         }
       }
     },
-    "factLabel": {
-      "$description": "The uppercase label above a fact on an item page.",
-      "$value": {
-        "fontFamily": "{font.family.sans}",
-        "fontSize": {
-          "value": 11,
-          "unit": "px"
-        },
-        "fontWeight": "{font.weight.regular}",
-        "letterSpacing": {
-          "value": 0.6,
-          "unit": "px"
-        },
-        "lineHeight": "{lineHeight.tight}"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["ios"],
-          "textCase": "uppercase",
-          "ios": {
-            "textStyle": "caption2"
-          }
-        }
-      }
-    },
     "groupLabel": {
       "$description": "The uppercase label above a group of More destinations.",
       "$value": {
@@ -1205,56 +1447,6 @@
           "platforms": ["ios"],
           "ios": {
             "textStyle": "title"
-          }
-        }
-      }
-    },
-    "dateStamp": {
-      "$description": "Uppercase monospaced dates on record cards and archive rows.",
-      "$value": {
-        "fontFamily": "{font.family.mono}",
-        "fontSize": {
-          "value": 11,
-          "unit": "px"
-        },
-        "fontWeight": "{font.weight.regular}",
-        "letterSpacing": {
-          "value": 0.25,
-          "unit": "px"
-        },
-        "lineHeight": "{lineHeight.tight}"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["ios"],
-          "textCase": "uppercase",
-          "ios": {
-            "textStyle": "caption2"
-          }
-        }
-      }
-    },
-    "firstTimeDate": {
-      "$description": "The uppercase date above a First Time card title.",
-      "$value": {
-        "fontFamily": "{font.family.mono}",
-        "fontSize": {
-          "value": 11,
-          "unit": "px"
-        },
-        "fontWeight": "{font.weight.regular}",
-        "letterSpacing": {
-          "value": 0.35,
-          "unit": "px"
-        },
-        "lineHeight": "{lineHeight.tight}"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["ios"],
-          "textCase": "uppercase",
-          "ios": {
-            "textStyle": "caption2"
           }
         }
       }

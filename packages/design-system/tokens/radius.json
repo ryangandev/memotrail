@@ -2,6 +2,54 @@
   "radius": {
     "$type": "dimension",
     "$description": "Corner radii, from small controls to pills.",
+    "brandMarkTail": {
+      "$description": "The tail corner of the phone brand mark tile.",
+      "$value": {
+        "value": 3,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "xxsmall": {
+      "$description": "Key caps, inline code, and the small checkbox.",
+      "$value": {
+        "value": 4,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "checkbox": {
+      "$description": "The medium checkbox box.",
+      "$value": {
+        "value": 5,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "xsmall": {
+      "$description": "Editor toolbar buttons, tooltips, and compact inputs.",
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "small": {
       "$description": "Small buttons and fields, segmented choices, and calendar days.",
       "$value": {
@@ -9,11 +57,47 @@
         "unit": "px"
       }
     },
+    "tile": {
+      "$description": "34px icon tiles and segmented options.",
+      "$value": {
+        "value": 9,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "notice": {
+      "$description": "Inline notices and 34px heading icons.",
+      "$value": {
+        "value": 10,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "medium": {
       "$description": "Buttons, fields, menus, and toasts.",
       "$value": {
         "value": 12,
         "unit": "px"
+      }
+    },
+    "panel": {
+      "$description": "Export settings panels.",
+      "$value": {
+        "value": 16,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
       }
     },
     "large": {

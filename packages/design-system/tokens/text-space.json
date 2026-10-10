@@ -1,0 +1,74 @@
+{
+  "textSpace": {
+    "$type": "number",
+    "$description": "Web spacing measured in em, so it scales with the text it sits in.",
+    "$extensions": {
+      "com.memotrail": {
+        "platforms": ["web"]
+      }
+    },
+    "paragraphGap": {
+      "$description": "Space after a paragraph or list in a saved story.",
+      "$value": 0.65,
+      "$extensions": {
+        "com.memotrail": {
+          "web": { "unit": "em" }
+        }
+      }
+    },
+    "editorParagraphGap": {
+      "$description": "Space after a paragraph or list in the rich text editor.",
+      "$value": 0.55,
+      "$extensions": {
+        "com.memotrail": {
+          "web": { "unit": "em" }
+        }
+      }
+    },
+    "listIndent": {
+      "$description": "Indent of a list in a saved story.",
+      "$value": 1.5,
+      "$extensions": {
+        "com.memotrail": {
+          "web": { "unit": "em" }
+        }
+      }
+    },
+    "editorListIndent": {
+      "$description": "Indent of a list in the rich text editor.",
+      "$value": 1.45,
+      "$extensions": {
+        "com.memotrail": {
+          "web": { "unit": "em" }
+        }
+      }
+    },
+    "codePaddingBlock": {
+      "$description": "Space above and below inline code.",
+      "$value": 0.12,
+      "$extensions": {
+        "com.memotrail": {
+          "web": { "unit": "em" }
+        }
+      }
+    },
+    "codePaddingInline": {
+      "$description": "Space before and after inline code.",
+      "$value": 0.35,
+      "$extensions": {
+        "com.memotrail": {
+          "web": { "unit": "em" }
+        }
+      }
+    },
+    "separatorGap": {
+      "$description": "Space on each side of the dot between facts in a separated row.",
+      "$value": 0.28,
+      "$extensions": {
+        "com.memotrail": {
+          "web": { "unit": "em" }
+        }
+      }
+    }
+  }
+}

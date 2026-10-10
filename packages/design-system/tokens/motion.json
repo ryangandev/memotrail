@@ -1,11 +1,35 @@
 {
   "motion": {
     "$type": "duration",
+    "labelFade": {
+      "$description": "Sidebar labels fading, and the wait before a faded label hides.",
+      "$value": {
+        "value": 100,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "quick": {
       "$description": "Hover, press, and focus transitions.",
       "$value": {
         "value": 120,
         "unit": "ms"
+      }
+    },
+    "composerEnter": {
+      "$description": "The bottom Quick Capture dialog rising into place.",
+      "$value": {
+        "value": 160,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
       }
     },
     "standard": {
@@ -15,11 +39,83 @@
         "unit": "ms"
       }
     },
+    "sidebar": {
+      "$description": "The sidebar collapsing and expanding.",
+      "$value": {
+        "value": 240,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
     "deliberate": {
       "$description": "Slower reveals, such as the tag editor's expanding search.",
       "$value": {
         "value": 280,
         "unit": "ms"
+      }
+    },
+    "brandRotation": {
+      "$description": "The brand mark turning as the sidebar collapses.",
+      "$value": {
+        "value": 320,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "loadingSpin": {
+      "$description": "One turn of the Timeline editor's loading spinner.",
+      "$value": {
+        "value": 700,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "spin": {
+      "$description": "One turn of a busy button's spinner.",
+      "$value": {
+        "value": 800,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "progressSweep": {
+      "$description": "One sweep of the navigation progress bar.",
+      "$value": {
+        "value": 850,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "pulse": {
+      "$description": "One pulse of the syncing indicator.",
+      "$value": {
+        "value": 1100,
+        "unit": "ms"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
       }
     },
     "shimmer": {

@@ -69,6 +69,7 @@ export async function exportClaudeDesign({
 
   const { tokens, stylesheet } = makeTokens({
     system,
+    icons,
     contrast,
     meta: sourceMeta(),
     title: `MemoTrail ${system.name}`,

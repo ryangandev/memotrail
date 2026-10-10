@@ -122,6 +122,13 @@ describe("the Soft Ledger tokens", async () => {
     assert.equal(catalog.type.wordmarkLarge, undefined);
   });
 
+  test("write a Web-only relative measure with its unit", () => {
+    assert.match(css, /--mt-text-space-list-indent: 1\.5em;/);
+    assert.match(css, /--mt-font-size-inline-code: 0\.9em;/);
+    assert.equal(catalog.textSpace.listIndent, "1.5em");
+    assert.doesNotMatch(swift, /listIndent|inlineCode/);
+  });
+
   test("emit a fluid Web role and its iOS override", () => {
     assert.match(css, /--mt-type-hero-font-size: clamp\(46px, 5\.5vw, 70px\);/);
     assert.match(css, /--mt-type-hero-letter-spacing: -0\.045em;/);
@@ -160,6 +167,21 @@ describe("the Soft Ledger tokens", async () => {
     );
   });
 
+  test("draw a shadow layer through the mixed color it names", () => {
+    assert.match(
+      css,
+      /--mt-material-glass-shadow: [^;]*, 0 8px 28px var\(--mt-material-glass-shadow-color\);/,
+    );
+    assert.match(
+      css,
+      /--mt-material-glass-shadow-color: color-mix\(in srgb, var\(--mt-color-ink\) 12%, transparent\);/,
+    );
+    assert.match(
+      catalog.material.light.glass.shadow,
+      /, 0 8px 28px rgb\(38 37 31 \/ 0\.12\)$/,
+    );
+  });
+
   test("apply platform overrides only on their platform", () => {
     assert.equal(
       catalog.material.light.glassPanel.tint,
@@ -180,6 +202,11 @@ describe("the Soft Ledger tokens", async () => {
       swift,
       /static let iosOnly: Set<MTIcon> = \[\n {4}\.collection,/,
     );
+  });
+
+  test("type Web icon sizes by the size.icon scale", () => {
+    assert.match(typescript, /export const iconSizes = \{[^}]*\b18: 18,/);
+    assert.match(typescript, /export type IconSize = keyof typeof iconSizes;/);
   });
 
   test("pass AA contrast or name every exception", async () => {
@@ -290,6 +317,33 @@ describe("validation", () => {
     });
     await resolveInline({ light: mixed("#93928F") });
     await assert.rejects(resolveInline({ light: mixed("#000000") }), /#93928F/);
+  });
+
+  test("allows a relative unit only on a Web-only number", async () => {
+    const indent = (extension) => ({
+      foundation: {
+        textSpace: {
+          indent: {
+            $type: "number",
+            $value: 1.5,
+            $extensions: { "com.memotrail": extension },
+          },
+        },
+      },
+      light: colorTheme("#26251F", "#FFFFFF"),
+    });
+    const system = await resolveInline(
+      indent({ platforms: ["web"], web: { unit: "em" } }),
+    );
+    assert.match(makeCss(system, "tokens"), /--mt-text-space-indent: 1\.5em;/);
+    await assert.rejects(
+      resolveInline(indent({ web: { unit: "em" } })),
+      /Web-only number token/,
+    );
+    await assert.rejects(
+      resolveInline(indent({ platforms: ["web"], web: { unit: "vw" } })),
+      /web\.unit must be em/,
+    );
   });
 
   test("requires both themes to define the same tokens", async () => {

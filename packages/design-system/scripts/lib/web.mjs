@@ -18,6 +18,7 @@ export const groupOrder = [
   "lineHeight",
   "type",
   "space",
+  "textSpace",
   "size",
   "radius",
   "layout",
@@ -69,7 +70,7 @@ export function orderedPaths(tokens) {
 
 // CSS
 
-export function makeCss(system, sourceLabel) {
+export function makeCss(system, sourceLabel, icons) {
   const web = webTokens(system);
   const shared = [];
   const light = [];
@@ -83,6 +84,18 @@ export function makeCss(system, sourceLabel) {
     } else {
       shared.push(...cssDeclarations(web.light.get(path), web.light));
       if (derived.has(path)) shared.push(derived.get(path));
+    }
+  }
+
+  for (const image of icons?.cssImages ?? []) {
+    const [lightImage, darkImage] = [web.light, web.dark].map((tokens) =>
+      cssImage(image, tokens, icons.viewBox),
+    );
+    if (lightImage === darkImage) {
+      shared.push(lightImage);
+    } else {
+      light.push(lightImage);
+      dark.push(darkImage);
     }
   }
 
@@ -140,7 +153,24 @@ function cssReferenceOrValue(token, tokens) {
   if (token.type === "color" && token.extension.mix && !token.overridden) {
     return cssMix(token, tokens);
   }
-  return cssValue(token);
+  if (token.type === "shadow") {
+    // A layer that names a public color token draws through it, so a mixed color stays a
+    // color-mix() inside the shadow too.
+    return cssShadow(token.value, (layer) =>
+      layer.colorAlias &&
+      isPublic(layer.colorAlias) &&
+      tokens.has(layer.colorAlias)
+        ? `var(${cssName(layer.colorAlias)})`
+        : cssColor(layer),
+    );
+  }
+  return relativeValue(token) ?? cssValue(token);
+}
+
+// A Web-only number with a unit, such as 0.65em, measures against the surrounding text.
+export function relativeValue(token) {
+  const unit = token.extension.web?.unit;
+  return unit ? `${formatNumber(token.value)}${unit}` : undefined;
 }
 
 // A mixed color stays a color-mix() of its sources. Chrome keeps full precision for the
@@ -209,23 +239,27 @@ export function cssValue({ type, value }) {
     case "cubicBezier":
       return `cubic-bezier(${value.map(formatNumber).join(", ")})`;
     case "shadow":
-      return value
-        .map((layer) =>
-          [
-            layer.inset ? "inset" : null,
-            cssLength(layer.x),
-            cssLength(layer.y),
-            cssLength(layer.blur),
-            layer.spread === 0 ? null : cssLength(layer.spread),
-            cssColor(layer),
-          ]
-            .filter(Boolean)
-            .join(" "),
-        )
-        .join(", ");
+      return cssShadow(value, cssColor);
     default:
       return String(value);
   }
+}
+
+function cssShadow(layers, color) {
+  return layers
+    .map((layer) =>
+      [
+        layer.inset ? "inset" : null,
+        cssLength(layer.x),
+        cssLength(layer.y),
+        cssLength(layer.blur),
+        layer.spread === 0 ? null : cssLength(layer.spread),
+        color(layer),
+      ]
+        .filter(Boolean)
+        .join(" "),
+    )
+    .join(", ");
 }
 
 export function cssColor({ channels, alpha }) {
@@ -262,6 +296,35 @@ function cssFontFamily(family) {
 }
 
 // Each material with a blur also gets a ready backdrop-filter value, emitted after its parts.
+// A Web icon as an SVG data URL in one theme's color, for CSS that cannot use currentColor,
+// such as the indicator a native select draws as its background image.
+function cssImage(image, tokens, viewBox) {
+  const color = tokens.get(image.color).value;
+  if (color.alpha !== 1) {
+    throw new Error(`cssImages.${image.name} color must be opaque.`);
+  }
+  const size = tokens.get(image.size).value;
+  const paint = {
+    stroke: hexString(color.channels),
+    "stroke-width": formatNumber(tokens.get(image.strokeWidth).value),
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+  };
+  const attributes = (entries) =>
+    Object.entries(entries)
+      .map(([name, value]) => `${name}='${value}'`)
+      .join(" ");
+  const element = ([tag, own], paintHere) =>
+    `<${tag} ${attributes(paintHere ? { ...own, ...paint } : own)}/>`;
+  const body =
+    image.svg.length === 1
+      ? element(image.svg[0], true)
+      : `<g ${attributes(paint)}>${image.svg.map((part) => element(part, false)).join("")}</g>`;
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${size}' height='${size}' fill='none' viewBox='${viewBox}'>${body}</svg>`;
+  const encoded = svg.replace(/[<>#]/g, (char) => encodeURIComponent(char));
+  return `${cssName(`image.${image.name}`)}: url("data:image/svg+xml,${encoded}");`;
+}
+
 function materialFilters(web) {
   const filters = new Map();
   const groups = new Map();
@@ -372,7 +435,7 @@ function catalogValue(token) {
       };
     }
     default:
-      return token.value;
+      return relativeValue(token) ?? token.value;
   }
 }
 
@@ -425,6 +488,11 @@ export type IconElement = readonly [
 export const iconViewBox = ${JSON.stringify(icons.viewBox)};
 
 export const iconStrokeWidth = ${icons.strokeWidth};
+
+/** Icon sizes in px. An icon's size must be one of these, so it stays on the size.icon scale. */
+${tsConst("iconSizes", numbers("size.icon"))}
+
+export type IconSize = keyof typeof iconSizes;
 
 export type IconElements = Readonly<Record<IconName, readonly IconElement[]>>;
 

@@ -4,15 +4,21 @@ import {
   iconStrokeWidth,
   iconViewBox,
   type IconName,
+  type IconSize,
 } from "@/generated/design-system";
 
 // The icon vocabulary is generated from packages/design-system/icons.json, which also maps each
 // name to the SF Symbol native iOS draws.
-export { iconNames, type IconName } from "@/generated/design-system";
+export {
+  iconNames,
+  type IconName,
+  type IconSize,
+} from "@/generated/design-system";
 
 type IconProps = {
   name: IconName;
-  size?: number;
+  /** A size.icon token, in px. */
+  size?: IconSize;
 };
 
 export function Icon({ name, size = 18 }: IconProps) {

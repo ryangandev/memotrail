@@ -2,7 +2,9 @@ import { platforms } from "./resolve.mjs";
 import { aliasPath, isObject } from "./util.mjs";
 
 // The icon manifest maps each semantic icon name to a Web line icon and an SF Symbol. DTCG has
-// no icon type, so this file has its own small schema, validated here.
+// no icon type, so this file has its own small schema, validated here. Its cssImages section
+// names Web icons drawn as CSS background images, where currentColor cannot reach, with the
+// tokens that size and color them.
 
 const elementAttributes = {
   path: new Set(["d", "fill", "stroke"]),
@@ -21,12 +23,13 @@ const numericAttributes = new Set([
 ]);
 const paintValues = new Set(["currentColor", "none"]);
 const iconKeys = new Set(["description", "platforms", "sfSymbol", "svg"]);
+const imageKeys = ["color", "description", "icon", "size", "strokeWidth"];
 
 export function validateIcons(manifest, webTokens) {
   const label = "icons.json";
   if (!isObject(manifest)) throw new Error(`${label} must be an object.`);
   for (const key of Object.keys(manifest)) {
-    if (!["$description", "svg", "icons"].includes(key)) {
+    if (!["$description", "svg", "icons", "cssImages"].includes(key)) {
       throw new Error(`${label}: unknown property ${key}.`);
     }
   }
@@ -127,7 +130,57 @@ export function validateIcons(manifest, webTokens) {
     };
   });
 
-  return { viewBox: svg.viewBox, strokeWidth: stroke.value, icons };
+  return {
+    viewBox: svg.viewBox,
+    strokeWidth: stroke.value,
+    icons,
+    cssImages: validateCssImages(manifest.cssImages ?? {}, icons, webTokens),
+  };
+}
+
+function validateCssImages(images, icons, webTokens) {
+  if (!isObject(images))
+    throw new Error("icons.json: cssImages must be an object.");
+  return Object.entries(images)
+    .filter(([name]) => name !== "$description")
+    .map(([name, image]) => {
+      const where = `icons.json: cssImages.${name}`;
+      if (!/^[a-z][A-Za-z0-9]*$/.test(name)) {
+        throw new Error(`${where} must have a camelCase name.`);
+      }
+      if (
+        !isObject(image) ||
+        Object.keys(image).sort().join(",") !== imageKeys.join(",")
+      ) {
+        throw new Error(`${where} must have exactly ${imageKeys.join(", ")}.`);
+      }
+      if (typeof image.description !== "string" || !image.description.trim()) {
+        throw new Error(`${where} needs a description.`);
+      }
+      const icon = icons.find((candidate) => candidate.name === image.icon);
+      if (!icon?.svg) {
+        throw new Error(
+          `${where} icon must name a Web icon, got ${image.icon}.`,
+        );
+      }
+      const reference = (key, type) => {
+        const path = aliasPath(image[key]);
+        const token = path && webTokens.get(path);
+        if (!token || token.type !== type) {
+          throw new Error(
+            `${where} ${key} must reference a Web ${type} token, got ${JSON.stringify(image[key])}.`,
+          );
+        }
+        return path;
+      };
+      return {
+        name,
+        svg: icon.svg,
+        color: reference("color", "color"),
+        size: reference("size", "dimension"),
+        strokeWidth: reference("strokeWidth", "dimension"),
+      };
+    });
 }
 
 function validateSvg(elements, where) {

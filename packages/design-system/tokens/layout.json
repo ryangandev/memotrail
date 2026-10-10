@@ -57,6 +57,34 @@
         }
       }
     },
+    "inset": {
+      "$type": "dimension",
+      "$description": "Room kept between page content and a viewport edge for floating chrome.",
+      "dock": {
+        "$description": "Below the workspace, so the floating action dock never covers the last item.",
+        "$value": {
+          "value": 100,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      },
+      "palette": {
+        "$description": "Most room above the command palette, which otherwise sits 14% down the viewport.",
+        "$value": {
+          "value": 120,
+          "unit": "px"
+        },
+        "$extensions": {
+          "com.memotrail": {
+            "platforms": ["web"]
+          }
+        }
+      }
+    },
     "breakpoint": {
       "390": {
         "$value": {

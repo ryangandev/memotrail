@@ -11,6 +11,7 @@ export const iconNames = [
   "car",
   "check",
   "chevron",
+  "chevronDown",
   "clock",
   "close",
   "code",
@@ -55,6 +56,31 @@ export type IconElement = readonly [
 export const iconViewBox = "0 0 24 24";
 
 export const iconStrokeWidth = 1.7;
+
+/** Icon sizes in px. An icon's size must be one of these, so it stays on the size.icon scale. */
+export const iconSizes = {
+  7: 7,
+  8: 8,
+  10: 10,
+  11: 11,
+  12: 12,
+  13: 13,
+  14: 14,
+  15: 15,
+  16: 16,
+  17: 17,
+  18: 18,
+  19: 19,
+  20: 20,
+  21: 21,
+  22: 22,
+  23: 23,
+  24: 24,
+  25: 25,
+  30: 30,
+} as const;
+
+export type IconSize = keyof typeof iconSizes;
 
 export type IconElements = Readonly<Record<IconName, readonly IconElement[]>>;
 
@@ -102,6 +128,7 @@ export const iconElements: IconElements = {
   ],
   check: [["path", { d: "m5 12 4 4L19 6" }]],
   chevron: [["path", { d: "m9 18 6-6-6-6" }]],
+  chevronDown: [["path", { d: "m7 10 5 5 5-5" }]],
   clock: [
     ["circle", { cx: "12", cy: "12", r: "9" }],
     ["path", { d: "M12 7v5l3 2" }],
@@ -303,10 +330,13 @@ export const typeRoles = [
   "heroCompact",
   "display",
   "title",
+  "headline",
+  "recordCardTitle",
   "sheetTitle",
   "recordTitle",
   "titleSmall",
   "cardTitle",
+  "composerTitle",
   "wordmark",
   "sectionTitle",
   "heading",
@@ -317,10 +347,22 @@ export const typeRoles = [
   "label",
   "listHeading",
   "caption",
+  "tagline",
+  "pageEyebrow",
+  "overline",
   "micro",
+  "signInEyebrow",
+  "menuHeading",
   "eyebrow",
+  "navigationLabel",
+  "columnHeading",
+  "filterLabel",
+  "statusLabel",
+  "factLabel",
   "fine",
   "stamp",
+  "dateStamp",
+  "firstTimeDate",
   "nano",
   "badgeMicro",
   "badgeSmall",
@@ -439,6 +481,7 @@ export const themeColors = {
     surfaceRaisedTranslucent: "rgb(255 255 255 / 0.94)",
     skeletonHighlight: "rgb(255 255 255 / 0.72)",
     borderFaint: "rgb(220 214 201 / 0.7)",
+    paletteBorder: "rgb(199 191 175 / 0.82)",
     inkUnderline: "rgb(38 37 31 / 0.7)",
     scrollbar: "rgb(113 109 99 / 0.38)",
     scrimFaint: "rgb(38 37 31 / 0.12)",
@@ -458,6 +501,7 @@ export const themeColors = {
       pin: "#526F60",
       pinInk: "#FFFFFF",
     },
+    brand: { ring: "#315E4F", accent: "#A76346", innerRing: "#82AD98" },
   },
   dark: {
     canvas: "#171816",
@@ -508,6 +552,7 @@ export const themeColors = {
     surfaceRaisedTranslucent: "rgb(38 40 36 / 0.94)",
     skeletonHighlight: "rgb(38 40 36 / 0.72)",
     borderFaint: "rgb(57 59 53 / 0.7)",
+    paletteBorder: "rgb(75 78 70 / 0.82)",
     inkUnderline: "rgb(238 234 223 / 0.7)",
     scrollbar: "rgb(180 175 163 / 0.38)",
     scrimFaint: "rgb(0 0 0 / 0.12)",
@@ -527,6 +572,7 @@ export const themeColors = {
       pin: "#526F60",
       pinInk: "#FFFFFF",
     },
+    brand: { ring: "#315E4F", accent: "#A76346", innerRing: "#82AD98" },
   },
 } as const;
 

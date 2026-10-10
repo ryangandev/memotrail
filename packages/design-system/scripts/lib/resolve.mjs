@@ -33,8 +33,10 @@ const tokenExtensionKeys = new Set([
 ]);
 const platformKeys = {
   ios: new Set(["value", "textStyle", "textCase"]),
-  web: new Set(["value", "fluid"]),
+  web: new Set(["value", "fluid", "unit"]),
 };
+// Units a Web-only number token may carry, for measures relative to the surrounding text.
+const webUnits = new Set(["em"]);
 export const iosTextStyles = {
   largeTitle: { size: 34, weight: 400 },
   title: { size: 28, weight: 400 },
@@ -532,6 +534,18 @@ function validateTokenExtension(path, type, extension, tokenPlatforms) {
     ) {
       throw new Error(
         `${where}.web.fluid must be { minimum: dimension, viewportWidth: vw number } on a typography token.`,
+      );
+    }
+  }
+
+  if (extension.web?.unit !== undefined) {
+    if (
+      type !== "number" ||
+      !webUnits.has(extension.web.unit) ||
+      tokenPlatforms.join(",") !== "web"
+    ) {
+      throw new Error(
+        `${where}.web.unit must be ${[...webUnits].join(" or ")} on a Web-only number token.`,
       );
     }
   }

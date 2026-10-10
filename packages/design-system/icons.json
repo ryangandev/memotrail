@@ -105,6 +105,11 @@
       "sfSymbol": "chevron.right",
       "svg": [["path", { "d": "m9 18 6-6-6-6" }]]
     },
+    "chevronDown": {
+      "description": "Opens a list of choices.",
+      "platforms": ["web"],
+      "svg": [["path", { "d": "m7 10 5 5 5-5" }]]
+    },
     "clock": {
       "description": "Times, history, and recent items.",
       "sfSymbol": "clock",
@@ -552,6 +557,16 @@
       "description": "Warnings.",
       "platforms": ["ios"],
       "sfSymbol": "exclamationmark.triangle"
+    }
+  },
+  "cssImages": {
+    "$description": "Web icons drawn as CSS background images, where currentColor cannot reach. Each becomes an --mt-image-* variable in every theme.",
+    "selectIndicator": {
+      "description": "The chevron a native select draws at its end.",
+      "icon": "chevronDown",
+      "color": "{color.inkMuted}",
+      "size": "{size.icon.16}",
+      "strokeWidth": "{size.stroke.indicator}"
     }
   }
 }
