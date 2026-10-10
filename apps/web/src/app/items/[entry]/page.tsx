@@ -61,7 +61,9 @@ function UnavailableItem() {
         title="Item unavailable"
         description="It may have moved to Trash or no longer be accessible."
       />
-      <ButtonLink href="/library">Back to Library</ButtonLink>
+      <ButtonLink href="/library" variant="secondary">
+        Back to Library
+      </ButtonLink>
     </section>
   );
 }

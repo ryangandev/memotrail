@@ -22,95 +22,86 @@ enum MTTone: CaseIterable {
   }
 }
 
-enum MTBadgeTone: CaseIterable, Sendable {
-  case accent, neutral, warm, success, outline, solidAccent, inverse, glassAccent, glassNeutral
-
-  var title: String {
-    switch self {
-    case .accent: "accent"
-    case .neutral: "neutral"
-    case .warm: "warm"
-    case .success: "success"
-    case .outline: "outline"
-    case .solidAccent: "solidAccent"
-    case .inverse: "inverse"
-    case .glassAccent: "glassAccent"
-    case .glassNeutral: "glassNeutral"
-    }
-  }
-
+// MTBadgeTone, MTBadgeSize, and MTBadgeDefaults are generated from
+// packages/design-system/components/badge.yaml, which also lists each tone's tokens.
+extension MTBadgeTone {
   fileprivate var foreground: Color {
     switch self {
     case .accent, .glassAccent: MTColor.accent
     case .neutral, .outline, .glassNeutral: MTColor.inkMuted
     case .warm: MTColor.warm
     case .success: MTColor.success
+    case .danger: MTColor.danger
+    case .inverse: MTColor.inverseInk
     case .solidAccent: MTColor.accentInk
-    case .inverse: .white
     }
   }
 
-  fileprivate var background: Color {
+  fileprivate var fill: Color {
     switch self {
-    case .accent, .success: MTColor.accentSubtle
+    case .accent: MTColor.accentSubtle
     case .neutral: MTColor.surfaceSubtle
     case .warm: MTColor.warmSubtle
+    case .success: MTColor.successSubtle
+    case .danger: MTColor.dangerSubtle
     case .outline: MTColor.surface
+    case .inverse: MTColor.inverseSurface
     case .solidAccent: MTColor.accent
-    case .inverse: Color(red: 24 / 255, green: 24 / 255, blue: 20 / 255).opacity(0.72)
-    case .glassAccent, .glassNeutral: MTColor.surfaceRaised.opacity(0.86)
+    case .glassAccent, .glassNeutral: MTMaterial.chip.tint
     }
   }
 
   /// Glass tones sit on photos and maps, so they blur what is behind them like Web.
-  fileprivate var isGlass: Bool { self == .glassAccent || self == .glassNeutral }
+  fileprivate var material: MTSystemMaterial? {
+    switch self {
+    case .glassAccent, .glassNeutral: MTMaterial.chip.systemMaterial
+    default: nil
+    }
+  }
+
+  fileprivate var border: Color? { self == .outline ? MTColor.border : nil }
 }
 
-enum MTBadgeSize: CaseIterable, Sendable {
-  case micro, small, medium
-
-  var title: String {
-    switch self {
-    case .micro: "micro"
-    case .small: "small"
-    case .medium: "medium"
+extension MTBadgeSize {
+  fileprivate func textRole(uppercase: Bool) -> MTTextRole {
+    switch (self, uppercase) {
+    case (.micro, false): .badgeMicro
+    case (.micro, true): .badgeMicroCaps
+    case (.small, false): .badgeSmall
+    case (.small, true): .badgeSmallCaps
+    case (.medium, false): .badgeMedium
+    case (.medium, true): .badgeMediumCaps
     }
   }
 }
 
 /// A noninteractive, single-line label. Long text truncates within its container.
+/// Specified in packages/design-system/components/badge.yaml.
 struct MTBadge: View {
   let title: String
-  var tone: MTBadgeTone = .accent
-  var size: MTBadgeSize = .small
-  var uppercase = false
+  var tone: MTBadgeTone = MTBadgeDefaults.tone
+  var size: MTBadgeSize = MTBadgeDefaults.size
+  var uppercase = MTBadgeDefaults.uppercase
 
   var body: some View {
-    Text(uppercase ? title.uppercased() : title)
-      .font(font)
-      .tracking(uppercase ? 0.6 : 0)
+    // Like a Web border, the outline sits inside the badge and adds to its size.
+    let borderWidth = tone.border == nil ? 0 : MTSize.Stroke.thin
+    Text(title)
+      .mtTextRole(size.textRole(uppercase: uppercase))
       .lineLimit(1)
       .truncationMode(.tail)
       .foregroundStyle(tone.foreground)
-      .padding(.horizontal, MTSpacing.s2)
-      .padding(.vertical, 3)
-      .frame(minHeight: size == .medium ? 22 : nil)
-      .background(tone.background, in: Capsule())
+      .padding(.horizontal, MTSpacing.s2 + borderWidth)
+      .padding(.vertical, MTSize.Badge.paddingBlock + borderWidth)
+      .frame(minHeight: size == .medium ? MTSize.Badge.minHeight : nil)
+      .background(tone.fill, in: Capsule())
       .background {
-        if tone.isGlass { Capsule().fill(.ultraThinMaterial) }
+        if let material = tone.material { Capsule().fill(material.material) }
       }
       .overlay {
-        if tone == .outline { Capsule().stroke(MTColor.border, lineWidth: 1) }
+        if let border = tone.border { Capsule().strokeBorder(border, lineWidth: borderWidth) }
       }
       .accessibilityLabel(title)
-  }
-
-  private var font: Font {
-    switch size {
-    case .micro: Font.caption2.weight(.semibold)
-    case .small: Font.caption2.weight(uppercase ? .semibold : .medium)
-    case .medium: Font.caption.weight(uppercase ? .semibold : .regular)
-    }
   }
 }
 

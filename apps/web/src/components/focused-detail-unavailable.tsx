@@ -14,7 +14,11 @@ export function FocusedDetailUnavailable({
   return (
     <PageFrame variant="compact">
       <PageHeader
-        actions={<ButtonLink href={back}>Back to {backLabel}</ButtonLink>}
+        actions={
+          <ButtonLink href={back} variant="secondary">
+            Back to {backLabel}
+          </ButtonLink>
+        }
         eyebrow={label}
         title={`${label} unavailable`}
         description="This record may have moved to Trash or no longer be accessible."

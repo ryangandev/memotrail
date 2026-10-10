@@ -69,7 +69,22 @@ export function normalizeSpec(spec, label) {
   if (new Set(ids).size !== ids.length) {
     throw new Error(`${label}: specimen ids must be unique.`);
   }
-  return { ...spec, label };
+  // covers names the prop values a specimen draws; all means every value the prop allows.
+  const specimens = spec.specimens.map((specimen) => ({
+    ...specimen,
+    covers: Object.fromEntries(
+      Object.entries(specimen.covers ?? {}).map(([prop, values]) => {
+        const allowed = spec.props?.[prop]?.values;
+        if (!Array.isArray(allowed)) {
+          throw new Error(
+            `${label}: specimen ${specimen.id} covers ${prop}, which is not a prop with values.`,
+          );
+        }
+        return [prop, values === "all" ? [...allowed] : values];
+      }),
+    ),
+  }));
+  return { ...spec, specimens, label };
 }
 
 // A spec describes a bundled component when it has the same name. Its Web platform must point at

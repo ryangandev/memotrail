@@ -1,20 +1,22 @@
-import { join, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import ts from "typescript";
 
 // Writes index.d.ts for the bundle and reads each component's props from it.
 //
 // TypeScript emits declarations for the bundled Web component files exactly as the app's
 // tsconfig compiles them. They are merged into one `MemoTrail` namespace, the type that
-// `window.MemoTrail` has, with the same shims the bundle uses: `next/link` is a plain anchor, and
-// icon names come from icons.json. The merged file is then type checked, so a declaration that no
-// longer resolves stops the export, and the README props come from that checked file.
+// `window.MemoTrail` has, with the same shim the bundle uses: `next/link` is a plain anchor. Types
+// the components import from the rest of the app, such as the unions generated from the component
+// specs, are copied in with the types they need, so the file stands alone. The merged file is then
+// type checked, so a declaration that no longer resolves stops the export, and the README props
+// come from that checked file.
 
 const virtualIndex = "memotrail-index.ts";
 
 const linkShim = `type Link = (
-    props: Omit<ComponentPropsWithoutRef<"a">, "href"> & { href: string },
-  ) => import("react").JSX.Element;
-  const Link: Link;`;
+  props: Omit<ComponentPropsWithoutRef<"a">, "href"> & { href: string },
+) => import("react").JSX.Element;
+const Link: Link;`;
 
 const readableAliases = new Set(["ReactNode", "IconName", "CSSProperties"]);
 
@@ -30,12 +32,7 @@ const elementTags = {
   HTMLTextAreaElement: "textarea",
 };
 
-export function makeDeclarations({
-  webRoot,
-  packageRoot,
-  components,
-  iconNames,
-}) {
+export function makeDeclarations({ webRoot, packageRoot, components }) {
   const componentDirectory = join(webRoot, "src/components");
   const files = [
     ...new Set(components.map((component) => component.source)),
@@ -43,10 +40,12 @@ export function makeDeclarations({
   const { program, options } = sourceProgram(webRoot, files);
   const checker = program.getTypeChecker();
   const exported = new Set(components.flatMap(componentNames));
+  const bundledFiles = new Set(files.map((file) => resolve(file)));
 
   const reactImports = new Set();
-  const declarations = [];
+  const members = [];
   const declared = new Map();
+  const copied = copier({ program, checker, webRoot, declared, reactImports });
   let usesLink = false;
 
   for (const file of files) {
@@ -73,24 +72,13 @@ export function makeDeclarations({
           }
         } else if (specifier === "next/link") {
           usesLink = true;
-        } else if (specifier === "@/generated/design-system") {
-          // IconName is declared from icons.json below.
-        } else if (isComponentModule(specifier)) {
-          // Merged into the same namespace.
         } else if (specifier.startsWith("@/") || specifier.startsWith(".")) {
+          const module = ts.resolveModuleName(specifier, file, options, ts.sys)
+            .resolvedModule?.resolvedFileName;
+          // Another bundled file is merged into the same namespace.
+          if (module && bundledFiles.has(resolve(module))) continue;
           for (const { imported, local } of importedNames(statement)) {
-            declarations.push(
-              inlineType({
-                program,
-                checker,
-                options,
-                file,
-                specifier,
-                imported,
-                local,
-              }),
-            );
-            record(declared, local, file);
+            copied.add({ file, specifier, module, imported, local });
           }
         } else {
           throw new Error(
@@ -104,9 +92,31 @@ export function makeDeclarations({
 
       const name = statementName(statement);
       if (name) record(declared, name, file);
-      declarations.push(namespaceMember(statement, emitted, exported));
+      members.push(
+        namespaceMember({ statement, emitted, source, checker, exported }),
+      );
     }
   }
+
+  // Values other than the components only remain when a kept type reads one with typeof, as a
+  // local list such as pageFrameVariants is no longer needed once its union is written out.
+  const kept = new Set(
+    members.filter((member) => !member.hidden).map((member) => member.name),
+  );
+  for (let grown = true; grown;) {
+    grown = false;
+    for (const member of members) {
+      if (!kept.has(member.name)) continue;
+      for (const query of member.queries) {
+        if (kept.has(query)) continue;
+        kept.add(query);
+        grown = true;
+      }
+    }
+  }
+  const declarations = members
+    .filter((member) => kept.has(member.name))
+    .map((member) => member.text);
 
   for (const name of exported) {
     if (!declared.has(name)) {
@@ -124,11 +134,15 @@ export function makeDeclarations({
 import type { ${[...new Set(imports)].sort().join(", ")} } from "react";
 
 declare namespace MemoTrail {
-  /** Icon names from packages/design-system/icons.json that Web draws. */
-  export type IconName =
-${iconNames.map((name) => `    | ${JSON.stringify(name)}`).join("\n")};
-${usesLink ? `\n  /** Next.js Link is a plain anchor in the bundle. */\n  ${linkShim}\n` : ""}
-${declarations.map((declaration) => indent(declaration)).join("\n\n")}
+${[
+  ...copied.declarations,
+  ...(usesLink
+    ? [`/** Next.js Link is a plain anchor in the bundle. */\n${linkShim}`]
+    : []),
+  ...declarations,
+]
+  .map((declaration) => indent(declaration))
+  .join("\n\n")}
 }
 
 declare global {
@@ -218,10 +232,6 @@ function importedNames(statement) {
   }));
 }
 
-function isComponentModule(specifier) {
-  return specifier.startsWith("./") || specifier.startsWith("@/components/");
-}
-
 function record(declared, name, file) {
   const owner = declared.get(name);
   if (owner && owner !== file) {
@@ -241,68 +251,268 @@ function statementName(statement) {
 
 // Rewrites a top-level declaration as a namespace member. Inside `declare namespace` every
 // member is already ambient, so `declare` goes, and only components and types stay exported:
-// the bundle exposes no other values.
-function namespaceMember(statement, source, exported) {
-  const leading = source.text
-    .slice(statement.getFullStart(), statement.getStart(source))
+// the bundle exposes no other values, so other values are hidden unless a type reads them. An
+// alias that resolves to a union of literals, such as (typeof pageFrameVariants)[number], is
+// written out as that union.
+function namespaceMember({ statement, emitted, source, checker, exported }) {
+  let leading = emitted.text
+    .slice(statement.getFullStart(), statement.getStart(emitted))
     .trim();
-  let body = statement.getText(source);
-  if (ts.isFunctionDeclaration(statement)) {
+  const name = statementName(statement);
+  const isValue =
+    ts.isFunctionDeclaration(statement) || ts.isVariableStatement(statement);
+  let body = statement.getText(emitted);
+  const original = ts.isTypeAliasDeclaration(statement)
+    ? source.statements.find(
+        (node) => ts.isTypeAliasDeclaration(node) && node.name.text === name,
+      )
+    : null;
+  const literals =
+    original && !isLiteralUnionNode(original.type)
+      ? literalUnion(checker, original)
+      : null;
+  if (literals) {
+    body = `${/^export\b/.test(body) ? "export " : ""}type ${name} =${literals};`;
+    leading ||= documentation(checker, original) ?? "";
+  } else if (ts.isFunctionDeclaration(statement)) {
     // Destructured parameters only repeat prop names; one named parameter reads better and
     // avoids renamed bindings, which are not valid outside a declaration file.
-    const start = statement.getStart(source);
+    const start = statement.getStart(emitted);
     for (const parameter of [...statement.parameters].reverse()) {
       if (ts.isIdentifier(parameter.name)) continue;
       body =
-        body.slice(0, parameter.name.getStart(source) - start) +
+        body.slice(0, parameter.name.getStart(emitted) - start) +
         "props" +
         body.slice(parameter.name.getEnd() - start);
     }
   }
-  const isValue =
-    ts.isFunctionDeclaration(statement) || ts.isVariableStatement(statement);
-  const name = statementName(statement);
   body = body.replace(/^export declare /, "export ").replace(/^declare /, "");
   if (isValue && !exported.has(name)) body = body.replace(/^export /, "");
-  return leading ? `${leading}\n${body}` : body;
+  // TypeScript emits four-space indents; the copied source types use two, as the app does.
+  body = body.replace(/^((?: {4})+)/gm, (spaces) =>
+    " ".repeat(spaces.length / 2),
+  );
+
+  const queries = new Set();
+  if (!literals) {
+    const visit = (node) => {
+      if (ts.isTypeQueryNode(node)) {
+        queries.add(node.exprName.getText(emitted).split(".")[0]);
+      }
+      ts.forEachChild(node, visit);
+    };
+    visit(statement);
+  }
+  return {
+    name,
+    hidden: isValue && !exported.has(name),
+    queries,
+    text: leading ? `${leading}\n${body}` : body,
+  };
 }
 
-// Copies a type alias or interface that a component imports from elsewhere in the app.
-function inlineType({
-  program,
-  checker,
-  options,
-  file,
-  specifier,
-  imported,
-  local,
-}) {
-  const resolved = ts.resolveModuleName(
-    specifier,
-    file,
-    options,
-    ts.sys,
-  ).resolvedModule;
-  const module = resolved && program.getSourceFile(resolved.resolvedFileName);
-  const symbol =
-    module && checker.getSymbolAtLocation(module)?.exports?.get(imported);
-  const declaration = symbol?.declarations?.[0];
-  if (
-    !declaration ||
-    !(
-      ts.isTypeAliasDeclaration(declaration) ||
-      ts.isInterfaceDeclaration(declaration)
-    )
-  ) {
-    throw new Error(
-      `${file} imports ${imported} from ${specifier}, which is not a type alias or interface index.d.ts can copy.`,
+function isLiteralUnionNode(node) {
+  if (!node) return false;
+  const members = ts.isUnionTypeNode(node) ? node.types : [node];
+  return members.every(
+    (member) =>
+      ts.isLiteralTypeNode(member) &&
+      (ts.isStringLiteral(member.literal) ||
+        ts.isNumericLiteral(member.literal) ||
+        ts.isPrefixUnaryExpression(member.literal)),
+  );
+}
+
+// The members of an alias that resolves to a union of string or number literals, in the order
+// its source lists them, or null for any other type.
+function literalUnion(checker, declaration) {
+  const type = checker.getTypeAtLocation(declaration.name);
+  const members = type.isUnion() ? type.types : [type];
+  if (!members.every((member) => member.isLiteral())) return null;
+  const values = members.map((member) => member.value);
+  if (values.some((value) => typeof value === "object")) return null;
+  const order = declaredOrder(checker, declaration);
+  const position = (value) =>
+    order.includes(value) ? order.indexOf(value) : order.length;
+  values.sort((first, second) => position(first) - position(second));
+  const written = values.map((value) => JSON.stringify(value));
+  const line = ` ${written.join(" | ")}`;
+  return line.length <= 72
+    ? line
+    : written.map((value) => `\n  | ${value}`).join("");
+}
+
+// The checker orders union members by when it first met each literal, so the order comes from
+// the source: a written union, or the list a union such as (typeof badgeTones)[number] reads.
+function declaredOrder(checker, declaration) {
+  const literal = (node) => {
+    if (ts.isStringLiteralLike(node)) return [node.text];
+    if (ts.isNumericLiteral(node) || ts.isPrefixUnaryExpression(node)) {
+      return [Number(node.getText())];
+    }
+    return [];
+  };
+  let node = declaration.type;
+  if (isLiteralUnionNode(node)) {
+    return (ts.isUnionTypeNode(node) ? node.types : [node]).flatMap((member) =>
+      literal(member.literal),
     );
   }
-  const text = declaration.getText(module).replace(/^export /, "");
-  return text.replace(
-    ts.isTypeAliasDeclaration(declaration) ? /^type \w+/ : /^interface \w+/,
-    `${ts.isTypeAliasDeclaration(declaration) ? "type" : "interface"} ${local}`,
-  );
+  if (!node || !ts.isIndexedAccessTypeNode(node)) return [];
+  node = node.objectType;
+  while (ts.isParenthesizedTypeNode(node)) node = node.type;
+  if (!ts.isTypeQueryNode(node)) return [];
+  const value = checker.getSymbolAtLocation(node.exprName)?.valueDeclaration;
+  let list =
+    value && ts.isVariableDeclaration(value) ? value.initializer : null;
+  while (
+    list &&
+    (ts.isAsExpression(list) ||
+      ts.isSatisfiesExpression(list) ||
+      ts.isParenthesizedExpression(list))
+  ) {
+    list = list.expression;
+  }
+  if (!list || !ts.isArrayLiteralExpression(list)) return [];
+  return list.elements.flatMap(literal);
+}
+
+// Copies the types that components import from the rest of the app, such as the unions generated
+// from the component specs, with the app types each copy references in turn.
+//
+// An alias that is a union of literals is written out as that union, so index.d.ts shows the
+// values instead of the generated list they come from. Any other alias or interface is copied as
+// written. A copy keeps its source's JSDoc, or that of the value its source reads with `typeof`.
+function copier({ program, checker, webRoot, declared, reactImports }) {
+  const appRoot = resolve(webRoot);
+  const declarations = [];
+  const origins = new Map();
+
+  const resolveAlias = (symbol) =>
+    symbol && symbol.flags & ts.SymbolFlags.Alias
+      ? checker.getAliasedSymbol(symbol)
+      : symbol;
+
+  function add({ file, specifier, module, imported, local }) {
+    const source = module && program.getSourceFile(module);
+    const symbol = resolveAlias(
+      source && checker.getSymbolAtLocation(source)?.exports?.get(imported),
+    );
+    copy(symbol, local, `${file} imports ${imported} from ${specifier}`);
+  }
+
+  function copy(symbol, local, context) {
+    const declaration = symbol?.declarations?.find(
+      (node) =>
+        ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node),
+    );
+    if (!declaration) {
+      throw new Error(
+        `${context}, which is not a type alias or interface index.d.ts can copy.`,
+      );
+    }
+    const source = declaration.getSourceFile();
+    const origin = `${relative(appRoot, source.fileName)}#${symbol.name}`;
+    if (origins.has(local)) {
+      if (origins.get(local) === origin) return;
+      throw new Error(
+        `${context}, but index.d.ts already copies ${origins.get(local)} as ${local}.`,
+      );
+    }
+    origins.set(local, origin);
+    record(declared, local, origin);
+
+    const literals = ts.isTypeAliasDeclaration(declaration)
+      ? literalUnion(checker, declaration)
+      : null;
+    let body;
+    if (literals) {
+      body = `export type ${local} =${literals};`;
+    } else {
+      for (const dependency of references(declaration, `${origin}`)) {
+        copy(dependency, dependency.name, `${origin} uses ${dependency.name}`);
+      }
+      const text = declaration
+        .getText(source)
+        .replace(/^export\s+/, "")
+        .replace(/^(type|interface)\s+\w+/, `$1 ${local}`);
+      body = `export ${text}`;
+    }
+    const comment = documentation(checker, declaration);
+    declarations.push(comment ? `${comment}\n${body}` : body);
+  }
+
+  // The app types a copied declaration names, after noting the React types it needs.
+  function references(declaration, origin) {
+    const found = [];
+    const visit = (node) => {
+      if (ts.isTypeQueryNode(node)) {
+        throw new Error(
+          `${origin} reads the value ${node.exprName.getText()} with typeof, which index.d.ts cannot declare. Make it a union of literals or a plain type.`,
+        );
+      }
+      const name = ts.isTypeReferenceNode(node)
+        ? node.typeName
+        : ts.isExpressionWithTypeArguments(node)
+          ? node.expression
+          : null;
+      const symbol = name && resolveAlias(checker.getSymbolAtLocation(name));
+      const target = symbol?.declarations?.[0];
+      if (target && !ts.isTypeParameterDeclaration(target)) {
+        const file = target.getSourceFile();
+        const where = resolve(file.fileName);
+        if (program.isSourceFileDefaultLibrary(file)) {
+          // A global such as Record or HTMLElement.
+        } else if (
+          ts.isIdentifier(name) &&
+          name.text === symbol.name &&
+          /[\\/]node_modules[\\/]@types[\\/]react[\\/]/.test(where)
+        ) {
+          reactImports.add(name.text);
+        } else if (
+          ts.isIdentifier(name) &&
+          name.text === symbol.name &&
+          where.startsWith(`${appRoot}/`) &&
+          !where.includes("/node_modules/")
+        ) {
+          found.push(symbol);
+        } else {
+          throw new Error(
+            `${origin} uses ${name.getText()} from ${relative(appRoot, where)}, which index.d.ts cannot reference. Import it by its own name, or give the type a plain definition.`,
+          );
+        }
+      }
+      ts.forEachChild(node, visit);
+    };
+    ts.forEachChild(declaration, visit);
+    return found;
+  }
+
+  return { add, declarations };
+}
+
+// A type's JSDoc, or that of the value it reads with typeof, such as the generated badgeTones.
+function documentation(checker, declaration) {
+  const own = jsDoc(declaration);
+  if (own) return own;
+  let comment = null;
+  const visit = (node) => {
+    if (comment) return;
+    if (ts.isTypeQueryNode(node)) {
+      const value = checker.getSymbolAtLocation(
+        node.exprName,
+      )?.valueDeclaration;
+      comment = value ? jsDoc(value) : null;
+    }
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(declaration, visit);
+  return comment;
+}
+
+function jsDoc(node) {
+  const comments = ts.getJSDocCommentsAndTags(node).filter(ts.isJSDoc);
+  return comments.at(-1)?.getText() ?? null;
 }
 
 function indent(text) {
@@ -424,6 +634,23 @@ function propertyTypeText(declarations, checker, type, location) {
     /^[A-Z]\w*$/.test(written[0]) &&
     !readableAliases.has(written[0])
   ) {
+    // A union of literals keeps the order index.d.ts writes it in; the checker would order its
+    // members by when it first met each literal.
+    const reference = declarations.find(
+      (declaration) =>
+        declaration.type && ts.isTypeReferenceNode(declaration.type),
+    )?.type;
+    const alias = reference
+      ? checker.getSymbolAtLocation(reference.typeName)?.declarations?.[0]
+      : null;
+    if (alias && ts.isTypeAliasDeclaration(alias)) {
+      const members = ts.isUnionTypeNode(alias.type)
+        ? alias.type.types
+        : [alias.type];
+      if (members.every((member) => ts.isLiteralTypeNode(member))) {
+        return members.map((member) => member.getText()).join(" | ");
+      }
+    }
     return checker.typeToString(
       checker.getNonNullableType(type),
       undefined,
@@ -452,8 +679,18 @@ function componentDeclaration(
   return { symbol, declaration: symbol?.declarations?.[0], source };
 }
 
-// Defaults live in the source's destructuring, which declarations drop.
+// Defaults live in the source's destructuring, which declarations drop. A default read from a
+// constant, such as badgeDefaults.size, is shown as the literal it resolves to.
 function readDefaults(program, checker, components, componentDirectory) {
+  const written = (initializer, source) => {
+    const type = checker.getTypeAtLocation(initializer);
+    if (type.isStringLiteral()) return JSON.stringify(type.value);
+    if (type.isNumberLiteral()) return String(type.value);
+    if (type.flags & ts.TypeFlags.BooleanLiteral) {
+      return checker.typeToString(type);
+    }
+    return initializer.getText(source);
+  };
   const defaults = new Map();
   for (const component of components) {
     for (const name of componentNames(component)) {
@@ -470,8 +707,10 @@ function readDefaults(program, checker, components, componentDirectory) {
         for (const element of pattern.elements) {
           if (!element.initializer) continue;
           const key = (element.propertyName ?? element.name).getText(source);
-          values[key.replace(/^"|"$/g, "")] =
-            element.initializer.getText(source);
+          values[key.replace(/^"|"$/g, "")] = written(
+            element.initializer,
+            source,
+          );
         }
       }
       defaults.set(name, values);

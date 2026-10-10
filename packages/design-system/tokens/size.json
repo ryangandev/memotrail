@@ -264,6 +264,23 @@
           "unit": "px"
         }
       }
+    },
+    "badge": {
+      "$description": "Badge geometry: Web Badge and iOS MTBadge share it.",
+      "paddingBlock": {
+        "$description": "Space above and below a badge's label.",
+        "$value": {
+          "value": 3,
+          "unit": "px"
+        }
+      },
+      "minHeight": {
+        "$description": "Minimum height of a medium badge.",
+        "$value": {
+          "value": 22,
+          "unit": "px"
+        }
+      }
     }
   }
 }

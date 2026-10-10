@@ -7,8 +7,10 @@ import { Dialog } from "@/components/dialog";
 import { EmptyState } from "@/components/empty-state";
 import { Icon } from "@/components/icon";
 import { PageHeader } from "@/components/page-header";
+import { buttonSizes, buttonVariants } from "@/generated/design-system";
 import styles from "./page.module.css";
 import review from "./pending-component-review.module.css";
+import { capitalize, SpecimenCase } from "./specimen";
 
 export function SharedPrimitivesGallery() {
   const portal = useRef<HTMLDivElement>(null);
@@ -41,31 +43,36 @@ export function SharedPrimitivesGallery() {
     <div className={review.stack} ref={portal}>
       <Sample
         title="Button"
-        api="primary · secondary · ghost · danger · small / medium / large"
+        api="variant · size · loading · disabled · ButtonLink · IconButton"
       >
-        <div className={review.stack}>
-          {(["primary", "secondary", "ghost", "danger"] as const).map(
-            (variant) => (
-              <div className={review.row} key={variant}>
-                <span className={review.rowLabel}>{variant}</span>
-                <Button
-                  variant={variant}
-                  onClick={() => setMessage(`${variant} button activated.`)}
-                >
-                  Continue
-                </Button>
-                <Button variant={variant} disabled>
-                  Disabled
-                </Button>
-                <Button variant={variant} loading>
-                  Saving
-                </Button>
-              </div>
-            ),
-          )}
-          <div className={review.row}>
-            <span className={review.rowLabel}>Sizes</span>
-            {(["small", "medium", "large"] as const).map((size) => (
+        <div className={styles.specimenCases}>
+          <SpecimenCase id="button-variants">
+            {buttonVariants.map((variant) => (
+              <Button
+                key={variant}
+                variant={variant}
+                onClick={() => setMessage(`${variant} button activated.`)}
+              >
+                {capitalize(variant)}
+              </Button>
+            ))}
+          </SpecimenCase>
+          <SpecimenCase id="button-disabled">
+            {buttonVariants.map((variant) => (
+              <Button disabled key={variant} variant={variant}>
+                {capitalize(variant)}
+              </Button>
+            ))}
+          </SpecimenCase>
+          <SpecimenCase id="button-loading">
+            {buttonVariants.map((variant) => (
+              <Button key={variant} loading variant={variant}>
+                Saving
+              </Button>
+            ))}
+          </SpecimenCase>
+          <SpecimenCase id="button-sizes">
+            {buttonSizes.map((size) => (
               <Button
                 key={size}
                 size={size}
@@ -73,26 +80,42 @@ export function SharedPrimitivesGallery() {
                 onClick={() => setMessage(`${size} button activated.`)}
               >
                 <Icon name="plus" size={16} />
-                {size}
+                {capitalize(size)}
               </Button>
             ))}
-          </div>
-          <div className={review.row}>
-            <span className={review.rowLabel}>Icon / link</span>
-            <IconButton
-              label="Add demo entry"
-              onClick={() => setMessage("Add icon activated.")}
-            >
-              <Icon name="plus" size={18} />
-            </IconButton>
-            <IconButton label="Disabled add entry" disabled>
-              <Icon name="plus" size={18} />
-            </IconButton>
-            <IconButton label="Saving entry" loading>
-              <Icon name="plus" size={18} />
-            </IconButton>
+          </SpecimenCase>
+          <SpecimenCase id="button-link">
             <ButtonLink href="#foundations">View foundations</ButtonLink>
-          </div>
+            <ButtonLink href="#shared-primitives" variant="secondary">
+              Back to primitives
+            </ButtonLink>
+          </SpecimenCase>
+          <section
+            aria-labelledby="icon-button-states"
+            className={styles.specimenCase}
+          >
+            <div className={styles.specimenCaseHeader}>
+              <h4 id="icon-button-states">IconButton</h4>
+              <p>
+                Icon-only actions at rest, disabled, and loading. IconButton
+                draws with Button and names itself with its required label.
+              </p>
+            </div>
+            <div className={styles.specimenCaseBody}>
+              <IconButton
+                label="Add demo entry"
+                onClick={() => setMessage("Add icon activated.")}
+              >
+                <Icon name="plus" size={18} />
+              </IconButton>
+              <IconButton label="Disabled add entry" disabled>
+                <Icon name="plus" size={18} />
+              </IconButton>
+              <IconButton label="Saving entry" loading>
+                <Icon name="plus" size={18} />
+              </IconButton>
+            </div>
+          </section>
           <p className={styles.stateNote} role="status">
             {message}
           </p>

@@ -17,6 +17,7 @@ import { bundled, cardGroups, excluded } from "./claude-design/catalog.mjs";
 import { componentNames } from "./claude-design/declarations.mjs";
 import {
   checkSpecAgainstComponent,
+  loadSpecs,
   normalizeSpec,
 } from "./claude-design/docs.mjs";
 import { specimenOrder } from "./claude-design/previews.mjs";
@@ -359,6 +360,47 @@ describe("components", () => {
     }
   });
 
+  test("index.d.ts writes out the generated unions the components use, in their order", async () => {
+    const text = await readFile(join(project, "components/index.d.ts"), "utf8");
+    const generated = await readFile(
+      resolve(repositoryRoot, "apps/web/src/generated/design-system.ts"),
+      "utf8",
+    );
+    const lists = new Map(
+      [
+        ...generated.matchAll(
+          /^export const (\w+) = \[([^\]]*)\] as const;$/gm,
+        ),
+      ].map((match) => [match[1], [...match[2].matchAll(/"([^"]*)"/g)]]),
+    );
+    const aliases = [
+      ...generated.matchAll(
+        /^export type (\w+) = \(typeof (\w+)\)\[number\];$/gm,
+      ),
+    ];
+    const copied = aliases.filter(([, alias]) =>
+      text.includes(`export type ${alias} =`),
+    );
+    for (const name of ["IconName", "BadgeTone", "ButtonVariant"]) {
+      assert.ok(
+        copied.some(([, alias]) => alias === name),
+        `copies ${name}`,
+      );
+    }
+    for (const [, alias, list] of copied) {
+      const declared = text.match(
+        new RegExp(`export type ${alias} =([^;]*);`),
+      )[1];
+      assert.deepEqual(
+        [...declared.matchAll(/"([^"]*)"/g)].map((match) => match[1]),
+        lists.get(list).map((match) => match[1]),
+        alias,
+      );
+    }
+    assert.doesNotMatch(text, /typeof \w+\)\[number\]/);
+    assert.doesNotMatch(text, /from "@\//);
+  });
+
   test("the catalog lists every Web component file exactly once", async () => {
     const files = (await readdir(webComponents)).filter(
       (file) => /\.tsx?$/.test(file) && !/\.test\.tsx?$/.test(file),
@@ -407,6 +449,48 @@ describe("README.md", () => {
     const sources = await webSources(resolve(repositoryRoot, "apps/web/src"));
     for (const quote of quotes) assert.ok(sources.includes(quote), quote);
   });
+});
+
+test("exports with the repository's own component specs", async () => {
+  const own = await mkdtemp(join(tmpdir(), "memotrail-claude-design-specs-"));
+  try {
+    const exported = await exportClaudeDesign({ output: own });
+    const specs = await loadSpecs(
+      resolve(packageRoot, "components"),
+      repositoryRoot,
+    );
+    assert.ok(specs.length > 0);
+    for (const spec of specs) {
+      const readme = await readFile(
+        join(exported.project, `components/${spec.name}/README.md`),
+        "utf8",
+      );
+      for (const specimen of spec.specimens) {
+        assert.match(readme, new RegExp(`^- \`${specimen.id}\`: `, "m"));
+      }
+      // The spec's props, then the Web props of the component and each part that takes the prop,
+      // list every value, and Web defaults show the literal read from the generated constants.
+      for (const [name, prop] of Object.entries(spec.props)) {
+        if (!prop.values || prop.platforms?.includes("web") === false) continue;
+        const rows = readme
+          .split("\n")
+          .filter((line) => line.startsWith(`| \`${name}\` |`));
+        const [specRow, ...webRows] = rows;
+        assert.ok(webRows.length > 0, `${spec.name} ${name} has Web rows`);
+        for (const value of prop.values) {
+          assert.ok(specRow.includes(`\`${value}\``), `${name} ${value}`);
+          for (const row of webRows) {
+            assert.ok(row.includes(`"${value}"`), `Web ${name} ${value}`);
+          }
+        }
+        for (const row of webRows) {
+          assert.ok(row.includes(`| \`"${prop.default}"\` |`), row);
+        }
+      }
+    }
+  } finally {
+    await rm(own, { recursive: true, force: true });
+  }
 });
 
 test("no exported text uses the em dash", async () => {

@@ -294,6 +294,24 @@ struct MTTextRole: Sendable {
   static let stamp = MTTextRole(
     name: "stamp", size: 10, weight: .regular, design: .monospaced, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: nil)
+  static let badgeMicro = MTTextRole(
+    name: "badgeMicro", size: 11, weight: .regular, design: .default, lineHeight: 1.2, tracking: 0,
+    isUppercase: false, textStyle: .caption2)
+  static let badgeSmall = MTTextRole(
+    name: "badgeSmall", size: 11, weight: .regular, design: .default, lineHeight: 1.2, tracking: 0,
+    isUppercase: false, textStyle: .caption2)
+  static let badgeMedium = MTTextRole(
+    name: "badgeMedium", size: 12, weight: .regular, design: .default, lineHeight: 1.2, tracking: 0,
+    isUppercase: false, textStyle: .caption)
+  static let badgeMicroCaps = MTTextRole(
+    name: "badgeMicroCaps", size: 11, weight: .semibold, design: .default, lineHeight: 1.2,
+    tracking: 0.66, isUppercase: true, textStyle: .caption2)
+  static let badgeSmallCaps = MTTextRole(
+    name: "badgeSmallCaps", size: 11, weight: .semibold, design: .default, lineHeight: 1.2,
+    tracking: 0.66, isUppercase: true, textStyle: .caption2)
+  static let badgeMediumCaps = MTTextRole(
+    name: "badgeMediumCaps", size: 12, weight: .semibold, design: .default, lineHeight: 1.2,
+    tracking: 0.72, isUppercase: true, textStyle: .caption)
 
   static let catalog = [
     hero,
@@ -316,6 +334,12 @@ struct MTTextRole: Sendable {
     eyebrow,
     fine,
     stamp,
+    badgeMicro,
+    badgeSmall,
+    badgeMedium,
+    badgeMicroCaps,
+    badgeSmallCaps,
+    badgeMediumCaps,
   ]
 }
 
@@ -362,6 +386,18 @@ enum MTFont {
   static let fine = Font.system(size: 10)
   /// Monospaced counts and dates.
   static let stamp = Font.system(size: 10, design: .monospaced)
+  /// Micro badge labels, such as tags in record card footers. iOS draws them at its 11 pt caption2 minimum.
+  static let badgeMicro = Font.caption2
+  /// Small badge labels, the default size for statuses and tags. iOS draws them at its 11 pt caption2 minimum.
+  static let badgeSmall = Font.caption2
+  /// Medium badge labels, such as Dashboard tags.
+  static let badgeMedium = Font.caption
+  /// Uppercase micro badge labels, such as record kinds over photos. Tracking is 0.06 em on both platforms.
+  static let badgeMicroCaps = Font.caption2.weight(.semibold)
+  /// Uppercase small badge labels. Tracking is 0.06 em on both platforms.
+  static let badgeSmallCaps = Font.caption2.weight(.semibold)
+  /// Uppercase medium badge labels. Tracking is 0.06 em on both platforms.
+  static let badgeMediumCaps = Font.caption.weight(.semibold)
 }
 
 enum MTSpacing {
@@ -498,6 +534,11 @@ enum MTSize {
     static let medium: CGFloat = 2
     static let thick: CGFloat = 3
     static let icon: CGFloat = 1.7
+  }
+
+  enum Badge {
+    static let paddingBlock: CGFloat = 3
+    static let minHeight: CGFloat = 22
   }
 }
 

@@ -322,6 +322,12 @@ export const typeRoles = [
   "fine",
   "stamp",
   "nano",
+  "badgeMicro",
+  "badgeSmall",
+  "badgeMedium",
+  "badgeMicroCaps",
+  "badgeSmallCaps",
+  "badgeMediumCaps",
 ] as const;
 
 export type TypeRole = (typeof typeRoles)[number];
@@ -523,3 +529,138 @@ export const themeColors = {
     },
   },
 } as const;
+
+// Badge, from packages/design-system/components/badge.yaml.
+
+/** The badge's color treatment. Glass and inverse tones are for photos and maps; success and danger are for outcomes. */
+export const badgeTones = [
+  "accent",
+  "neutral",
+  "warm",
+  "success",
+  "danger",
+  "outline",
+  "inverse",
+  "solidAccent",
+  "glassAccent",
+  "glassNeutral",
+] as const;
+
+export type BadgeTone = (typeof badgeTones)[number];
+
+/** The badge's text size. Micro fits dense cards, small is the default, and medium sits beside 22 px controls. */
+export const badgeSizes = ["micro", "small", "medium"] as const;
+
+export type BadgeSize = (typeof badgeSizes)[number];
+
+/** Badge prop defaults. */
+export const badgeDefaults = {
+  tone: "accent",
+  size: "small",
+  uppercase: false,
+} as const;
+
+// Button, from packages/design-system/components/button.yaml.
+
+/** The action's emphasis. Primary is the main action, secondary an alternative, ghost a quiet one, and danger a destructive one. */
+export const buttonVariants = [
+  "primary",
+  "secondary",
+  "ghost",
+  "danger",
+] as const;
+
+export type ButtonVariant = (typeof buttonVariants)[number];
+
+/** The control's height, padding, and text size. Small fits dense rows and toolbars, and large stands alone. */
+export const buttonSizes = ["small", "medium", "large"] as const;
+
+export type ButtonSize = (typeof buttonSizes)[number];
+
+/** Button prop defaults. */
+export const buttonDefaults = {
+  variant: "primary",
+  size: "medium",
+  loading: false,
+} as const;
+
+/** Every spec's gallery specimens. The gallery marks each with data-specimen="<id>". */
+export const componentSpecimens = [
+  {
+    component: "Badge",
+    id: "badge-tones",
+    description: "Every tone at the default small size.",
+    covers: {
+      tone: [
+        "accent",
+        "neutral",
+        "warm",
+        "success",
+        "danger",
+        "outline",
+        "inverse",
+        "solidAccent",
+        "glassAccent",
+        "glassNeutral",
+      ],
+    },
+  },
+  {
+    component: "Badge",
+    id: "badge-sizes",
+    description: "Every size in the default accent tone, beside the uppercase treatment at each size.",
+    covers: { size: ["micro", "small", "medium"] },
+  },
+  {
+    component: "Badge",
+    id: "badge-tags",
+    description: "Tags written with a leading # in Latin and CJK scripts, at the medium size Dashboard uses.",
+    covers: {},
+  },
+  {
+    component: "Badge",
+    id: "badge-truncation",
+    description: "A long label and a long tag stay on one line and truncate at the tail inside a narrow container.",
+    covers: {},
+  },
+  {
+    component: "Badge",
+    id: "badge-photo-overlay",
+    description: "Uppercase micro glass and inverse tones over a photo, where record cards place them.",
+    covers: { tone: ["glassAccent", "glassNeutral", "inverse"] },
+  },
+  {
+    component: "Button",
+    id: "button-variants",
+    description: "Every variant at the default medium size.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "Button",
+    id: "button-disabled",
+    description: "Every variant disabled, faded to the disabled opacity.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "Button",
+    id: "button-loading",
+    description: "Every variant loading, with the spinner before the label.",
+    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+  },
+  {
+    component: "Button",
+    id: "button-sizes",
+    description: "Every size in the secondary variant, each with a leading icon.",
+    covers: { size: ["small", "medium", "large"] },
+  },
+  {
+    component: "Button",
+    id: "button-link",
+    description: "Navigation drawn as a button, with Web ButtonLink and an iOS NavigationLink.",
+    covers: {},
+  },
+] as const;
+
+export type ComponentSpecimen = (typeof componentSpecimens)[number];
+
+export type ComponentSpecimenId = ComponentSpecimen["id"];
