@@ -24,25 +24,8 @@
   color: var(--mt-color-ink-muted);
 }
 
-.homeSection > header:not([data-ui-page-header]) {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
+.homeSectionHeader {
   margin-bottom: var(--mt-space-3);
-}
-
-.homeSection > header:not([data-ui-page-header]) h2 {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.homeSection > header:not([data-ui-page-header]) span {
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
 }
 
 .homeGrid {
@@ -286,7 +269,7 @@
     margin-top: var(--mt-space-6);
   }
 
-  .homeSection > header:not([data-ui-page-header]) span {
+  .homeSectionDetail {
     display: none;
   }
 

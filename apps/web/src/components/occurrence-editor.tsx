@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
+import { Checkbox } from "@/components/checkbox";
 import {
   DatePickerField,
   type DatePickerGranularity,
@@ -190,55 +191,45 @@ export function OccurrenceEditor({
         </div>
         <div className={styles.dateToggles}>
           {timeToggle ? (
-            <label className={styles.presentToggle}>
-              <input
-                checked={exact}
-                onChange={(event) => toggleTime(event.target.checked)}
-                type="checkbox"
-              />
-              <span>Add time</span>
-            </label>
+            <Checkbox
+              checked={exact}
+              label="Add time"
+              onChange={(event) => toggleTime(event.target.checked)}
+              size="small"
+            />
           ) : null}
           {endToggle ? (
-            <label className={styles.presentToggle}>
-              <input
-                checked={endAdded}
-                onChange={(event) => toggleEnd(event.target.checked)}
-                type="checkbox"
-              />
-              <span>Add end date</span>
-            </label>
+            <Checkbox
+              checked={endAdded}
+              label="Add end date"
+              onChange={(event) => toggleEnd(event.target.checked)}
+              size="small"
+            />
           ) : null}
           {presentShown ? (
-            <label className={styles.presentToggle}>
-              <input
-                aria-label="Present"
-                checked={endMode === "present"}
-                onChange={(event) =>
-                  change({
-                    end: event.target.checked ? "" : value.end,
-                    endMode: event.target.checked ? "present" : "date",
-                  })
-                }
-                type="checkbox"
-              />
-              <span>
-                Present <small>Still going on</small>
-              </span>
-            </label>
+            <Checkbox
+              checked={endMode === "present"}
+              description="Still going on"
+              label="Present"
+              onChange={(event) =>
+                change({
+                  end: event.target.checked ? "" : value.end,
+                  endMode: event.target.checked ? "present" : "date",
+                })
+              }
+              size="small"
+            />
           ) : null}
           {!unsure ? (
-            <label className={styles.presentToggle}>
-              <input
-                checked={showDescription || Boolean(value.label)}
-                onChange={(event) => {
-                  setShowDescription(event.target.checked);
-                  if (!event.target.checked) change({ label: "" });
-                }}
-                type="checkbox"
-              />
-              <span>Add date description</span>
-            </label>
+            <Checkbox
+              checked={showDescription || Boolean(value.label)}
+              label="Add date description"
+              onChange={(event) => {
+                setShowDescription(event.target.checked);
+                if (!event.target.checked) change({ label: "" });
+              }}
+              size="small"
+            />
           ) : null}
         </div>
       </div>

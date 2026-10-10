@@ -4,6 +4,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LibrarySearch } from "@/components/library-search";
 import { PageFrame } from "@/components/page-frame";
+import { SectionHeader } from "@/components/section-header";
 import { getSearchWorkspace } from "@/lib/data/search";
 import {
   parseSearchRequest,
@@ -97,23 +98,31 @@ function LibraryBrowse({
 
   return (
     <section aria-labelledby="library-items-heading">
-      <div className={styles.sectionHeading}>
-        <h2 id="library-items-heading">
-          {needsOrganizing ? "Needs organizing" : "All items"}
-        </h2>
-        <div className={styles.sectionMeta}>
-          <span>
-            {totalCount} {totalCount === 1 ? "item" : "items"}
-          </span>
-          {needsOrganizing ? (
-            <Link href={libraryPageHref(1, false)}>Show all items</Link>
+      <SectionHeader
+        action={
+          needsOrganizing ? (
+            <Link
+              className={styles.sectionLink}
+              href={libraryPageHref(1, false)}
+            >
+              Show all items
+            </Link>
           ) : workspace.needsOrganizingCount > 0 ? (
-            <Link href={libraryPageHref(1, true)}>
+            <Link
+              className={styles.sectionLink}
+              href={libraryPageHref(1, true)}
+            >
               {workspace.needsOrganizingCount} need organizing
             </Link>
-          ) : null}
-        </div>
-      </div>
+          ) : null
+        }
+        className={styles.sectionHeading}
+        detail={`${totalCount} ${totalCount === 1 ? "item" : "items"}`}
+        detailAlign="end"
+        headingId="library-items-heading"
+        title={needsOrganizing ? "Needs organizing" : "All items"}
+        variant="list"
+      />
       {needsOrganizing ? (
         <p className={styles.sectionNote}>
           Entries without a title or a tag. Give one either and it leaves this

@@ -1,5 +1,6 @@
 "use client";
 
+import { Checkbox } from "@/components/checkbox";
 import { Icon } from "@/components/icon";
 import {
   milestoneLanes,
@@ -37,19 +38,14 @@ export function MilestoneFields({
       data-ui-field
       disabled={disabled}
     >
-      <label className={styles.toggle}>
-        <input
-          checked={value !== null}
-          onChange={(event) =>
-            onChange(event.target.checked ? defaultMilestone : null)
-          }
-          type="checkbox"
-        />
-        <span>
-          Show on Timeline
-          <small>Mark this as a milestone in your life</small>
-        </span>
-      </label>
+      <Checkbox
+        checked={value !== null}
+        description="Mark this as a milestone in your life"
+        label="Show on Timeline"
+        onChange={(event) =>
+          onChange(event.target.checked ? defaultMilestone : null)
+        }
+      />
       {value ? (
         <div className={styles.details}>
           <div className={styles.shape}>
@@ -95,19 +91,13 @@ export function MilestoneFields({
               ))}
             </select>
           </label>
-          <label className={styles.toggle}>
-            <input
-              checked={value.isFirstTime}
-              onChange={(event) =>
-                change({ isFirstTime: event.target.checked })
-              }
-              type="checkbox"
-            />
-            <span>
-              First Time
-              <small>Also list it in First Times</small>
-            </span>
-          </label>
+          <Checkbox
+            checked={value.isFirstTime}
+            className={styles.firstTime}
+            description="Also list it in First Times"
+            label="First Time"
+            onChange={(event) => change({ isFirstTime: event.target.checked })}
+          />
         </div>
       ) : null}
     </fieldset>

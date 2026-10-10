@@ -77,11 +77,8 @@
   border-top: 1px solid var(--mt-color-border);
   padding-top: var(--mt-space-5);
 }
-.section h2 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: normal;
-  margin: 0 0 var(--mt-space-3);
+.sectionHeader {
+  margin-bottom: var(--mt-space-3);
 }
 .prose {
   white-space: pre-wrap;

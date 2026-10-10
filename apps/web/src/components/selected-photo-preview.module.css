@@ -29,31 +29,11 @@
   text-align: center;
 }
 
-.placeholder[aria-busy="true"] {
-  background:
-    linear-gradient(
-      105deg,
-      transparent 35%,
-      color-mix(in srgb, var(--mt-color-surface-raised) 72%, transparent) 50%,
-      transparent 65%
-    ),
-    var(--mt-color-surface-subtle);
-  background-size: 220% 100%;
-  animation: selected-photo-loading 1.25s ease-in-out infinite;
+.placeholderSkeleton {
+  position: absolute;
+  inset: 0;
 }
 
-@keyframes selected-photo-loading {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -100% 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .placeholder[aria-busy="true"] {
-    animation: none;
-  }
+.placeholderText {
+  position: relative;
 }

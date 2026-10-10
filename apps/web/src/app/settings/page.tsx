@@ -10,6 +10,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
 import { TimezoneSetting } from "@/components/timezone-setting";
 import { PageFrame } from "@/components/page-frame";
+import { SectionHeader } from "@/components/section-header";
 import { PreferredNameSetting } from "@/components/preferred-name-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
@@ -82,13 +83,14 @@ export default async function SettingsPage() {
       />
 
       <section aria-labelledby="account-heading">
-        <div className={pageStyles.sectionHeading}>
-          <div>
-            <h2 id="account-heading">Account</h2>
-            <p>Your current MemoTrail identity</p>
-          </div>
-          <span className={pageStyles.connectedStatus}>Connected</span>
-        </div>
+        <SectionHeader
+          action={<span className={pageStyles.connectedStatus}>Connected</span>}
+          className={pageStyles.sectionHeading}
+          description="Your current MemoTrail identity"
+          headingId="account-heading"
+          title="Account"
+          variant="list"
+        />
 
         <div className={pageStyles.accountCard}>
           <span className={pageStyles.accountAvatar}>
@@ -119,12 +121,13 @@ export default async function SettingsPage() {
       </section>
 
       <section aria-labelledby="preferences-heading">
-        <div className={pageStyles.sectionHeading}>
-          <div>
-            <h2 id="preferences-heading">Preferences</h2>
-            <p>Controls already available in this version</p>
-          </div>
-        </div>
+        <SectionHeader
+          className={pageStyles.sectionHeading}
+          description="Controls already available in this version"
+          headingId="preferences-heading"
+          title="Preferences"
+          variant="list"
+        />
 
         {profileTimezone.available ? (
           <TimezoneSetting initialTimezone={profileTimezone.timezone} />

@@ -3,24 +3,7 @@
 }
 
 .sectionHeading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
   margin-bottom: var(--mt-space-3);
-}
-
-.sectionHeading h2 {
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.sectionHeading p {
-  margin-top: 3px;
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
 }
 
 .connectedStatus {

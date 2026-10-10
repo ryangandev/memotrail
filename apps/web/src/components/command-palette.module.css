@@ -179,28 +179,9 @@
   padding: var(--mt-space-2);
 }
 
-.searching span {
-  height: 44px;
-  border-radius: var(--mt-radius-medium);
-  background: linear-gradient(
-    100deg,
-    var(--mt-color-surface-subtle) 20%,
-    var(--mt-color-surface) 44%,
-    var(--mt-color-surface-subtle) 68%
-  );
-  background-size: 220% 100%;
-  animation: paletteLoading 1.2s ease-in-out infinite;
-}
-
 .fullSearchSection {
   padding-top: 0;
   border-top: 1px solid var(--mt-color-border);
-}
-
-@keyframes paletteLoading {
-  to {
-    background-position: -220% 0;
-  }
 }
 
 .footer {

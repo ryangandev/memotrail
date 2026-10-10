@@ -23,6 +23,7 @@ import { EntryOrganizationEditor } from "@/components/entry-organization-editor"
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SectionHeader } from "@/components/section-header";
 import { RecordCardMap } from "@/components/record-card-map";
 import {
   RecordCard,
@@ -186,10 +187,13 @@ function VehicleSection({
 }) {
   return (
     <section className={styles.homeSection}>
-      <header>
-        <h2>{title}</h2>
-        <span>{label}</span>
-      </header>
+      <SectionHeader
+        className={styles.homeSectionHeader}
+        detail={<span className={styles.homeSectionDetail}>{label}</span>}
+        detailAlign="end"
+        title={title}
+        variant="list"
+      />
       <div className={styles.homeGrid}>
         {vehicles.map((vehicle, index) => (
           <VehicleCard

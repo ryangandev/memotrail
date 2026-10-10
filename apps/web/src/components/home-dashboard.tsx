@@ -6,6 +6,7 @@ import { Icon, type IconName } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/badge";
 import type {
   HomeEntry,
@@ -109,15 +110,16 @@ function Section({
 }) {
   return (
     <section className={styles.section} aria-label={title}>
-      <header className={styles.sectionHeading}>
-        <div>
-          <h2>{title}</h2>
-        </div>
-        <Link href={href}>
-          {action}
-          <Icon name="chevron" size={14} />
-        </Link>
-      </header>
+      <SectionHeader
+        action={
+          <Link className={styles.sectionLink} href={href}>
+            {action}
+            <Icon name="chevron" size={14} />
+          </Link>
+        }
+        className={styles.sectionHeading}
+        title={title}
+      />
       {children}
     </section>
   );

@@ -11,6 +11,7 @@ import { EntryRichTextContent } from "@/components/entry-rich-text-content";
 import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { SearchField } from "@/components/search-field";
+import { SectionHeader } from "@/components/section-header";
 import { SeparatedList } from "@/components/separated-list";
 import {
   SEARCH_PAGE_SIZE,
@@ -197,17 +198,20 @@ function SearchResults({
       className={styles.resultsSection}
       aria-labelledby="results-heading"
     >
-      <header className={styles.resultsHeader}>
-        <div>
-          <h2 id="results-heading">Results</h2>
-          <span aria-live="polite">{resultCountLabel(totalCount)}</span>
-        </div>
-        {totalCount > SEARCH_PAGE_SIZE ? (
-          <span>
-            Page {request.page} · {SEARCH_PAGE_SIZE} at a time
-          </span>
-        ) : null}
-      </header>
+      <SectionHeader
+        action={
+          totalCount > SEARCH_PAGE_SIZE ? (
+            <span className={styles.resultsPage}>
+              Page {request.page} · {SEARCH_PAGE_SIZE} at a time
+            </span>
+          ) : null
+        }
+        className={styles.resultsHeader}
+        detail={<span aria-live="polite">{resultCountLabel(totalCount)}</span>}
+        headingId="results-heading"
+        title="Results"
+        variant="list"
+      />
 
       <div className={styles.resultList}>
         {entries.map((entry) => (

@@ -7,6 +7,7 @@ import { Icon } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
 import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
+import { SectionHeader } from "@/components/section-header";
 import { HomeEditor } from "@/components/homes-workspace";
 import { VehicleEditor } from "@/components/vehicles-workspace";
 import { GoalEditor } from "@/components/goals-workspace";
@@ -229,13 +230,16 @@ function RecordContent({
       </dl>
       {body ? (
         <section className={styles.section}>
-          <h2>{kind === "goal" ? "Notes" : "Story"}</h2>
+          <SectionHeader
+            className={styles.sectionHeader}
+            title={kind === "goal" ? "Notes" : "Story"}
+          />
           <p className={styles.prose}>{body}</p>
         </section>
       ) : null}
       {tags.length ? (
         <section className={styles.section}>
-          <h2>Organize</h2>
+          <SectionHeader className={styles.sectionHeader} title="Organize" />
           <div className={styles.chips}>
             {tags.map((name) => (
               <Badge key={`tag:${name}`} tone="neutral">
@@ -247,7 +251,7 @@ function RecordContent({
       ) : null}
       {kind === "goal" && (record as GoalRecord).relatedEntries.length ? (
         <section className={styles.section}>
-          <h2>First Time</h2>
+          <SectionHeader className={styles.sectionHeader} title="First Time" />
           <ul>
             {(record as GoalRecord).relatedEntries.map((entry) => (
               <li key={entry.id}>

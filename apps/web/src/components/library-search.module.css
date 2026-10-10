@@ -154,27 +154,10 @@
 }
 
 .resultsHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
   margin-bottom: var(--mt-space-3);
 }
 
-.resultsHeader > div {
-  display: flex;
-  align-items: baseline;
-  gap: var(--mt-space-2);
-}
-
-.resultsHeader h2 {
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-semibold);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.resultsHeader span {
+.resultsPage {
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-caption);
 }

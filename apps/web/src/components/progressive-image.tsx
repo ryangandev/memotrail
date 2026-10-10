@@ -7,6 +7,7 @@ import {
   type ImgHTMLAttributes,
   type ReactNode,
 } from "react";
+import { Skeleton } from "./skeleton";
 import styles from "./progressive-image.module.css";
 
 type ImageStatus = "loading" | "loaded" | "failed";
@@ -54,7 +55,11 @@ export function ProgressiveImage({
       className={`${styles.frame} ${className ?? ""}`}
       data-image-status={status}
     >
-      <span aria-hidden="true" className={styles.skeleton} />
+      <Skeleton
+        animated={status === "loading"}
+        className={styles.skeleton}
+        shape="fill"
+      />
       {/* Private, expiring, already optimized media grants bypass the public Next image cache. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
