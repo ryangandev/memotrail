@@ -141,7 +141,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-location-editor.png",
+      path: test.info().outputPath("memotrail-location-editor.png"),
     });
     await page.setViewportSize({ height: 844, width: 390 });
     expect(
@@ -152,7 +152,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-location-editor-mobile.png",
+      path: test.info().outputPath("memotrail-location-editor-mobile.png"),
     });
     await dialog
       .getByRole("button", { name: "Save changes", exact: true })
@@ -237,7 +237,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
     ).toHaveCSS("box-shadow", "none");
     await homeDialog.locator("[data-search-field]").screenshot({
       animations: "disabled",
-      path: "/private/tmp/memotrail-home-search-focused.png",
+      path: test.info().outputPath("memotrail-home-search-focused.png"),
     });
     await homeDialog
       .getByRole("textbox", { name: "Home name" })
@@ -260,7 +260,7 @@ test("repeating an address creates independent Entry and Home Locations", async 
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-home-location-editor.png",
+      path: test.info().outputPath("memotrail-home-location-editor.png"),
     });
     await homeDialog.getByRole("button", { name: "Add Home" }).click();
     await expect(homeDialog).not.toBeVisible();

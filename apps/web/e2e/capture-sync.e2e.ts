@@ -174,7 +174,7 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   ).toBeEnabled();
   await page.screenshot({
     animations: "disabled",
-    path: "/private/tmp/memotrail-pending-sync-dialog.png",
+    path: test.info().outputPath("memotrail-pending-sync-dialog.png"),
   });
   await pending
     .getByRole("button", { name: "Close Pending sync", exact: true })

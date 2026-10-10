@@ -160,7 +160,7 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-tags-consistent.png",
+      path: test.info().outputPath("memotrail-tags-consistent.png"),
     });
 
     expect(
@@ -256,13 +256,13 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-tag-editor.png",
+      path: test.info().outputPath("memotrail-tag-editor.png"),
     });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-tag-editor-dark.png",
+      path: test.info().outputPath("memotrail-tag-editor-dark.png"),
     });
     await page.emulateMedia({ colorScheme: "light" });
     await travelDialog
@@ -332,14 +332,14 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-tags-desktop.png",
+      path: test.info().outputPath("memotrail-tags-desktop.png"),
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-tags-mobile.png",
+      path: test.info().outputPath("memotrail-tags-mobile.png"),
     });
     expect(
       await page.evaluate(

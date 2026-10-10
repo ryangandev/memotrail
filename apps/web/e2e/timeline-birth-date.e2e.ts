@@ -67,7 +67,7 @@ test("Timeline asks for a private birth date and starts the story there", async 
     await expect(birthDateInput).toHaveAttribute("readonly", "");
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-timeline-birth-prompt.png",
+      path: test.info().outputPath("memotrail-timeline-birth-prompt.png"),
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
@@ -78,7 +78,9 @@ test("Timeline asks for a private birth date and starts the story there", async 
     ).toBe(true);
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-timeline-birth-prompt-mobile.png",
+      path: test
+        .info()
+        .outputPath("memotrail-timeline-birth-prompt-mobile.png"),
     });
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.emulateMedia({ colorScheme: "light" });
@@ -92,7 +94,7 @@ test("Timeline asks for a private birth date and starts the story there", async 
     ).toHaveText("1994");
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-timeline-from-birth.png",
+      path: test.info().outputPath("memotrail-timeline-from-birth.png"),
     });
     await expect
       .poll(

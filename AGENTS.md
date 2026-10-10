@@ -26,11 +26,34 @@ When these disagree, verify the real behavior and update the stale source in the
 ## Implementation rules
 
 - Preserve unrelated working-tree changes.
-- Reproduce bugs through the closest practical user path before fixing them.
+- Reproduce a bug with the cheapest check that fails the way the user sees it: a unit test when the logic is local, one browser spec or Simulator flow only when the failure lives there.
 - Keep shared behavior aligned across Web, native iOS, and Supabase.
 - Keep private data and credentials out of clients, fixtures, logs, docs, and commits.
-- Treat builds, automated tests, hosted APIs, browser UI, native UI, and recovery exercises as distinct evidence.
+- Treat builds, automated tests, hosted APIs, browser UI, native UI, and recovery exercises as distinct evidence, and do not claim one from another.
 - Confirm the exact target and authorization before deployment, hosted migrations, DNS, billing, production-data, retention, or destructive actions.
+
+## Validation
+
+Run the smallest checks that prove the change locally, and let GitHub CI run the full suites.
+The [README](./README.md#validation) lists each test layer and its command.
+
+- While iterating, run the affected unit test files, then lint and type checking for the touched package.
+- Add the single browser spec, data contract, database test file, or XCTest identifier that covers the changed behavior; pass the file name instead of running the whole suite.
+- Do not run full local suites to collect evidence.
+  CI runs formatting, lint, type checking, unit tests, the build, every database test, every data contract, and the full product browser suite on each pull request.
+- Run native builds and XCTest only when the change touches `apps/ios` or generated design-system output that iOS consumes; native work is otherwise paused.
+- Run the design gallery suite only when shared Web components or design tokens change.
+- Capture before-and-after evidence only when the request is about a regression or visual parity.
+- Record the checks you ran in the pull request description, not in `docs/status.md`.
+
+## Pushing and CI
+
+GitHub Actions minutes for this private repository are limited.
+
+- Commit locally as work progresses and push once the branch is ready for review, not after every commit.
+- A new push cancels the branch's in-progress CI run, so batch follow-up fixes into one push.
+- Fix a CI failure by reproducing only the failing check locally, then push once.
+- Changes limited to documentation or `apps/ios` skip the Web and Supabase CI jobs.
 
 ## Documentation
 

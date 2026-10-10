@@ -128,7 +128,7 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-first-time-location-form.png",
+      path: test.info().outputPath("memotrail-first-time-location-form.png"),
     });
     await firstTimeEditor
       .getByRole("button", { name: "Add", exact: true })
@@ -139,7 +139,7 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       firstTimeCard.locator('[data-record-card-map="true"]'),
     ).toBeVisible();
     await firstTimeCard.screenshot({
-      path: "/private/tmp/memotrail-first-time-map-card-desktop.png",
+      path: test.info().outputPath("memotrail-first-time-map-card-desktop.png"),
     });
 
     await page.goto("/vehicles");
@@ -167,7 +167,9 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-vehicle-location-form-mobile.png",
+      path: test
+        .info()
+        .outputPath("memotrail-vehicle-location-form-mobile.png"),
     });
     await vehicleEditor.getByRole("button", { name: "Add Vehicle" }).click();
     await expect(vehicleEditor).not.toBeVisible();
@@ -176,7 +178,7 @@ test("First Time and Vehicle keep separate snapshots of one address", async ({
       vehicleCard.locator('[data-record-card-map="true"]'),
     ).toBeVisible();
     await vehicleCard.screenshot({
-      path: "/private/tmp/memotrail-vehicle-map-card-mobile.png",
+      path: test.info().outputPath("memotrail-vehicle-map-card-mobile.png"),
     });
 
     const entries = (

@@ -36,9 +36,9 @@ test("capture dock keeps focus tight and reopens without rebuilding the editor",
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
   await trigger.screenshot({
-    path: "/private/tmp/memotrail-dock-focus-polish.png",
+    path: test.info().outputPath("memotrail-dock-focus-polish.png"),
   });
-  await page.keyboard.press("Meta+j");
+  await page.keyboard.press("ControlOrMeta+j");
   await expect(editor).toBeFocused();
   expect(
     focusStyle.offset,
@@ -56,19 +56,19 @@ test("capture dock keeps focus tight and reopens without rebuilding the editor",
   for (let cycle = 0; cycle < 3; cycle++) {
     await editor.press("Escape");
     await expect(dialog).not.toBeVisible();
-    await page.keyboard.press("Meta+j");
+    await page.keyboard.press("ControlOrMeta+j");
     await expect(editor).toBeFocused();
     await expect(editor).toHaveAttribute("data-editor-continuity", "kept");
   }
   await page.screenshot({
     animations: "disabled",
-    path: "/private/tmp/memotrail-dock-glass-polish-dark.png",
+    path: test.info().outputPath("memotrail-dock-glass-polish-dark.png"),
   });
   await editor.press("Escape");
   await expect(dialog).not.toBeVisible();
   await page.emulateMedia({ colorScheme: "light" });
   await trigger.screenshot({
-    path: "/private/tmp/memotrail-dock-glass-polish-light.png",
+    path: test.info().outputPath("memotrail-dock-glass-polish-light.png"),
   });
 });
 
@@ -100,7 +100,7 @@ test("a retained composer picks up dashboard edits and can interrupt collapse", 
   await trigger.click();
   await expect(editor).toHaveText("Latest draft from the dashboard.");
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
-  await page.keyboard.press("Meta+j");
+  await page.keyboard.press("ControlOrMeta+j");
   await expect(editor).toBeFocused();
   await expect(editor).toHaveText("Latest draft from the dashboard.");
   // A click waits for the reopened surface to settle and catches any stale

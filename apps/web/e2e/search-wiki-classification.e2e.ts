@@ -156,14 +156,14 @@ test("Search filters Entries by record and descriptive tag", async ({
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-semantic-search-desktop.png",
+      path: test.info().outputPath("memotrail-semantic-search-desktop.png"),
     });
     await page.setViewportSize({ height: 844, width: 390 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-semantic-search-mobile.png",
+      path: test.info().outputPath("memotrail-semantic-search-mobile.png"),
     });
     expect(
       await page.evaluate(

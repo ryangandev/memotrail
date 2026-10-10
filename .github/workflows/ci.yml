@@ -1,10 +1,16 @@
 name: CI
 
+# Pull requests carry the full validation. Merged branches are not tested again on
+# main, and documentation-only or native-only changes skip these Linux jobs, to
+# keep this private repository within its Actions minutes.
 on:
   pull_request:
-  push:
-    branches:
-      - main
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - "timeline-ideas/**"
+      - "apps/ios/**"
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -17,6 +23,7 @@ jobs:
   web:
     name: Web and shared checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
@@ -48,12 +55,22 @@ jobs:
       - name: Verify shipped media dependencies
         run: node apps/web/scripts/verify-media-trace.mjs
 
-  database:
-    name: Supabase database tests
+  supabase:
+    name: Supabase database, data contract, and browser tests
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Install Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v2
@@ -61,8 +78,31 @@ jobs:
           version: 2.116.0
           github-token: ${{ github.token }}
 
-      - name: Start local database
-        run: supabase db start
+      # Web uses neither Realtime nor Storage image transforms, and tests sign in
+      # through the admin API instead of email.
+      - name: Start local Supabase
+        run: supabase start -x studio,realtime,imgproxy,edge-runtime,logflare,vector,supavisor,mailpit
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Run database tests
         run: supabase test db
+
+      - name: Run multi-client data contracts
+        run: pnpm --filter @memotrail/web test:contracts
+
+      # The runner image includes Google Chrome, which the suite uses directly.
+      - name: Run product browser suite against a production build
+        env:
+          MEMOTRAIL_E2E_PRODUCTION: "1"
+        run: pnpm --filter @memotrail/web test:e2e --reporter=github,line
+
+      - name: Keep browser failure output
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: browser-test-results
+          path: apps/web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

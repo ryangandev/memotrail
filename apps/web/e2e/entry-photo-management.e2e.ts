@@ -114,7 +114,9 @@ test("Entry photos are added, retried, and moved to Trash in the editor", async 
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-photo-management-editor-light.png",
+      path: test
+        .info()
+        .outputPath("memotrail-photo-management-editor-light.png"),
     });
     // The first registration reaches the server but its answer is lost.
     let dropped = false;
@@ -176,7 +178,9 @@ test("Entry photos are added, retried, and moved to Trash in the editor", async 
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-photo-management-editor-mobile-dark.png",
+      path: test
+        .info()
+        .outputPath("memotrail-photo-management-editor-mobile-dark.png"),
     });
     await field
       .getByRole("button", { name: "Remove New memory.png", exact: true })

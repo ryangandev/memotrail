@@ -44,7 +44,7 @@ test("capture saves with Command Return while Enter still writes another line", 
   await expect(saveHint).toBeVisible();
   await editor.focus();
   await expect(saveHint).not.toBeVisible();
-  await editor.press("Meta+Enter");
+  await editor.press("ControlOrMeta+Enter");
   await expect
     .poll(async () => {
       const saved = await workspace.client
@@ -76,8 +76,8 @@ test("capture saves with Command Return while Enter still writes another line", 
     dialog.getByRole("tooltip", { name: "Save to Library ⌘ Return" }),
   ).toBeVisible();
   await dockEditor.fill("A linked draft");
-  await dockEditor.press("Meta+a");
-  await dockEditor.press("Meta+k");
+  await dockEditor.press("ControlOrMeta+a");
+  await dockEditor.press("ControlOrMeta+k");
   const linkEditor = dialog.getByRole("group", {
     name: "Link editor",
     exact: true,
@@ -85,7 +85,9 @@ test("capture saves with Command Return while Enter still writes another line", 
   await linkEditor
     .getByLabel("Link URL", { exact: true })
     .fill("mailto:hello@example.com");
-  await linkEditor.getByLabel("Link URL", { exact: true }).press("Meta+Enter");
+  await linkEditor
+    .getByLabel("Link URL", { exact: true })
+    .press("ControlOrMeta+Enter");
   await expect(linkEditor).not.toBeVisible();
   await expect(dockEditor.locator("a")).toHaveAttribute(
     "href",
@@ -98,8 +100,8 @@ test("capture saves with Command Return while Enter still writes another line", 
   expect(afterLinkEdit.error).toBeNull();
   expect(afterLinkEdit.data).toHaveLength(1);
 
-  await dockEditor.press("Meta+a");
-  await dockEditor.press("Meta+k");
+  await dockEditor.press("ControlOrMeta+a");
+  await dockEditor.press("ControlOrMeta+k");
   await linkEditor
     .getByLabel("Link URL", { exact: true })
     .fill("tel:+15555550123");

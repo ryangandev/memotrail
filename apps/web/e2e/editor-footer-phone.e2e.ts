@@ -169,7 +169,7 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       if (width === 320)
         await page.screenshot({
           caret: "initial",
-          path: "/private/tmp/memotrail-editor-footer-phone.png",
+          path: test.info().outputPath("memotrail-editor-footer-phone.png"),
         });
     }
   } finally {

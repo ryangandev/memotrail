@@ -121,14 +121,16 @@ test("Editing a First Time keeps its original date range", async ({
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-first-time-precision-desktop.png",
+      path: test
+        .info()
+        .outputPath("memotrail-first-time-precision-desktop.png"),
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-first-time-precision-mobile.png",
+      path: test.info().outputPath("memotrail-first-time-precision-mobile.png"),
     });
     expect(
       await page.evaluate(

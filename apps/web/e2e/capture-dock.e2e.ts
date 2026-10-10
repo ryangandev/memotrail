@@ -58,11 +58,11 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
       width: searchBox.x + searchBox.width - triggerBox.x + 32,
       height: triggerBox.height + 24,
     },
-    path: "/private/tmp/memotrail-action-dock-desktop.png",
+    path: test.info().outputPath("memotrail-action-dock-desktop.png"),
   });
   await page.screenshot({
     animations: "disabled",
-    path: "/private/tmp/memotrail-capture-dock-desktop.png",
+    path: test.info().outputPath("memotrail-capture-dock-desktop.png"),
   });
   await page.mouse.click(1400, 130);
   await trigger.hover();
@@ -74,7 +74,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
       width: searchBox.x + searchBox.width - triggerBox.x + 32,
       height: triggerBox.height + 24,
     },
-    path: "/private/tmp/memotrail-action-dock-hover.png",
+    path: test.info().outputPath("memotrail-action-dock-hover.png"),
   });
 
   await trigger.click();
@@ -83,7 +83,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
   await editor.press("Escape");
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
-  await page.keyboard.press("Meta+j");
+  await page.keyboard.press("ControlOrMeta+j");
   await expect(editor).toHaveText("A quiet moment worth keeping.");
   await expect(editor).toBeFocused();
   await page.keyboard.press("Shift+Tab");
@@ -99,7 +99,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
   await editor.focus();
   await page.screenshot({
     animations: "disabled",
-    path: "/private/tmp/memotrail-capture-dock-expanded.png",
+    path: test.info().outputPath("memotrail-capture-dock-expanded.png"),
   });
   await dialog
     .getByRole("button", { name: "Save to Library", exact: true })
@@ -147,7 +147,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
   await expect(editor).toBeFocused();
   await page.screenshot({
     animations: "disabled",
-    path: "/private/tmp/memotrail-capture-dock-dark.png",
+    path: test.info().outputPath("memotrail-capture-dock-dark.png"),
   });
   await editor.press("Escape");
 
@@ -168,7 +168,9 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     );
     await page.screenshot({
       animations: "disabled",
-      path: `/private/tmp/memotrail-capture-dock-mobile-${width}.png`,
+      path: test
+        .info()
+        .outputPath(`memotrail-capture-dock-mobile-${width}.png`),
     });
     await search.click();
     const palette = page.getByRole("dialog", { name: "Search MemoTrail" });
@@ -188,7 +190,9 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     expect(box.y + box.height).toBeLessThanOrEqual(844 - 12);
     await page.screenshot({
       animations: "disabled",
-      path: `/private/tmp/memotrail-capture-dock-mobile-expanded-${width}.png`,
+      path: test
+        .info()
+        .outputPath(`memotrail-capture-dock-mobile-expanded-${width}.png`),
     });
     await page.setViewportSize({ width, height: 430 });
     await dialog

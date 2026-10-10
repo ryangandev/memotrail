@@ -206,7 +206,7 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
       ).toHaveCount(0);
       await page.screenshot({
         animations: "disabled",
-        path: "/private/tmp/memotrail-location-map-dark.png",
+        path: test.info().outputPath("memotrail-location-map-dark.png"),
       });
     }
     const lightTile =
@@ -250,7 +250,7 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
     await expect(page.getByText("Deleted Pine Street note")).toHaveCount(0);
     await page.screenshot({
       animations: "disabled",
-      path: "/private/tmp/memotrail-location-map-desktop.png",
+      path: test.info().outputPath("memotrail-location-map-desktop.png"),
     });
 
     await page.getByLabel("Category").selectOption("entry");
@@ -282,7 +282,7 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
       .toBe(true);
     await page.screenshot({
       animations: "disabled",
-      path: "/private/tmp/memotrail-location-map-mobile.png",
+      path: test.info().outputPath("memotrail-location-map-mobile.png"),
     });
 
     const westEntryId = randomUUID();
@@ -366,7 +366,7 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
     await expect(page.locator(".leaflet-marker-icon")).toHaveCount(2);
     await page.screenshot({
       animations: "disabled",
-      path: "/private/tmp/memotrail-location-map-areas-desktop.png",
+      path: test.info().outputPath("memotrail-location-map-areas-desktop.png"),
     });
     await page.setViewportSize({ width: 390, height: 844 });
     await expect
@@ -378,7 +378,7 @@ test("Map shows current Entry coordinates", async ({ context, page }) => {
       .toBe(true);
     await page.screenshot({
       animations: "disabled",
-      path: "/private/tmp/memotrail-location-map-areas-mobile.png",
+      path: test.info().outputPath("memotrail-location-map-areas-mobile.png"),
     });
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();

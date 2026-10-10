@@ -133,9 +133,9 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
-      path: "/private/tmp/memotrail-organized-editor-desktop.png",
+      path: test.info().outputPath("memotrail-organized-editor-desktop.png"),
     });
-    await noteEditor.press("Meta+k");
+    await noteEditor.press("ControlOrMeta+k");
     const linkEditor = dialog.getByRole("group", {
       name: "Link editor",
       exact: true,
@@ -157,10 +157,10 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
-      path: "/private/tmp/memotrail-organized-editor-mobile.png",
+      path: test.info().outputPath("memotrail-organized-editor-mobile.png"),
     });
     await noteEditor.fill("Updated after organizing");
-    await noteEditor.press("Meta+a");
+    await noteEditor.press("ControlOrMeta+a");
     await dialog.getByRole("button", { name: "Italic", exact: true }).click();
     await expect(noteEditor.locator("em")).toHaveText(
       "Updated after organizing",

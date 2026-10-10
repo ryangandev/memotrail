@@ -199,14 +199,14 @@ for (const kind of ["home", "vehicle"] as const) {
       await expectOccurrencePrecision(dialog, "unknown");
       await page.screenshot({
         caret: "initial",
-        path: `/private/tmp/memotrail-${kind}-chapter-desktop.png`,
+        path: test.info().outputPath(`memotrail-${kind}-chapter-desktop.png`),
         fullPage: true,
       });
       await page.setViewportSize({ width: 390, height: 844 });
       await page.emulateMedia({ colorScheme: "dark" });
       await page.screenshot({
         caret: "initial",
-        path: `/private/tmp/memotrail-${kind}-chapter-mobile.png`,
+        path: test.info().outputPath(`memotrail-${kind}-chapter-mobile.png`),
         fullPage: true,
       });
       await dialog.getByRole("button", { name: "Cancel" }).click();

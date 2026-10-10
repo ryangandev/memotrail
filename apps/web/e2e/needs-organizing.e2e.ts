@@ -129,7 +129,7 @@ test("captures land in Library and wait under Needs organizing until they have a
     await page.screenshot({
       caret: "initial",
       fullPage: true,
-      path: "/private/tmp/memotrail-home-needs-organizing.png",
+      path: test.info().outputPath("memotrail-home-needs-organizing.png"),
     });
 
     await needsOrganizing
@@ -163,7 +163,7 @@ test("captures land in Library and wait under Needs organizing until they have a
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: "/private/tmp/memotrail-entry-editor.png",
+      path: test.info().outputPath("memotrail-entry-editor.png"),
     });
     await editor
       .getByRole("textbox", { name: "Title" })
@@ -214,7 +214,9 @@ test("captures land in Library and wait under Needs organizing until they have a
     await page.screenshot({
       animations: "disabled",
       fullPage: true,
-      path: "/private/tmp/memotrail-library-needs-organizing-mobile.png",
+      path: test
+        .info()
+        .outputPath("memotrail-library-needs-organizing-mobile.png"),
     });
     await list
       .getByRole("link", { name: "Show all items", exact: true })

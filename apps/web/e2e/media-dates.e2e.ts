@@ -231,7 +231,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-photo-dates-desktop.png",
+      path: test.info().outputPath("memotrail-photo-dates-desktop.png"),
       fullPage: true,
     });
     await page.setViewportSize({ width: 390, height: 844 });
@@ -245,7 +245,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
-      path: "/private/tmp/memotrail-photo-dates-mobile.png",
+      path: test.info().outputPath("memotrail-photo-dates-mobile.png"),
       fullPage: true,
     });
     await dialog.getByRole("button", { name: "Close Entry editor" }).click();
@@ -327,7 +327,7 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
     await dialog.getByText("39.95000, -75.16667").scrollIntoViewIfNeeded();
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-photo-place-desktop.png",
+      path: test.info().outputPath("memotrail-photo-place-desktop.png"),
       fullPage: true,
     });
     await page.setViewportSize({ width: 390, height: 844 });

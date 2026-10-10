@@ -181,7 +181,7 @@ test("Search date filters include overlapping periods without inventing date pre
     await expect(card("Previous calendar day")).toHaveCount(0);
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-search-precision-desktop.png",
+      path: test.info().outputPath("memotrail-search-precision-desktop.png"),
       fullPage: true,
     });
     const bearer = createClient(env.API_URL, env.ANON_KEY, {
@@ -212,7 +212,7 @@ test("Search date filters include overlapping periods without inventing date pre
     await page.emulateMedia({ colorScheme: "dark" });
     await page.screenshot({
       caret: "initial",
-      path: "/private/tmp/memotrail-search-precision-mobile.png",
+      path: test.info().outputPath("memotrail-search-precision-mobile.png"),
       fullPage: true,
     });
     await page.goto("/library?q=2017-01-01");

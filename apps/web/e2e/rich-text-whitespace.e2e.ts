@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { test, expect } from "./helpers/workspace-test";
+import { documentStart, documentEnd } from "./helpers/keys";
 
 const boldDocument = (text: string) => ({
   content: [
@@ -25,7 +26,7 @@ test("capture keeps formatting when the note ends with a new line", async ({
     exact: true,
   });
   await editor.click();
-  await editor.press("Meta+b");
+  await editor.press("ControlOrMeta+b");
   await editor.pressSequentially("Bold capture");
   await expect(editor.locator("strong")).toHaveText("Bold capture");
   await editor.press("Enter");
@@ -124,9 +125,9 @@ test("Entry editing saves a formatted note with surrounding whitespace", async (
   const note = review.getByRole("textbox", { name: "Note", exact: true });
   await expect(note.locator("strong")).toHaveText("Bold review note");
   await note.click();
-  await note.press("Meta+ArrowUp");
+  await note.press(documentStart);
   await note.pressSequentially("  ");
-  await note.press("Meta+ArrowDown");
+  await note.press(documentEnd);
   await note.press("Enter");
   await note.pressSequentially(" ");
   await expect(note.locator("p")).toHaveCount(2);

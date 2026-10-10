@@ -152,7 +152,7 @@ test("Goal achievements keep every date the editor records and reject duplicate 
         expect((await achieveButton.boundingBox())!.height).toBeLessThan(70);
         await page.screenshot({
           caret: "initial",
-          path: "/private/tmp/memotrail-goal-achievement-light.png",
+          path: test.info().outputPath("memotrail-goal-achievement-light.png"),
           animations: "disabled",
         });
         await page.setViewportSize({ width: 390, height: 844 });
@@ -165,7 +165,7 @@ test("Goal achievements keep every date the editor records and reject duplicate 
           .scrollIntoViewIfNeeded();
         await page.screenshot({
           caret: "initial",
-          path: "/private/tmp/memotrail-goal-achievement-mobile.png",
+          path: test.info().outputPath("memotrail-goal-achievement-mobile.png"),
           animations: "disabled",
         });
         await page.setViewportSize({ width: 1280, height: 900 });
