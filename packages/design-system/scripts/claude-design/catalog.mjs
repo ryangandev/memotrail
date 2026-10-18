@@ -250,12 +250,9 @@ export const excluded = {
   "first-times-workspace.tsx": featureView,
   "focused-editor-surface.tsx": needsDialog,
   "focused-record-detail.tsx": `${featureView} It also uses the router.`,
-  "goals-workspace.tsx": featureView,
   "home-dashboard.tsx": featureView,
   "homes-workspace.tsx": featureView,
   "library-search.tsx": `${featureView} It also reads and writes the URL.`,
-  "location-map-workspace.tsx":
-    "Draws a Leaflet map with remote tiles and app locations.",
   "location-picker.tsx":
     "Searches and saves locations through the app's location API.",
   "milestone-fields.tsx":
