@@ -16,7 +16,8 @@ import {
   type TimelineLane,
 } from "@/lib/data/milestone";
 import {
-  occurrencePrecisions,
+  entryDisplayTitle,
+  storedOccurrence,
   type OccurrencePrecision,
 } from "@/lib/data/occurrence";
 
@@ -35,6 +36,7 @@ export type TimelineEntry = {
   revision: number;
   shape: MilestoneShape;
   tagNames: string[];
+  /** Its title, or its date when it has none. */
   title: string;
   updatedAt: string;
 };
@@ -69,8 +71,9 @@ type TimelineRow = {
   occurred_timezone: string;
   revision: number;
   shape: MilestoneShape;
+  /** The stored title, blank when the Entry has none. */
+  stored_title: string;
   tag_names: string[];
-  title: string;
   updated_at: string;
 };
 
@@ -128,13 +131,16 @@ export function timelineLaneGroups(
 }
 
 function timelineEntryFromRow(row: TimelineRow): TimelineEntry {
+  const occurrence = storedOccurrence({
+    datePrecision: row.date_precision,
+    occurredEnd: row.occurred_end,
+    occurredLabel: row.occurred_label,
+    occurredStart: row.occurred_start,
+    occurredTimezone: row.occurred_timezone,
+  });
   return {
     body: row.body,
-    datePrecision: occurrencePrecisions.includes(
-      row.date_precision as OccurrencePrecision,
-    )
-      ? (row.date_precision as OccurrencePrecision)
-      : "unknown",
+    datePrecision: occurrence.datePrecision,
     id: row.entry_id,
     isFirstTime: row.is_first_time,
     itemKind: row.item_kind,
@@ -147,7 +153,7 @@ function timelineEntryFromRow(row: TimelineRow): TimelineEntry {
     revision: row.revision,
     shape: row.shape,
     tagNames: row.tag_names,
-    title: row.title,
+    title: entryDisplayTitle(row.stored_title, occurrence),
     updatedAt: row.updated_at,
   };
 }
@@ -170,7 +176,7 @@ function isTimelineRow(value: unknown): value is TimelineRow {
     typeof value.body === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
-    typeof value.title === "string" &&
+    typeof value.stored_title === "string" &&
     isTimelineLane(value.lane) &&
     isMilestoneShape(value.shape) &&
     typeof value.is_first_time === "boolean" &&

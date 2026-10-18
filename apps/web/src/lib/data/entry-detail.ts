@@ -1,5 +1,6 @@
 import type { WikiItemKind } from "./wiki-item";
 import type { MilestoneLane, MilestoneShape } from "./milestone";
+import { entryDisplayTitle, storedOccurrence } from "./occurrence";
 
 /** The current Entry the Item page shows, as `entry_detail` returns it. */
 export type EntryDetail = {
@@ -32,15 +33,27 @@ export type EntryDetail = {
   links: { target_entry_id: string; relationship: string }[];
 };
 
-export function entryTitle(value: {
-  title: string | null;
-  body?: string;
-  excerpt?: string;
-}) {
-  return (
-    value.title?.trim() ||
-    (value.body ?? value.excerpt ?? "").trim().slice(0, 80) ||
-    "Untitled item"
+/** What the Item page calls an item: its title, or its date when it has none. */
+export function entryTitle(
+  value: Pick<
+    EntryDetail,
+    | "title"
+    | "occurred_label"
+    | "occurred_start"
+    | "occurred_end"
+    | "occurred_timezone"
+    | "date_precision"
+  >,
+) {
+  return entryDisplayTitle(
+    value.title,
+    storedOccurrence({
+      datePrecision: value.date_precision,
+      occurredEnd: value.occurred_end,
+      occurredLabel: value.occurred_label,
+      occurredStart: value.occurred_start,
+      occurredTimezone: value.occurred_timezone,
+    }),
   );
 }
 
@@ -49,6 +62,39 @@ export function validEntryID(id: unknown): id is string {
     typeof id === "string" &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)
   );
+}
+
+/**
+ * Whether the Item page's Date fact adds something to its heading. An untitled
+ * Entry is already headed by its date, so the fact shows only when it says more:
+ * the time of an exact moment, an end the heading leaves out, or a date the
+ * heading cannot name.
+ */
+export function entryDateAddsToTitle(
+  value: Pick<
+    EntryDetail,
+    | "title"
+    | "occurred_label"
+    | "occurred_start"
+    | "occurred_end"
+    | "date_precision"
+  >,
+) {
+  if (value.title?.trim()) return true;
+  // The heading is the description, or "Undated entry" when nothing is known.
+  if (value.occurred_label?.trim() || !value.occurred_start) return false;
+  switch (value.date_precision) {
+    case "exact":
+      return true;
+    case "day":
+    case "month":
+    case "year":
+      return Boolean(value.occurred_end);
+    case "range":
+      return false;
+    default:
+      return true;
+  }
 }
 
 export function entryDateLabel(

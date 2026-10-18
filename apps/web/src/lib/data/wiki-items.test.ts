@@ -15,10 +15,13 @@ const item = {
   canonical_item_id: "40000000-0000-4000-8000-000000000001",
   excerpt: "A reflection",
   item_id: "40000000-0000-4000-8000-000000000001",
+  date_precision: "day",
   item_kind: "entry",
   item_subtype: "entry",
   occurred_end: null,
-  occurred_start: null,
+  occurred_label: null,
+  occurred_start: "2026-09-15T19:00:00Z",
+  occurred_timezone: "America/Los_Angeles",
   title: "Morning pages",
   total_count: 3,
   updated_at: "2026-09-16T00:00:00Z",
@@ -28,8 +31,11 @@ describe("Life Wiki workspace data", () => {
   it("parses a unified item row", () => {
     expect(parseWikiItemRows([item])).toEqual([
       expect.objectContaining({
+        datePrecision: "day",
         itemKind: "entry",
         itemSubtype: "entry",
+        occurredStart: "2026-09-15T19:00:00Z",
+        occurredTimezone: "America/Los_Angeles",
         totalCount: 3,
       }),
     ]);
@@ -41,6 +47,7 @@ describe("Life Wiki workspace data", () => {
     ).toBeNull();
     expect(parseWikiItemRows([{ ...item, item_kind: "writing" }])).toBeNull();
     expect(parseWikiItemRows([{ ...item, total_count: "many" }])).toBeNull();
+    expect(parseWikiItemRows([{ ...item, date_precision: null }])).toBeNull();
   });
 
   it("routes specialized and registry Entities to their editors", () => {
@@ -55,48 +62,23 @@ describe("Life Wiki workspace data", () => {
     ).toBe(`/vehicles/${parsed.id}`);
   });
 
-  it("counts the Entries that still need organizing beside the full list", async () => {
-    const rpc = vi.fn((_name: string, parameters: Record<string, unknown>) =>
-      Promise.resolve({
-        data: parameters.p_needs_organizing
-          ? [{ ...item, total_count: 2 }]
-          : [item],
-        error: null,
-      }),
-    );
+  it("loads one page of the full list", async () => {
+    const rpc = vi.fn(() => Promise.resolve({ data: [item], error: null }));
     vi.mocked(getAuthenticatedContext).mockResolvedValue({
       client: { rpc },
     } as never);
 
-    const all = await getWikiItemsWorkspace({
-      itemKind: null,
-      needsOrganizing: false,
-      page: 2,
-      query: "",
+    expect(await getWikiItemsWorkspace(2)).toMatchObject({
+      error: null,
+      items: [expect.objectContaining({ title: "Morning pages" })],
     });
-    expect(all).toMatchObject({ error: null, needsOrganizingCount: 2 });
-    expect(rpc).toHaveBeenCalledWith(
-      "wiki_items_workspace",
-      expect.objectContaining({
-        p_limit: 12,
-        p_needs_organizing: false,
-        p_offset: 12,
-      }),
-    );
-    expect(rpc).toHaveBeenCalledWith(
-      "wiki_items_workspace",
-      expect.objectContaining({ p_limit: 1, p_needs_organizing: true }),
-    );
-
-    rpc.mockClear();
-    const needsOrganizing = await getWikiItemsWorkspace({
-      itemKind: null,
-      needsOrganizing: true,
-      page: 1,
-      query: "",
+    expect(rpc).toHaveBeenCalledWith("wiki_items_workspace", {
+      p_item_kinds: [],
+      p_item_subtypes: [],
+      p_limit: 12,
+      p_offset: 12,
+      p_query: "",
     });
-    expect(needsOrganizing).toMatchObject({ needsOrganizingCount: 2 });
-    expect(rpc).toHaveBeenCalledTimes(1);
   });
 
   it("bounds pagination", () => {

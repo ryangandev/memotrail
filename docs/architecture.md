@@ -68,8 +68,9 @@ Pair it with the test file carrying the same feature name.
   Migration `202610040009` created `milestones` and dropped `timeline_items`, `timeline_tracks`, their RPCs, and the First Time RPCs.
   It made a milestone of every First Time, every Entry placed on a visible track, and every unplaced Moment or Period, and turned the `moment`, `period`, and `first_time` subtypes into `entry`.
   Education and Career placements went to Work and study, and other custom track names became tags on their Entries.
-- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination.
-  `p_needs_organizing` limits it to ordinary Entries with a blank title and no tag, which Web `/library?show=needs-organizing` and the Dashboard Needs organizing panel read.
+- `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination, with each row's date fields.
+  Migration `202610180087` dropped its `p_needs_organizing` filter with the Needs organizing view.
+  It keeps the earlier six-argument `wiki_items_workspace`, with every argument required so PostgREST resolves each call to one function, for the Web deployed before it; a later migration removes it once the Web that names untitled Entries by date is deployed.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, which reads `entry_detail` for the current content, tags, Locations, Timeline placement, and provenance links.
   Native Library routes Homes, Vehicles, First Times, Goals, and People to their focused pages like Web, other typed records to their focused editors, and other canonical items to the Item page, like Web `/items/[entry]`.
@@ -164,6 +165,12 @@ Pair it with the test file carrying the same feature name.
   They do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
   `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action, and shows the select only when the profile cannot be read.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
+- Workspaces return an Entry's stored title, an empty string when it has none, and never a stand-in made from its writing.
+  Migration `202610180087` made `home_workspace`, `home_resurfaced_memory`, `first_times_workspace`, `goals_workspace`, and `wiki_items_workspace` follow that, with the date fields each needs to name an untitled Entry.
+  It only adds fields, so the Web deployed before it keeps working whichever ships first.
+  Where that Web shows a title without its own fallback, the earlier stand-in stays until a later migration removes it: `timeline_workspace` adds `stored_title`, and `trash_workspace` adds `entry_title`, the stored title of the row's Entry or of the Entry a photo belongs to, with that Entry's date.
+- Web `entryDisplayTitle` and `occurrenceTitle` in `lib/data/occurrence.ts` name an untitled Entry by its date at its recorded precision, read in its recorded time zone with the fixed `en-US` locale, so the server and every browser render the same text.
+  Every Web surface that shows an Entry title goes through them: Dashboard, Library, Library search, the Command Palette, Pending sync, the Item page and its page title, Map, Timeline, First Times, Someday, Trash, and AI search.
 - An optional private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings; without it, `createTimelineLayout` starts from the earliest dated item, padded.
 - Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.
   `TimelineWorkspace` measures titles in the lane item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Period only when the bar holds it.
@@ -240,7 +247,7 @@ Pair it with the test file carrying the same feature name.
   If the marker cannot be stored, the run stops with a retry instead, so the capture is never sent again unmarked.
   Discard, `InboxSyncStore.discard` or `InboxController.discardRejected`, removes only refused captures: their photo drafts first, then the queue entry, so orphaned photos cannot reappear in a composer.
 - A per-owner Web Lock serializes runs across tabs, and each capture is reread from storage before it is sent, so a tab skips captures another tab already synced.
-  `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Library and Needs organizing stay current.
+  `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Library and Dashboard stay current.
   The tab that sends a capture needs no extra refresh, because the sync Server Actions revalidate and return its current route.
   Browsers without Web Locks fall back to per-tab runs, where the stable Entry ID still keeps a repeated send from creating a second Entry.
 - The same provider owns the capture draft through the framework-free store in `lib/data/inbox-draft-store.ts`, read with `useCaptureDraft()`.
@@ -378,7 +385,7 @@ Pair it with the test file carrying the same feature name.
   It edits photos through `EntryPhotoField`: new photos upload after the Entry saves, and a saved photo moves to Trash at once after confirmation.
   `EntryPhotoDates` reads camera dates and GPS from the Entry's saved photos.
 - The Web Item page loads its photos on the server with `lib/data/entry-photos.ts`, which also serves `/api/media/photos` for native, and `components/entry-photos.tsx` shows them read-only and pages through them in `PhotoPreviewDialog`.
-  `/inbox` redirects to `/library?show=needs-organizing` and `/inbox?entry=` to `/items/[entry]` in `next.config.ts`.
+  `/inbox` redirects to `/library` and `/inbox?entry=` to `/items/[entry]` in `next.config.ts`; Library ignores the retired `show=needs-organizing` parameter.
   Native `Features/Inbox` still shows the retired list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`, including its Save to Library footer, until native follows Web.
   Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.

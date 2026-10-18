@@ -288,7 +288,7 @@ for (const late of [false, true])
     ).toBeVisible();
     await expect(
       other
-        .getByRole("region", { name: "Needs organizing", exact: true })
+        .getByRole("region", { name: "Recent Entries", exact: true })
         .getByText("Once across tabs", { exact: true }),
     ).toBeVisible();
     await page.waitForLoadState("networkidle");

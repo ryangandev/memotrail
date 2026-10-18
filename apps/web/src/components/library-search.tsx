@@ -1,9 +1,11 @@
 import { Button } from "@/components/button";
 import { Badge } from "@/components/badge";
 import {
+  entryDisplayTitle,
   occurrenceLabel,
   occurrenceSpanLabel,
   validTimezone,
+  type Occurrence,
 } from "@/lib/data/occurrence";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -226,6 +228,7 @@ function SearchResults({
 function SearchResultCard({ entry }: { entry: SearchEntry }) {
   const body = entry.body.trim();
   const hasLongBody = body.length > 280;
+  const occurrence = resultOccurrence(entry);
 
   return (
     <article className={styles.resultCard}>
@@ -243,13 +246,16 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
                 : null,
             )}
           </Badge>
-          <time dateTime={entry.occurredAt ?? undefined}>
-            {resultDateLabel(entry)}
-          </time>
+          {/* An untitled Entry is already named by its date. */}
+          {entry.title ? (
+            <time dateTime={entry.occurredAt ?? undefined}>
+              {resultDateLabel(entry, occurrence)}
+            </time>
+          ) : null}
         </div>
         <h3>
           <Link className={styles.sourceLink} href={wikiEntryHref(entry)}>
-            {entry.title ?? firstUsefulLine(body) ?? "Untitled Entry"}
+            {entryDisplayTitle(entry.title, occurrence)}
           </Link>
         </h3>
       </header>
@@ -332,23 +338,19 @@ function resultCountLabel(count: number) {
   return `${count} ${count === 1 ? "item" : "items"}`;
 }
 
-function resultDateLabel(entry: SearchEntry) {
-  const occurrence = {
+function resultOccurrence(entry: SearchEntry): Occurrence {
+  return {
     ...entry,
     occurredTimezone: validTimezone(entry.occurredTimezone)
       ? entry.occurredTimezone
       : "UTC",
   };
+}
+
+function resultDateLabel(entry: SearchEntry, occurrence: Occurrence) {
   return (entry.itemKind === "entity" &&
     ["home", "vehicle"].includes(entry.itemSubtype)) ||
     entry.milestoneShape === "period"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
-}
-
-function firstUsefulLine(value: string) {
-  return value
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .find(Boolean);
 }

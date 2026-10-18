@@ -1,10 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  entryDisplayTitle,
   occurrenceDraft,
   occurrenceLabel,
   occurrenceSpanLabel,
   occurrenceDurationLabel,
+  occurrenceTitle,
   resolveOccurrenceDraft,
+  storedOccurrence,
   validateOccurrence,
   wallTimeToISO,
   type Occurrence,
@@ -241,5 +244,95 @@ describe("precision-aware occurrence", () => {
           timezone: "UTC",
         }).error,
       ).toBeDefined();
+  });
+});
+
+describe("date titles", () => {
+  const day: Occurrence = {
+    datePrecision: "day",
+    occurredAt: "2026-10-18T19:00:00Z",
+    occurredEnd: null,
+    occurredLabel: null,
+    occurredTimezone: "America/Los_Angeles",
+  };
+
+  it("names an untitled Entry by its date at the recorded precision", () => {
+    expect(occurrenceTitle(day)).toBe("Sunday, October 18, 2026");
+    // A late-evening moment stays on the day it was recorded in its own zone.
+    expect(
+      occurrenceTitle({
+        ...day,
+        datePrecision: "exact",
+        occurredAt: "2026-10-19T06:30:00Z",
+      }),
+    ).toBe("Sunday, October 18, 2026");
+    expect(occurrenceTitle({ ...day, datePrecision: "month" })).toBe(
+      "October 2026",
+    );
+    expect(occurrenceTitle({ ...day, datePrecision: "year" })).toBe("2026");
+  });
+
+  it("names date ranges by both ends, or by their start while open", () => {
+    const range: Occurrence = {
+      ...day,
+      datePrecision: "range",
+      occurredEnd: "2026-10-20T19:00:00Z",
+    };
+    expect(occurrenceTitle(range)).toBe("October 18 - October 20, 2026");
+    expect(
+      occurrenceTitle({ ...range, occurredEnd: "2027-01-02T20:00:00Z" }),
+    ).toBe("October 18, 2026 - January 2, 2027");
+    expect(occurrenceTitle({ ...range, occurredEnd: null })).toBe(
+      "October 18, 2026 onward",
+    );
+  });
+
+  it("uses the description of an uncertain date and admits an unknown one", () => {
+    expect(
+      occurrenceTitle({
+        ...day,
+        datePrecision: "approximate",
+        occurredLabel: " The summer after college ",
+      }),
+    ).toBe("The summer after college");
+    expect(
+      occurrenceTitle({
+        ...day,
+        datePrecision: "age",
+        occurredAt: null,
+        occurredLabel: "Age 7",
+      }),
+    ).toBe("Age 7");
+    expect(
+      occurrenceTitle({ ...day, datePrecision: "unknown", occurredAt: null }),
+    ).toBe("Undated entry");
+    expect(occurrenceTitle({ ...day, occurredAt: "not a date" })).toBe(
+      "Undated entry",
+    );
+  });
+
+  it("keeps a stored title and reads stored rows in the viewer's zone when needed", () => {
+    expect(entryDisplayTitle(" First snow ", day)).toBe("First snow");
+    expect(entryDisplayTitle("", day)).toBe("Sunday, October 18, 2026");
+    expect(entryDisplayTitle(null, day)).toBe("Sunday, October 18, 2026");
+    const row = {
+      datePrecision: "exact",
+      occurredLabel: null,
+      occurredStart: "2026-10-18T22:00:00Z",
+      occurredTimezone: null,
+    };
+    expect(storedOccurrence(row, "Asia/Tokyo")).toEqual({
+      datePrecision: "exact",
+      occurredAt: "2026-10-18T22:00:00Z",
+      occurredEnd: null,
+      occurredLabel: null,
+      occurredTimezone: "Asia/Tokyo",
+    });
+    expect(occurrenceTitle(storedOccurrence(row, "Asia/Tokyo"))).toBe(
+      "Monday, October 19, 2026",
+    );
+    expect(
+      storedOccurrence({ ...row, datePrecision: "someday" }, "Not/AZone"),
+    ).toMatchObject({ datePrecision: "unknown", occurredTimezone: "UTC" });
   });
 });

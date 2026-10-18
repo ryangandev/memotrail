@@ -24,6 +24,7 @@ export type HomeEntry = {
   occurredTimezone: string | null;
   revision: number;
   tagNames: string[];
+  /** The stored title, blank when the Entry has none. */
   title: string;
   updatedAt: string;
 };

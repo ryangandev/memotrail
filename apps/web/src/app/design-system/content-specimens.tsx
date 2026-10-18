@@ -362,7 +362,7 @@ export function SectionHeaderSpecimen() {
               <SectionHeader
                 action={
                   <a className={styles.headerLink} href="#section-header">
-                    3 need organizing
+                    Show all
                   </a>
                 }
                 detail="12 items"

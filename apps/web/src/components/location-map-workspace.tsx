@@ -51,9 +51,7 @@ export function LocationMapWorkspace({
     () =>
       items.filter((item) => {
         if (kind !== "all" && item.kind !== kind) return false;
-        const year = item.occurredAt
-          ? new Date(item.occurredAt).getUTCFullYear()
-          : null;
+        const { year } = item;
         if (fromYear && (year === null || year < Number(fromYear)))
           return false;
         if (toYear && (year === null || year > Number(toYear))) return false;
@@ -420,9 +418,7 @@ export function LocationMapWorkspace({
                       <SeparatedList spacing="word">
                         <span>{item.kind}</span>
                         <span>{item.address}</span>
-                        {item.occurredAt ? (
-                          <span>{item.occurredAt.slice(0, 10)}</span>
-                        ) : null}
+                        {item.dateLabel ? <span>{item.dateLabel}</span> : null}
                       </SeparatedList>
                     </small>
                   </Link>

@@ -203,9 +203,7 @@ export function TrashWorkspace({
                       </time>
                     </div>
                     <h2>{item.title}</h2>
-                    {item.detail && item.detail !== item.title ? (
-                      <p>{item.detail}</p>
-                    ) : null}
+                    {item.detail ? <p>{item.detail}</p> : null}
                     <div className={styles.retentionLine}>
                       <Icon name="clock" size={14} />
                       <span>{retentionLabel(item.expiresAt)}</span>

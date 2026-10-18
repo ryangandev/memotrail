@@ -21,9 +21,11 @@ const row = {
   related_entries: [
     {
       body: "Sailed across the bay.",
+      date_precision: "day",
       item_kind: "entry",
       item_subtype: "entry",
       id: "40000000-0000-4000-8000-000000000002",
+      occurred_end: null,
       occurred_label: null,
       occurred_start: "2026-08-01T12:00:00Z",
       occurred_timezone: "America/Los_Angeles",
@@ -54,11 +56,19 @@ describe("Goal records", () => {
           itemKind: "entry",
           itemSubtype: "entry",
           relationship: "achievement",
+          title: "First sail across the bay",
         },
       ],
       status: "active",
       targetDate: "2030-06-15",
     });
+  });
+
+  it("names an untitled First Time by its date", () => {
+    const [entry] = parseGoalRows([
+      { ...row, related_entries: [{ ...row.related_entries[0], title: "" }] },
+    ])![0].relatedEntries;
+    expect(entry.title).toBe("Saturday, August 1, 2026");
   });
 
   it("rejects retired states and malformed Goal, relationship, and attachment rows", () => {

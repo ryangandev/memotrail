@@ -3,6 +3,7 @@ import {
   type EntryImageMimeType,
 } from "./entry-photo-input";
 import { goalStatuses, type GoalStatus } from "./goal-record-input";
+import { entryDisplayTitle, storedOccurrence } from "./occurrence";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 
 export type GoalAttachment = {
@@ -20,14 +21,17 @@ export type GoalAttachment = {
 
 export type GoalRelatedEntry = {
   body: string;
+  datePrecision: string;
   id: string;
   itemKind: WikiItemKind;
   itemSubtype: string;
+  occurredEnd: string | null;
   occurredLabel: string | null;
   occurredStart: string | null;
   occurredTimezone: string | null;
   relationship: string;
   revision: number;
+  /** Its title, or its date when it has none. */
   title: string;
   updatedAt: string;
 };
@@ -131,7 +135,9 @@ function parseRelatedEntries(value: unknown): GoalRelatedEntry[] | null {
       typeof item.body !== "string" ||
       !isWikiItemKind(item.item_kind) ||
       typeof item.item_subtype !== "string" ||
+      typeof item.date_precision !== "string" ||
       !nullableString(item.occurred_start) ||
+      !nullableString(item.occurred_end) ||
       !nullableString(item.occurred_label) ||
       !nullableString(item.occurred_timezone) ||
       typeof item.revision !== "number" ||
@@ -140,17 +146,25 @@ function parseRelatedEntries(value: unknown): GoalRelatedEntry[] | null {
     ) {
       return null;
     }
+    const occurrence = {
+      datePrecision: item.date_precision,
+      occurredEnd: item.occurred_end as string | null,
+      occurredLabel: item.occurred_label as string | null,
+      occurredStart: item.occurred_start as string | null,
+      occurredTimezone: item.occurred_timezone as string | null,
+    };
     entries.push({
+      ...occurrence,
       body: item.body,
       id: item.id,
       itemKind: item.item_kind,
       itemSubtype: item.item_subtype,
-      occurredLabel: item.occurred_label,
-      occurredStart: item.occurred_start,
-      occurredTimezone: item.occurred_timezone,
       relationship: item.relationship,
       revision: item.revision,
-      title: item.title || "Untitled Entry",
+      title: entryDisplayTitle(
+        item.title as string | null,
+        storedOccurrence(occurrence),
+      ),
       updatedAt: item.updated_at,
     });
   }

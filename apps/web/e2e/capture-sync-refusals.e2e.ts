@@ -414,20 +414,25 @@ function pendingIndicator(page: Page) {
     .getByText(/^\d+ (pending|not accepted)( · \d+ not accepted)?$/);
 }
 
-/** Opens the Delete forever confirmation, retrying a click made before hydration. */
-async function confirmDeletion(page: Page, title: string) {
+/**
+ * Opens the Delete forever confirmation for the Trash row showing `text`,
+ * retrying a click made before hydration. The confirmation names the row by
+ * its heading, which is the date for an untitled Entry.
+ */
+async function confirmDeletion(page: Page, text: string) {
   const dialog = page.getByRole("dialog");
+  const row = page.getByRole("article").filter({ hasText: text });
+  // Read before opening: the modal confirmation hides the rest of the page.
+  const heading = await row.getByRole("heading").first().innerText();
   await expect(async () => {
     if (!(await dialog.isVisible())) {
-      await page
-        .getByRole("article")
-        .filter({ hasText: title })
+      await row
         .getByRole("button", { name: "Delete forever", exact: true })
         .click();
     }
     await expect(dialog).toBeVisible({ timeout: 2_000 });
   }).toPass(firstCompile);
-  await expect(dialog).toContainText(`Delete “${title}” forever?`);
+  await expect(dialog).toContainText(`Delete “${heading}” forever?`);
   return dialog;
 }
 

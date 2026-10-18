@@ -39,7 +39,8 @@ export type TagInput = {
   name: string;
 };
 export type TagEntryPreview = {
-  date: string;
+  /** Null when the title already is the date. */
+  date: string | null;
   href: string;
   id: string;
   title: string;
