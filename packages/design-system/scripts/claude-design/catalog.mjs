@@ -284,6 +284,8 @@ export const excluded = {
   "timezone-setting.tsx": needsData,
   "timezone-sync.tsx":
     "Syncs the browser timezone to Settings and renders nothing.",
+  "top-layer.ts":
+    "Helpers that place Dialog and its overlays in the browser top layer; it renders nothing, and Dialog is not bundled.",
   "trash-workspace.tsx": featureView,
   "use-confirmed-records.ts": "A hook, not a component.",
   "use-effective-theme.ts": "A hook, not a component.",
