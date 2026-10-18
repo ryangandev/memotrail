@@ -109,15 +109,10 @@ test("Editing a First Time keeps its original date range", async ({
     await expect(
       dialog.getByRole("button", { name: "Period", exact: true }),
     ).toHaveAttribute("aria-pressed", "true");
-    await expect
-      .poll(() =>
-        dialog
-          .getByRole("combobox", { name: "Time zone", exact: true })
-          .evaluate(
-            (control) => getComputedStyle(control.closest("label")!).rowGap,
-          ),
-      )
-      .toBe("8px");
+    // A date without a time has no time zone to choose.
+    await expect(
+      dialog.getByRole("combobox", { name: "Time zone", exact: true }),
+    ).toHaveCount(0);
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
@@ -186,6 +181,19 @@ test("Editing a First Time keeps its original date range", async ({
     await page.reload();
     await page.getByRole("button", { name: "Edit Entry" }).click();
     await expectOccurrencePrecision(dialog, "exact");
+    // Los Angeles differs from the Settings default, UTC, so its select shows in full.
+    await expect(
+      dialog.getByText("Entry override", { exact: true }),
+    ).toBeVisible();
+    await expect
+      .poll(() =>
+        dialog
+          .getByRole("combobox", { name: "Time zone", exact: true })
+          .evaluate(
+            (control) => getComputedStyle(control.closest("label")!).rowGap,
+          ),
+      )
+      .toBe("8px");
     await dialog.getByRole("button", { name: "Save changes" }).click();
     await expect(dialog).not.toBeVisible();
     expect(

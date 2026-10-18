@@ -311,4 +311,14 @@ describe("createTimelineLayout", () => {
 
     expect(layout.positions.map((item) => item.row)).toEqual([0, 0]);
   });
+
+  it("fills the visible width and still widens a long Timeline past it", () => {
+    expect(createTimelineLayout([], reference).canvasWidth).toBe(840);
+    expect(createTimelineLayout([], reference, null, 1100.6).canvasWidth).toBe(
+      1100,
+    );
+    const long = createTimelineLayout([], reference, "1990-01-01", 1100);
+    expect(long.canvasWidth).toBe(long.yearMarkers.length * 112);
+    expect(long.canvasWidth).toBeGreaterThan(1100);
+  });
 });

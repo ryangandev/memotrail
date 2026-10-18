@@ -27,14 +27,14 @@ test("capture saves with Command Return while Enter still writes another line", 
   });
   await expect(editor).toContainText("A continuation.");
   await expect(
-    page.getByRole("button", { name: "Save to Library", exact: true }),
+    page.getByRole("button", { name: "Save", exact: true }),
   ).toHaveAttribute("aria-keyshortcuts", "Meta+Enter Control+Enter");
   const save = page.getByRole("button", {
-    name: "Save to Library",
+    name: "Save",
     exact: true,
   });
   const saveHint = page.getByRole("tooltip", {
-    name: "Save to Library ⌘ Return",
+    name: "Save ⌘ Return",
   });
   await save.hover();
   await expect(saveHint).toBeVisible();
@@ -69,11 +69,9 @@ test("capture saves with Command Return while Enter still writes another line", 
     name: "Entry text",
     exact: true,
   });
-  await dialog
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .hover();
+  await dialog.getByRole("button", { name: "Save", exact: true }).hover();
   await expect(
-    dialog.getByRole("tooltip", { name: "Save to Library ⌘ Return" }),
+    dialog.getByRole("tooltip", { name: "Save ⌘ Return" }),
   ).toBeVisible();
   await dockEditor.fill("A linked draft");
   await dockEditor.press("ControlOrMeta+a");

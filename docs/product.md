@@ -51,15 +51,19 @@ An age recorded before Not sure existed stays an age when its Entry is edited.
 Leaving the date empty stores Unknown, so Unknown is not a separate choice.
 Moving to a coarser choice keeps what is known, and moving to a finer one starts empty rather than inventing a day or month.
 Web date forms share one calendar control with day, month, year, optional hour-and-minute, editable numeric-entry, picker-only, and size variants.
-Editable date fields accept digits and add their own separators; the first-visit birth-date prompt is picker-only, while Settings also permits numeric editing.
-Settings owns the user's default timezone for new exact Timeline timestamps.
-An exact Timeline timestamp shows a directly editable timezone select, may override the Settings default on its Entry, and labels every option with the UTC offset for the relevant date.
-Date-only and uncertain Timeline forms keep timezone controls out of the primary form.
+Editable date fields accept digits and add their own separators; the Timeline birth-date prompt is picker-only, while Settings also permits numeric editing.
+Settings owns the user's default timezone for new exact timestamps.
+In every date editor, an exact timestamp in the Settings default shows that zone as text with a Change action, so the default needs no decision.
+Change, or a timestamp recorded in another zone, shows the timezone select, which may override the Settings default on its Entry and labels every option with the UTC offset for the relevant date.
+Date-only and uncertain dates keep timezone controls out of the primary form.
 Changing the default never rewrites an existing Entry's recorded timezone.
 
 ## Capture
 
-- Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
+- Global capture starts with one flexible writing field and may include photos, voice-to-text, and a date.
+- Recording a thought needs no decision: open the composer, write, and save, with no required field, choice, or extra dialog on the way.
+- A capture is dated by the moment it is saved unless Date picks a calendar day, with an optional time, in the browser's time zone.
+  Month, year, uncertain, and ranged dates, time zones, and date descriptions are set later in the Entry editor.
 - New captures remain untitled until later editing adds a title.
 - An untitled Entry is named by its date wherever a title is shown; its stored title stays empty.
   The name follows the date's recorded precision: a day or exact time reads "Sunday, October 18, 2026", a month "October 2026", a year "2026", and a range names both ends.
@@ -119,6 +123,11 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 
 - An Entry may have several tags.
 - Tags are the one organization label: they group related Entries, such as travel, family, or a trip, for browsing, filtering, and discovery.
+- The Entry editor shows Tags right under the Note, before Photos and the date, as a labeled tag field.
+  While the field is focused, or while the Entry has no tags, it offers the person's most used tags as one-click suggestions, counting only Entries outside Trash.
+  Typing finds existing tags or creates a new one.
+- Tags are unique regardless of case, so a typed name that differs from an existing tag only by case adds that tag as it is already written.
+- An Entry can have up to 70 tags; the editor shows the count only once an Entry nears that limit.
 - MemoTrail has no separate Collections.
   Each earlier Collection became a tag with the same name and kept its Entries; older Collection links open Tags, and an older Library Collection filter reads as a tag filter.
 - MemoTrail does not keep People records.
@@ -136,7 +145,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
   Photos are added and removed in the Entry editor, not on the Item page.
   A pencil-and-Edit action changes the fields on that detail page into an inline form; Add remains a modal creation flow.
 - Current Wiki Item detail supports moving the item to Trash, where it remains restorable.
-- Tags are created and managed from the Tags destination and remain available in every compatible Wiki Item editor.
+- Tags are managed from the Tags destination, and every compatible Wiki Item editor can add existing tags or create new ones.
 - Tag management opens in viewport-level dialogs. The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
 - Renaming a tag preserves its identity and linked Wiki Items.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
@@ -178,7 +187,9 @@ Timeline has four fixed lanes, in this order: Places lived, Vehicles, Work and s
 Homes fill Places lived and Vehicles fill Vehicles; each milestone chooses Work and study or Other milestones.
 There are no custom tracks, and lanes cannot be renamed, reordered, or hidden.
 Web Timeline has one view, the lanes; there is no style setting.
-The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
+An optional private birth date becomes the story's starting point; Set birth date on Timeline and Settings add it, and Timeline never asks for it unprompted.
+Without one, Timeline starts from the earliest dated item, and an empty Timeline shows the current year.
+Adding to Timeline never waits on a birth date.
 Add to Timeline asks whether the user is adding a milestone, a First Time, a Home, or a Vehicle.
 A milestone or First Time opens the Entry editor with the milestone already marked; a Home or Vehicle opens its focused editor.
 Each lane's add shortcut does the same for that lane, and a milestone added to Work and study starts as a Period.
@@ -282,10 +293,10 @@ A customizable Command Palette opens from the global search control or Command K
 On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
 The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
-It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Library.
+It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save.
 The expanded composer uses one consistent frosted surface across its header, writing area, and action row.
 Web Capture saves to Library with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
-Hovering or focusing Save to Library displays a tooltip with the Command Return shortcut.
+Hovering or focusing Save displays a tooltip with the Command Return shortcut.
 Enter starts a new paragraph, and Shift+Enter inserts a line break; input method composition and nested editing controls do not trigger the save shortcut.
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.

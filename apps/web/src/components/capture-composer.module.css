@@ -382,7 +382,12 @@
     transition: none;
   }
 }
-.captureOccurrencePanel {
-  padding: var(--mt-space-4) var(--capture-inline-padding);
+.captureDatePanel {
+  padding: var(--mt-space-3) var(--capture-inline-padding);
   border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+/* One day with an optional time needs no more than a short field. */
+.captureDatePanel > [data-ui-date-field] {
+  max-width: 280px;
 }

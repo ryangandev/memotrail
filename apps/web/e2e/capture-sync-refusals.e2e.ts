@@ -382,7 +382,7 @@ async function saveCapture(
         .toBuffer(),
     });
   const save = composer.getByRole("button", {
-    name: "Save to Library",
+    name: "Save",
     exact: true,
   });
   await expect(save).toBeEnabled({ timeout: 60_000 });

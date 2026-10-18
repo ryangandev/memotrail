@@ -595,6 +595,14 @@ test("OccurrenceEditor moves between Day, Month, Year, and Not sure without inve
 
   // A time is one point in the Settings time zone, so it cannot also end.
   await toggle("Add time").check();
+  await expect(editor.getByRole("combobox", { name: "Time zone" })).toHaveCount(
+    0,
+  );
+  await expect(
+    editor.getByRole("group", { name: "Time zone", exact: true }),
+  ).toHaveText(/Default from Settings\(UTC-0[78]:00\) Los Angeles - America/);
+  await shot("time-zone-default");
+  await editor.getByRole("button", { name: "Change time zone" }).click();
   await expect(editor.getByText("Default from Settings")).toBeVisible();
   await expect(
     editor.getByRole("button", { name: "Choose occurred time" }),

@@ -143,7 +143,7 @@ export function EmptyTrashControl({
             <>
               <Button
                 variant="secondary"
-                autoFocus
+                data-autofocus
                 disabled={running}
                 onClick={close}
                 type="button"

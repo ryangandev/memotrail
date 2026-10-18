@@ -2,6 +2,7 @@ import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { loadTagOptions } from "./tag-options";
 import { storedProfileTimezone } from "./profile-input";
 import { getPrimaryEntryLocations } from "./entry-locations";
 import type { LocationSelection } from "@/lib/locations/location";
@@ -56,8 +57,6 @@ export type FirstTimesWorkspace = {
   viewer: Viewer;
 };
 
-type NameRow = { name: string };
-
 type FirstTimeRow = {
   attachments: unknown;
   body: string;
@@ -88,12 +87,7 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
       .select("*")
       .eq("user_id", context.userId)
       .single(),
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
+    loadTagOptions(context.client, context.userId),
   ]);
   const rows = firstTimes.error ? null : parseFirstTimeRows(firstTimes.data);
 
@@ -143,7 +137,7 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
       updatedAt: row.updated_at,
     })),
     loadError: null,
-    tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
+    tagOptions: tags ?? [],
     viewer: context.viewer,
   };
 }

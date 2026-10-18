@@ -224,6 +224,10 @@ test("Camera dates are private, read-only suggestions until an explicit Entry sa
       .click();
     await expectOccurrencePrecision(dialog, "day");
     await expect(occurrenceStartField(dialog)).toHaveValue("2017-07-08");
+    // The camera date keeps the Entry's own time zone, which a time then shows.
+    await dialog
+      .getByRole("checkbox", { name: "Add time", exact: true })
+      .check();
     await expect(dialog.getByLabel("Time zone", { exact: true })).toHaveValue(
       "America/Los_Angeles",
     );

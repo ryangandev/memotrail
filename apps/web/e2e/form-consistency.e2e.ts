@@ -104,27 +104,22 @@ test("specialized forms share photo fields and required-label conventions", asyn
         name: "Preview selected goal-preview.png",
       }),
     ).toHaveCount(0);
-    for (const [legendText, kind] of [["Tags", "tag"]] as const) {
-      const legend = goalDialog.getByText(legendText, { exact: true });
-      await goalDialog
-        .getByRole("button", { name: `Add ${kind}`, exact: true })
-        .click();
-      const input = goalDialog.getByRole("combobox", {
-        name: `Search or create a ${kind}`,
-      });
-      await input.scrollIntoViewIfNeeded();
-      const fieldShell = input.locator("..");
-      const [legendBox, inputBox] = await Promise.all([
-        legend.boundingBox(),
-        fieldShell.boundingBox(),
-      ]);
-      expect(
-        Math.round(
-          (inputBox?.y ?? 0) - ((legendBox?.y ?? 0) + (legendBox?.height ?? 0)),
-        ),
-      ).toBeGreaterThanOrEqual(8);
-      await input.press("Escape");
-    }
+    const tagLegend = goalDialog.getByText("Tags", { exact: true });
+    const tagInput = goalDialog.getByRole("combobox", {
+      name: "Tags",
+      exact: true,
+    });
+    await tagInput.scrollIntoViewIfNeeded();
+    const [legendBox, tagFieldBox] = await Promise.all([
+      tagLegend.boundingBox(),
+      tagInput.locator("..").boundingBox(),
+    ]);
+    expect(
+      Math.round(
+        (tagFieldBox?.y ?? 0) -
+          ((legendBox?.y ?? 0) + (legendBox?.height ?? 0)),
+      ),
+    ).toBeGreaterThanOrEqual(8);
     await goalDialog
       .getByRole("button", { name: "Close Someday editor", exact: true })
       .click();

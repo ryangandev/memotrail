@@ -1,5 +1,4 @@
 .editor {
-  --organization-control-icon-inset: 8px;
   display: grid;
   min-width: 0;
   grid-column: 1 / -1;
@@ -17,38 +16,88 @@
   font-weight: var(--mt-font-weight-medium);
 }
 
-.editor > small {
-  justify-self: end;
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
-}
-
-.items {
-  display: flex;
-  min-height: 34px;
-  flex-wrap: wrap;
-  align-items: flex-start;
+.field {
+  display: grid;
+  min-width: 0;
   gap: var(--mt-space-2);
 }
 
-.item,
-.addButton {
+.combobox {
   position: relative;
-  display: inline-flex;
-  min-height: 32px;
+  min-width: 0;
+}
+
+/* The shared field surface, holding the added tags and the tag input on one line. */
+.control {
+  display: flex;
+  min-width: 0;
+  min-height: var(--mt-size-field-medium);
+  flex-wrap: wrap;
   align-items: center;
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+  gap: var(--mt-space-1-25);
+  padding: var(--mt-space-1) var(--mt-space-3) var(--mt-space-1)
+    var(--mt-space-1-25);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-surface);
+  cursor: text;
+  transition:
+    border-color var(--mt-motion-quick),
+    box-shadow var(--mt-motion-quick);
+}
+
+.control:not(:has(.item)) {
+  padding-left: var(--mt-space-3);
+}
+
+.control:focus-within {
+  border-color: var(--mt-color-accent);
+  box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
+}
+
+.control[data-disabled] {
+  background: var(--mt-color-surface-subtle);
+  opacity: var(--mt-state-disabled-opacity-field);
+  cursor: default;
+}
+
+.editor .input {
+  width: auto;
+  height: 30px;
+  min-width: 120px;
+  flex: 1 1 120px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  color: var(--mt-color-ink);
+  background: transparent;
+  box-shadow: none;
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
+}
+
+.editor .input:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+.editor .input::placeholder {
+  color: var(--mt-color-ink-faint);
 }
 
 .item {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
   gap: var(--mt-space-0-75);
-  padding: var(--mt-space-1) var(--mt-space-0-5) var(--mt-space-1)
+  padding: var(--mt-space-0-5) var(--mt-space-0-5) var(--mt-space-0-5)
     var(--mt-space-2-5);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-accent-border);
   border-radius: var(--mt-radius-pill);
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
+  font-size: var(--mt-font-size-caption);
 }
 
 .editor .item > span:first-child {
@@ -64,6 +113,7 @@
   height: 18px;
   flex: 0 0 auto;
   place-items: center;
+  margin-right: var(--mt-space-0-25);
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -73,16 +123,11 @@
   cursor: pointer;
 }
 
-.editor .removeButton {
-  margin-right: var(--mt-space-0-25);
-}
-
 .removeButton svg {
   display: block;
 }
 
 .item:hover {
-  color: var(--mt-color-accent);
   border-color: var(--mt-color-border-strong);
 }
 
@@ -92,78 +137,67 @@
   background: transparent;
 }
 
-.addButton {
-  width: 34px;
-  min-width: 34px;
-  justify-content: flex-start;
-  gap: 0;
-  padding: 0 0 0 var(--organization-control-icon-inset);
+.suggestions {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mt-space-1-25);
+}
+
+.suggestions > span {
+  margin-right: var(--mt-space-0-75);
+  color: var(--mt-color-ink-faint);
+  line-height: var(--mt-line-height-none);
+  font-size: var(--mt-font-size-caption);
+}
+
+.suggestions .suggestion {
+  display: inline-flex;
+  max-width: 100%;
+  min-height: 28px;
+  align-items: center;
+  gap: var(--mt-space-1);
+  padding: var(--mt-space-0-5) var(--mt-space-2-5) var(--mt-space-0-5)
+    var(--mt-space-2);
   border: var(--mt-size-stroke-thin) dashed var(--mt-color-border-strong);
   border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-ink-muted);
   background: transparent;
-  overflow: hidden;
+  font: inherit;
+  font-size: var(--mt-font-size-caption);
   cursor: pointer;
   transition:
-    width var(--mt-motion-deliberate),
     color var(--mt-motion-quick),
     border-color var(--mt-motion-quick),
     background var(--mt-motion-quick);
 }
 
-.addButton > svg {
-  display: block;
+.suggestion > svg {
   flex: 0 0 auto;
 }
 
-.addButton span {
-  position: absolute;
-  top: 50%;
-  left: 30px;
-  opacity: 0;
-  transform: translate(-4px, -50%);
+.suggestion > span {
+  overflow: hidden;
+  line-height: var(--mt-line-height-none);
+  text-overflow: ellipsis;
   white-space: nowrap;
-  transition:
-    opacity var(--mt-motion-deliberate),
-    transform var(--mt-motion-deliberate);
 }
 
-.addButton:hover,
-.addButton:focus-visible {
-  width: 84px;
-  color: var(--mt-color-accent);
+.suggestions .suggestion:hover,
+.suggestions .suggestion:focus-visible {
   border-color: var(--mt-color-accent);
+  color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
 }
 
-.addButton:hover span,
-.addButton:focus-visible span {
-  opacity: 1;
-  transform: translate(0, -50%);
-}
-
-.inlineEditor {
-  position: relative;
-  z-index: var(--mt-layout-layer-local4);
-  width: 220px;
-  max-width: 100%;
-  min-width: 0;
-  flex: 0 1 220px;
-}
-
-.searchField :global([data-search-control]) {
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-accent);
-  border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-surface-raised);
-  box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
-}
-
-.suggestions {
+.options {
   position: absolute;
-  top: calc(100% + var(--mt-space-2));
+  z-index: var(--mt-layout-layer-local4);
+  top: calc(100% + var(--mt-space-1));
   left: 0;
   display: grid;
-  width: 100%;
+  width: min(320px, 100%);
   overflow: hidden;
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
   border-radius: var(--mt-radius-medium);
@@ -171,11 +205,11 @@
   box-shadow: var(--mt-shadow-floating);
 }
 
-.suggestions
+.options
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ),
-.suggestions .statusOption {
+.options .statusOption {
   display: grid;
   min-height: 36px;
   grid-template-columns: 18px minmax(0, 1fr) auto;
@@ -190,43 +224,43 @@
   cursor: pointer;
 }
 
-.suggestions > * + * {
+.options > * + * {
   border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
-.suggestions
+.options
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ):hover,
-.suggestions
+.options
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   ):focus-visible {
   background: var(--mt-color-surface-subtle);
 }
 
-.suggestions
+.options
   button:not(
     :where([data-ui-button], [data-ui-empty-state], [data-record-card])
   )
   small,
-.suggestions .statusOption small {
+.options .statusOption small {
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-fine);
 }
 
-.suggestions .statusOption {
+.options .statusOption {
   color: var(--mt-color-ink-muted);
   cursor: default;
 }
 
-.suggestions .createOption {
+.options .createOption {
   color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
 }
 
 .createOption strong {
-  max-width: 120px;
+  max-width: 160px;
   overflow: hidden;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
@@ -235,8 +269,10 @@
   white-space: nowrap;
 }
 
-.editor:disabled {
-  opacity: var(--mt-state-disabled-opacity-choice);
+.limit {
+  justify-self: end;
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-fine);
 }
 
 .editor:disabled
@@ -246,20 +282,9 @@
   cursor: default;
 }
 
-@media (hover: none) {
-  .addButton span {
-    opacity: 1;
-    transform: translate(0, -50%);
-  }
-
-  .addButton {
-    width: 84px;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .addButton,
-  .addButton span {
+  .control,
+  .suggestions .suggestion {
     transition: none;
   }
 }

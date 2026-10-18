@@ -1,6 +1,7 @@
 import "server-only";
 
 import { getAuthenticatedContext, type Viewer } from "@/lib/data/inbox";
+import { loadTagOptions } from "@/lib/data/tag-options";
 import {
   storedBirthDate,
   storedProfileTimezone,
@@ -56,8 +57,6 @@ export type TimelineWorkspace = {
   viewer: Viewer;
 };
 
-type NameRow = { name: string };
-
 type TimelineRow = {
   body: string;
   date_precision: string;
@@ -92,12 +91,7 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
       .select("*")
       .eq("user_id", context.userId)
       .single(),
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
+    loadTagOptions(context.client, context.userId),
   ]);
   const rows = timeline.error ? null : timelineRows(timeline.data);
   const profileBirthDate = storedBirthDate(profile.error ? null : profile.data);
@@ -113,7 +107,7 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
     loadError: rows
       ? null
       : "MemoTrail could not load your Timeline. Refresh to try again.",
-    tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
+    tagOptions: tags ?? [],
     viewer: context.viewer,
   };
 }

@@ -3,6 +3,8 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getPrimaryEntryLocations } from "./entry-locations";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { loadTagOptions } from "./tag-options";
+import { loadDefaultTimezone } from "./profile-timezone";
 import {
   parseHomeRows,
   type HomeAttachment,
@@ -10,13 +12,13 @@ import {
 } from "./home-record";
 
 export type HomesWorkspace = {
+  // The Settings time zone, when the profile could be read.
+  defaultTimezone?: string;
   homes: HomeRecord[];
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
 };
-
-type NameRow = { name: string };
 
 export async function getHomesWorkspace(
   targetId?: string,
@@ -27,14 +29,10 @@ export async function getHomesWorkspace(
     return null;
   }
 
-  const [homes, tags] = await Promise.all([
+  const [homes, tags, defaultTimezone] = await Promise.all([
     context.client.rpc("homes_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
+    loadTagOptions(context.client, context.userId),
+    loadDefaultTimezone(context.client, context.userId),
   ]);
   const rows = homes.error ? null : parseHomeRows(homes.data);
 
@@ -79,8 +77,9 @@ export async function getHomesWorkspace(
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,
       })),
     })),
+    defaultTimezone,
     loadError: null,
-    tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
+    tagOptions: tags ?? [],
     viewer: context.viewer,
   };
 }

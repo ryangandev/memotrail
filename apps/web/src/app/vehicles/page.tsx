@@ -19,6 +19,7 @@ export default async function VehiclesPage({
     <VehiclesWorkspace
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
+      defaultTimezone={workspace.defaultTimezone}
       tagOptions={workspace.tagOptions}
       vehicles={workspace.vehicles}
     />

@@ -45,6 +45,7 @@ import {
   type InboxReviewInput,
 } from "@/lib/data/inbox-review";
 import { trimEntryNote } from "@/lib/data/rich-text";
+import { tagNamesIncludingDraft } from "@/lib/data/organization";
 
 // A new Entry for the editor's create mode, such as a milestone added from Timeline.
 // Adds a new Entry. Its id is drafted once, so a retried save cannot add it twice.
@@ -113,7 +114,7 @@ export function EntryEditorDialog({
   photos,
   tagOptions,
 }: {
-  // The time zone from Settings, shown as the default for a new Entry.
+  // The time zone from Settings. An exact time in it shows the zone quietly.
   defaultTimezone?: string;
   entry: InboxEntry;
   // Saves `entry` as a new Entry. Use `NewEntryDialog` to add one.
@@ -194,7 +195,7 @@ export function EntryEditorDialog({
       id: entry.id,
       milestone,
       revision,
-      tagNames: namesIncludingDraft(tagNames, tagInput),
+      tagNames: tagNamesIncludingDraft(tagNames, tagInput, tagOptions),
       title: title || null,
     };
     const parsedInput = parseInboxReviewInput(input);
@@ -328,7 +329,7 @@ export function EntryEditorDialog({
         )
       }
       titleId="entry-editor-heading"
-      eyebrow={isNew ? <>New Entry</> : <>Life Wiki editor</>}
+      eyebrow={isNew ? <>New Entry</> : <>Entry</>}
       closeLabel="Close Entry editor"
       busy={isPending}
       size="wide"
@@ -388,6 +389,15 @@ export function EntryEditorDialog({
           />
         </div>
 
+        <EntryOrganizationEditor
+          disabled={isPending}
+          names={tagNames}
+          onChange={setTagNames}
+          input={tagInput}
+          onInputChange={setTagInput}
+          options={tagOptions}
+        />
+
         <EntryPhotoField
           disabled={isPending}
           existingPhotos={existingPhotos.map((photo) => ({
@@ -428,15 +438,6 @@ export function EntryEditorDialog({
           value={location}
         />
 
-        <EntryOrganizationEditor
-          disabled={isPending}
-          names={tagNames}
-          onChange={setTagNames}
-          input={tagInput}
-          onInputChange={setTagInput}
-          options={tagOptions}
-        />
-
         {existingPhotos.length > 0 ? (
           <EntryPhotoDates
             photoLocation={photoLocation}
@@ -462,9 +463,4 @@ export function EntryEditorDialog({
 async function registerPhoto(input: EntryAttachmentInput) {
   const result = await registerEntryAttachment(input);
   return { status: result.status === "synced" ? "saved" : "error" };
-}
-
-function namesIncludingDraft(names: string[], draft: string) {
-  const name = draft.trim();
-  return name ? [...names, name] : names;
 }

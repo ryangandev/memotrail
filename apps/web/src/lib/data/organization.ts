@@ -2,6 +2,30 @@ export const tagNameCountLimit = 70;
 export const tagNameLengthLimit = 80;
 export const tagNamesLimitMessage = `Use up to ${tagNameCountLimit} tags with names up to ${tagNameLengthLimit} characters.`;
 
+// Tags are unique regardless of case, so a typed name that differs from an existing tag
+// only by case is that tag, written the way it already is.
+export function existingTagName(name: string, options: readonly string[]) {
+  const trimmed = name.trim();
+  const normalized = trimmed.toLocaleLowerCase();
+  return (
+    options.find((option) => option.toLocaleLowerCase() === normalized) ??
+    trimmed
+  );
+}
+
+// The tags to save, including a name still typed in the tag field.
+export function tagNamesIncludingDraft(
+  names: string[],
+  draft: string,
+  options: readonly string[],
+) {
+  const name = existingTagName(draft, options);
+  const normalized = name.toLocaleLowerCase();
+  return !name || names.some((item) => item.toLocaleLowerCase() === normalized)
+    ? names
+    : [...names, name];
+}
+
 export type TagItem = {
   id: string;
   name: string;

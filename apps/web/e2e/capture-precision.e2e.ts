@@ -1,455 +1,386 @@
-import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { test, expect, type Page } from "@playwright/test";
-import { createClient } from "@supabase/supabase-js";
-import { createServerClient } from "@supabase/ssr";
+import type { Locator, Page } from "@playwright/test";
 import sharp from "sharp";
-import {
-  fillOccurrenceEnd,
-  fillOccurrenceStart,
-  occurrenceField,
-  occurrenceStartField,
-  setDateDescription,
-  setOccurrencePrecision,
-  type DatePrecision,
-} from "./helpers/occurrence";
-import { parseInboxDraft } from "../src/lib/data/inbox-draft";
+import { expect, test } from "./helpers/workspace-test";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-test("Quick capture retains uncertain dates in drafts and offline replay", async ({
-  page,
+// Tokyo is nine hours from UTC all year, which shows that a capture's day and
+// time are read in the browser's own time zone.
+test.use({ timezoneId: "Asia/Tokyo" });
+
+test("the composer dates a capture by a day with an optional time", async ({
   context,
+  page,
+  workspace,
 }) => {
-  const env = JSON.parse(
-    execFileSync("supabase", ["status", "-o", "json"], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }),
+  test.setTimeout(120_000);
+  const { capture, date, dateToggle, day, open, save, text } =
+    await openCapture(page);
+
+  // Date starts on today and offers a day and an optional time, nothing else.
+  await dateToggle.click();
+  await expect(dateToggle).toHaveAttribute("aria-pressed", "true");
+  await expect(day).toHaveValue(
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" }).format(
+      new Date(),
+    ),
   );
-  expect(env.API_URL).toBe("http://127.0.0.1:54321");
-  const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY);
-  const email = `capture-precision-${randomUUID()}@memotrail.local`;
-  const created = await admin.auth.admin.createUser({
-    email,
-    email_confirm: true,
-  });
-  const owner = created.data.user!.id;
-  try {
-    const cookies: { name: string; value: string }[] = [];
-    const client = createServerClient(env.API_URL, env.ANON_KEY, {
-      cookies: {
-        getAll: () => cookies,
-        setAll: (values) => {
-          cookies.push(
-            ...values.map((v) => ({ name: v.name, value: v.value })),
-          );
-        },
-      },
-    });
-    const link = await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-    });
-    expect(
-      (
-        await client.auth.verifyOtp({
-          type: "magiclink",
-          token_hash: link.data.properties!.hashed_token,
-        })
-      ).error,
-    ).toBeNull();
-    await context.addCookies(
-      cookies.map((c) => ({
-        ...c,
-        domain: "127.0.0.1",
-        path: "/",
-        sameSite: "Lax",
-        httpOnly: false,
-      })),
-    );
-    await page.goto("/");
-    const capture = page.getByRole("form", {
-      name: "Quick capture",
-      exact: true,
-    });
-    // The editor mounts only after hydration; a photo chosen before it would be ignored.
+  await expect(
+    date.getByRole("button", { name: "Choose date time", exact: true }),
+  ).toHaveText("Time");
+  for (const retired of ["Day", "Month", "Year", "Not sure"])
     await expect(
-      capture.getByRole("textbox", { name: "Entry text", exact: true }),
-    ).toBeVisible({ timeout: 30_000 });
-    await capture.locator('input[type="file"]').setInputFiles({
-      name: "quick-preview.png",
-      mimeType: "image/png",
-      buffer: await sharp({
-        create: { width: 320, height: 240, channels: 3, background: "#426e83" },
-      })
-        .png()
-        .toBuffer(),
-    });
-    const removePhoto = capture.getByRole("button", {
-      name: "Remove selected quick-preview.png",
-    });
-    const removeIconOffset = await removePhoto.evaluate((button) => {
-      const icon = button.querySelector("svg")?.getBoundingClientRect();
-      const bounds = button.getBoundingClientRect();
-      return icon
-        ? Math.hypot(
-            icon.x + icon.width / 2 - (bounds.x + bounds.width / 2),
-            icon.y + icon.height / 2 - (bounds.y + bounds.height / 2),
-          )
-        : Infinity;
-    });
-    expect(removeIconOffset).toBeLessThan(0.5);
-    await capture
-      .getByRole("button", { name: "Preview selected quick-preview.png" })
-      .click();
-    const photoPreview = page.getByRole("dialog", {
-      name: "quick-preview.png",
-    });
-    await expect(photoPreview).toBeVisible();
-    await photoPreview
-      .getByRole("button", { name: "Close", exact: true })
-      .click();
-    await removePhoto.click();
-    await expect(
-      capture.getByRole("button", {
-        name: "Preview selected quick-preview.png",
-      }),
+      capture.getByRole("button", { name: retired, exact: true }),
     ).toHaveCount(0);
-    await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await expect(occurrenceField(capture)).toBeVisible({
-      timeout: 5000,
-    });
-    await expect(
-      capture.getByRole("textbox", { name: "Entry title", exact: true }),
-    ).toHaveCount(0);
-    await capture
-      .getByRole("textbox", { name: "Entry text", exact: true })
-      .fill("Recovered partial draft");
-    await expect
-      .poll(() =>
-        page.evaluate((ownerId) => {
-          const stored = localStorage.getItem(
-            `memotrail:inbox-draft:${ownerId}`,
-          );
-          return stored ? JSON.parse(stored) : null;
-        }, owner),
-      )
-      .toMatchObject({
-        body: "Recovered partial draft",
-        bodyRich: { text: "Recovered partial draft", version: 1 },
-      });
-    await setOccurrencePrecision(capture, "year");
-    await occurrenceStartField(capture).fill("20");
-    const storedDraft = await page.evaluate(
-      (ownerId) => localStorage.getItem(`memotrail:inbox-draft:${ownerId}`),
-      owner,
-    );
-    expect(parseInboxDraft(storedDraft)).toMatchObject({
-      body: "Recovered partial draft",
-    });
-    await page.reload();
-    await expect(occurrenceStartField(capture)).toHaveValue("20");
-    await capture
-      .getByRole("button", { name: "Save to Library", exact: true })
-      .click();
-    await expect(capture).toContainText("Choose a valid calendar date");
-    expect((await client.from("entries").select("id")).data).toHaveLength(0);
+  await expect(capture.getByRole("combobox")).toHaveCount(0);
+  await expect(capture.getByRole("checkbox")).toHaveCount(0);
 
-    const cases: {
-      precision: DatePrecision;
-      start: string;
-      label: string;
-      end: string;
-    }[] = [
-      { precision: "exact", start: "2017-07-08T12:34", label: "", end: "" },
-      { precision: "day", start: "2017-07-08", label: "", end: "" },
-      { precision: "month", start: "2017-07", label: "", end: "" },
-      { precision: "year", start: "2017", label: "", end: "" },
-      {
-        precision: "approximate",
-        start: "",
-        label: "Summer before college",
-        end: "",
-      },
-      { precision: "range", start: "2017-07-01", label: "", end: "2017-08-12" },
-      { precision: "unknown", start: "", label: "", end: "" },
-    ];
-    for (const [index, item] of cases.entries()) {
-      if (index > 0)
-        await capture
-          .getByRole("button", { name: "Date", exact: true })
-          .click();
-      await capture
-        .getByRole("textbox", { name: "Entry text", exact: true })
-        .fill(`Capture ${item.precision}`);
-      await setOccurrencePrecision(capture, item.precision);
-      await capture
-        .getByRole("combobox", { name: "Time zone", exact: true })
-        .selectOption("Asia/Kathmandu");
-      if (item.start) await fillOccurrenceStart(capture, item.start);
-      else await occurrenceStartField(capture).fill("");
-      await setDateDescription(capture, item.label);
-      if (item.end) await fillOccurrenceEnd(capture, item.end);
-      if (item.precision === "approximate") {
-        await page.setViewportSize({ width: 390, height: 844 });
-        await page.emulateMedia({ colorScheme: "dark" });
-        await page.screenshot({
-          caret: "initial",
-          path: test
-            .info()
-            .outputPath("memotrail-capture-precision-mobile.png"),
-        });
-        await page.waitForLoadState("networkidle");
-        await context.setOffline(true);
-      }
-      if (index === 0)
-        await page.screenshot({
-          caret: "initial",
-          path: test
-            .info()
-            .outputPath("memotrail-capture-precision-desktop.png"),
-        });
-      let delayedSync = false;
-      if (index === 0) {
-        await watchPendingSyncSurfaces(page);
-        await page.route("**/*", async (route) => {
-          if (
-            !delayedSync &&
-            route.request().method() === "POST" &&
-            route.request().headers()["next-action"]
-          ) {
-            delayedSync = true;
-            await new Promise((resolve) => setTimeout(resolve, 750));
-          }
-          await route.continue();
-        });
-      }
-      await capture
-        .getByRole("button", { name: "Save to Library", exact: true })
-        .click();
-      if (item.precision === "approximate") {
-        await expect(
-          page.getByRole("heading", { name: "Pending sync", exact: true }),
-        ).toBeVisible();
-        // The closed Quick Capture mirrors the same shared queue.
-        await expect(
-          page.locator("main article").filter({
-            hasText: "Capture approximate",
-          }),
-        ).toContainText("Summer before college");
-        const pending = await page.evaluate(
-          (owner) =>
-            JSON.parse(localStorage.getItem(`memotrail:inbox-queue:${owner}`)!),
-          owner,
-        );
-        expect(pending[0]).toMatchObject({
-          version: 3,
-          datePrecision: "approximate",
-          occurredAt: null,
-          occurredEnd: null,
-          occurredLabel: "Summer before college",
-        });
-        await context.setOffline(false);
-        // Let the online retry finish before exercising reload recovery,
-        // rather than aborting its in-flight render.
-        await expect(
-          page.getByRole("region", { name: "Recent Entries", exact: true }),
-        ).toContainText("Capture approximate");
-        await page.reload();
-      }
-      await expect
-        .poll(
-          async () =>
-            (
-              await client
-                .from("entries")
-                .select("id")
-                .eq("body", `Capture ${item.precision}`)
-            ).data?.length,
-        )
-        .toBe(1);
-      if (index === 0) {
-        expect(delayedSync).toBe(true);
-        expect(
-          await page.evaluate(() =>
-            sessionStorage.getItem("pending-sync-seen"),
-          ),
-        ).toBe("no");
-        await page.unroute("**/*");
-      }
-      const saved = (
-        await client
-          .from("entries")
-          .select("*")
-          .eq("body", `Capture ${item.precision}`)
-          .single()
-      ).data!;
-      expect(saved).toMatchObject({
-        body: `Capture ${item.precision}`,
-        date_precision: item.precision,
-        occurred_timezone: "Asia/Kathmandu",
-        occurred_label: item.label || null,
-        title: null,
-      });
-      if (!item.start) expect(saved.occurred_start).toBeNull();
-      else {
-        const expected =
-          item.precision === "exact"
-            ? "2017-07-08T06:49:00"
-            : `${item.precision === "year" ? "2017-01-01" : item.precision === "month" ? "2017-07-01" : item.start}T06:15:00`;
-        expect(saved.occurred_start).toBe(`${expected}+00:00`);
-      }
-      expect(saved.occurred_end).toBe(
-        item.end ? "2017-08-12T06:15:00+00:00" : null,
+  // The calendar opens above the short dialog instead of being clipped by it.
+  await date.getByRole("button", { name: "Choose date", exact: true }).click();
+  const calendar = page.locator(
+    '[data-scope="date-picker"][data-part="content"][data-state="open"]',
+  );
+  await expect(calendar).toBeVisible();
+  expect(
+    await calendar.evaluate((element) => {
+      const header = element
+        .querySelector('[data-part="view-control"]')!
+        .getBoundingClientRect();
+      return element.contains(
+        document.elementFromPoint(
+          header.x + header.width / 2,
+          header.y + header.height / 2,
+        ),
       );
-      await expect(
-        capture.getByRole("button", { name: "Save to Library", exact: true }),
-      ).toBeEnabled();
+    }),
+  ).toBe(true);
+  await calendar
+    .locator('[data-part="table-cell-trigger"]', { hasText: /^15$/ })
+    .click();
+  await expect(calendar).toHaveCount(0);
+  await expect(day).toHaveValue(/-15$/);
+
+  // An unfinished day survives a reload and is refused at Save.
+  await text.fill("Back-dated day");
+  await day.fill("2017-0");
+  await expect
+    .poll(() => storedDraft(page, workspace.owner))
+    .toMatchObject({
+      body: "Back-dated day",
+      occurrence: { precision: "day", start: "2017-0" },
+    });
+  await page.reload();
+  await open();
+  await expect(day).toHaveValue("2017-0");
+  await save.click();
+  await expect(capture).toContainText("Choose a valid calendar date");
+  expect(await entries(workspace.client)).toHaveLength(0);
+
+  // A day saves at midday in the browser's time zone.
+  await day.fill("2017-07-08");
+  await save.click();
+  await expect(text).toBeEmpty();
+  await expect(date).toHaveCount(0);
+  await expect
+    .poll(() => entries(workspace.client))
+    .toEqual([
+      expect.objectContaining({
+        body: "Back-dated day",
+        date_precision: "day",
+        occurred_start: "2017-07-08T03:00:00+00:00",
+        occurred_timezone: "Asia/Tokyo",
+      }),
+    ]);
+
+  // A time makes the date exact, and the offline queue keeps it until replay.
+  await dateToggle.click();
+  await text.fill("Back-dated time");
+  await day.fill("2017-07-08");
+  await chooseTime(page, date, "12", "34");
+  await expect(day).toHaveValue("2017-07-08");
+  await page.waitForLoadState("networkidle");
+  await context.setOffline(true);
+  await save.click();
+  await expect(
+    capture.getByRole("heading", { name: "Pending sync", exact: true }),
+  ).toBeVisible();
+  expect(await queuedCaptures(page, workspace.owner)).toEqual([
+    expect.objectContaining({
+      version: 3,
+      datePrecision: "exact",
+      occurredAt: "2017-07-08T03:34:00.000Z",
+      occurredEnd: null,
+      occurredLabel: null,
+      occurredTimezone: "Asia/Tokyo",
+    }),
+  ]);
+  await context.setOffline(false);
+  await expect
+    .poll(async () =>
+      (await entries(workspace.client)).find(
+        (entry) => entry.body === "Back-dated time",
+      ),
+    )
+    .toMatchObject({
+      date_precision: "exact",
+      occurred_start: "2017-07-08T03:34:00+00:00",
+    });
+
+  // Turning Date off again saves the capture time, and an online save never
+  // surfaces the pending list while it waits on MemoTrail.
+  await expect(
+    capture.getByRole("heading", { name: "Pending sync", exact: true }),
+  ).toHaveCount(0);
+  await dateToggle.click();
+  await expect(date).toBeVisible();
+  await dateToggle.click();
+  await expect(date).toHaveCount(0);
+  await expect(dateToggle).toHaveAttribute("aria-pressed", "false");
+  await text.fill("Default capture time");
+  await watchPendingSyncSurfaces(page);
+  let delayedSync = false;
+  await page.route("**/*", async (route) => {
+    if (
+      !delayedSync &&
+      route.request().method() === "POST" &&
+      route.request().headers()["next-action"]
+    ) {
+      delayedSync = true;
+      await new Promise((resolve) => setTimeout(resolve, 750));
     }
-
-    await capture.getByRole("button", { name: "Date", exact: true }).click();
-    await setOccurrencePrecision(capture, "unknown");
-    await capture
-      .getByRole("button", { name: "Use capture time", exact: true })
-      .click();
-    await expect(occurrenceField(capture)).toHaveCount(0);
-    await capture
-      .getByRole("textbox", { name: "Entry text", exact: true })
-      .fill("Default capture time");
-    const beforeDefault = Date.now();
-    await capture
-      .getByRole("button", { name: "Save to Library", exact: true })
-      .click();
-    await expect
-      .poll(
-        async () =>
-          (
-            await client
-              .from("entries")
-              .select("id")
-              .eq("body", "Default capture time")
-          ).data?.length,
-      )
-      .toBe(1);
-    const defaultEntry = (
-      await client
-        .from("entries")
-        .select("*")
-        .eq("body", "Default capture time")
-        .single()
-    ).data!;
-    expect(defaultEntry.title).toBeNull();
-    expect(defaultEntry.date_precision).toBe("exact");
-    expect(Date.parse(defaultEntry.occurred_start)).toBeGreaterThanOrEqual(
-      beforeDefault,
-    );
-    expect(Date.parse(defaultEntry.occurred_start)).toBeLessThanOrEqual(
-      Date.now(),
-    );
-    expect(defaultEntry.occurred_end).toBeNull();
-    expect(defaultEntry.occurred_label).toBeNull();
-
-    await page.getByRole("button", { name: "New entry" }).click();
-    const newCapture = page.getByRole("dialog", {
-      name: "What’s on your mind?",
+    await route.continue();
+  });
+  const beforeDefault = Date.now();
+  await save.click();
+  await expect(
+    capture.getByRole("button", { name: "Saving…", exact: true }),
+  ).toBeDisabled();
+  await expect
+    .poll(async () =>
+      (await entries(workspace.client)).find(
+        (entry) => entry.body === "Default capture time",
+      ),
+    )
+    .toMatchObject({
+      date_precision: "exact",
+      occurred_end: null,
+      occurred_label: null,
+      title: null,
     });
-    await newCapture
-      .getByRole("textbox", { name: "Entry text" })
-      .fill("Capture from New");
-    await watchPendingSyncSurfaces(page);
-    let delayedModalSync = false;
-    await page.route("**/*", async (route) => {
-      if (
-        !delayedModalSync &&
-        route.request().method() === "POST" &&
-        route.request().headers()["next-action"]
-      ) {
-        delayedModalSync = true;
-        await new Promise((resolve) => setTimeout(resolve, 750));
-      }
-      await route.continue();
-    });
-    await newCapture
-      .getByRole("button", { name: "Save to Library", exact: true })
-      .click();
-    await expect(
-      newCapture.getByRole("button", { name: "Saving…", exact: true }),
-    ).toBeDisabled();
-    await expect
-      .poll(
-        async () =>
-          (
-            await client
-              .from("entries")
-              .select("id")
-              .eq("body", "Capture from New")
-          ).data?.length,
-      )
-      .toBe(1);
-    expect(delayedModalSync).toBe(true);
-    expect(
-      await page.evaluate(() => sessionStorage.getItem("pending-sync-seen")),
-    ).toBe("no");
-    await page.unroute("**/*");
-    await expect(
-      newCapture.getByRole("button", { name: "Save to Library", exact: true }),
-    ).toBeEnabled();
-    await newCapture
-      .getByRole("button", { name: "Close quick capture" })
-      .click();
-    await expect(
-      page.getByRole("region", { name: "Recent Entries", exact: true }),
-    ).toContainText("Capture from New");
+  const defaultEntry = (await entries(workspace.client)).find(
+    (entry) => entry.body === "Default capture time",
+  )!;
+  expect(Date.parse(defaultEntry.occurred_start)).toBeGreaterThanOrEqual(
+    beforeDefault,
+  );
+  expect(Date.parse(defaultEntry.occurred_start)).toBeLessThanOrEqual(
+    Date.now(),
+  );
+  expect(delayedSync).toBe(true);
+  expect(
+    await page.evaluate(() => sessionStorage.getItem("pending-sync-seen")),
+  ).toBe("no");
+  await page.unroute("**/*");
+  await expect(save).toBeEnabled();
+});
 
-    // Old pending payloads retain their UUID/date and are not duplicated on replay.
-    const legacyId = randomUUID();
-    await page.evaluate(
-      ({ owner, legacyId }) => {
-        localStorage.setItem(
-          `memotrail:inbox-queue:${owner}`,
-          JSON.stringify([
-            {
-              version: 1,
-              id: legacyId,
-              title: "Legacy capture",
-              body: "Older client",
-              occurredAt: "2017-07-08T12:34:56.123456Z",
-              occurredTimezone: "UTC",
-              queuedAt: "2026-09-01T00:00:00Z",
-            },
-          ]),
-        );
-      },
-      { owner, legacyId },
+test("drafts and queued captures from earlier composers still load", async ({
+  page,
+  workspace,
+}) => {
+  test.setTimeout(120_000);
+  const { date, day, open, save, text } = await openCapture(page);
+
+  // An earlier composer kept a date range; the composer shows and saves its day.
+  await page.evaluate((owner) => {
+    localStorage.setItem(
+      `memotrail:inbox-draft:${owner}`,
+      JSON.stringify({
+        version: 3,
+        title: "",
+        body: "Draft from an earlier composer",
+        occurredAt: null,
+        updatedAt: new Date().toISOString(),
+        occurrence: {
+          precision: "range",
+          start: "2017-07-01",
+          end: "2017-08-12",
+          endMode: "date",
+          label: "",
+          timezone: "Asia/Tokyo",
+        },
+      }),
     );
-    await page.reload();
-    await expect
-      .poll(
-        async () =>
-          (await client.from("entries").select("id").eq("id", legacyId)).data
-            ?.length,
-      )
-      .toBe(1);
-    expect(
-      (
-        await client
-          .from("entries")
-          .select("date_precision,occurred_start")
-          .eq("id", legacyId)
-          .single()
-      ).data,
-    ).toMatchObject({
+  }, workspace.owner);
+  await page.reload();
+  await open();
+  await expect(text).toHaveText("Draft from an earlier composer");
+  await expect(day).toHaveValue("2017-07-01");
+  await save.click();
+  await expect(date).toHaveCount(0);
+  await expect
+    .poll(() => entries(workspace.client))
+    .toEqual([
+      expect.objectContaining({
+        body: "Draft from an earlier composer",
+        date_precision: "day",
+        occurred_start: "2017-07-01T03:00:00+00:00",
+        occurred_end: null,
+      }),
+    ]);
+
+  // Old pending payloads keep their UUID and date and are not duplicated on replay.
+  const legacyId = randomUUID();
+  await page.evaluate(
+    ({ owner, legacyId }) => {
+      localStorage.setItem(
+        `memotrail:inbox-queue:${owner}`,
+        JSON.stringify([
+          {
+            version: 1,
+            id: legacyId,
+            title: "Legacy capture",
+            body: "Older client",
+            occurredAt: "2017-07-08T12:34:56.123456Z",
+            occurredTimezone: "UTC",
+            queuedAt: "2026-09-01T00:00:00Z",
+          },
+        ]),
+      );
+    },
+    { owner: workspace.owner, legacyId },
+  );
+  await page.reload();
+  await expect
+    .poll(async () =>
+      (await entries(workspace.client)).find((entry) => entry.id === legacyId),
+    )
+    .toMatchObject({
       date_precision: "exact",
       occurred_start: "2017-07-08T12:34:56.123456+00:00",
     });
-    // The replay finishes once the Dashboard shows the Entry.
-    await expect(
-      page.getByRole("region", { name: "Recent Entries", exact: true }),
-    ).toContainText("Legacy capture");
-  } finally {
-    await context.setOffline(false);
-    expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
-  }
+  await expect.poll(() => queuedCaptures(page, workspace.owner)).toEqual([]);
 });
+
+test("a draft photo previews in place and removes from its own control", async ({
+  page,
+  workspace,
+}) => {
+  expect(workspace.owner).toBeTruthy();
+  // The Dashboard composer, since a preview opened from Quick Capture stays
+  // under its native dialog.
+  await page.goto("/");
+  const capture = page.getByRole("form", {
+    name: "Quick capture",
+    exact: true,
+  });
+  // The editor mounts only after hydration; a photo chosen before it is ignored.
+  await expect(
+    capture.getByRole("textbox", { name: "Entry text", exact: true }),
+  ).toBeVisible({ timeout: 30_000 });
+  await capture.locator('input[type="file"]').setInputFiles({
+    name: "quick-preview.png",
+    mimeType: "image/png",
+    buffer: await sharp({
+      create: { width: 320, height: 240, channels: 3, background: "#426e83" },
+    })
+      .png()
+      .toBuffer(),
+  });
+  const removePhoto = capture.getByRole("button", {
+    name: "Remove selected quick-preview.png",
+  });
+  const removeIconOffset = await removePhoto.evaluate((button) => {
+    const icon = button.querySelector("svg")?.getBoundingClientRect();
+    const bounds = button.getBoundingClientRect();
+    return icon
+      ? Math.hypot(
+          icon.x + icon.width / 2 - (bounds.x + bounds.width / 2),
+          icon.y + icon.height / 2 - (bounds.y + bounds.height / 2),
+        )
+      : Infinity;
+  });
+  expect(removeIconOffset).toBeLessThan(0.5);
+  await capture
+    .getByRole("button", { name: "Preview selected quick-preview.png" })
+    .click();
+  const photoPreview = page.getByRole("dialog", { name: "quick-preview.png" });
+  await expect(photoPreview).toBeVisible();
+  await photoPreview
+    .getByRole("button", { name: "Close", exact: true })
+    .click();
+  await removePhoto.click();
+  await expect(
+    capture.getByRole("button", { name: "Preview selected quick-preview.png" }),
+  ).toHaveCount(0);
+});
+
+/** Opens Quick Capture from the dock on Library, away from the Dashboard composer. */
+async function openCapture(page: Page) {
+  await page.goto("/library");
+  const capture = page.getByRole("dialog", { name: "What’s on your mind?" });
+  const text = capture.getByRole("textbox", {
+    name: "Entry text",
+    exact: true,
+  });
+  const date = capture.getByRole("group", { name: "Date", exact: true });
+  async function open() {
+    await page.getByRole("button", { name: "New entry", exact: true }).click();
+    // The editor mounts only after hydration; input before it would be lost.
+    await expect(text).toBeVisible({ timeout: 30_000 });
+  }
+  await open();
+  return {
+    capture,
+    date,
+    dateToggle: capture.getByRole("button", { name: "Date", exact: true }),
+    day: date.getByRole("textbox", { name: "Date", exact: true }),
+    open,
+    save: capture.getByRole("button", { name: "Save", exact: true }),
+    text,
+  };
+}
+
+async function chooseTime(
+  page: Page,
+  date: Locator,
+  hour: string,
+  minute: string,
+) {
+  const title = "Choose date time";
+  await date.getByRole("button", { name: title, exact: true }).click();
+  const picker = page.getByRole("dialog", { name: title, exact: true });
+  await picker.getByRole("combobox", { name: "Hour" }).selectOption(hour);
+  await picker.getByRole("combobox", { name: "Minute" }).selectOption(minute);
+  await picker.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(
+    date.getByRole("button", { name: title, exact: true }),
+  ).toHaveText(`${hour}:${minute}`);
+}
+
+async function entries(client: SupabaseClient) {
+  const result = await client
+    .from("entries")
+    .select(
+      "id,body,title,date_precision,occurred_start,occurred_end,occurred_label,occurred_timezone",
+    );
+  expect(result.error).toBeNull();
+  return result.data!;
+}
+
+function storedDraft(page: Page, owner: string) {
+  return page.evaluate((owner) => {
+    const stored = localStorage.getItem(`memotrail:inbox-draft:${owner}`);
+    return stored ? JSON.parse(stored) : null;
+  }, owner);
+}
+
+function queuedCaptures(page: Page, owner: string) {
+  return page.evaluate((owner) => {
+    const stored = localStorage.getItem(`memotrail:inbox-queue:${owner}`);
+    return stored ? JSON.parse(stored) : [];
+  }, owner);
+}
 
 // Records whether any pending list or the header pending indicator appears,
 // because an online save's first attempt must not surface either.

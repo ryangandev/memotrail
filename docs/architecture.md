@@ -134,6 +134,8 @@ Pair it with the test file carrying the same feature name.
 - Moment, Period, and First Time are milestone settings on an ordinary Entry, not forms; Memory and Story are optional descriptive tags.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve tag memberships with the canonical Entry mutation.
   `replace_entry_tags` and `valid_tag_names` hold the shared tag write and the 70-name, 80-character limits, which Web `lib/data/organization.ts` mirrors.
+- Every Entry editor's tag choices come from `lib/data/tag-options.ts`, ordered by how many Entries outside Trash use each tag, so the editor's first options are its most used suggestions.
+  `lib/data/organization.ts` resolves a typed name to the existing tag that differs only by case, matching the case-insensitive tag uniqueness that `replace_entry_tags` relies on.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
 - Multi-record changes use authenticated RPCs so content, relationships, and specialized facts commit atomically.
@@ -155,10 +157,13 @@ Pair it with the test file carrying the same feature name.
 - Exact timestamp, day, month, year, age, range, approximate, and Unknown values remain distinct.
 - Unknown and description-only dates have no fabricated calendar anchor.
 - The Web `OccurrenceEditor` offers Day, Month, Year, and Not sure and maps them, with its Add time and Add end date toggles, onto the stored precisions; `resolveOccurrenceDraft` stores an empty calendar date as Unknown.
+- The Web composer's Date is a day with an optional time: `lib/data/inbox-capture-date.ts` maps it to and from the draft's occurrence, saves an empty field as the capture time, and shows a draft an earlier composer kept at another precision by its day.
 - Recorded timezone controls calendar interpretation and search overlap.
-- `profiles.timezone` supplies the default for new exact Timeline timestamps; an Entry stores its own timezone snapshot and may override that default.
+- `profiles.timezone` supplies the default for new exact timestamps; an Entry stores its own timezone snapshot and may override that default.
 - Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.
-- Timeline date-only, partial, and uncertain editors do not surface a timezone control, but they preserve the stored timezone needed for stable calendar interpretation.
+- Every Web date editor receives the Settings default through `lib/data/profile-timezone.ts`: the Entry editor, Timeline forms, and the Home, Vehicle, and Goal achievement editors on their own pages.
+  They do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
+  `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action, and shows the select only when the profile cannot be read.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
 - Workspaces return an Entry's stored title, an empty string when it has none, and never a stand-in made from its writing.
   Migration `202610180087` made `home_workspace`, `home_resurfaced_memory`, `first_times_workspace`, `goals_workspace`, and `wiki_items_workspace` follow that, with the date fields each needs to name an untitled Entry.
@@ -166,11 +171,12 @@ Pair it with the test file carrying the same feature name.
   Where that Web shows a title without its own fallback, the earlier stand-in stays until a later migration removes it: `timeline_workspace` adds `stored_title`, and `trash_workspace` adds `entry_title`, the stored title of the row's Entry or of the Entry a photo belongs to, with that Entry's date.
 - Web `entryDisplayTitle` and `occurrenceTitle` in `lib/data/occurrence.ts` name an untitled Entry by its date at its recorded precision, read in its recorded time zone with the fixed `en-US` locale, so the server and every browser render the same text.
   Every Web surface that shows an Entry title goes through them: Dashboard, Library, Library search, the Command Palette, Pending sync, the Item page and its page title, Map, Timeline, First Times, Someday, Trash, and AI search.
-- A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
+- An optional private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings; without it, `createTimelineLayout` starts from the earliest dated item, padded.
 - Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.
   `TimelineWorkspace` measures titles in the lane item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Period only when the bar holds it.
   A shorter Period draws its bar alone with the title after it, or before it at the end of the Timeline, like a Moment; titles beside an item mask the year and Today lines and end in an ellipsis only past 180 pixels.
   A dashed Today line uses the same reference instant as open Periods, whose bars end against it with a flat right edge.
+  The canvas is at least the width beside the lane labels, measured on the client, so a short Timeline fills its card and a long one scrolls.
 - Every Timeline item is a link to its Item page through `wikiEntryHref`. Creation routes by what is added, not by lane: a milestone or First Time opens `NewEntryDialog` from `components/entry-editor-dialog.tsx` with the milestone preset, and a Home or Vehicle reuses the exported Records editor in a lazy-loaded modal.
 - `components/milestone-fields.tsx` is the Entry editor's Timeline fieldset; turning a Period back into a Moment clears its end date.
 - Timeline server data loads the lanes, the profile's time zone and birth date, and tag choices in parallel.
@@ -211,6 +217,7 @@ Pair it with the test file carrying the same feature name.
   Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
 - Web Timeline has only the lane view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
+  Its open calendar and time picker render in the top layer as manual popovers, so a scrolling or translucent container such as Quick Capture's native dialog cannot clip them.
 
 ## Offline rules
 
@@ -385,8 +392,11 @@ Pair it with the test file carrying the same feature name.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
   `packages/design-system/components/button.yaml` specifies Button and ButtonLink with native `mtButtonStyle`.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
+  Its first focus goes to a `data-autofocus` control, else the first field; React's `autoFocus` fires before the trap starts, so an enclosing dialog's trap takes it back.
   Editor forms retain their handlers; footer submit actions use native form associations.
   Quick Capture uses a native HTML dialog anchored to the workspace bottom, preserving photo-picker cancellation, nested overlays, and focus restoration; its mobile geometry follows the visual viewport when the keyboard opens.
+  The browser shows that dialog in the top layer and makes everything outside it inert, so a Dialog opened over it, such as the photo preview or a confirmation, portals into it and shows its positioner as a manual popover with the scrim as its `::backdrop` (`components/top-layer.ts`).
+  A Dialog's content is a `data-escape-layer`, so Quick Capture leaves its Escape, Tab, and Mod-Enter to it.
   `WorkspaceActionDock` owns the shared bottom position and glass control styling for global Search and Quick Capture.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.

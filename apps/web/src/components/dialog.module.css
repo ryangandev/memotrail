@@ -17,6 +17,25 @@
   pointer-events: none;
 }
 
+/* Over a native modal dialog, the positioner is a top-layer popover that
+   takes outside clicks and draws the scrim as its backdrop. */
+.positioner[popover] {
+  width: auto;
+  height: auto;
+  margin: 0;
+  overflow: visible;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.positioner[popover]::backdrop {
+  background: var(--mt-material-dialog-scrim-tint);
+  backdrop-filter: var(--mt-material-dialog-scrim-backdrop-filter);
+  animation: fade var(--mt-motion-standard) var(--mt-motion-easing-enter);
+}
+
 .dialog {
   display: flex;
   width: min(100%, 640px);
@@ -144,7 +163,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .dialog[data-state],
-  .backdrop[data-state] {
+  .backdrop[data-state],
+  .positioner[popover]::backdrop {
     animation: none;
   }
 }

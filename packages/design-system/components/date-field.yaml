@@ -30,7 +30,7 @@ anatomy:
   value: The date text, or its placeholder while empty.
   time: The time and its clock icon, when the field includes a time.
   clear: The action that empties the field, shown while it has a value.
-  calendar: The popover with the day, month, or year view.
+  calendar: The popover with the day, month, or year view, shown above every surface so a dialog or scrolling container never clips it.
 
 props:
   granularity:

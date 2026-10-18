@@ -305,7 +305,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         expect(narrowRows[2]).toBeGreaterThan(narrowRows[0]);
         expect(narrowRows[3]).toBe(narrowRows[2]);
         const save = page.getByRole("button", {
-          name: "Save to Library",
+          name: "Save",
           exact: true,
         });
         await expect(save).toBeVisible();
@@ -340,9 +340,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
     await page
       .getByRole("textbox", { name: "Entry text", exact: true })
       .fill("Captured from Home");
-    await page
-      .getByRole("button", { name: "Save to Library", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(
       page
         .locator("[data-sonner-toast]")

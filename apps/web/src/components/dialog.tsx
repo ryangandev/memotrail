@@ -3,9 +3,16 @@
 import { Dialog as ArkDialog } from "@ark-ui/react/dialog";
 import { Portal } from "@ark-ui/react/portal";
 import { ClientOnly } from "@ark-ui/react/client-only";
-import { useRef, type ReactNode, type RefObject } from "react";
+import {
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { dialogDefaults, type DialogSize } from "@/generated/design-system";
 import { OverlayContainerContext } from "./overlay-container";
+import { topmostModalDialog, useTopLayerRef } from "./top-layer";
 import { IconButton } from "./button";
 import { Icon } from "./icon";
 import styles from "./dialog.module.css";
@@ -48,6 +55,12 @@ export function Dialog({
   portalContainer?: RefObject<HTMLElement | null>;
 }) {
   const container = useRef<HTMLDivElement>(null);
+  const host = useModalDialogHost(open && !portalContainer);
+  const hostContainer = useMemo(
+    () => (host ? { current: host } : undefined),
+    [host],
+  );
+  const topLayerRef = useTopLayerRef<HTMLDivElement>(host !== null);
   return (
     <ClientOnly>
       <ArkDialog.Root
@@ -58,16 +71,22 @@ export function Dialog({
         closeOnEscape={!busy}
         onFocusOutside={(event) => event.preventDefault()}
         onEscapeKeyDown={(event) => {
-          if (
-            event.target instanceof Element &&
-            event.target.closest("[data-escape-layer]")
-          )
-            event.preventDefault();
+          // A nested layer, such as a calendar, handles its own Escape first.
+          const layer =
+            event.target instanceof Element
+              ? event.target.closest("[data-escape-layer]")
+              : null;
+          if (layer && layer !== container.current) event.preventDefault();
         }}
+        // Mark a control other than the first field with data-autofocus. React's
+        // autoFocus focuses it before this dialog traps focus, so an enclosing
+        // dialog's trap would take that focus back.
         initialFocusEl={() =>
+          container.current?.querySelector<HTMLElement>("[data-autofocus]") ??
           container.current?.querySelector<HTMLElement>(
-            "[autofocus], input:not([type=hidden]):not(:disabled), textarea:not(:disabled), [contenteditable=true]",
-          ) ?? null
+            "input:not([type=hidden]):not(:disabled), textarea:not(:disabled), [contenteditable=true]",
+          ) ??
+          null
         }
         closeOnInteractOutside={!busy && closeOnInteractOutside}
         lazyMount
@@ -81,12 +100,19 @@ export function Dialog({
         {trigger ? (
           <ArkDialog.Trigger asChild>{trigger}</ArkDialog.Trigger>
         ) : null}
-        <Portal container={portalContainer}>
-          <ArkDialog.Backdrop className={styles.backdrop} />
-          <ArkDialog.Positioner className={styles.positioner}>
+        <Portal container={portalContainer ?? hostContainer}>
+          {/* Over a native modal dialog, the positioner draws the scrim as its own
+              top-layer backdrop, so nothing can be stacked between the two. */}
+          {host ? null : <ArkDialog.Backdrop className={styles.backdrop} />}
+          <ArkDialog.Positioner
+            className={styles.positioner}
+            popover={host ? "manual" : undefined}
+            ref={topLayerRef}
+          >
             <ArkDialog.Content
               ref={container}
               className={styles.dialog}
+              data-escape-layer="dialog"
               data-size={size}
               data-ui-dialog
               aria-busy={busy}
@@ -133,4 +159,21 @@ export function Dialog({
       </ArkDialog.Root>
     </ClientOnly>
   );
+}
+
+/**
+ * The native modal dialog, such as Quick Capture, that was open when this
+ * dialog opened. The dialog renders inside it and above it in the top layer,
+ * so it stays interactive. It is read on each opening and kept while the
+ * dialog animates closed.
+ */
+function useModalDialogHost(open: boolean) {
+  const [opening, setOpening] = useState<{
+    open: boolean;
+    host: HTMLDialogElement | null;
+  }>({ open: false, host: null });
+  if (opening.open === open) return opening.host;
+  const host = open ? topmostModalDialog() : opening.host;
+  setOpening({ open, host });
+  return host;
 }

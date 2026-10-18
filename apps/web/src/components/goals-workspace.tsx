@@ -28,6 +28,7 @@ import common from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
+import { tagNamesIncludingDraft } from "@/lib/data/organization";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { SectionHeader } from "@/components/section-header";
@@ -85,11 +86,13 @@ const goalSections: Array<{
 ];
 
 export function GoalsWorkspace({
+  defaultTimezone,
   goals,
   loadError,
   ownerId,
   tagOptions,
 }: {
+  defaultTimezone?: string;
   goals: GoalRecord[];
   loadError: string | null;
   ownerId: string;
@@ -174,6 +177,7 @@ export function GoalsWorkspace({
 
       {selectedGoal !== undefined ? (
         <GoalEditor
+          defaultTimezone={defaultTimezone}
           goal={selectedGoal}
           key={selectedGoal?.id ?? "new-goal"}
           onClose={() => setSelectedGoal(undefined)}
@@ -277,6 +281,7 @@ function GoalCard({
 }
 
 export function GoalEditor({
+  defaultTimezone,
   goal,
   onClose,
   onTrashed,
@@ -284,6 +289,8 @@ export function GoalEditor({
   presentation = "dialog",
   tagOptions,
 }: {
+  // The Settings time zone, the default for the achievement date.
+  defaultTimezone?: string;
   goal: GoalRecord | null;
   onClose: () => void;
   onTrashed?: () => void;
@@ -357,7 +364,7 @@ export function GoalEditor({
       id: currentId,
       revision: currentRevision,
       status,
-      tagNames: namesIncludingDraft(tagNames, tagInput),
+      tagNames: tagNamesIncludingDraft(tagNames, tagInput, tagOptions),
       targetDate: targetDate || null,
       title,
     };
@@ -605,6 +612,7 @@ export function GoalEditor({
 
           {canRecordAchievement && currentId && currentRevision !== null ? (
             <AchievementPanel
+              defaultTimezone={defaultTimezone}
               disabled={isPending}
               goalId={currentId}
               revision={currentRevision}
@@ -636,6 +644,7 @@ export function GoalEditor({
 }
 
 function AchievementPanel({
+  defaultTimezone,
   disabled,
   goalId,
   onAchieved,
@@ -643,6 +652,7 @@ function AchievementPanel({
   revision,
   unsavedChanges,
 }: {
+  defaultTimezone?: string;
   disabled: boolean;
   goalId: string;
   onAchieved: (result: GoalActionResult) => void;
@@ -655,7 +665,7 @@ function AchievementPanel({
     start: "",
     end: "",
     label: "",
-    timezone: localTimezone(),
+    timezone: defaultTimezone ?? localTimezone(),
   }));
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -708,6 +718,7 @@ function AchievementPanel({
         </div>
       </div>
       <OccurrenceEditor
+        defaultTimezone={defaultTimezone}
         value={occurrence}
         onChange={setOccurrence}
         disabled={disabled}
@@ -749,11 +760,6 @@ async function uploadPhotos(
     registerGoalAttachment,
     onProgress,
   );
-}
-
-function namesIncludingDraft(names: string[], draft: string) {
-  const name = draft.trim();
-  return name ? [...names, name] : names;
 }
 
 function sameNames(first: string[], second: string[]) {

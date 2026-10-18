@@ -25,9 +25,7 @@ test("a capture queued offline on the Dashboard syncs after moving to Library", 
   await composer
     .getByRole("textbox", { name: "Entry text", exact: true })
     .fill("Offline on the Dashboard");
-  await composer
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await composer.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
     page.locator("main").getByRole("heading", {
       name: "Pending sync",
@@ -73,9 +71,7 @@ test("a capture keeps retrying while online until MemoTrail can be reached", asy
   await dialog
     .getByRole("textbox", { name: "Entry text", exact: true })
     .fill("Retried while online");
-  await dialog
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
     dialog.getByRole("heading", { name: "Pending sync", exact: true }),
   ).toBeVisible();
@@ -111,9 +107,7 @@ test("a capture from a closed Quick Capture syncs when the connection returns", 
   await dialog
     .getByRole("textbox", { name: "Entry text", exact: true })
     .fill("Offline from Quick Capture");
-  await dialog
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
     dialog.getByRole("heading", { name: "Pending sync", exact: true }),
   ).toBeVisible();
@@ -141,9 +135,7 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   await capture
     .getByRole("textbox", { name: "Entry text", exact: true })
     .fill("Waiting for MemoTrail");
-  await capture
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await capture.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
     capture.getByRole("heading", { name: "Pending sync", exact: true }),
   ).toBeVisible();
@@ -212,18 +204,14 @@ test("the Dashboard composer and Quick Capture send each queued capture once", a
   await composer
     .getByRole("textbox", { name: "Entry text", exact: true })
     .fill("Once from the Dashboard");
-  await composer
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await composer.getByRole("button", { name: "Save", exact: true }).click();
   await expect(pendingIndicator(page)).toHaveText("1 pending");
   await page.getByRole("button", { name: "New entry", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
   await dialog
     .getByRole("textbox", { name: "Entry text", exact: true })
     .fill("Once from Quick Capture");
-  await dialog
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(pendingIndicator(page)).toHaveText("2 pending");
   await expect(
     dialog.getByRole("heading", { name: "Pending sync", exact: true }),
@@ -273,9 +261,7 @@ test("two tabs send each queued capture once", async ({
   await dialog
     .getByRole("textbox", { name: "Entry text", exact: true })
     .fill("Once across tabs");
-  await dialog
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
   await expect(pendingIndicator(page)).toHaveText("1 pending");
   // localStorage is shared, so the other tab shows the same waiting capture.
