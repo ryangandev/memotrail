@@ -30,6 +30,7 @@ Homes and Vehicles appear on Timeline in their own lanes, custom tracks are gone
 Migration `202610040009` converts existing Moments, Periods, First Times, and track placements into milestones and turns custom track names into tags.
 Native iOS still calls the retired Timeline and First Time functions until it follows Web.
 Migrations `202610040001` through `202610040009` were applied to the hosted project on 2026-10-05 after a schema and data backup, and `main` at `cf68cab` was deployed to Production.
+Migration `202610180087` was applied to the hosted project on 2026-10-18, right after `main` at `497b9d4` was deployed to Production; it is additive and keeps the older `wiki_items_workspace` signature.
 Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
 The date precision controls are settled too: Web date forms choose Day, Month, Year, or Not sure, with Add time and Add end date toggles, and an empty date means Unknown.
 Native iOS still shows the eight Date types until it follows Web.
@@ -76,28 +77,28 @@ The merged Web release still needs Production deployment verification and browse
 
 Use Git history for feature-level implementation and test evidence.
 
-| Area                                                                              | State                                                                                                                                                                        |
-| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox and Needs organizing and names untitled Entries by their date, while native still shows Inbox                                  |
-| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Someday      | Implemented on Web and iOS; Web simplified Goals into Someday and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web |
-| Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                      |
-| Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                           |
-| Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                            |
-| Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, simplified AI, and account controls implemented                                                                        |
-| Web tags                                                                          | One Tags destination and shared Entry tag editor implemented; Collections are merged into tags                                                                               |
-| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                                     |
-| Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                           |
-| Hosted Supabase contracts                                                         | Every repository migration through `202610040009` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` through `202610040009` were applied on 2026-10-05            |
-| Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                               |
-| Web design system                                                                 | Every value comes from shared tokens and lint rejects hardcoded ones; 28 component specs shared with iOS; production browser acceptance pending                              |
-| Backup and restore                                                                | Not ready                                                                                                                                                                    |
-| Current GitHub CI                                                                 | Pull requests run the Linux Web job and a Supabase job with database tests, data contracts, and the full browser suite; native checks run locally                            |
+| Area                                                                              | State                                                                                                                                                                                              |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox and Needs organizing and names untitled Entries by their date, while native still shows Inbox                                                        |
+| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Someday      | Implemented on Web and iOS; Web simplified Goals into Someday and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web                       |
+| Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                            |
+| Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                                 |
+| Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                  |
+| Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                              |
+| Web tags                                                                          | One Tags destination and shared Entry tag editor implemented; Collections are merged into tags                                                                                                     |
+| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                                                           |
+| Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                                 |
+| Hosted Supabase contracts                                                         | Every repository migration through `202610180087` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` through `202610040009` were applied on 2026-10-05 and `202610180087` on 2026-10-18 |
+| Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                                                     |
+| Web design system                                                                 | Every value comes from shared tokens and lint rejects hardcoded ones; 28 component specs shared with iOS; production browser acceptance pending                                                    |
+| Backup and restore                                                                | Not ready                                                                                                                                                                                          |
+| Current GitHub CI                                                                 | Pull requests run the Linux Web job and a Supabase job with database tests, data contracts, and the full browser suite; native checks run locally                                                  |
 
 ## Next work
 
 ### 1. Release and accept the Entry-centered Web flow
 
-- Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, untitled Entries named by their date, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
+- Verify the Production deployment against the hosted project migrated through `202610180087`, then check Quick Capture, untitled Entries named by their date, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
@@ -106,7 +107,7 @@ Use Git history for feature-level implementation and test evidence.
 
 ### 2. Accept Web Location
 
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610040009`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
+- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610180087`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
 - Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - `localhost:3000` points to the linked cloud Supabase project.
 - Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
