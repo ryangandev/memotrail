@@ -33,6 +33,7 @@ Migrations `202610040001` through `202610040009` were applied to the hosted proj
 Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
 The date precision controls are settled too: Web date forms choose Day, Month, Year, or Not sure, with Add time and Add end date toggles, and an empty date means Unknown.
 Native iOS still shows the eight Date types until it follows Web.
+Web Timeline no longer opens the birth date prompt on its own; native iOS still asks on the first Timeline visit until it follows Web.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state

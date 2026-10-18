@@ -675,13 +675,6 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .getByRole("link", { name: "Timeline", exact: true })
       .click();
     await expect(page).toHaveURL(/\/timeline$/);
-    const birthDatePrompt = page.getByRole("dialog", {
-      name: "When did your story begin?",
-    });
-    await expect(birthDatePrompt).toBeVisible();
-    await birthDatePrompt
-      .getByRole("button", { name: "Not now", exact: true })
-      .click();
     await page.emulateMedia({ colorScheme: "dark" });
     await page.evaluate(() => {
       const captureWindow = window as typeof window & {
