@@ -103,9 +103,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     animations: "disabled",
     path: test.info().outputPath("memotrail-capture-dock-expanded.png"),
   });
-  await dialog
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
     page
       .locator("[data-sonner-toast]")
@@ -183,7 +181,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     await expect(editor).toBeFocused();
     await expect(dialog).toHaveCSS("animation-name", "none");
     await expect(
-      dialog.getByRole("button", { name: "Save to Library", exact: true }),
+      dialog.getByRole("button", { name: "Save", exact: true }),
     ).toBeInViewport();
     const box = (await dialog.boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(12);
@@ -198,10 +196,10 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     });
     await page.setViewportSize({ width, height: 430 });
     await dialog
-      .getByRole("button", { name: "Save to Library", exact: true })
+      .getByRole("button", { name: "Save", exact: true })
       .scrollIntoViewIfNeeded();
     await expect(
-      dialog.getByRole("button", { name: "Save to Library", exact: true }),
+      dialog.getByRole("button", { name: "Save", exact: true }),
     ).toBeInViewport();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),

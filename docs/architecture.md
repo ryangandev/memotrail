@@ -133,6 +133,8 @@ Pair it with the test file carrying the same feature name.
 - Moment, Period, and First Time are milestone settings on an ordinary Entry, not forms; Memory and Story are optional descriptive tags.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve tag memberships with the canonical Entry mutation.
   `replace_entry_tags` and `valid_tag_names` hold the shared tag write and the 70-name, 80-character limits, which Web `lib/data/organization.ts` mirrors.
+- Every Entry editor's tag choices come from `lib/data/tag-options.ts`, ordered by how many Entries outside Trash use each tag, so the editor's first options are its most used suggestions.
+  `lib/data/organization.ts` resolves a typed name to the existing tag that differs only by case, matching the case-insensitive tag uniqueness that `replace_entry_tags` relies on.
 - Used tags merge atomically into another stable tag identity. Only unused tags can be deleted directly.
 - Tag management loads at most five linked Entry previews on demand through a server action, so the Tags page stays lightweight and never creates a per-tag data waterfall during its initial render.
 - Multi-record changes use authenticated RPCs so content, relationships, and specialized facts commit atomically.
@@ -154,16 +156,20 @@ Pair it with the test file carrying the same feature name.
 - Exact timestamp, day, month, year, age, range, approximate, and Unknown values remain distinct.
 - Unknown and description-only dates have no fabricated calendar anchor.
 - The Web `OccurrenceEditor` offers Day, Month, Year, and Not sure and maps them, with its Add time and Add end date toggles, onto the stored precisions; `resolveOccurrenceDraft` stores an empty calendar date as Unknown.
+- The Web composer's Date is a day with an optional time: `lib/data/inbox-capture-date.ts` maps it to and from the draft's occurrence, saves an empty field as the capture time, and shows a draft an earlier composer kept at another precision by its day.
 - Recorded timezone controls calendar interpretation and search overlap.
-- `profiles.timezone` supplies the default for new exact Timeline timestamps; an Entry stores its own timezone snapshot and may override that default.
+- `profiles.timezone` supplies the default for new exact timestamps; an Entry stores its own timezone snapshot and may override that default.
 - Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.
-- Timeline date-only, partial, and uncertain editors do not surface a timezone control, but they preserve the stored timezone needed for stable calendar interpretation.
+- Every Web date editor receives the Settings default through `lib/data/profile-timezone.ts`: the Entry editor, Timeline forms, and the Home, Vehicle, and Goal achievement editors on their own pages.
+  They do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
+  `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action, and shows the select only when the profile cannot be read.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
-- A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
+- An optional private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings; without it, `createTimelineLayout` starts from the earliest dated item, padded.
 - Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.
   `TimelineWorkspace` measures titles in the lane item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Period only when the bar holds it.
   A shorter Period draws its bar alone with the title after it, or before it at the end of the Timeline, like a Moment; titles beside an item mask the year and Today lines and end in an ellipsis only past 180 pixels.
   A dashed Today line uses the same reference instant as open Periods, whose bars end against it with a flat right edge.
+  The canvas is at least the width beside the lane labels, measured on the client, so a short Timeline fills its card and a long one scrolls.
 - Every Timeline item is a link to its Item page through `wikiEntryHref`. Creation routes by what is added, not by lane: a milestone or First Time opens `NewEntryDialog` from `components/entry-editor-dialog.tsx` with the milestone preset, and a Home or Vehicle reuses the exported Records editor in a lazy-loaded modal.
 - `components/milestone-fields.tsx` is the Entry editor's Timeline fieldset; turning a Period back into a Moment clears its end date.
 - Timeline server data loads the lanes, the profile's time zone and birth date, and tag choices in parallel.
@@ -204,6 +210,7 @@ Pair it with the test file carrying the same feature name.
   Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
 - Web Timeline has only the lane view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
+  Its open calendar and time picker render in the top layer as manual popovers, so a scrolling or translucent container such as Quick Capture's native dialog cannot clip them.
 
 ## Offline rules
 

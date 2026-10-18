@@ -165,14 +165,6 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       path: test.info().outputPath("memotrail-tags-consistent.png"),
     });
 
-    expect(
-      (
-        await client
-          .from("profiles")
-          .update({ birth_date: "1990-01-01" })
-          .eq("user_id", owner)
-      ).error,
-    ).toBeNull();
     await page.goto("/timeline");
     await page.getByRole("button", { name: "Add to Timeline" }).click();
     await page
@@ -187,15 +179,12 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       .fill("Moved to Seattle");
     await setOccurrencePrecision(momentDialog, "day");
     await fillOccurrenceStart(momentDialog, "2025-03-14");
-    await momentDialog
-      .getByRole("button", { name: "Add tag", exact: true })
-      .click();
-    await momentDialog
-      .getByRole("combobox", { name: "Search or create a tag" })
-      .fill("travel");
-    await momentDialog
-      .getByRole("combobox", { name: "Search or create a tag" })
-      .press("Enter");
+    const momentTags = momentDialog.getByRole("combobox", {
+      name: "Tags",
+      exact: true,
+    });
+    await momentTags.fill("travel");
+    await momentTags.press("Enter");
     await momentDialog
       .getByRole("button", { name: "Add", exact: true })
       .click();

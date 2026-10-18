@@ -299,6 +299,17 @@ test("Timeline shows Homes, Vehicles, and milestones in fixed lanes", async ({
     "work_study",
   );
   await setOccurrencePrecision(editor, "exact");
+  // The Settings time zone stays out of the way until the person changes it.
+  await expect(editor.getByRole("combobox", { name: "Time zone" })).toHaveCount(
+    0,
+  );
+  await expect(
+    editor.getByRole("group", { name: "Time zone", exact: true }),
+  ).toHaveText(/Default from Settings\(UTC-0[45]:00\) New York - America/);
+  await editor.getByRole("button", { name: "Change time zone" }).click();
+  await expect(
+    editor.getByRole("combobox", { name: "Time zone" }),
+  ).toBeFocused();
   await expect(editor.getByRole("combobox", { name: "Time zone" })).toHaveValue(
     "America/New_York",
   );
@@ -435,11 +446,6 @@ test("A First Time is a milestone that First Times lists and the Entry editor ch
   await page.goto(`/first-times/${id}`);
   await expect(page).toHaveURL(`/items/${id}`);
   await page.goto("/timeline");
-  // This person has no birth date, so Timeline first asks for one in a dialog.
-  await page
-    .getByRole("dialog", { name: "When did your story begin?" })
-    .getByRole("button", { name: "Not now", exact: true })
-    .click();
   await expect(
     page
       .getByRole("region", { name: "Timeline by lane" })

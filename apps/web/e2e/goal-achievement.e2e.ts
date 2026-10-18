@@ -63,6 +63,15 @@ test("Goal achievements keep every date the editor records and reject duplicate 
         httpOnly: false,
       })),
     );
+    // Achievement dates default to the Settings time zone, so no case chooses one.
+    expect(
+      (
+        await client
+          .from("profiles")
+          .update({ timezone: "America/Los_Angeles" })
+          .eq("user_id", owner)
+      ).error,
+    ).toBeNull();
 
     const cases: {
       precision: DatePrecision;
@@ -133,9 +142,13 @@ test("Goal achievements keep every date the editor records and reject duplicate 
       const dialog = page.getByRole("main");
       await setOccurrencePrecision(dialog, value.precision);
       await expectOccurrencePrecision(dialog, value.precision);
-      await dialog
-        .getByRole("combobox", { name: "Time zone", exact: true })
-        .selectOption("America/Los_Angeles");
+      await expect(
+        dialog.getByRole("combobox", { name: "Time zone", exact: true }),
+      ).toHaveCount(0);
+      if (value.precision === "exact")
+        await expect(
+          dialog.getByRole("group", { name: "Time zone", exact: true }),
+        ).toContainText("Los Angeles - America");
       if (value.start) await fillOccurrenceStart(dialog, value.start);
       if (value.end) await fillOccurrenceEnd(dialog, value.end);
       await setDateDescription(dialog, value.label);
