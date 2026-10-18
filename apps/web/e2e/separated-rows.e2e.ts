@@ -37,7 +37,9 @@ test("Timeline summary keeps its separators between facts on phones", async ({
 
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/timeline");
-  const summary = page.getByLabel("Timeline summary");
+  // A production build streams the page into a hidden boundary before it moves
+  // into the workspace, so read the copy that is actually shown.
+  const summary = page.getByRole("main").getByLabel("Timeline summary");
   await expect(summary).toContainText("1 item");
   // The range ends a little past today, so its last year depends on the date.
   await expect(summary).toContainText(/2017 to \d{4}/);
