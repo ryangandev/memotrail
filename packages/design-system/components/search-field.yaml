@@ -50,7 +50,7 @@ tokens:
       fontWeight: { web: "{font.weight.medium}" }
     control:
       minHeight: "{size.field.medium}"
-      radius: "{radius.medium}"
+      radius: { web: "{radius.control}", ios: "{radius.medium}" }
       paddingInline: "{space.3}"
       gap: "{space.2}"
       background: "{color.surface}"
@@ -71,7 +71,7 @@ tokens:
   - when: { size: small }
     control:
       minHeight: "{size.field.small}"
-      radius: "{radius.small}"
+      radius: { web: "{radius.control}", ios: "{radius.small}" }
     icon:
       size: { web: "{size.icon.15}", ios: "{size.icon.14}" }
   - when: { size: large }
@@ -105,8 +105,8 @@ accessibility:
   dynamicType: iOS text follows Dynamic Type through the body role and the control grows past its minimum height. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
-  - difference: Controls are 34, 42, and 48 px tall on Web and 36, 44, and 50 pt on iOS.
-    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: Controls are 32, 36, and 44 px tall with 6 px corners on Web, and 36, 44, and 50 pt tall with 12 and 8 pt corners on iOS.
+    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions. The Web radius.control token tightens pointer-sized controls; native work is paused, so iOS keeps its radii until its next design pass.
   - difference: The search icon is 17 px, or 15 px when small, on Web and 16 pt, or 14 pt, on iOS.
     reason: An SF Symbol fills more of its point size than the stroked SVG fills its box, so one step smaller draws the same glyph size.
   - difference: The query is 13 px on Web and the 15 pt body role on iOS.

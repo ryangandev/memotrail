@@ -38,7 +38,7 @@
   padding: var(--mt-space-1) var(--mt-space-3) var(--mt-space-1)
     var(--mt-space-1-25);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   background: var(--mt-color-surface);
   cursor: text;
   transition:

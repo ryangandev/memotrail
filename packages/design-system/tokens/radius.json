@@ -15,7 +15,7 @@
       }
     },
     "xxsmall": {
-      "$description": "Key caps, inline code, and the small checkbox.",
+      "$description": "Key caps, inline code, the small checkbox, and options inside a segmented group.",
       "$value": {
         "value": 4,
         "unit": "px"
@@ -29,7 +29,19 @@
       }
     },
     "xsmall": {
-      "$description": "Editor toolbar buttons, tooltips, and compact inputs.",
+      "$description": "Tooltips.",
+      "$value": {
+        "value": 6,
+        "unit": "px"
+      },
+      "$extensions": {
+        "com.memotrail": {
+          "platforms": ["web"]
+        }
+      }
+    },
+    "control": {
+      "$description": "Web buttons, icon buttons, form fields, segmented groups, and sidebar items.",
       "$value": {
         "value": 6,
         "unit": "px"
@@ -41,7 +53,7 @@
       }
     },
     "small": {
-      "$description": "Small buttons and fields, segmented choices, and calendar days.",
+      "$description": "Calendar days, inline chips, and small iOS buttons and fields.",
       "$value": {
         "value": 8,
         "unit": "px"
@@ -67,7 +79,7 @@
       }
     },
     "medium": {
-      "$description": "Buttons, fields, menus, and toasts.",
+      "$description": "Menus, toasts, list rows, and iOS buttons and fields.",
       "$value": {
         "value": 12,
         "unit": "px"

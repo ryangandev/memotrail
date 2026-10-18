@@ -940,7 +940,7 @@ test("Shared primitives fit both themes at desktop and mobile widths", async ({
         await expect(dialog).toHaveCSS("opacity", "1");
         await expect(dialog).toHaveCSS(
           "background-color",
-          theme === "dark" ? "rgb(38, 40, 36)" : "rgb(255, 255, 255)",
+          theme === "dark" ? "rgb(37, 39, 35)" : "rgb(250, 248, 243)",
         );
         const bounds = await dialog.boundingBox();
         expect(bounds!.x).toBeGreaterThanOrEqual(0);
@@ -1001,10 +1001,10 @@ test("Checkbox is a native input with a name, a description, a focus ring, and f
     named(name).locator("xpath=following-sibling::span[1]");
   await expect(box("Unchecked")).toHaveCSS("width", "20px");
   await expect(box("Small unchecked")).toHaveCSS("width", "16px");
-  await expect(box("Checked")).toHaveCSS("background-color", "rgb(49, 94, 79)");
+  await expect(box("Checked")).toHaveCSS("background-color", "rgb(47, 90, 75)");
   await expect(box("Unchecked")).toHaveCSS(
     "background-color",
-    "rgb(251, 249, 243)",
+    "rgb(248, 246, 239)",
   );
 
   // Keyboard focus draws a ring around the box.

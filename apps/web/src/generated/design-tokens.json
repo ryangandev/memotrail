@@ -2,65 +2,65 @@
   "name": "Soft Ledger",
   "color": {
     "light": {
-      "canvas": "#F4F1E9",
-      "surface": "#FBF9F3",
-      "surfaceRaised": "#FFFFFF",
-      "surfaceSubtle": "#ECE7DC",
-      "ink": "#26251F",
-      "inkMuted": "#716D63",
-      "inkFaint": "#9A9589",
-      "border": "#DCD6C9",
-      "borderStrong": "#C7BFAF",
-      "accent": "#315E4F",
-      "accentHover": "#254A3E",
-      "accentSubtle": "#DDE8E1",
-      "accentInk": "#F8FBF9",
+      "canvas": "#F1EEE6",
+      "surface": "#F8F6EF",
+      "surfaceRaised": "#FAF8F3",
+      "surfaceSubtle": "#EAE6DC",
+      "ink": "#25241F",
+      "inkMuted": "#6E6A60",
+      "inkFaint": "#8C877B",
+      "border": "#DED8CB",
+      "borderStrong": "#C9C1B1",
+      "accent": "#2F5A4B",
+      "accentHover": "#244638",
+      "accentSubtle": "#DCE5DC",
+      "accentInk": "#F3F0E7",
       "warm": "#A76346",
       "warmSubtle": "#F1E2D8",
-      "success": "#49705B",
+      "success": "#3F6A55",
       "warning": "#9B6A2F",
-      "scrim": "#26251F",
+      "scrim": "#25241F",
       "danger": "#A76346",
       "dangerSubtle": "#F1E2D8",
       "dangerBorder": "rgb(167 99 70 / 0.34)",
       "dangerTint": "rgb(167 99 70 / 0.1)",
-      "info": "#315E4F",
-      "infoSubtle": "#DDE8E1",
-      "successSubtle": "#DDE8E1",
+      "info": "#2F5A4B",
+      "infoSubtle": "#DCE5DC",
+      "successSubtle": "#DCE5DC",
       "warningSubtle": "#F1E2D8",
       "warningBorder": "rgb(155 106 47 / 0.35)",
       "inverseSurface": "rgb(24 24 20 / 0.72)",
       "inverseInk": "#FFFFFF",
-      "accentWash": "rgb(49 94 79 / 0.07)",
-      "accentTint": "rgb(49 94 79 / 0.1)",
-      "accentBorderFaint": "rgb(49 94 79 / 0.15)",
-      "accentBorder": "rgb(49 94 79 / 0.34)",
-      "accentBorderStrong": "rgb(49 94 79 / 0.42)",
-      "accentStripe": "rgb(49 94 79 / 0.62)",
-      "accentHalo": "rgb(221 232 225 / 0.55)",
-      "accentPanel": "#EEF2EB",
-      "accentPanelBorder": "#9BA89B",
+      "accentWash": "rgb(47 90 75 / 0.07)",
+      "accentTint": "rgb(47 90 75 / 0.1)",
+      "accentBorderFaint": "rgb(47 90 75 / 0.15)",
+      "accentBorder": "rgb(47 90 75 / 0.34)",
+      "accentBorderStrong": "rgb(47 90 75 / 0.42)",
+      "accentStripe": "rgb(47 90 75 / 0.62)",
+      "accentHalo": "rgb(220 229 220 / 0.55)",
+      "accentPanel": "#ECEFE7",
+      "accentPanelBorder": "#9CA89A",
       "warmGlow": "rgb(241 226 216 / 0.78)",
       "warmWash": "rgb(241 226 216 / 0.65)",
-      "captureQueued": "#F4F5EF",
-      "captureRefused": "#F8F2EA",
-      "chipSurface": "#FCFBF6",
-      "laneSurface": "#FDFEFD",
-      "surfaceWash": "rgb(236 231 220 / 0.42)",
-      "surfaceRaisedTranslucent": "rgb(255 255 255 / 0.94)",
-      "skeletonHighlight": "rgb(255 255 255 / 0.72)",
-      "borderFaint": "rgb(220 214 201 / 0.7)",
-      "paletteBorder": "rgb(199 191 175 / 0.82)",
-      "inkUnderline": "rgb(38 37 31 / 0.7)",
-      "scrollbar": "rgb(113 109 99 / 0.38)",
-      "scrimFaint": "rgb(38 37 31 / 0.12)",
-      "scrimMedium": "rgb(38 37 31 / 0.34)",
-      "scrimStrong": "rgb(38 37 31 / 0.48)",
+      "captureQueued": "#F1F2EA",
+      "captureRefused": "#F6F0E8",
+      "chipSurface": "#F9F7F0",
+      "laneSurface": "#F8F7F2",
+      "surfaceWash": "rgb(234 230 220 / 0.42)",
+      "surfaceRaisedTranslucent": "rgb(250 248 243 / 0.94)",
+      "skeletonHighlight": "rgb(250 248 243 / 0.72)",
+      "borderFaint": "rgb(222 216 203 / 0.7)",
+      "paletteBorder": "rgb(201 193 177 / 0.82)",
+      "inkUnderline": "rgb(37 36 31 / 0.7)",
+      "scrollbar": "rgb(110 106 96 / 0.38)",
+      "scrimFaint": "rgb(37 36 31 / 0.12)",
+      "scrimMedium": "rgb(37 36 31 / 0.34)",
+      "scrimStrong": "rgb(37 36 31 / 0.48)",
       "menuScrim": "rgb(0 0 0 / 0.48)",
       "mediaControl": "rgb(0 0 0 / 0.64)",
       "mediaControlBorder": "rgb(255 255 255 / 0.4)",
-      "onInkKey": "rgb(255 255 255 / 0.1)",
-      "onInkKeyBorder": "rgb(255 255 255 / 0.35)",
+      "onInkKey": "rgb(250 248 243 / 0.1)",
+      "onInkKeyBorder": "rgb(250 248 243 / 0.35)",
       "map": {
         "marker": "#5C6F5D",
         "canvas": "#F3F1EB",
@@ -77,65 +77,65 @@
       }
     },
     "dark": {
-      "canvas": "#171816",
-      "surface": "#1E201D",
-      "surfaceRaised": "#262824",
-      "surfaceSubtle": "#2C2E29",
-      "ink": "#EEEADF",
-      "inkMuted": "#B4AFA3",
-      "inkFaint": "#817D74",
-      "border": "#393B35",
-      "borderStrong": "#4B4E46",
-      "accent": "#82AD98",
-      "accentHover": "#96BEAA",
-      "accentSubtle": "#273C33",
-      "accentInk": "#142019",
+      "canvas": "#181916",
+      "surface": "#1F211D",
+      "surfaceRaised": "#252723",
+      "surfaceSubtle": "#2A2C27",
+      "ink": "#E9E5D9",
+      "inkMuted": "#A8A396",
+      "inkFaint": "#858176",
+      "border": "#31342E",
+      "borderStrong": "#43473F",
+      "accent": "#8DB5A1",
+      "accentHover": "#A2C4B3",
+      "accentSubtle": "#24342C",
+      "accentInk": "#13201A",
       "warm": "#D49373",
       "warmSubtle": "#432E25",
-      "success": "#82AD98",
+      "success": "#8DB5A1",
       "warning": "#D3A360",
       "scrim": "#000000",
       "danger": "#D49373",
       "dangerSubtle": "#432E25",
       "dangerBorder": "rgb(212 147 115 / 0.34)",
       "dangerTint": "rgb(212 147 115 / 0.1)",
-      "info": "#82AD98",
-      "infoSubtle": "#273C33",
-      "successSubtle": "#273C33",
+      "info": "#8DB5A1",
+      "infoSubtle": "#24342C",
+      "successSubtle": "#24342C",
       "warningSubtle": "#432E25",
       "warningBorder": "rgb(211 163 96 / 0.35)",
       "inverseSurface": "rgb(24 24 20 / 0.72)",
       "inverseInk": "#FFFFFF",
-      "accentWash": "rgb(130 173 152 / 0.07)",
-      "accentTint": "rgb(130 173 152 / 0.1)",
-      "accentBorderFaint": "rgb(130 173 152 / 0.15)",
-      "accentBorder": "rgb(130 173 152 / 0.34)",
-      "accentBorderStrong": "rgb(130 173 152 / 0.42)",
-      "accentStripe": "rgb(130 173 152 / 0.62)",
-      "accentHalo": "rgb(39 60 51 / 0.55)",
-      "accentPanel": "#222C26",
-      "accentPanelBorder": "#55665B",
+      "accentWash": "rgb(141 181 161 / 0.07)",
+      "accentTint": "rgb(141 181 161 / 0.1)",
+      "accentBorderFaint": "rgb(141 181 161 / 0.15)",
+      "accentBorder": "rgb(141 181 161 / 0.34)",
+      "accentBorderStrong": "rgb(141 181 161 / 0.42)",
+      "accentStripe": "rgb(141 181 161 / 0.62)",
+      "accentHalo": "rgb(36 52 44 / 0.55)",
+      "accentPanel": "#212923",
+      "accentPanelBorder": "#54655A",
       "warmGlow": "rgb(67 46 37 / 0.78)",
       "warmWash": "rgb(67 46 37 / 0.65)",
-      "captureQueued": "#202722",
-      "captureRefused": "#2A2420",
-      "chipSurface": "#20221F",
-      "laneSurface": "#262925",
-      "surfaceWash": "rgb(44 46 41 / 0.42)",
-      "surfaceRaisedTranslucent": "rgb(38 40 36 / 0.94)",
-      "skeletonHighlight": "rgb(38 40 36 / 0.72)",
-      "borderFaint": "rgb(57 59 53 / 0.7)",
-      "paletteBorder": "rgb(75 78 70 / 0.82)",
-      "inkUnderline": "rgb(238 234 223 / 0.7)",
-      "scrollbar": "rgb(180 175 163 / 0.38)",
+      "captureQueued": "#202621",
+      "captureRefused": "#2B2520",
+      "chipSurface": "#21231F",
+      "laneSurface": "#252824",
+      "surfaceWash": "rgb(42 44 39 / 0.42)",
+      "surfaceRaisedTranslucent": "rgb(37 39 35 / 0.94)",
+      "skeletonHighlight": "rgb(37 39 35 / 0.72)",
+      "borderFaint": "rgb(49 52 46 / 0.7)",
+      "paletteBorder": "rgb(67 71 63 / 0.82)",
+      "inkUnderline": "rgb(233 229 217 / 0.7)",
+      "scrollbar": "rgb(168 163 150 / 0.38)",
       "scrimFaint": "rgb(0 0 0 / 0.12)",
       "scrimMedium": "rgb(0 0 0 / 0.34)",
       "scrimStrong": "rgb(0 0 0 / 0.48)",
       "menuScrim": "rgb(0 0 0 / 0.48)",
       "mediaControl": "rgb(0 0 0 / 0.64)",
       "mediaControlBorder": "rgb(255 255 255 / 0.4)",
-      "onInkKey": "rgb(38 40 36 / 0.1)",
-      "onInkKeyBorder": "rgb(38 40 36 / 0.35)",
+      "onInkKey": "rgb(37 39 35 / 0.1)",
+      "onInkKeyBorder": "rgb(37 39 35 / 0.35)",
       "map": {
         "marker": "#9CB6A5",
         "canvas": "#252824",
@@ -588,13 +588,13 @@
   "size": {
     "control": {
       "small": 32,
-      "medium": 40,
-      "large": 48
+      "medium": 36,
+      "large": 44
     },
     "field": {
-      "small": 34,
-      "medium": 42,
-      "large": 48
+      "small": 32,
+      "medium": 36,
+      "large": 44
     },
     "hitTarget": 24,
     "icon": {
@@ -680,6 +680,7 @@
     "xxsmall": 4,
     "checkbox": 5,
     "xsmall": 6,
+    "control": 6,
     "small": 8,
     "tile": 9,
     "notice": 10,
@@ -777,10 +778,10 @@
   "shadow": {
     "raised": "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)",
     "floating": "0 16px 48px rgb(38 37 31 / 0.14)",
-    "hairline": "0 1px 2px rgb(38 37 31 / 0.025)",
-    "thumb": "0 1px 3px rgb(38 37 31 / 0.1)",
-    "thumbStrong": "0 1px 3px rgb(38 37 31 / 0.12)",
-    "lifted": "0 3px 12px rgb(38 37 31 / 0.06)",
+    "hairline": "0 1px 2px rgb(37 36 31 / 0.025)",
+    "thumb": "0 1px 3px rgb(37 36 31 / 0.1)",
+    "thumbStrong": "0 1px 3px rgb(37 36 31 / 0.12)",
+    "lifted": "0 3px 12px rgb(37 36 31 / 0.06)",
     "menu": "0 16px 44px rgb(0 0 0 / 0.2)",
     "mapNotice": "0 2px 10px rgb(0 0 0 / 0.08)",
     "mapPin": "0 2px 8px rgb(0 0 0 / 0.25)",
@@ -789,8 +790,8 @@
   "state": {
     "light": {
       "focus": {
-        "ring": "#315E4F",
-        "halo": "#DDE8E1",
+        "ring": "#2F5A4B",
+        "halo": "#DCE5DC",
         "ringWidth": 2,
         "ringOffset": 3,
         "ringOffsetSnug": 2,
@@ -801,19 +802,19 @@
         "haloWidth": 3
       },
       "hover": {
-        "surface": "#ECE7DC",
-        "ink": "#26251F",
-        "accentSurface": "#DDE8E1",
-        "primary": "#254A3E",
+        "surface": "#EAE6DC",
+        "ink": "#25241F",
+        "accentSurface": "#DCE5DC",
+        "primary": "#244638",
         "mediaControl": "rgb(0 0 0 / 0.78)",
-        "chipBorder": "#889687",
-        "periodBar": "#ADC1B8"
+        "chipBorder": "#889686",
+        "periodBar": "#ACBEB3"
       },
       "selected": {
-        "surface": "#FFFFFF",
-        "ink": "#315E4F",
-        "fill": "#315E4F",
-        "onFill": "#F8FBF9"
+        "surface": "#FAF8F3",
+        "ink": "#2F5A4B",
+        "fill": "#2F5A4B",
+        "onFill": "#F3F0E7"
       },
       "disabled": {
         "opacity": {
@@ -826,7 +827,7 @@
           "toolbar": 0.38,
           "calendarDay": 0.35
         },
-        "codeSurface": "#EEE9DF"
+        "codeSurface": "#ECE8DE"
       },
       "muted": {
         "opacity": {
@@ -838,8 +839,8 @@
     },
     "dark": {
       "focus": {
-        "ring": "#82AD98",
-        "halo": "#273C33",
+        "ring": "#8DB5A1",
+        "halo": "#24342C",
         "ringWidth": 2,
         "ringOffset": 3,
         "ringOffsetSnug": 2,
@@ -850,19 +851,19 @@
         "haloWidth": 3
       },
       "hover": {
-        "surface": "#2C2E29",
-        "ink": "#EEEADF",
-        "accentSurface": "#273C33",
-        "primary": "#96BEAA",
+        "surface": "#2A2C27",
+        "ink": "#E9E5D9",
+        "accentSurface": "#24342C",
+        "primary": "#A2C4B3",
         "mediaControl": "rgb(0 0 0 / 0.78)",
-        "chipBorder": "#627668",
-        "periodBar": "#405C4F"
+        "chipBorder": "#627568",
+        "periodBar": "#41584D"
       },
       "selected": {
-        "surface": "#262824",
-        "ink": "#82AD98",
-        "fill": "#82AD98",
-        "onFill": "#142019"
+        "surface": "#252723",
+        "ink": "#8DB5A1",
+        "fill": "#8DB5A1",
+        "onFill": "#13201A"
       },
       "disabled": {
         "opacity": {
@@ -875,7 +876,7 @@
           "toolbar": 0.38,
           "calendarDay": 0.35
         },
-        "codeSurface": "#272924"
+        "codeSurface": "#262723"
       },
       "muted": {
         "opacity": {
@@ -892,38 +893,38 @@
         "blur": 18,
         "saturation": 1.6,
         "sheen": "rgb(255 255 255 / 0.05)",
-        "tint": "rgb(255 255 255 / 0.72)",
-        "border": "rgb(199 191 175 / 0.72)",
-        "hoverBorder": "rgb(49 94 79 / 0.58)",
-        "key": "rgb(255 255 255 / 0.32)",
-        "keyBorder": "rgb(199 191 175 / 0.55)",
-        "shadowColor": "rgb(38 37 31 / 0.12)",
-        "hoverRing": "rgb(49 94 79 / 0.12)",
-        "hoverGlow": "rgb(49 94 79 / 0.16)",
-        "hoverShadowColor": "rgb(38 37 31 / 0.15)",
-        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(38 37 31 / 0.12)",
-        "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(49 94 79 / 0.12), 0 0 16px rgb(49 94 79 / 0.16), 0 10px 32px rgb(38 37 31 / 0.15)"
+        "tint": "rgb(250 248 243 / 0.72)",
+        "border": "rgb(201 193 177 / 0.72)",
+        "hoverBorder": "rgb(47 90 75 / 0.58)",
+        "key": "rgb(250 248 243 / 0.32)",
+        "keyBorder": "rgb(201 193 177 / 0.55)",
+        "shadowColor": "rgb(37 36 31 / 0.12)",
+        "hoverRing": "rgb(47 90 75 / 0.12)",
+        "hoverGlow": "rgb(47 90 75 / 0.16)",
+        "hoverShadowColor": "rgb(37 36 31 / 0.15)",
+        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(37 36 31 / 0.12)",
+        "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(47 90 75 / 0.12), 0 0 16px rgb(47 90 75 / 0.16), 0 10px 32px rgb(37 36 31 / 0.15)"
       },
       "glassPanel": {
         "blur": 18,
         "saturation": 1.4,
         "sheen": "rgb(255 255 255 / 0.06)",
         "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), 0 16px 48px rgb(38 37 31 / 0.14)",
-        "tint": "rgb(255 255 255 / 0.76)",
-        "border": "rgb(199 191 175 / 0.8)"
+        "tint": "rgb(250 248 243 / 0.76)",
+        "border": "rgb(201 193 177 / 0.8)"
       },
       "topBar": {
         "blur": 16,
-        "tint": "rgb(244 241 233 / 0.88)",
-        "border": "rgb(220 214 201 / 0.82)"
+        "tint": "rgb(241 238 230 / 0.88)",
+        "border": "rgb(222 216 203 / 0.82)"
       },
       "bottomBar": {
         "blur": 20,
-        "tint": "rgb(251 249 243 / 0.94)"
+        "tint": "rgb(248 246 239 / 0.94)"
       },
       "chip": {
         "blur": 8,
-        "tint": "rgb(255 255 255 / 0.86)"
+        "tint": "rgb(250 248 243 / 0.86)"
       },
       "inverseChip": {
         "tint": "rgb(24 24 20 / 0.72)",
@@ -934,15 +935,15 @@
         "blur": 6
       },
       "dialogScrim": {
-        "tint": "rgb(38 37 31 / 0.48)",
+        "tint": "rgb(37 36 31 / 0.48)",
         "blur": 6
       },
       "sheetScrim": {
-        "tint": "rgb(38 37 31 / 0.48)",
+        "tint": "rgb(37 36 31 / 0.48)",
         "blur": 5
       },
       "paletteScrim": {
-        "tint": "rgb(38 37 31 / 0.34)",
+        "tint": "rgb(37 36 31 / 0.34)",
         "blur": 8
       }
     },
@@ -951,38 +952,38 @@
         "blur": 18,
         "saturation": 1.6,
         "sheen": "rgb(255 255 255 / 0.05)",
-        "tint": "rgb(38 40 36 / 0.72)",
-        "border": "rgb(75 78 70 / 0.72)",
-        "hoverBorder": "rgb(130 173 152 / 0.58)",
-        "key": "rgb(38 40 36 / 0.32)",
-        "keyBorder": "rgb(75 78 70 / 0.55)",
-        "shadowColor": "rgb(238 234 223 / 0.12)",
-        "hoverRing": "rgb(130 173 152 / 0.12)",
-        "hoverGlow": "rgb(130 173 152 / 0.16)",
-        "hoverShadowColor": "rgb(238 234 223 / 0.15)",
-        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(238 234 223 / 0.12)",
-        "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(130 173 152 / 0.12), 0 0 16px rgb(130 173 152 / 0.16), 0 10px 32px rgb(238 234 223 / 0.15)"
+        "tint": "rgb(37 39 35 / 0.72)",
+        "border": "rgb(67 71 63 / 0.72)",
+        "hoverBorder": "rgb(141 181 161 / 0.58)",
+        "key": "rgb(37 39 35 / 0.32)",
+        "keyBorder": "rgb(67 71 63 / 0.55)",
+        "shadowColor": "rgb(233 229 217 / 0.12)",
+        "hoverRing": "rgb(141 181 161 / 0.12)",
+        "hoverGlow": "rgb(141 181 161 / 0.16)",
+        "hoverShadowColor": "rgb(233 229 217 / 0.15)",
+        "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 8px 28px rgb(233 229 217 / 0.12)",
+        "hoverShadow": "inset 0 1px 0 rgb(255 255 255 / 0.25), inset 0 -1px 0 rgb(255 255 255 / 0.04), 0 0 0 1px rgb(141 181 161 / 0.12), 0 0 16px rgb(141 181 161 / 0.16), 0 10px 32px rgb(233 229 217 / 0.15)"
       },
       "glassPanel": {
         "blur": 18,
         "saturation": 1.4,
         "sheen": "rgb(255 255 255 / 0.06)",
         "shadow": "inset 0 1px 0 rgb(255 255 255 / 0.2), 0 16px 48px rgb(38 37 31 / 0.14)",
-        "tint": "rgb(38 40 36 / 0.76)",
-        "border": "rgb(75 78 70 / 0.8)"
+        "tint": "rgb(37 39 35 / 0.76)",
+        "border": "rgb(67 71 63 / 0.8)"
       },
       "topBar": {
         "blur": 16,
-        "tint": "rgb(23 24 22 / 0.88)",
-        "border": "rgb(57 59 53 / 0.82)"
+        "tint": "rgb(24 25 22 / 0.88)",
+        "border": "rgb(49 52 46 / 0.82)"
       },
       "bottomBar": {
         "blur": 20,
-        "tint": "rgb(30 32 29 / 0.94)"
+        "tint": "rgb(31 33 29 / 0.94)"
       },
       "chip": {
         "blur": 8,
-        "tint": "rgb(38 40 36 / 0.86)"
+        "tint": "rgb(37 39 35 / 0.86)"
       },
       "inverseChip": {
         "tint": "rgb(24 24 20 / 0.72)",
@@ -1009,44 +1010,44 @@
   "elevation": {
     "light": {
       "flat": {
-        "surface": "#FFFFFF"
+        "surface": "#FAF8F3"
       },
       "resting": {
-        "surface": "#FFFFFF",
-        "shadow": "0 1px 2px rgb(38 37 31 / 0.025)"
+        "surface": "#FAF8F3",
+        "shadow": "0 1px 2px rgb(37 36 31 / 0.025)"
       },
       "raised": {
-        "surface": "#FFFFFF",
+        "surface": "#FAF8F3",
         "shadow": "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)"
       },
       "floating": {
-        "surface": "#FFFFFF",
+        "surface": "#FAF8F3",
         "shadow": "0 16px 48px rgb(38 37 31 / 0.14)"
       },
       "overlay": {
-        "surface": "#FFFFFF",
+        "surface": "#FAF8F3",
         "shadow": "0 16px 48px rgb(38 37 31 / 0.14)",
-        "scrim": "rgb(38 37 31 / 0.48)"
+        "scrim": "rgb(37 36 31 / 0.48)"
       }
     },
     "dark": {
       "flat": {
-        "surface": "#262824"
+        "surface": "#252723"
       },
       "resting": {
-        "surface": "#262824",
-        "shadow": "0 1px 2px rgb(38 37 31 / 0.025)"
+        "surface": "#252723",
+        "shadow": "0 1px 2px rgb(37 36 31 / 0.025)"
       },
       "raised": {
-        "surface": "#262824",
+        "surface": "#252723",
         "shadow": "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)"
       },
       "floating": {
-        "surface": "#262824",
+        "surface": "#252723",
         "shadow": "0 16px 48px rgb(38 37 31 / 0.14)"
       },
       "overlay": {
-        "surface": "#262824",
+        "surface": "#252723",
         "shadow": "0 16px 48px rgb(38 37 31 / 0.14)",
         "scrim": "rgb(0 0 0 / 0.48)"
       }
@@ -1602,13 +1603,14 @@
     "size.toast.icon": "The tone icon column.",
     "size.datePicker.width": "The calendar's width, narrowed to fit small screens.",
     "radius.brandMarkTail": "The tail corner of the phone brand mark tile.",
-    "radius.xxsmall": "Key caps, inline code, and the small checkbox.",
+    "radius.xxsmall": "Key caps, inline code, the small checkbox, and options inside a segmented group.",
     "radius.checkbox": "The medium checkbox square.",
-    "radius.xsmall": "Editor toolbar buttons, tooltips, and compact inputs.",
-    "radius.small": "Small buttons and fields, segmented choices, and calendar days.",
+    "radius.xsmall": "Tooltips.",
+    "radius.control": "Web buttons, icon buttons, form fields, segmented groups, and sidebar items.",
+    "radius.small": "Calendar days, inline chips, and small iOS buttons and fields.",
     "radius.tile": "34px icon tiles and segmented options.",
     "radius.notice": "Inline notices, and the 34px icon tile beside a Location's name.",
-    "radius.medium": "Buttons, fields, menus, and toasts.",
+    "radius.medium": "Menus, toasts, list rows, and iOS buttons and fields.",
     "radius.panel": "Export settings panels.",
     "radius.large": "Cards, panels, dialogs, and empty states.",
     "radius.xlarge": "The sign-in story panel.",

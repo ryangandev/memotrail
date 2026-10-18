@@ -159,7 +159,7 @@
   height: 30px;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: var(--mt-radius-xsmall);
+  border-radius: var(--mt-radius-control);
   color: inherit;
   background: transparent;
   cursor: pointer;
@@ -272,10 +272,10 @@
 .linkEditor input {
   width: 100%;
   min-width: 0;
-  height: 34px;
+  height: var(--mt-size-field-small);
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-xsmall);
+  border-radius: var(--mt-radius-control);
   outline: none;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);

@@ -73,7 +73,7 @@ test("specialized forms share photo fields and required-label conventions", asyn
     await expect(goalPhotos).toBeVisible();
     const goalPhotoStyle = await photoFieldStyle(goalPhotos);
     expect(goalPhotoStyle.borderTopWidth).toBe("0px");
-    expect(goalPhotoStyle.pickerHeight).toBe("42px");
+    expect(goalPhotoStyle.pickerHeight).toBe("36px");
     await goalPhotos.screenshot({
       animations: "disabled",
       caret: "initial",

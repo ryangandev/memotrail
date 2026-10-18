@@ -96,13 +96,13 @@
   position: relative;
   display: inline-flex;
   width: max-content;
-  height: 42px;
+  height: var(--mt-size-field-medium);
   align-items: center;
   justify-content: center;
   gap: var(--mt-space-2);
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-raised);
   cursor: pointer;

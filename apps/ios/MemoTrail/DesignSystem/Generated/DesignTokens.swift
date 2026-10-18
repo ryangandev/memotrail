@@ -13,33 +13,33 @@ struct MTColorToken: Sendable {
 }
 
 enum MTColor {
-  static let canvas = Color(lightHex: "#F4F1E9", darkHex: "#171816")
-  static let surface = Color(lightHex: "#FBF9F3", darkHex: "#1E201D")
-  static let surfaceRaised = Color(lightHex: "#FFFFFF", darkHex: "#262824")
-  static let surfaceSubtle = Color(lightHex: "#ECE7DC", darkHex: "#2C2E29")
-  static let ink = Color(lightHex: "#26251F", darkHex: "#EEEADF")
-  static let inkMuted = Color(lightHex: "#716D63", darkHex: "#B4AFA3")
-  static let inkFaint = Color(lightHex: "#9A9589", darkHex: "#817D74")
-  static let border = Color(lightHex: "#DCD6C9", darkHex: "#393B35")
-  static let borderStrong = Color(lightHex: "#C7BFAF", darkHex: "#4B4E46")
-  static let accent = Color(lightHex: "#315E4F", darkHex: "#82AD98")
-  static let accentHover = Color(lightHex: "#254A3E", darkHex: "#96BEAA")
-  static let accentSubtle = Color(lightHex: "#DDE8E1", darkHex: "#273C33")
-  static let accentInk = Color(lightHex: "#F8FBF9", darkHex: "#142019")
+  static let canvas = Color(lightHex: "#F1EEE6", darkHex: "#181916")
+  static let surface = Color(lightHex: "#F8F6EF", darkHex: "#1F211D")
+  static let surfaceRaised = Color(lightHex: "#FAF8F3", darkHex: "#252723")
+  static let surfaceSubtle = Color(lightHex: "#EAE6DC", darkHex: "#2A2C27")
+  static let ink = Color(lightHex: "#25241F", darkHex: "#E9E5D9")
+  static let inkMuted = Color(lightHex: "#6E6A60", darkHex: "#A8A396")
+  static let inkFaint = Color(lightHex: "#8C877B", darkHex: "#858176")
+  static let border = Color(lightHex: "#DED8CB", darkHex: "#31342E")
+  static let borderStrong = Color(lightHex: "#C9C1B1", darkHex: "#43473F")
+  static let accent = Color(lightHex: "#2F5A4B", darkHex: "#8DB5A1")
+  static let accentHover = Color(lightHex: "#244638", darkHex: "#A2C4B3")
+  static let accentSubtle = Color(lightHex: "#DCE5DC", darkHex: "#24342C")
+  static let accentInk = Color(lightHex: "#F3F0E7", darkHex: "#13201A")
   static let warm = Color(lightHex: "#A76346", darkHex: "#D49373")
   static let warmSubtle = Color(lightHex: "#F1E2D8", darkHex: "#432E25")
-  static let success = Color(lightHex: "#49705B", darkHex: "#82AD98")
+  static let success = Color(lightHex: "#3F6A55", darkHex: "#8DB5A1")
   static let warning = Color(lightHex: "#9B6A2F", darkHex: "#D3A360")
-  static let scrim = Color(lightHex: "#26251F", darkHex: "#000000")
+  static let scrim = Color(lightHex: "#25241F", darkHex: "#000000")
   static let danger = Color(lightHex: "#A76346", darkHex: "#D49373")
   static let dangerSubtle = Color(lightHex: "#F1E2D8", darkHex: "#432E25")
   static let dangerBorder = Color(
     lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.34, darkOpacity: 0.34)
   static let dangerTint = Color(
     lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.1, darkOpacity: 0.1)
-  static let info = Color(lightHex: "#315E4F", darkHex: "#82AD98")
-  static let infoSubtle = Color(lightHex: "#DDE8E1", darkHex: "#273C33")
-  static let successSubtle = Color(lightHex: "#DDE8E1", darkHex: "#273C33")
+  static let info = Color(lightHex: "#2F5A4B", darkHex: "#8DB5A1")
+  static let infoSubtle = Color(lightHex: "#DCE5DC", darkHex: "#24342C")
+  static let successSubtle = Color(lightHex: "#DCE5DC", darkHex: "#24342C")
   static let warningSubtle = Color(lightHex: "#F1E2D8", darkHex: "#432E25")
   static let warningBorder = Color(
     lightHex: "#9B6A2F", darkHex: "#D3A360", lightOpacity: 0.35, darkOpacity: 0.35)
@@ -47,23 +47,23 @@ enum MTColor {
     lightHex: "#181814", darkHex: "#181814", lightOpacity: 0.72, darkOpacity: 0.72)
   static let inverseInk = Color(lightHex: "#FFFFFF", darkHex: "#FFFFFF")
   static let accentWash = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.07, darkOpacity: 0.07)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.07, darkOpacity: 0.07)
   static let accentTint = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.1, darkOpacity: 0.1)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.1, darkOpacity: 0.1)
   static let accentBorderFaint = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.15, darkOpacity: 0.15)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.15, darkOpacity: 0.15)
   static let accentBorder = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.34, darkOpacity: 0.34)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.34, darkOpacity: 0.34)
   static let accentBorderStrong = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.42, darkOpacity: 0.42)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.42, darkOpacity: 0.42)
   static let accentStripe = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.62, darkOpacity: 0.62)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.62, darkOpacity: 0.62)
   static let accentHalo = Color(
-    lightHex: "#DDE8E1", darkHex: "#273C33", lightOpacity: 0.55, darkOpacity: 0.55)
+    lightHex: "#DCE5DC", darkHex: "#24342C", lightOpacity: 0.55, darkOpacity: 0.55)
   static let accentNotice = Color(
-    lightHex: "#DDE8E1", darkHex: "#273C33", lightOpacity: 0.42, darkOpacity: 0.42)
-  static let accentPanel = Color(lightHex: "#EEF2EB", darkHex: "#222C26")
-  static let accentPanelBorder = Color(lightHex: "#9BA89B", darkHex: "#55665B")
+    lightHex: "#DCE5DC", darkHex: "#24342C", lightOpacity: 0.42, darkOpacity: 0.42)
+  static let accentPanel = Color(lightHex: "#ECEFE7", darkHex: "#212923")
+  static let accentPanelBorder = Color(lightHex: "#9CA89A", darkHex: "#54655A")
   static let warmNotice = Color(
     lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.42, darkOpacity: 0.42)
   static let warmGlow = Color(
@@ -72,35 +72,35 @@ enum MTColor {
     lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0, darkOpacity: 0)
   static let warmWash = Color(
     lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.65, darkOpacity: 0.65)
-  static let captureQueued = Color(lightHex: "#F4F5EF", darkHex: "#202722")
+  static let captureQueued = Color(lightHex: "#F1F2EA", darkHex: "#202621")
   static let captureRefused = Color(
     lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.32, darkOpacity: 0.32)
-  static let chipSurface = Color(lightHex: "#FCFBF6", darkHex: "#20221F")
-  static let laneSurface = Color(lightHex: "#FDFEFD", darkHex: "#262925")
+  static let chipSurface = Color(lightHex: "#F9F7F0", darkHex: "#21231F")
+  static let laneSurface = Color(lightHex: "#F8F7F2", darkHex: "#252824")
   static let surfaceWash = Color(
-    lightHex: "#ECE7DC", darkHex: "#2C2E29", lightOpacity: 0.42, darkOpacity: 0.42)
+    lightHex: "#EAE6DC", darkHex: "#2A2C27", lightOpacity: 0.42, darkOpacity: 0.42)
   static let surfaceRaisedTranslucent = Color(
-    lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.94, darkOpacity: 0.94)
+    lightHex: "#FAF8F3", darkHex: "#252723", lightOpacity: 0.94, darkOpacity: 0.94)
   static let skeletonHighlight = Color(
-    lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.72, darkOpacity: 0.72)
+    lightHex: "#FAF8F3", darkHex: "#252723", lightOpacity: 0.72, darkOpacity: 0.72)
   static let borderFaint = Color(
-    lightHex: "#DCD6C9", darkHex: "#393B35", lightOpacity: 0.7, darkOpacity: 0.7)
+    lightHex: "#DED8CB", darkHex: "#31342E", lightOpacity: 0.7, darkOpacity: 0.7)
   static let inkUnderline = Color(
-    lightHex: "#26251F", darkHex: "#EEEADF", lightOpacity: 0.7, darkOpacity: 0.7)
+    lightHex: "#25241F", darkHex: "#E9E5D9", lightOpacity: 0.7, darkOpacity: 0.7)
   static let scrimFaint = Color(
-    lightHex: "#26251F", darkHex: "#000000", lightOpacity: 0.12, darkOpacity: 0.12)
+    lightHex: "#25241F", darkHex: "#000000", lightOpacity: 0.12, darkOpacity: 0.12)
   static let scrimMedium = Color(
-    lightHex: "#26251F", darkHex: "#000000", lightOpacity: 0.34, darkOpacity: 0.34)
+    lightHex: "#25241F", darkHex: "#000000", lightOpacity: 0.34, darkOpacity: 0.34)
   static let scrimStrong = Color(
-    lightHex: "#26251F", darkHex: "#000000", lightOpacity: 0.48, darkOpacity: 0.48)
+    lightHex: "#25241F", darkHex: "#000000", lightOpacity: 0.48, darkOpacity: 0.48)
   static let accentGroupBorder = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.38, darkOpacity: 0.38)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.38, darkOpacity: 0.38)
   static let accentPrompt = Color(
-    lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.6, darkOpacity: 0.6)
+    lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.6, darkOpacity: 0.6)
   static let warmPrompt = Color(
     lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.6, darkOpacity: 0.6)
   static let labelSheen = Color(
-    lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.34, darkOpacity: 0.34)
+    lightHex: "#FAF8F3", darkHex: "#252723", lightOpacity: 0.34, darkOpacity: 0.34)
   static let labelShade = Color(
     lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.12, darkOpacity: 0.12)
   static let labelEdge = Color(
@@ -111,28 +111,28 @@ enum MTColor {
   static let brandInnerRing = Color(lightHex: "#82AD98", darkHex: "#82AD98")
 
   static let catalog = [
-    MTColorToken(name: "canvas", lightHex: "#F4F1E9", darkHex: "#171816", color: canvas),
-    MTColorToken(name: "surface", lightHex: "#FBF9F3", darkHex: "#1E201D", color: surface),
+    MTColorToken(name: "canvas", lightHex: "#F1EEE6", darkHex: "#181916", color: canvas),
+    MTColorToken(name: "surface", lightHex: "#F8F6EF", darkHex: "#1F211D", color: surface),
     MTColorToken(
-      name: "surfaceRaised", lightHex: "#FFFFFF", darkHex: "#262824", color: surfaceRaised),
+      name: "surfaceRaised", lightHex: "#FAF8F3", darkHex: "#252723", color: surfaceRaised),
     MTColorToken(
-      name: "surfaceSubtle", lightHex: "#ECE7DC", darkHex: "#2C2E29", color: surfaceSubtle),
-    MTColorToken(name: "ink", lightHex: "#26251F", darkHex: "#EEEADF", color: ink),
-    MTColorToken(name: "inkMuted", lightHex: "#716D63", darkHex: "#B4AFA3", color: inkMuted),
-    MTColorToken(name: "inkFaint", lightHex: "#9A9589", darkHex: "#817D74", color: inkFaint),
-    MTColorToken(name: "border", lightHex: "#DCD6C9", darkHex: "#393B35", color: border),
+      name: "surfaceSubtle", lightHex: "#EAE6DC", darkHex: "#2A2C27", color: surfaceSubtle),
+    MTColorToken(name: "ink", lightHex: "#25241F", darkHex: "#E9E5D9", color: ink),
+    MTColorToken(name: "inkMuted", lightHex: "#6E6A60", darkHex: "#A8A396", color: inkMuted),
+    MTColorToken(name: "inkFaint", lightHex: "#8C877B", darkHex: "#858176", color: inkFaint),
+    MTColorToken(name: "border", lightHex: "#DED8CB", darkHex: "#31342E", color: border),
     MTColorToken(
-      name: "borderStrong", lightHex: "#C7BFAF", darkHex: "#4B4E46", color: borderStrong),
-    MTColorToken(name: "accent", lightHex: "#315E4F", darkHex: "#82AD98", color: accent),
-    MTColorToken(name: "accentHover", lightHex: "#254A3E", darkHex: "#96BEAA", color: accentHover),
+      name: "borderStrong", lightHex: "#C9C1B1", darkHex: "#43473F", color: borderStrong),
+    MTColorToken(name: "accent", lightHex: "#2F5A4B", darkHex: "#8DB5A1", color: accent),
+    MTColorToken(name: "accentHover", lightHex: "#244638", darkHex: "#A2C4B3", color: accentHover),
     MTColorToken(
-      name: "accentSubtle", lightHex: "#DDE8E1", darkHex: "#273C33", color: accentSubtle),
-    MTColorToken(name: "accentInk", lightHex: "#F8FBF9", darkHex: "#142019", color: accentInk),
+      name: "accentSubtle", lightHex: "#DCE5DC", darkHex: "#24342C", color: accentSubtle),
+    MTColorToken(name: "accentInk", lightHex: "#F3F0E7", darkHex: "#13201A", color: accentInk),
     MTColorToken(name: "warm", lightHex: "#A76346", darkHex: "#D49373", color: warm),
     MTColorToken(name: "warmSubtle", lightHex: "#F1E2D8", darkHex: "#432E25", color: warmSubtle),
-    MTColorToken(name: "success", lightHex: "#49705B", darkHex: "#82AD98", color: success),
+    MTColorToken(name: "success", lightHex: "#3F6A55", darkHex: "#8DB5A1", color: success),
     MTColorToken(name: "warning", lightHex: "#9B6A2F", darkHex: "#D3A360", color: warning),
-    MTColorToken(name: "scrim", lightHex: "#26251F", darkHex: "#000000", color: scrim),
+    MTColorToken(name: "scrim", lightHex: "#25241F", darkHex: "#000000", color: scrim),
     MTColorToken(name: "danger", lightHex: "#A76346", darkHex: "#D49373", color: danger),
     MTColorToken(
       name: "dangerSubtle", lightHex: "#F1E2D8", darkHex: "#432E25", color: dangerSubtle),
@@ -142,10 +142,10 @@ enum MTColor {
     MTColorToken(
       name: "dangerTint", lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.1,
       darkOpacity: 0.1, color: dangerTint),
-    MTColorToken(name: "info", lightHex: "#315E4F", darkHex: "#82AD98", color: info),
-    MTColorToken(name: "infoSubtle", lightHex: "#DDE8E1", darkHex: "#273C33", color: infoSubtle),
+    MTColorToken(name: "info", lightHex: "#2F5A4B", darkHex: "#8DB5A1", color: info),
+    MTColorToken(name: "infoSubtle", lightHex: "#DCE5DC", darkHex: "#24342C", color: infoSubtle),
     MTColorToken(
-      name: "successSubtle", lightHex: "#DDE8E1", darkHex: "#273C33", color: successSubtle),
+      name: "successSubtle", lightHex: "#DCE5DC", darkHex: "#24342C", color: successSubtle),
     MTColorToken(
       name: "warningSubtle", lightHex: "#F1E2D8", darkHex: "#432E25", color: warningSubtle),
     MTColorToken(
@@ -156,32 +156,32 @@ enum MTColor {
       darkOpacity: 0.72, color: inverseSurface),
     MTColorToken(name: "inverseInk", lightHex: "#FFFFFF", darkHex: "#FFFFFF", color: inverseInk),
     MTColorToken(
-      name: "accentWash", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.07,
+      name: "accentWash", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.07,
       darkOpacity: 0.07, color: accentWash),
     MTColorToken(
-      name: "accentTint", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.1,
+      name: "accentTint", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.1,
       darkOpacity: 0.1, color: accentTint),
     MTColorToken(
-      name: "accentBorderFaint", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.15,
+      name: "accentBorderFaint", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.15,
       darkOpacity: 0.15, color: accentBorderFaint),
     MTColorToken(
-      name: "accentBorder", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.34,
+      name: "accentBorder", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.34,
       darkOpacity: 0.34, color: accentBorder),
     MTColorToken(
-      name: "accentBorderStrong", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.42,
+      name: "accentBorderStrong", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.42,
       darkOpacity: 0.42, color: accentBorderStrong),
     MTColorToken(
-      name: "accentStripe", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.62,
+      name: "accentStripe", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.62,
       darkOpacity: 0.62, color: accentStripe),
     MTColorToken(
-      name: "accentHalo", lightHex: "#DDE8E1", darkHex: "#273C33", lightOpacity: 0.55,
+      name: "accentHalo", lightHex: "#DCE5DC", darkHex: "#24342C", lightOpacity: 0.55,
       darkOpacity: 0.55, color: accentHalo),
     MTColorToken(
-      name: "accentNotice", lightHex: "#DDE8E1", darkHex: "#273C33", lightOpacity: 0.42,
+      name: "accentNotice", lightHex: "#DCE5DC", darkHex: "#24342C", lightOpacity: 0.42,
       darkOpacity: 0.42, color: accentNotice),
-    MTColorToken(name: "accentPanel", lightHex: "#EEF2EB", darkHex: "#222C26", color: accentPanel),
+    MTColorToken(name: "accentPanel", lightHex: "#ECEFE7", darkHex: "#212923", color: accentPanel),
     MTColorToken(
-      name: "accentPanelBorder", lightHex: "#9BA89B", darkHex: "#55665B", color: accentPanelBorder),
+      name: "accentPanelBorder", lightHex: "#9CA89A", darkHex: "#54655A", color: accentPanelBorder),
     MTColorToken(
       name: "warmNotice", lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.42,
       darkOpacity: 0.42, color: warmNotice),
@@ -195,47 +195,47 @@ enum MTColor {
       name: "warmWash", lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.65,
       darkOpacity: 0.65, color: warmWash),
     MTColorToken(
-      name: "captureQueued", lightHex: "#F4F5EF", darkHex: "#202722", color: captureQueued),
+      name: "captureQueued", lightHex: "#F1F2EA", darkHex: "#202621", color: captureQueued),
     MTColorToken(
       name: "captureRefused", lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.32,
       darkOpacity: 0.32, color: captureRefused),
-    MTColorToken(name: "chipSurface", lightHex: "#FCFBF6", darkHex: "#20221F", color: chipSurface),
-    MTColorToken(name: "laneSurface", lightHex: "#FDFEFD", darkHex: "#262925", color: laneSurface),
+    MTColorToken(name: "chipSurface", lightHex: "#F9F7F0", darkHex: "#21231F", color: chipSurface),
+    MTColorToken(name: "laneSurface", lightHex: "#F8F7F2", darkHex: "#252824", color: laneSurface),
     MTColorToken(
-      name: "surfaceWash", lightHex: "#ECE7DC", darkHex: "#2C2E29", lightOpacity: 0.42,
+      name: "surfaceWash", lightHex: "#EAE6DC", darkHex: "#2A2C27", lightOpacity: 0.42,
       darkOpacity: 0.42, color: surfaceWash),
     MTColorToken(
-      name: "surfaceRaisedTranslucent", lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.94,
+      name: "surfaceRaisedTranslucent", lightHex: "#FAF8F3", darkHex: "#252723", lightOpacity: 0.94,
       darkOpacity: 0.94, color: surfaceRaisedTranslucent),
     MTColorToken(
-      name: "skeletonHighlight", lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.72,
+      name: "skeletonHighlight", lightHex: "#FAF8F3", darkHex: "#252723", lightOpacity: 0.72,
       darkOpacity: 0.72, color: skeletonHighlight),
     MTColorToken(
-      name: "borderFaint", lightHex: "#DCD6C9", darkHex: "#393B35", lightOpacity: 0.7,
+      name: "borderFaint", lightHex: "#DED8CB", darkHex: "#31342E", lightOpacity: 0.7,
       darkOpacity: 0.7, color: borderFaint),
     MTColorToken(
-      name: "inkUnderline", lightHex: "#26251F", darkHex: "#EEEADF", lightOpacity: 0.7,
+      name: "inkUnderline", lightHex: "#25241F", darkHex: "#E9E5D9", lightOpacity: 0.7,
       darkOpacity: 0.7, color: inkUnderline),
     MTColorToken(
-      name: "scrimFaint", lightHex: "#26251F", darkHex: "#000000", lightOpacity: 0.12,
+      name: "scrimFaint", lightHex: "#25241F", darkHex: "#000000", lightOpacity: 0.12,
       darkOpacity: 0.12, color: scrimFaint),
     MTColorToken(
-      name: "scrimMedium", lightHex: "#26251F", darkHex: "#000000", lightOpacity: 0.34,
+      name: "scrimMedium", lightHex: "#25241F", darkHex: "#000000", lightOpacity: 0.34,
       darkOpacity: 0.34, color: scrimMedium),
     MTColorToken(
-      name: "scrimStrong", lightHex: "#26251F", darkHex: "#000000", lightOpacity: 0.48,
+      name: "scrimStrong", lightHex: "#25241F", darkHex: "#000000", lightOpacity: 0.48,
       darkOpacity: 0.48, color: scrimStrong),
     MTColorToken(
-      name: "accentGroupBorder", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.38,
+      name: "accentGroupBorder", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.38,
       darkOpacity: 0.38, color: accentGroupBorder),
     MTColorToken(
-      name: "accentPrompt", lightHex: "#315E4F", darkHex: "#82AD98", lightOpacity: 0.6,
+      name: "accentPrompt", lightHex: "#2F5A4B", darkHex: "#8DB5A1", lightOpacity: 0.6,
       darkOpacity: 0.6, color: accentPrompt),
     MTColorToken(
       name: "warmPrompt", lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.6,
       darkOpacity: 0.6, color: warmPrompt),
     MTColorToken(
-      name: "labelSheen", lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.34,
+      name: "labelSheen", lightHex: "#FAF8F3", darkHex: "#252723", lightOpacity: 0.34,
       darkOpacity: 0.34, color: labelSheen),
     MTColorToken(
       name: "labelShade", lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.12,
@@ -1169,16 +1169,16 @@ enum MTShadow {
     MTShadowLayer(red: 38, green: 37, blue: 31, opacity: 0.14, radius: 24, x: 0, y: 16)
   ]
   static let hairline = [
-    MTShadowLayer(red: 38, green: 37, blue: 31, opacity: 0.025, radius: 1, x: 0, y: 1)
+    MTShadowLayer(red: 37, green: 36, blue: 31, opacity: 0.025, radius: 1, x: 0, y: 1)
   ]
   static let thumb = [
-    MTShadowLayer(red: 38, green: 37, blue: 31, opacity: 0.1, radius: 1.5, x: 0, y: 1)
+    MTShadowLayer(red: 37, green: 36, blue: 31, opacity: 0.1, radius: 1.5, x: 0, y: 1)
   ]
   static let thumbStrong = [
-    MTShadowLayer(red: 38, green: 37, blue: 31, opacity: 0.12, radius: 1.5, x: 0, y: 1)
+    MTShadowLayer(red: 37, green: 36, blue: 31, opacity: 0.12, radius: 1.5, x: 0, y: 1)
   ]
   static let lifted = [
-    MTShadowLayer(red: 38, green: 37, blue: 31, opacity: 0.06, radius: 6, x: 0, y: 3)
+    MTShadowLayer(red: 37, green: 36, blue: 31, opacity: 0.06, radius: 6, x: 0, y: 3)
   ]
   static let mediaControl = [
     MTShadowLayer(red: 0, green: 0, blue: 0, opacity: 0.24, radius: 9, x: 0, y: 4)
@@ -1192,10 +1192,10 @@ enum MTShadow {
       name: "raised", css: "0 1px 2px rgb(38 37 31 / 0.06), 0 8px 28px rgb(38 37 31 / 0.06)",
       layers: raised),
     MTShadowToken(name: "floating", css: "0 16px 48px rgb(38 37 31 / 0.14)", layers: floating),
-    MTShadowToken(name: "hairline", css: "0 1px 2px rgb(38 37 31 / 0.025)", layers: hairline),
-    MTShadowToken(name: "thumb", css: "0 1px 3px rgb(38 37 31 / 0.1)", layers: thumb),
-    MTShadowToken(name: "thumbStrong", css: "0 1px 3px rgb(38 37 31 / 0.12)", layers: thumbStrong),
-    MTShadowToken(name: "lifted", css: "0 3px 12px rgb(38 37 31 / 0.06)", layers: lifted),
+    MTShadowToken(name: "hairline", css: "0 1px 2px rgb(37 36 31 / 0.025)", layers: hairline),
+    MTShadowToken(name: "thumb", css: "0 1px 3px rgb(37 36 31 / 0.1)", layers: thumb),
+    MTShadowToken(name: "thumbStrong", css: "0 1px 3px rgb(37 36 31 / 0.12)", layers: thumbStrong),
+    MTShadowToken(name: "lifted", css: "0 3px 12px rgb(37 36 31 / 0.06)", layers: lifted),
     MTShadowToken(name: "mediaControl", css: "0 4px 18px rgb(0 0 0 / 0.24)", layers: mediaControl),
     MTShadowToken(name: "snapshotPin", css: "0 1px 6px rgb(0 0 0 / 0.18)", layers: snapshotPin),
   ]
@@ -1216,8 +1216,8 @@ enum MTState {
     static let ink = MTColor.ink
     static let accentSurface = MTColor.accentSubtle
     static let primary = MTColor.accentHover
-    static let chipBorder = Color(lightHex: "#889687", darkHex: "#627668")
-    static let periodBar = Color(lightHex: "#ADC1B8", darkHex: "#405C4F")
+    static let chipBorder = Color(lightHex: "#889686", darkHex: "#627568")
+    static let periodBar = Color(lightHex: "#ACBEB3", darkHex: "#41584D")
   }
 
   enum Selected {
@@ -1239,7 +1239,7 @@ enum MTState {
       static let calendarDay: Double = 0.35
     }
 
-    static let codeSurface = Color(lightHex: "#EEE9DF", darkHex: "#272924")
+    static let codeSurface = Color(lightHex: "#ECE8DE", darkHex: "#262723")
   }
 
   enum Pressed {
@@ -1278,12 +1278,12 @@ struct MTMaterialToken: Sendable {
 enum MTMaterial {
   static let glassPanel = MTMaterialToken(
     name: "glassPanel",
-    tint: Color(lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.94, darkOpacity: 0.94),
-    border: Color(lightHex: "#C7BFAF", darkHex: "#4B4E46", lightOpacity: 0.8, darkOpacity: 0.8),
+    tint: Color(lightHex: "#FFFFFF", darkHex: "#252723", lightOpacity: 0.94, darkOpacity: 0.94),
+    border: Color(lightHex: "#C9C1B1", darkHex: "#43473F", lightOpacity: 0.8, darkOpacity: 0.8),
     systemMaterial: .ultraThin)
   static let chip = MTMaterialToken(
     name: "chip",
-    tint: Color(lightHex: "#FFFFFF", darkHex: "#262824", lightOpacity: 0.86, darkOpacity: 0.86),
+    tint: Color(lightHex: "#FAF8F3", darkHex: "#252723", lightOpacity: 0.86, darkOpacity: 0.86),
     border: nil, systemMaterial: .ultraThin)
 
   static let catalog = [

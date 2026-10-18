@@ -124,22 +124,34 @@
   ],
   "exceptions": [
     {
-      "name": "inkFaint metadata",
+      "name": "inkFaint metadata in light",
       "text": "{color.inkFaint}",
+      "themes": ["light"],
       "on": [
         "{color.canvas}",
         "{color.surface}",
         "{color.surfaceRaised}",
         "{color.surfaceSubtle}"
       ],
-      "reason": "inkFaint is the quietest tone for placeholders, timestamps, and decorative metadata. It is 2.4 to 3.0:1 in light and 3.4 to 4.3:1 in dark today. Kept so no pixel changes; text that carries meaning should move to inkMuted, or a later palette change should darken inkFaint."
+      "reason": "inkFaint is the quietest tone for placeholders, timestamps, and decorative metadata. It is 2.9 to 3.4:1 in light. Text that carries meaning should move to inkMuted, or a later palette change should darken inkFaint."
+    },
+    {
+      "name": "inkFaint metadata in dark",
+      "text": "{color.inkFaint}",
+      "themes": ["dark"],
+      "on": [
+        "{color.surface}",
+        "{color.surfaceRaised}",
+        "{color.surfaceSubtle}"
+      ],
+      "reason": "inkFaint passes on the dark canvas but is 3.6 to 4.2:1 on dark panels. Text that carries meaning should move to inkMuted, or a later palette change should lighten inkFaint."
     },
     {
       "name": "Muted text on subtle panels",
       "text": "{color.inkMuted}",
       "themes": ["light"],
       "on": ["{color.surfaceSubtle}", "{color.warningSubtle}"],
-      "reason": "Muted helper text on the subtle and warning panels is 4.1 to 4.2:1 in light, just under AA. Kept so no pixel changes; a later palette change should darken inkMuted or lighten the panels."
+      "reason": "Muted helper text on the subtle and warning panels is 4.3:1 in light, just under AA. A later palette change should darken inkMuted or lighten the panels."
     },
     {
       "name": "Warm text in light",
@@ -154,25 +166,23 @@
       "themes": ["light"],
       "on": [
         "{color.surface}",
+        "{color.surfaceRaised}",
         "{color.dangerSubtle}",
         "{color.dangerTint} over {color.surface}",
         "{color.dangerTint} over {color.surfaceRaised}"
       ],
-      "reason": "Errors reuse the warm clay 600 palette, which is 3.7 to 4.4:1 in light on danger buttons and error panels. Kept so no pixel changes; a later palette change should give danger a darker light value."
+      "reason": "Errors reuse the warm clay 600 palette, which is 3.7 to 4.4:1 in light on the paper surfaces, danger buttons, and error panels. A later palette change should give danger a darker light value."
     },
     {
       "name": "Warning text in light",
       "text": "{color.warning}",
       "themes": ["light"],
-      "on": ["{color.surface}", "{color.warningSubtle}"],
-      "reason": "Amber 700 warning text is 3.7 to 4.4:1 in light. Kept so no pixel changes; a later palette change should darken amber 700."
-    },
-    {
-      "name": "Success text on its notice",
-      "text": "{color.success}",
-      "themes": ["light"],
-      "on": ["{color.successSubtle}"],
-      "reason": "Green 600 success text on the success notice is 4.45:1 in light, just under AA. Kept so no pixel changes; success notices can use accent text, which passes."
+      "on": [
+        "{color.surface}",
+        "{color.surfaceRaised}",
+        "{color.warningSubtle}"
+      ],
+      "reason": "Amber 700 warning text is 3.7 to 4.4:1 on the light paper surfaces. A later palette change should darken amber 700."
     }
   ]
 }

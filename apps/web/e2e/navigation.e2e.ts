@@ -259,7 +259,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Tab");
     const panelControl = page.getByRole("button", { name: "Collapse sidebar" });
     await expect(panelControl).toBeFocused();
-    await expect(panelControl).toHaveCSS("border-radius", "8px");
+    await expect(panelControl).toHaveCSS("border-radius", "6px");
     const panelFocusShadow = await panelControl.evaluate(
       (element) => getComputedStyle(element).boxShadow,
     );
@@ -496,11 +496,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       exact: true,
     });
     await expect(collapsedLibrary).toBeVisible();
-    await expect(homeLink).toHaveCSS("width", "40px");
-    await expect(homeLink).toHaveCSS("height", "40px");
+    await expect(homeLink).toHaveCSS("width", "36px");
+    await expect(homeLink).toHaveCSS("height", "36px");
     await collapsedLibrary.hover();
-    await expect(collapsedLibrary).toHaveCSS("width", "40px");
-    await expect(collapsedLibrary).toHaveCSS("height", "40px");
+    await expect(collapsedLibrary).toHaveCSS("width", "36px");
+    await expect(collapsedLibrary).toHaveCSS("height", "36px");
     await page.screenshot({
       animations: "disabled",
       caret: "initial",

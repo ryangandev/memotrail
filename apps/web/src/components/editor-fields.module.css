@@ -30,7 +30,7 @@
   min-width: 0;
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   outline: 0;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);

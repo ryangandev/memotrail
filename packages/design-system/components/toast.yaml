@@ -65,7 +65,7 @@ tokens:
     close:
       color: "{color.inkMuted}"
       size: { ios: "{size.icon.11}" }
-      radius: { web: "{radius.small}" }
+      radius: { web: "{radius.control}" }
   - when: { tone: error }
     container:
       duration: "{motion.toastError}"

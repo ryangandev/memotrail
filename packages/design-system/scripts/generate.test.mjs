@@ -170,7 +170,7 @@ describe("the Soft Ledger tokens", async () => {
     // The catalog and Swift keep the resolved value.
     assert.equal(
       catalog.color.light.skeletonHighlight,
-      "rgb(255 255 255 / 0.72)",
+      "rgb(250 248 243 / 0.72)",
     );
   });
 
@@ -185,14 +185,14 @@ describe("the Soft Ledger tokens", async () => {
     );
     assert.match(
       catalog.material.light.glass.shadow,
-      /, 0 8px 28px rgb\(38 37 31 \/ 0\.12\)$/,
+      /, 0 8px 28px rgb\(37 36 31 \/ 0\.12\)$/,
     );
   });
 
   test("apply platform overrides only on their platform", () => {
     assert.equal(
       catalog.material.light.glassPanel.tint,
-      "rgb(255 255 255 / 0.76)",
+      "rgb(250 248 243 / 0.76)",
     );
     assert.match(
       swift,

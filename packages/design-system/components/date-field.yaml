@@ -74,7 +74,7 @@ tokens:
       color: "{color.warm}"
     control:
       minHeight: "{size.field.medium}"
-      radius: "{radius.medium}"
+      radius: { web: "{radius.control}", ios: "{radius.medium}" }
       background: "{color.surface}"
       border: "{color.borderStrong}"
       borderWidth: "{size.stroke.thin}"
@@ -100,7 +100,7 @@ tokens:
   - when: { size: small }
     control:
       minHeight: "{size.field.small}"
-      radius: "{radius.small}"
+      radius: { web: "{radius.control}", ios: "{radius.small}" }
   - when: { size: large }
     control:
       minHeight: "{size.field.large}"
@@ -132,8 +132,8 @@ accessibility:
   dynamicType: iOS text follows Dynamic Type through the body and label roles, and the control grows past its minimum height. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
-  - difference: Controls are 34, 42, and 48 px tall on Web and 36, 44, and 50 pt on iOS.
-    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: Controls are 32, 36, and 44 px tall with 6 px corners on Web, and 36, 44, and 50 pt tall with 12 and 8 pt corners on iOS.
+    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions. The Web radius.control token tightens pointer-sized controls; native work is paused, so iOS keeps its radii until its next design pass.
   - difference: Web lets people type the date unless editable is off and can hide its label; iOS always opens the picker and always shows its label.
     reason: Typing digits is fast with a keyboard and a mouse; on a phone the native wheel and graphical pickers are faster than the number pad, and every native date field sits in a labeled form.
   - difference: Web shows a calendar grid for every precision and closes it once a date is chosen; iOS shows the graphical calendar for days and wheels for months and years, above a Done button.

@@ -47,7 +47,7 @@ states: [default, hover, pressed, focus, disabled, loading]
 tokens:
   - container:
       size: "{size.control.medium}"
-      radius: "{radius.medium}"
+      radius: { web: "{radius.control}", ios: "{radius.medium}" }
       borderWidth: "{size.stroke.thin}"
       duration: "{motion.quick}"
       easing: "{motion.easing.standard}"
@@ -63,7 +63,7 @@ tokens:
   - when: { size: small }
     container:
       size: "{size.control.small}"
-      radius: "{radius.small}"
+      radius: { web: "{radius.control}", ios: "{radius.small}" }
     icon:
       size: { ios: "{size.icon.14}" }
   - when: { size: large }
@@ -115,8 +115,8 @@ accessibility:
   dynamicType: The square keeps its size at every text size, because it holds no text. iOS icons are SF Symbols at a fixed point size; Web icons grow only with browser zoom.
 
 platformDifferences:
-  - difference: Squares are 32, 40, and 48 px on Web and 34, 44, and 52 pt on iOS.
-    reason: IconButton shares Button's size.control tokens, which raise iOS toward the 44 pt touch target.
+  - difference: Squares are 32, 36, and 44 px with 6 px corners on Web, and 34, 44, and 52 pt with 12 and 8 pt corners on iOS.
+    reason: IconButton shares Button's size.control tokens, which raise iOS toward the 44 pt touch target. The Web radius.control token tightens pointer-sized controls; native work is paused, so iOS keeps its radii until its next design pass.
   - difference: Web callers pass the Icon as the child at the size they need, usually 17 or 18 px; iOS takes an MTIcon and draws it at 17 pt, or 14 pt when small.
     reason: Web icons are SVGs that callers size like any other Icon; an SF Symbol is a glyph that MTIconButton sizes from the control, so every native icon action matches.
   - difference: Web shows hover colors on pointer hover; iOS shows them while pressed.

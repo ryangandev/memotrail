@@ -35,7 +35,7 @@
 .preferredNameControls {
   grid-column: 1 / -1;
   display: flex;
-  min-height: 40px;
+  min-height: var(--mt-size-control-medium);
   align-items: center;
   gap: var(--mt-space-3);
 }
@@ -90,7 +90,7 @@
   height: var(--mt-size-field-medium);
   padding-left: var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   outline: 0;
   color: var(--mt-color-ink);
   background-color: var(--mt-color-surface);
@@ -107,7 +107,7 @@
 .timezoneControls {
   grid-column: 1 / -1;
   display: flex;
-  min-height: 40px;
+  min-height: var(--mt-size-control-medium);
   align-items: center;
   gap: var(--mt-space-3);
 }
@@ -154,7 +154,7 @@
   margin: 0;
   padding: var(--mt-space-0-75);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   background: var(--mt-color-surface-subtle);
 }
 
@@ -183,10 +183,10 @@
 
 .appearanceControl label > span {
   display: grid;
-  min-height: 34px;
+  min-height: 28px;
   place-items: center;
   padding: 0 var(--mt-space-3);
-  border-radius: var(--mt-radius-tile);
+  border-radius: var(--mt-radius-xxsmall);
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);

@@ -59,7 +59,7 @@ tokens:
       color: "{color.warm}"
     control:
       minHeight: "{size.field.medium}"
-      radius: "{radius.medium}"
+      radius: { web: "{radius.control}", ios: "{radius.medium}" }
       paddingInline: "{space.3}"
       background: "{color.surface}"
       border: "{color.borderStrong}"
@@ -77,7 +77,7 @@ tokens:
   - when: { size: small }
     control:
       minHeight: "{size.field.small}"
-      radius: "{radius.small}"
+      radius: { web: "{radius.control}", ios: "{radius.small}" }
   - when: { size: large }
     control:
       minHeight: "{size.field.large}"
@@ -108,8 +108,8 @@ accessibility:
   dynamicType: iOS follows Dynamic Type through the body and label roles, and a long choice wraps onto a second line. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
-  - difference: Controls are 34, 42, and 48 px tall on Web and 36, 44, and 50 pt on iOS.
-    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: Controls are 32, 36, and 44 px tall with 6 px corners on Web, and 36, 44, and 50 pt tall with 12 and 8 pt corners on iOS.
+    reason: The size.field tokens raise iOS toward the 44 pt touch target while keeping the Web proportions. The Web radius.control token tightens pointer-sized controls; native work is paused, so iOS keeps its radii until its next design pass.
   - difference: Web callers pass option and optgroup elements as children; iOS takes options or MTSelectGroup values and a title function.
     reason: A native select reads its list from markup; a SwiftUI Menu builds its sections from data.
   - difference: A long selected title keeps one line on Web and wraps onto a second line on iOS.
