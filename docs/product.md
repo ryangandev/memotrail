@@ -51,9 +51,9 @@ Moving to a coarser choice keeps what is known, and moving to a finer one starts
 Web date forms share one calendar control with day, month, year, optional hour-and-minute, editable numeric-entry, picker-only, and size variants.
 Editable date fields accept digits and add their own separators; the first-visit birth-date prompt is picker-only, while Settings also permits numeric editing.
 Settings owns the user's default timezone for new exact timestamps.
-In the Entry editor and the Timeline forms, an exact timestamp in the Settings default shows that zone as text with a Change action, so the default needs no decision.
+In every date editor, an exact timestamp in the Settings default shows that zone as text with a Change action, so the default needs no decision.
 Change, or a timestamp recorded in another zone, shows the timezone select, which may override the Settings default on its Entry and labels every option with the UTC offset for the relevant date.
-Date-only and uncertain forms there keep timezone controls out of the primary form.
+Date-only and uncertain dates keep timezone controls out of the primary form.
 Changing the default never rewrites an existing Entry's recorded timezone.
 
 ## Capture

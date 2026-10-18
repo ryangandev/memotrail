@@ -159,8 +159,9 @@ Pair it with the test file carrying the same feature name.
 - Recorded timezone controls calendar interpretation and search overlap.
 - `profiles.timezone` supplies the default for new exact timestamps; an Entry stores its own timezone snapshot and may override that default.
 - Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.
-- Editors given the Settings default (the Entry editor, Timeline forms, and Home and Vehicle editors opened from Timeline) do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
-  `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action; editors without a default always show the select.
+- Every Web date editor receives the Settings default through `lib/data/profile-timezone.ts`: the Entry editor, Timeline forms, and the Home, Vehicle, and Goal achievement editors on their own pages.
+  They do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
+  `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action, and shows the select only when the profile cannot be read.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
 - A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
 - Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.

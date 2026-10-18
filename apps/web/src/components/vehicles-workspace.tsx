@@ -70,11 +70,13 @@ import {
 import { countLabel } from "@/lib/count-label";
 
 export function VehiclesWorkspace({
+  defaultTimezone,
   loadError,
   ownerId,
   tagOptions,
   vehicles: serverRecords,
 }: {
+  defaultTimezone?: string;
   loadError: string | null;
   ownerId: string;
   tagOptions: string[];
@@ -162,6 +164,7 @@ export function VehiclesWorkspace({
 
       {selectedVehicle !== undefined ? (
         <VehicleEditor
+          defaultTimezone={defaultTimezone}
           key={selectedVehicle?.id ?? "new-vehicle"}
           onSaved={confirm}
           onTrashed={forget}

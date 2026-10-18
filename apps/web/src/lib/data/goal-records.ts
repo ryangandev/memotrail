@@ -3,6 +3,7 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { loadTagOptions } from "./tag-options";
+import { loadDefaultTimezone } from "./profile-timezone";
 import {
   parseGoalRows,
   type GoalAttachment,
@@ -10,6 +11,8 @@ import {
 } from "./goal-record";
 
 export type GoalsWorkspace = {
+  // The Settings time zone, when the profile could be read.
+  defaultTimezone?: string;
   goals: GoalRecord[];
   loadError: string | null;
   tagOptions: string[];
@@ -22,9 +25,10 @@ export async function getGoalsWorkspace(
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [goals, tags] = await Promise.all([
+  const [goals, tags, defaultTimezone] = await Promise.all([
     context.client.rpc("goals_workspace", { p_limit: 100, p_offset: 0 }),
     loadTagOptions(context.client, context.userId),
+    loadDefaultTimezone(context.client, context.userId),
   ]);
 
   const rows = goals.error ? null : parseGoalRows(goals.data);
@@ -60,6 +64,7 @@ export async function getGoalsWorkspace(
         imageUrl: signedUrls.get(attachment.objectPath) ?? null,
       })),
     })),
+    defaultTimezone,
     loadError: null,
     tagOptions: tags ?? [],
     viewer: context.viewer,

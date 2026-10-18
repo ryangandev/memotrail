@@ -31,8 +31,10 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
   const tags = {
     books: randomUUID(),
     family: randomUUID(),
+    purged: randomUUID(),
     trashed: randomUUID(),
     travel: randomUUID(),
+    unused: randomUUID(),
   };
   expect(
     (
@@ -42,13 +44,15 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
         .eq("user_id", owner)
     ).error,
   ).toBeNull();
-  // Travel is used most, then family and books; the Entries using "archived" are in
-  // Trash, so it counts as unused.
+  // Travel is used most, then family and books. The Entries using "archived" are in
+  // Trash and the one using "purged" is deleted forever below, so both count as
+  // unused, like "unused", which never had an Entry.
   const usage = [
     ["travel", 3, null],
     ["family", 2, null],
     ["books", 1, null],
     ["trashed", 4, new Date().toISOString()],
+    ["purged", 1, new Date().toISOString()],
   ] as const;
   const entries = usage.flatMap(([tag, count, deletedAt]) =>
     Array.from({ length: count }, (_, index) => ({
@@ -66,6 +70,8 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
         { id: tags.family, owner_id: owner, name: "family" },
         { id: tags.books, owner_id: owner, name: "books" },
         { id: tags.trashed, owner_id: owner, name: "archived" },
+        { id: tags.purged, owner_id: owner, name: "purged" },
+        { id: tags.unused, owner_id: owner, name: "unused" },
       ])
     ).error,
   ).toBeNull();
@@ -106,6 +112,28 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
       )
     ).error,
   ).toBeNull();
+  const purged = entries.find((entry) => entry.tag === "purged")!;
+  const { data: trashed } = await client
+    .from("entries")
+    .select("revision,deleted_at")
+    .eq("id", purged.id)
+    .single();
+  const deleted = await client.rpc("delete_trash_item_forever", {
+    p_expected_deleted_at: trashed!.deleted_at,
+    p_expected_revision: trashed!.revision,
+    p_item_id: purged.id,
+    p_item_kind: "entry",
+  });
+  expect(deleted.error).toBeNull();
+  expect(deleted.data).toHaveLength(1);
+  expect(
+    (
+      await client
+        .from("entry_tags")
+        .select("tag_id", { count: "exact", head: true })
+        .eq("tag_id", tags.purged)
+    ).count,
+  ).toBe(0);
 
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(`/items/${entryId}`);
@@ -133,13 +161,16 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
     editor.getByRole("group", { name: "Time zone", exact: true }),
   ).toHaveText(/Default from Settings\(UTC-04:00\) New York - America/);
 
-  // An Entry without tags offers the most used ones, and Trash does not count.
+  // An Entry without tags offers the most used ones. Trash does not count, and tags
+  // without any Entry are still offered, last and by name.
   const suggestions = editor.getByRole("group", { name: "Most used tags" });
   await expect(suggestions.getByRole("button")).toHaveText([
     "Travel",
     "family",
     "books",
     "archived",
+    "purged",
+    "unused",
   ]);
   await expect(editor.getByText(/of 70/)).toHaveCount(0);
   await page.screenshot({
@@ -159,6 +190,8 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
     "Travel",
     "books",
     "archived",
+    "purged",
+    "unused",
   ]);
 
   // A name that differs only by case is the existing tag, not a new one.
@@ -209,7 +242,7 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
     .select("name")
     .eq("owner_id", owner);
   expect(ownerTags.data!.map((row) => row.name).sort()).toEqual(
-    ["Travel", "archived", "books", "family"].sort(),
+    ["Travel", "archived", "books", "family", "purged", "unused"].sort(),
   );
   await expect(
     page.getByRole("article", { name: "Current item" }),

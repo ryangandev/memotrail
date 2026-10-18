@@ -9,32 +9,22 @@ import {
 import { existingLocationFromRow } from "@/lib/locations/location";
 import { milestoneFromRow } from "@/lib/data/milestone";
 import { loadEntryPhotos } from "@/lib/data/entry-photos";
-import { storedProfileTimezone } from "@/lib/data/profile-input";
+import { loadDefaultTimezone } from "@/lib/data/profile-timezone";
 import { loadTagOptions } from "@/lib/data/tag-options";
 
 export async function loadEditableEntry(id: string) {
   if (!validEntryID(id)) return null;
   const context = await getAuthenticatedContext();
   if (!context) return null;
-  const [{ data, error }, tags, photos, profile] = await Promise.all([
+  const [{ data, error }, tags, photos, defaultTimezone] = await Promise.all([
     context.client.rpc("editable_entry", { p_entry_id: id }),
     loadTagOptions(context.client, context.userId),
     loadEntryPhotos(context.client, context.userId, id),
-    context.client
-      .from("profiles")
-      .select("timezone")
-      .eq("user_id", context.userId)
-      .single(),
+    loadDefaultTimezone(context.client, context.userId),
   ]);
   if (error || !data || !photos) return null;
-  const profileTimezone = storedProfileTimezone(
-    profile.error ? null : profile.data,
-  );
   return {
-    // Without the Settings time zone, the editor shows every Entry's zone in full.
-    defaultTimezone: profileTimezone.available
-      ? profileTimezone.timezone
-      : undefined,
+    defaultTimezone,
     entry: {
       ...entryFromRow(
         data,

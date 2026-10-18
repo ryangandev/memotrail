@@ -86,11 +86,13 @@ const goalSections: Array<{
 ];
 
 export function GoalsWorkspace({
+  defaultTimezone,
   goals,
   loadError,
   ownerId,
   tagOptions,
 }: {
+  defaultTimezone?: string;
   goals: GoalRecord[];
   loadError: string | null;
   ownerId: string;
@@ -175,6 +177,7 @@ export function GoalsWorkspace({
 
       {selectedGoal !== undefined ? (
         <GoalEditor
+          defaultTimezone={defaultTimezone}
           goal={selectedGoal}
           key={selectedGoal?.id ?? "new-goal"}
           onClose={() => setSelectedGoal(undefined)}
@@ -278,6 +281,7 @@ function GoalCard({
 }
 
 export function GoalEditor({
+  defaultTimezone,
   goal,
   onClose,
   onTrashed,
@@ -285,6 +289,8 @@ export function GoalEditor({
   presentation = "dialog",
   tagOptions,
 }: {
+  // The Settings time zone, the default for the achievement date.
+  defaultTimezone?: string;
   goal: GoalRecord | null;
   onClose: () => void;
   onTrashed?: () => void;
@@ -606,6 +612,7 @@ export function GoalEditor({
 
           {canRecordAchievement && currentId && currentRevision !== null ? (
             <AchievementPanel
+              defaultTimezone={defaultTimezone}
               disabled={isPending}
               goalId={currentId}
               revision={currentRevision}
@@ -637,6 +644,7 @@ export function GoalEditor({
 }
 
 function AchievementPanel({
+  defaultTimezone,
   disabled,
   goalId,
   onAchieved,
@@ -644,6 +652,7 @@ function AchievementPanel({
   revision,
   unsavedChanges,
 }: {
+  defaultTimezone?: string;
   disabled: boolean;
   goalId: string;
   onAchieved: (result: GoalActionResult) => void;
@@ -656,7 +665,7 @@ function AchievementPanel({
     start: "",
     end: "",
     label: "",
-    timezone: localTimezone(),
+    timezone: defaultTimezone ?? localTimezone(),
   }));
   const [localError, setLocalError] = useState<string | null>(null);
 
@@ -709,6 +718,7 @@ function AchievementPanel({
         </div>
       </div>
       <OccurrenceEditor
+        defaultTimezone={defaultTimezone}
         value={occurrence}
         onChange={setOccurrence}
         disabled={disabled}

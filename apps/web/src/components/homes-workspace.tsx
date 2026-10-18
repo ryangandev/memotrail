@@ -69,11 +69,13 @@ import {
 import { countLabel } from "@/lib/count-label";
 
 export function HomesWorkspace({
+  defaultTimezone,
   homes: serverRecords,
   loadError,
   ownerId,
   tagOptions,
 }: {
+  defaultTimezone?: string;
   homes: HomeRecord[];
   loadError: string | null;
   ownerId: string;
@@ -169,6 +171,7 @@ export function HomesWorkspace({
 
       {selectedHome !== undefined ? (
         <HomeEditor
+          defaultTimezone={defaultTimezone}
           home={selectedHome}
           key={selectedHome?.id ?? "new-home"}
           onSaved={confirm}

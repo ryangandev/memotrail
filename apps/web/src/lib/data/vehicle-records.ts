@@ -3,6 +3,7 @@ import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { loadTagOptions } from "./tag-options";
+import { loadDefaultTimezone } from "./profile-timezone";
 import { getPrimaryEntryLocations } from "./entry-locations";
 import {
   parseVehicleRows,
@@ -11,6 +12,8 @@ import {
 } from "./vehicle-record";
 
 export type VehiclesWorkspace = {
+  // The Settings time zone, when the profile could be read.
+  defaultTimezone?: string;
   loadError: string | null;
   tagOptions: string[];
   vehicles: VehicleRecord[];
@@ -23,9 +26,10 @@ export async function getVehiclesWorkspace(
   const context = await getAuthenticatedContext();
   if (!context) return null;
 
-  const [vehicles, tags] = await Promise.all([
+  const [vehicles, tags, defaultTimezone] = await Promise.all([
     context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
     loadTagOptions(context.client, context.userId),
+    loadDefaultTimezone(context.client, context.userId),
   ]);
   const rows = vehicles.error ? null : parseVehicleRows(vehicles.data);
   if (!rows) {
@@ -61,6 +65,7 @@ export async function getVehiclesWorkspace(
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
+    defaultTimezone,
     loadError: null,
     tagOptions: tags ?? [],
     vehicles: visibleRows.map((vehicle) => ({

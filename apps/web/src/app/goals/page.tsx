@@ -19,6 +19,7 @@ export default async function GoalsPage({
       goals={workspace.goals}
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
+      defaultTimezone={workspace.defaultTimezone}
       tagOptions={workspace.tagOptions}
     />
   );
