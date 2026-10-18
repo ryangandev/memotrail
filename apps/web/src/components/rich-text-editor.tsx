@@ -282,98 +282,104 @@ function FormattingToolbar({
 
   return (
     <div className={styles.toolbar} aria-label="Text formatting" role="toolbar">
-      <ToolbarButton
-        active={formatState.bold}
-        ariaKeyShortcuts="Meta+B Control+B"
-        disabled={disabled || !editor}
-        icon="bold"
-        label="Bold"
-        onRun={() => editor?.chain().focus().toggleBold().run()}
-        shortcut="⌘B"
-      />
-      <ToolbarButton
-        active={formatState.italic}
-        ariaKeyShortcuts="Meta+I Control+I"
-        disabled={disabled || !editor}
-        icon="italic"
-        label="Italic"
-        onRun={() => editor?.chain().focus().toggleItalic().run()}
-        shortcut="⌘I"
-      />
-      <ToolbarButton
-        active={formatState.underline}
-        ariaKeyShortcuts="Meta+U Control+U"
-        disabled={disabled || !editor}
-        icon="underline"
-        label="Underline"
-        onRun={() => editor?.chain().focus().toggleUnderline().run()}
-        shortcut="⌘U"
-      />
-      <ToolbarButton
-        active={formatState.strike}
-        ariaKeyShortcuts="Meta+Shift+S Control+Shift+S"
-        disabled={disabled || !editor}
-        icon="strike"
-        label="Strikethrough"
-        onRun={() => editor?.chain().focus().toggleStrike().run()}
-        shortcut="⌘⇧S"
-      />
-      <ToolbarButton
-        active={formatState.link}
-        ariaKeyShortcuts="Meta+K Control+K"
-        disabled={disabled || !editor}
-        icon="link"
-        label="Attach link"
-        onRun={openLinkEditor}
-        shortcut="⌘K"
-      />
+      <span className={styles.toolbarGroup}>
+        <ToolbarButton
+          active={formatState.bold}
+          ariaKeyShortcuts="Meta+B Control+B"
+          disabled={disabled || !editor}
+          icon="bold"
+          label="Bold"
+          onRun={() => editor?.chain().focus().toggleBold().run()}
+          shortcut="⌘B"
+        />
+        <ToolbarButton
+          active={formatState.italic}
+          ariaKeyShortcuts="Meta+I Control+I"
+          disabled={disabled || !editor}
+          icon="italic"
+          label="Italic"
+          onRun={() => editor?.chain().focus().toggleItalic().run()}
+          shortcut="⌘I"
+        />
+        <ToolbarButton
+          active={formatState.underline}
+          ariaKeyShortcuts="Meta+U Control+U"
+          disabled={disabled || !editor}
+          icon="underline"
+          label="Underline"
+          onRun={() => editor?.chain().focus().toggleUnderline().run()}
+          shortcut="⌘U"
+        />
+        <ToolbarButton
+          active={formatState.strike}
+          ariaKeyShortcuts="Meta+Shift+S Control+Shift+S"
+          disabled={disabled || !editor}
+          icon="strike"
+          label="Strikethrough"
+          onRun={() => editor?.chain().focus().toggleStrike().run()}
+          shortcut="⌘⇧S"
+        />
+        <ToolbarButton
+          active={formatState.link}
+          ariaKeyShortcuts="Meta+K Control+K"
+          disabled={disabled || !editor}
+          icon="link"
+          label="Attach link"
+          onRun={openLinkEditor}
+          shortcut="⌘K"
+        />
+      </span>
       <span className={styles.separator} role="separator" />
-      <ToolbarButton
-        active={formatState.bulletList}
-        ariaKeyShortcuts="Meta+Shift+8 Control+Shift+8"
-        disabled={disabled || !editor}
-        icon="bulletList"
-        label="Bullet list"
-        onRun={() => editor?.chain().focus().toggleBulletList().run()}
-        shortcut="⌘⇧8"
-      />
-      <ToolbarButton
-        active={formatState.orderedList}
-        ariaKeyShortcuts="Meta+Shift+7 Control+Shift+7"
-        disabled={disabled || !editor}
-        icon="orderedList"
-        label="Ordered list"
-        onRun={() => editor?.chain().focus().toggleOrderedList().run()}
-        shortcut="⌘⇧7"
-      />
-      <ToolbarButton
-        active={formatState.blockquote}
-        ariaKeyShortcuts="Meta+Shift+B Control+Shift+B"
-        disabled={disabled || !editor}
-        icon="quote"
-        label="Block quote"
-        onRun={() => editor?.chain().focus().toggleBlockquote().run()}
-        shortcut="⌘⇧B"
-      />
+      <span className={styles.toolbarGroup}>
+        <ToolbarButton
+          active={formatState.bulletList}
+          ariaKeyShortcuts="Meta+Shift+8 Control+Shift+8"
+          disabled={disabled || !editor}
+          icon="bulletList"
+          label="Bullet list"
+          onRun={() => editor?.chain().focus().toggleBulletList().run()}
+          shortcut="⌘⇧8"
+        />
+        <ToolbarButton
+          active={formatState.orderedList}
+          ariaKeyShortcuts="Meta+Shift+7 Control+Shift+7"
+          disabled={disabled || !editor}
+          icon="orderedList"
+          label="Ordered list"
+          onRun={() => editor?.chain().focus().toggleOrderedList().run()}
+          shortcut="⌘⇧7"
+        />
+        <ToolbarButton
+          active={formatState.blockquote}
+          ariaKeyShortcuts="Meta+Shift+B Control+Shift+B"
+          disabled={disabled || !editor}
+          icon="quote"
+          label="Block quote"
+          onRun={() => editor?.chain().focus().toggleBlockquote().run()}
+          shortcut="⌘⇧B"
+        />
+      </span>
       <span className={styles.separator} role="separator" />
-      <ToolbarButton
-        active={formatState.code}
-        ariaKeyShortcuts="Meta+E Control+E"
-        disabled={disabled || !editor || formatState.codeBlock}
-        icon="code"
-        label="Inline code"
-        onRun={() => editor?.chain().focus().toggleCode().run()}
-        shortcut="⌘E"
-      />
-      <ToolbarButton
-        active={formatState.codeBlock}
-        ariaKeyShortcuts="Meta+Alt+C Control+Alt+C"
-        disabled={disabled || !editor}
-        icon="codeBlock"
-        label="Code block"
-        onRun={() => editor?.chain().focus().toggleCodeBlock().run()}
-        shortcut="⌘⌥C"
-      />
+      <span className={styles.toolbarGroup}>
+        <ToolbarButton
+          active={formatState.code}
+          ariaKeyShortcuts="Meta+E Control+E"
+          disabled={disabled || !editor || formatState.codeBlock}
+          icon="code"
+          label="Inline code"
+          onRun={() => editor?.chain().focus().toggleCode().run()}
+          shortcut="⌘E"
+        />
+        <ToolbarButton
+          active={formatState.codeBlock}
+          ariaKeyShortcuts="Meta+Alt+C Control+Alt+C"
+          disabled={disabled || !editor}
+          icon="codeBlock"
+          label="Code block"
+          onRun={() => editor?.chain().focus().toggleCodeBlock().run()}
+          shortcut="⌘⌥C"
+        />
+      </span>
 
       {isLinkEditorOpen ? (
         <div
