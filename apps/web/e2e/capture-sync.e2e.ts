@@ -1,6 +1,7 @@
 import type { BrowserContext, Page } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { clickUnlessSynced } from "./helpers/capture-sync";
+import { hearOtherTabsLate } from "./helpers/tab-timing";
 import { test, expect } from "./helpers/workspace-test";
 
 // Pending captures belong to the signed-in workspace, not to whichever composer
@@ -239,60 +240,64 @@ test("the Dashboard composer and Quick Capture send each queued capture once", a
   ).toHaveCount(1);
 });
 
-test("two tabs send each queued capture once", async ({
-  context,
-  page,
-  workspace,
-}) => {
-  test.setTimeout(120_000);
-  const other = await context.newPage();
-  await page.goto("/library");
-  await other.goto("/");
-  await page.waitForLoadState("networkidle");
-  await other.waitForLoadState("networkidle");
-  const attempts = [
-    countCaptureSyncAttempts(page),
-    countCaptureSyncAttempts(other),
-  ];
+for (const late of [false, true])
+  test(`two tabs send each queued capture once${late ? ", even when the tab that queued it hears late that the other sent it" : ""}`, async ({
+    context,
+    page,
+    workspace,
+  }) => {
+    test.setTimeout(120_000);
+    const other = await context.newPage();
+    // The other tab reconnects first and sends the capture, and this tab rereads
+    // the queue in its own run before it hears of that.
+    if (late) await hearOtherTabsLate(page, { onlineMs: 700, storageMs: 1500 });
+    await page.goto("/library");
+    await other.goto("/");
+    await page.waitForLoadState("networkidle");
+    await other.waitForLoadState("networkidle");
+    const attempts = [
+      countCaptureSyncAttempts(page),
+      countCaptureSyncAttempts(other),
+    ];
 
-  await context.setOffline(true);
-  await page.getByRole("button", { name: "New entry", exact: true }).click();
-  const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
-  await dialog
-    .getByRole("textbox", { name: "Entry text", exact: true })
-    .fill("Once across tabs");
-  await dialog.getByRole("button", { name: "Save", exact: true }).click();
-  await dialog.getByRole("button", { name: "Close quick capture" }).click();
-  await expect(pendingIndicator(page)).toHaveText("1 pending");
-  // localStorage is shared, so the other tab shows the same waiting capture.
-  await expect(pendingIndicator(other)).toHaveText("1 pending");
-  const offlineAttempts = attempts.reduce(
-    (total, tab) => total + tab.for("Once across tabs"),
-    0,
-  );
+    await context.setOffline(true);
+    await page.getByRole("button", { name: "New entry", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
+    await dialog
+      .getByRole("textbox", { name: "Entry text", exact: true })
+      .fill("Once across tabs");
+    await dialog.getByRole("button", { name: "Save", exact: true }).click();
+    await dialog.getByRole("button", { name: "Close quick capture" }).click();
+    await expect(pendingIndicator(page)).toHaveText("1 pending");
+    // localStorage is shared, so the other tab shows the same waiting capture.
+    await expect(pendingIndicator(other)).toHaveText("1 pending");
+    const offlineAttempts = attempts.reduce(
+      (total, tab) => total + tab.for("Once across tabs"),
+      0,
+    );
 
-  await context.setOffline(false);
-  await expectEntryCount(workspace.client, "Once across tabs", 1);
-  await expect(pendingIndicator(page)).toHaveCount(0);
-  await expect(pendingIndicator(other)).toHaveCount(0);
-  // Both tabs show the synced capture, not only the one that sent it.
-  await expect(
-    page
-      .getByRole("list", { name: "Library items" })
-      .getByText("Once across tabs", { exact: true }),
-  ).toBeVisible();
-  await expect(
-    other
-      .getByRole("region", { name: "Needs organizing", exact: true })
-      .getByText("Once across tabs", { exact: true }),
-  ).toBeVisible();
-  await page.waitForLoadState("networkidle");
-  await other.waitForLoadState("networkidle");
-  expect(
-    attempts.reduce((total, tab) => total + tab.for("Once across tabs"), 0),
-  ).toBe(offlineAttempts + 1);
-  await other.close();
-});
+    await context.setOffline(false);
+    await expectEntryCount(workspace.client, "Once across tabs", 1);
+    await expect(pendingIndicator(page)).toHaveCount(0);
+    await expect(pendingIndicator(other)).toHaveCount(0);
+    // Both tabs show the synced capture, not only the one that sent it.
+    await expect(
+      page
+        .getByRole("list", { name: "Library items" })
+        .getByText("Once across tabs", { exact: true }),
+    ).toBeVisible();
+    await expect(
+      other
+        .getByRole("region", { name: "Needs organizing", exact: true })
+        .getByText("Once across tabs", { exact: true }),
+    ).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await other.waitForLoadState("networkidle");
+    expect(
+      attempts.reduce((total, tab) => total + tab.for("Once across tabs"), 0),
+    ).toBe(offlineAttempts + 1);
+    await other.close();
+  });
 
 function pendingIndicator(page: Page) {
   return page.locator("main > header").getByText(/^\d+ pending$/);

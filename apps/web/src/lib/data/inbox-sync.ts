@@ -3,6 +3,7 @@ import { offlinePhotoSyncMessage } from "./capture-sync-messages";
 import {
   enqueueInboxEntry,
   loadInboxQueue,
+  parseInboxQueue,
   queuedRejection,
   rejectInboxQueueEntry,
   removeInboxQueueEntry,
@@ -82,11 +83,8 @@ export type InboxSyncStore = {
   getServerSnapshot: () => InboxSyncSnapshot;
   getSnapshot: () => InboxSyncSnapshot;
   onRunFinished: (listener: (run: InboxSyncRun) => void) => () => void;
-  /**
-   * Rereads the queue after another tab changed it, returning how many
-   * captures left it, which means that tab synced them.
-   */
-  reload: () => number;
+  /** Rereads the queue after another tab changed it. */
+  reload: () => void;
   subscribe: (listener: () => void) => () => void;
   /** Never rejects; problems are reported through the snapshot. */
   synchronize: () => Promise<void>;
@@ -364,14 +362,7 @@ export function createInboxSyncStore({
       return () => runListeners.delete(listener);
     },
     reload() {
-      const queue = readQueue();
-      const remaining = new Set(queue.map(({ id }) => id));
-      // A rejected capture leaves the queue only when it is discarded.
-      const removed = entries.filter(
-        (entry) => !remaining.has(entry.id) && isSendable(entry),
-      ).length;
-      replaceEntries(queue);
-      return removed;
+      replaceEntries(readQueue());
     },
     subscribe(listener) {
       listeners.add(listener);
@@ -379,6 +370,23 @@ export function createInboxSyncStore({
     },
     synchronize,
   };
+}
+
+/**
+ * How many captures another tab synced in one change to the shared queue: the
+ * sendable captures the old value held that the new value no longer does. It
+ * reads the change itself, since this tab may already have reread the queue
+ * on its own by the time it hears of the change.
+ */
+export function countSyncedInQueueChange(
+  oldValue: string | null,
+  newValue: string | null,
+) {
+  const remaining = new Set(parseInboxQueue(newValue).map(({ id }) => id));
+  // A rejected capture leaves the queue only when it is discarded.
+  return parseInboxQueue(oldValue).filter(
+    (entry) => !remaining.has(entry.id) && isSendable(entry),
+  ).length;
 }
 
 /** Whether a pending list should appear; a first online attempt is progress. */
