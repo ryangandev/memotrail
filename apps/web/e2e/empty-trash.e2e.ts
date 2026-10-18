@@ -114,10 +114,23 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       (await client.rpc("trash_entry_attachment", { p_attachment_id: photoID }))
         .error,
     ).toBeNull();
+    // A browser in another time zone must still hydrate to
+    // the server's dates, in the profile time zone.
+    const hydrationErrors: string[] = [];
+    page.on("console", (message) => {
+      if (message.type() === "error" && /hydrat/i.test(message.text()))
+        hydrationErrors.push(message.text());
+    });
+    const browser = await context.newCDPSession(page);
+    await browser.send("Emulation.setTimezoneOverride", {
+      timezoneId: "Pacific/Kiritimati",
+    });
     await page.goto("/trash");
     await expect(
       page.getByRole("button", { name: "Empty Trash", exact: true }),
     ).toBeVisible();
+    await expect(page.getByText("Removed Sep 1, 2026").first()).toBeVisible();
+    expect(hydrationErrors).toEqual([]);
     const open = page.getByRole("button", { name: "Empty Trash", exact: true });
     const dialog = page.getByRole("dialog");
     await open.click();
