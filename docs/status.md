@@ -35,7 +35,8 @@ The date precision controls are settled too: Web date forms choose Day, Month, Y
 Native iOS still shows the eight Date types until it follows Web.
 Needs organizing is retired: capture never asks for a decision, so Library and the Dashboard no longer list or count Entries without a title or tag, and Quick Capture takes the Dashboard's full row.
 An untitled Entry is named by its date at its recorded precision on every Web surface, while its stored title stays empty.
-Migration `202610180087` makes the workspaces return blank stored titles with the date fields that name them and drops the Library Needs organizing filter; it must be applied before the Web release that reads it.
+Migration `202610180087` makes the workspaces return blank stored titles with the date fields that name them and replaces the Library Needs organizing filter.
+It and the Web release can ship in either order; once that Web is deployed, a later migration removes the earlier six-argument Library workspace and the Timeline and Trash title stand-ins.
 Native iOS still shows the retired Inbox list, the Dashboard Ready to organize section, and its To organize count, and still expects workspace titles made from an Entry's writing, until it follows Web.
 Open `audit-2026-10` issues stay tracked in GitHub.
 

@@ -66,6 +66,7 @@ Changing the default never rewrites an existing Entry's recorded timezone.
   A Not sure date uses its description, and an Entry without a date reads "Undated entry".
   The date is read in the time zone it was recorded in, so every device and the server show the same name.
   Lists show the note's first useful line as the summary, and the Item page shows the date as its heading and the note once.
+  The Item page's Date fact appears only when it says more than that heading, such as the time of an exact moment or an end the heading leaves out.
   Because the date already names it, an untitled Entry does not repeat its date beside the title.
 - The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.

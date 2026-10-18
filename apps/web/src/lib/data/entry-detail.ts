@@ -64,6 +64,39 @@ export function validEntryID(id: unknown): id is string {
   );
 }
 
+/**
+ * Whether the Item page's Date fact adds something to its heading. An untitled
+ * Entry is already headed by its date, so the fact shows only when it says more:
+ * the time of an exact moment, an end the heading leaves out, or a date the
+ * heading cannot name.
+ */
+export function entryDateAddsToTitle(
+  value: Pick<
+    EntryDetail,
+    | "title"
+    | "occurred_label"
+    | "occurred_start"
+    | "occurred_end"
+    | "date_precision"
+  >,
+) {
+  if (value.title?.trim()) return true;
+  // The heading is the description, or "Undated entry" when nothing is known.
+  if (value.occurred_label?.trim() || !value.occurred_start) return false;
+  switch (value.date_precision) {
+    case "exact":
+      return true;
+    case "day":
+    case "month":
+    case "year":
+      return Boolean(value.occurred_end);
+    case "range":
+      return false;
+    default:
+      return true;
+  }
+}
+
 export function entryDateLabel(
   value: Pick<
     EntryDetail,

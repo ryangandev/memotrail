@@ -55,9 +55,34 @@ select is(
   '',
   'A blank title is not replaced by the writing'
 );
-select ok(
-  to_regprocedure('public.wiki_items_workspace(text,text[],text[],integer,integer,boolean)') is null,
-  'Library no longer filters Entries that need organizing'
+-- The Web deployed before migration 202610180087 still calls the six-argument
+-- workspace until the Web that names untitled Entries by date replaces it.
+select is(
+  (select pronargdefaults::integer from pg_proc
+   where oid = to_regprocedure('public.wiki_items_workspace(text,text[],text[],integer,integer,boolean)')),
+  0,
+  'The earlier six-argument workspace requires every argument, so PostgREST never finds two matches'
+);
+select is(
+  (select title from public.wiki_items_workspace('read later',array[]::text[],array[]::text[],50,0,false)),
+  'A quick capture to read later.',
+  'The earlier workspace keeps its earlier title for the Web deployed before the change'
+);
+select is(
+  (select array_agg(item_id::text order by item_id) from public.wiki_items_workspace('',array[]::text[],array[]::text[],50,0,true)),
+  array['98200000-0000-4000-8000-000000000005','98200000-0000-4000-8000-000000000007'],
+  'The earlier workspace still lists Entries with neither a title nor a tag'
+);
+select is(
+  (select max(total_count) from public.wiki_items_workspace('',array[]::text[],array[]::text[],1,0,true)),
+  2::bigint,
+  'The earlier workspace still counts only matching Entries'
+);
+select throws_ok(
+  $$select * from public.wiki_items_workspace('',array[]::text[],array[]::text[],50,0,null)$$,
+  '22023',
+  'invalid_wiki_items_page',
+  'The earlier workspace still requires its switch'
 );
 select is(
   (select count(*) from public.wiki_items_workspace('',array['entity'],array[]::text[],50,0)),
@@ -97,6 +122,14 @@ select ok(
     'execute'
   ),
   'Anonymous Life Wiki browsing is denied'
+);
+select ok(
+  not has_function_privilege(
+    'anon',
+    'public.wiki_items_workspace(text,text[],text[],integer,integer,boolean)',
+    'execute'
+  ),
+  'Anonymous browsing through the earlier workspace is denied'
 );
 
 select * from finish();

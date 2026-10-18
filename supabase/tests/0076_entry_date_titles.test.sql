@@ -40,9 +40,19 @@ select results_eq(
   'A resurfaced memory keeps a blank title and its date'
 );
 select is(
-  (select array_agg(title order by entry_id) from public.timeline_workspace()),
+  (select array_agg(stored_title order by entry_id) from public.timeline_workspace()),
   array['',''],
-  'Timeline milestones keep blank titles'
+  'Timeline milestones carry blank stored titles'
+);
+select is(
+  (select array_agg(title order by entry_id) from public.timeline_workspace()),
+  array['Started at the bakery.','First solo hike.'],
+  'Timeline titles keep their earlier stand-in for the Web deployed before the change'
+);
+select ok(
+  not has_function_privilege('anon','public.timeline_workspace()','execute')
+    and has_function_privilege('authenticated','public.timeline_workspace()','execute'),
+  'Recreating Timeline keeps its grants'
 );
 select is(
   (select title from public.first_times_workspace()),

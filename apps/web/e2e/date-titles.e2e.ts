@@ -71,6 +71,14 @@ test("untitled Entries are named by their date and never wait to be organized", 
       },
       {
         ...untitled,
+        body: "Caught the early ferry.",
+        created_at: "2026-10-11T08:00:00Z",
+        date_precision: "exact",
+        occurred_start: "2026-10-03T14:30:00Z",
+        occurred_timezone: "America/Los_Angeles",
+      },
+      {
+        ...untitled,
         body: "Already named.",
         created_at: "2026-10-12T08:00:00Z",
         date_precision: "day",
@@ -83,6 +91,9 @@ test("untitled Entries are named by their date and never wait to be organized", 
   expect(inserted.error).toBeNull();
   const rainID = inserted.data!.find((entry) =>
     entry.body.startsWith("Rain"),
+  )!.id;
+  const exactID = inserted.data!.find((entry) =>
+    entry.body.startsWith("Caught"),
   )!.id;
   const named = [
     ["Sunday, October 18, 2026", "Rain all morning, walked anyway."],
@@ -115,7 +126,7 @@ test("untitled Entries are named by their date and never wait to be organized", 
 
   await page.goto("/library");
   const items = page.getByRole("list", { name: "Library items" });
-  await expect(items.getByRole("listitem")).toHaveCount(7);
+  await expect(items.getByRole("listitem")).toHaveCount(8);
   for (const [title, note] of named) {
     const row = items.getByRole("listitem").filter({ hasText: note });
     await expect(row.locator("strong")).toHaveText(title);
@@ -151,6 +162,16 @@ test("untitled Entries are named by their date and never wait to be organized", 
       .getByRole("main")
       .getByText("Rain all morning, walked anyway.", { exact: true }),
   ).toHaveCount(1);
+  // The heading already is the date, so the Date fact would only repeat it.
+  const facts = page.getByRole("article", { name: "Current item" });
+  await expect(facts.getByText("Date", { exact: true })).toHaveCount(0);
+  await page.goto(`/items/${exactID}`);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+    "Saturday, October 3, 2026",
+  );
+  // An exact moment keeps its Date fact, which adds the time.
+  await expect(facts.getByText("Date", { exact: true })).toBeVisible();
+  await expect(facts).toContainText("Oct 3, 2026, 7:30 AM");
 
   // Links saved before Needs organizing was retired still open Library.
   for (const retired of ["/inbox", "/library?show=needs-organizing"]) {
@@ -158,7 +179,7 @@ test("untitled Entries are named by their date and never wait to be organized", 
     await expect(page).toHaveURL(/\/library(\?show=needs-organizing)?$/);
     await expect(
       page.getByRole("list", { name: "Library items" }).getByRole("listitem"),
-    ).toHaveCount(7);
+    ).toHaveCount(8);
     await expect(
       page.getByRole("heading", { name: "Needs organizing" }),
     ).toHaveCount(0);

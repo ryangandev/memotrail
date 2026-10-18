@@ -18,6 +18,7 @@ import {
   trashWikiItem,
 } from "@/app/items/actions";
 import {
+  entryDateAddsToTitle,
   entryDateLabel,
   entryTitle,
   type EntryDetail,
@@ -233,10 +234,12 @@ function CurrentItem({
             </dd>
           </div>
         ) : null}
-        <div>
-          <dt>Date</dt>
-          <dd>{entryDateLabel(value)}</dd>
-        </div>
+        {entryDateAddsToTitle(value) ? (
+          <div>
+            <dt>Date</dt>
+            <dd>{entryDateLabel(value)}</dd>
+          </div>
+        ) : null}
         {groups.map((group) => (
           <div key={group.key}>
             <dt>{group.label}</dt>

@@ -194,16 +194,16 @@ select is(
     from public.trash_workspace(50, 0)
     where item_id = '71000000-0000-0000-0000-000000000004'
   ),
-  '||A body-only deleted thought.',
-  'An untitled Entry keeps a blank title in Trash, so clients name it by its date'
+  'A body-only deleted thought.||A body-only deleted thought.',
+  'An untitled Entry has a blank entry_title for clients that name it by date, and its earlier title stays'
 );
 select is(
   (
-    select title || '|' || entry_title || '|' || coalesce(detail, 'none')
+    select title || '|' || entry_title || '|' || detail
     from public.trash_workspace(50, 0)
     where item_id = '73000000-0000-0000-0000-000000000002'
   ),
-  'two.jpg|Photo parent|none',
+  'two.jpg|Photo parent|Photo from Photo parent',
   'A removed photo carries the title of the Entry it belongs to'
 );
 select is(

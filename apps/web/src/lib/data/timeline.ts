@@ -72,8 +72,9 @@ type TimelineRow = {
   occurred_timezone: string;
   revision: number;
   shape: MilestoneShape;
+  /** The stored title, blank when the Entry has none. */
+  stored_title: string;
   tag_names: string[];
-  title: string;
   updated_at: string;
 };
 
@@ -158,7 +159,7 @@ function timelineEntryFromRow(row: TimelineRow): TimelineEntry {
     revision: row.revision,
     shape: row.shape,
     tagNames: row.tag_names,
-    title: entryDisplayTitle(row.title, occurrence),
+    title: entryDisplayTitle(row.stored_title, occurrence),
     updatedAt: row.updated_at,
   };
 }
@@ -181,7 +182,7 @@ function isTimelineRow(value: unknown): value is TimelineRow {
     typeof value.body === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
-    typeof value.title === "string" &&
+    typeof value.stored_title === "string" &&
     isTimelineLane(value.lane) &&
     isMilestoneShape(value.shape) &&
     typeof value.is_first_time === "boolean" &&

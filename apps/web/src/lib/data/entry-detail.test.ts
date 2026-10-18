@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { entryDateLabel, entryTitle, validEntryID } from "./entry-detail";
+import {
+  entryDateAddsToTitle,
+  entryDateLabel,
+  entryTitle,
+  validEntryID,
+} from "./entry-detail";
 
 const undated = {
   occurred_start: null,
@@ -36,6 +41,43 @@ describe("Entry detail", () => {
       }),
     ).toBe("Sunday, October 18, 2026");
     expect(entryTitle({ ...undated, title: "" })).toBe("Undated entry");
+  });
+  it("shows the Date fact only when it says more than the heading", () => {
+    const day = {
+      ...undated,
+      title: null,
+      occurred_start: "2026-10-18T12:00:00Z",
+      date_precision: "day",
+    };
+    expect(entryDateAddsToTitle({ ...day, title: "Rainy walk" })).toBe(true);
+    expect(entryDateAddsToTitle(day)).toBe(false);
+    expect(entryDateAddsToTitle({ ...day, date_precision: "month" })).toBe(
+      false,
+    );
+    expect(entryDateAddsToTitle({ ...day, date_precision: "year" })).toBe(
+      false,
+    );
+    expect(
+      entryDateAddsToTitle({
+        ...day,
+        date_precision: "range",
+        occurred_end: "2026-10-20T12:00:00Z",
+      }),
+    ).toBe(false);
+    expect(
+      entryDateAddsToTitle({ ...day, occurred_end: "2026-10-20T12:00:00Z" }),
+    ).toBe(true);
+    expect(entryDateAddsToTitle({ ...day, date_precision: "exact" })).toBe(
+      true,
+    );
+    expect(
+      entryDateAddsToTitle({
+        ...day,
+        date_precision: "approximate",
+        occurred_label: "Summer after college",
+      }),
+    ).toBe(false);
+    expect(entryDateAddsToTitle({ ...undated, title: null })).toBe(false);
   });
   it("accepts only Entry identities", () => {
     expect(validEntryID("94000000-0000-4000-8000-000000000001")).toBe(true);

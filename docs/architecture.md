@@ -70,6 +70,7 @@ Pair it with the test file carrying the same feature name.
   Education and Career placements went to Work and study, and other custom track names became tags on their Entries.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination, with each row's date fields.
   Migration `202610180087` dropped its `p_needs_organizing` filter with the Needs organizing view.
+  It keeps the earlier six-argument `wiki_items_workspace`, with every argument required so PostgREST resolves each call to one function, for the Web deployed before it; a later migration removes it once the Web that names untitled Entries by date is deployed.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, which reads `entry_detail` for the current content, tags, Locations, Timeline placement, and provenance links.
   Native Library routes Homes, Vehicles, First Times, Goals, and People to their focused pages like Web, other typed records to their focused editors, and other canonical items to the Item page, like Web `/items/[entry]`.
@@ -160,8 +161,9 @@ Pair it with the test file carrying the same feature name.
 - Timeline date-only, partial, and uncertain editors do not surface a timezone control, but they preserve the stored timezone needed for stable calendar interpretation.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
 - Workspaces return an Entry's stored title, an empty string when it has none, and never a stand-in made from its writing.
-  Migration `202610180087` made `home_workspace`, `home_resurfaced_memory`, `timeline_workspace`, `first_times_workspace`, `goals_workspace`, `trash_workspace`, and `wiki_items_workspace` follow that, with the date fields each needs to name an untitled Entry.
-  `trash_workspace` keeps a photo's filename as its title and adds `entry_title` and the date of the Entry it belongs to.
+  Migration `202610180087` made `home_workspace`, `home_resurfaced_memory`, `first_times_workspace`, `goals_workspace`, and `wiki_items_workspace` follow that, with the date fields each needs to name an untitled Entry.
+  It only adds fields, so the Web deployed before it keeps working whichever ships first.
+  Where that Web shows a title without its own fallback, the earlier stand-in stays until a later migration removes it: `timeline_workspace` adds `stored_title`, and `trash_workspace` adds `entry_title`, the stored title of the row's Entry or of the Entry a photo belongs to, with that Entry's date.
 - Web `entryDisplayTitle` and `occurrenceTitle` in `lib/data/occurrence.ts` name an untitled Entry by its date at its recorded precision, read in its recorded time zone with the fixed `en-US` locale, so the server and every browser render the same text.
   Every Web surface that shows an Entry title goes through them: Dashboard, Library, Library search, the Command Palette, Pending sync, the Item page and its page title, Map, Timeline, First Times, Someday, Trash, and AI search.
 - A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.

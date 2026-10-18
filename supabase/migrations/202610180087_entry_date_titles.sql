@@ -2,6 +2,13 @@
 -- Formatting a date belongs to the client, which knows the precision and zone it is shown in,
 -- so workspaces return the stored title, blank when the Entry has none, instead of a stand-in made from its note.
 -- Nothing treats an unorganized Entry as unfinished any more, so Library loses its Needs organizing filter.
+--
+-- The Web deployed before this migration keeps working whichever ships first:
+-- it calls the six-argument wiki_items_workspace, which stays as it was, and every
+-- other workspace only gains fields. Where that Web shows a workspace title without
+-- its own fallback (Timeline and Trash), the title keeps its stand-in and the stored
+-- title comes in a new field. A later migration removes the six-argument function
+-- and those stand-ins once the Web that names untitled Entries by date is deployed.
 
 drop function if exists public.wiki_items_workspace(text, text[], text[], integer, integer, boolean);
 drop function if exists public.wiki_items_workspace(text, text[], text[], integer, integer);
@@ -86,7 +93,106 @@ $function$;
 revoke all on function public.wiki_items_workspace(text, text[], text[], integer, integer) from public, anon;
 grant execute on function public.wiki_items_workspace(text, text[], text[], integer, integer) to authenticated, service_role;
 
+-- Compatibility for the Web deployed before this migration, which always sends all six
+-- arguments and reads the earlier rows. Every argument is required, so PostgREST matches
+-- a six-argument call only here and a call without p_needs_organizing only above.
+-- Remove it in a later migration once the Web that names untitled Entries by date is deployed.
+create function public.wiki_items_workspace(p_query text, p_item_kinds text[], p_item_subtypes text[], p_limit integer, p_offset integer, p_needs_organizing boolean)
+ RETURNS TABLE(item_id uuid, canonical_item_id uuid, item_kind text, item_subtype text, title text, excerpt text, occurred_start timestamp with time zone, occurred_end timestamp with time zone, updated_at timestamp with time zone, total_count bigint)
+ LANGUAGE plpgsql
+ STABLE
+ SET search_path TO ''
+AS $function$
+declare
+  workspace_owner_id uuid := auth.uid();
+  normalized_query text := lower(btrim(coalesce(p_query, '')));
+begin
+  if workspace_owner_id is null then return; end if;
+
+  if p_query is null
+    or length(p_query) > 200
+    or p_item_kinds is null
+    or cardinality(p_item_kinds) > 6
+    or exists (
+      select 1 from unnest(p_item_kinds) as kind
+      where kind not in ('entry', 'entity', 'goal')
+    )
+    or p_item_subtypes is null
+    or cardinality(p_item_subtypes) > 50
+    or exists (
+      select 1 from unnest(p_item_subtypes) as subtype
+      where subtype !~ '^[a-z][a-z0-9_]{0,63}$'
+    )
+    or p_limit is null or p_limit < 1 or p_limit > 100
+    or p_offset is null or p_offset < 0 or p_offset > 100000
+    or p_needs_organizing is null
+  then
+    raise exception using errcode = '22023', message = 'invalid_wiki_items_page';
+  end if;
+
+  return query
+  with wiki_items as (
+    select
+      entry.id as item_id,
+      entry.id as canonical_item_id,
+      entry.item_kind,
+      entry.item_subtype,
+      coalesce(
+        nullif(btrim(entry.title), ''),
+        nullif(left(btrim(entry.body), 120), ''),
+        'Untitled item'
+      ) as title,
+      left(btrim(entry.body), 240) as excerpt,
+      entry.occurred_start,
+      entry.occurred_end,
+      entry.updated_at,
+      concat_ws(
+        ' ', entry.title, entry.body, entry.item_kind, entry.item_subtype
+      ) as searchable
+    from public.entries as entry
+    where entry.owner_id = workspace_owner_id
+      and entry.deleted_at is null
+      -- An Entry needs organizing while it has neither a title nor a tag, like a fresh Capture.
+      and (
+        not p_needs_organizing
+        or (
+          entry.item_kind = 'entry'
+          and nullif(btrim(entry.title), '') is null
+          and not exists (
+            select 1 from public.entry_tags as tagged
+            where tagged.entry_id = entry.id and tagged.owner_id = workspace_owner_id
+          )
+        )
+      )
+  ),
+  matches as (
+    select *
+    from wiki_items
+    where (cardinality(p_item_kinds) = 0 or wiki_items.item_kind = any(p_item_kinds))
+      and (cardinality(p_item_subtypes) = 0 or wiki_items.item_subtype = any(p_item_subtypes))
+      and (normalized_query = '' or strpos(lower(wiki_items.searchable), normalized_query) > 0)
+  ),
+  counted as (
+    select matches.*, count(*) over () as total_count
+    from matches
+  )
+  select
+    counted.item_id, counted.canonical_item_id,
+    counted.item_kind, counted.item_subtype, counted.title, counted.excerpt,
+    counted.occurred_start, counted.occurred_end,
+    counted.updated_at, counted.total_count
+  from counted
+  order by counted.updated_at desc, lower(counted.title), counted.item_id
+  limit p_limit offset p_offset;
+end;
+$function$
+;
+
+revoke all on function public.wiki_items_workspace(text, text[], text[], integer, integer, boolean) from public, anon;
+grant execute on function public.wiki_items_workspace(text, text[], text[], integer, integer, boolean) to authenticated, service_role;
+
 -- Each Trash row carries its Entry's stored title and date: an Entry's own, or the Entry a photo belongs to.
+-- title and detail keep their earlier text for the Web deployed before this migration.
 drop function if exists public.trash_workspace(integer, integer);
 
 create function public.trash_workspace(p_limit integer DEFAULT 50, p_offset integer DEFAULT 0)
@@ -110,7 +216,11 @@ begin
     select
       'entry'::text as item_kind,
       item.id as item_id,
-      coalesce(btrim(item.title), '') as title,
+      coalesce(
+        nullif(btrim(item.title), ''),
+        nullif(left(btrim(regexp_replace(item.body, '\s+', ' ', 'g')), 120), ''),
+        'Untitled Entry'
+      ) as title,
       nullif(left(btrim(regexp_replace(item.body, '\s+', ' ', 'g')), 240), '') as detail,
       item.deleted_at,
       item.deleted_at + interval '30 days' as expires_at,
@@ -141,7 +251,11 @@ begin
       'attachment'::text,
       media.id,
       coalesce(nullif(btrim(media.original_filename), ''), 'Removed photo'),
-      null::text,
+      concat('Photo from ', coalesce(
+        nullif(btrim(item.title), ''),
+        nullif(left(btrim(regexp_replace(item.body, '\s+', ' ', 'g')), 80), ''),
+        'Untitled Entry'
+      )),
       media.deleted_at,
       media.deleted_at + interval '30 days',
       null::integer,
@@ -543,15 +657,18 @@ end;
 $function$
 ;
 
-CREATE OR REPLACE FUNCTION public.timeline_workspace()
- RETURNS TABLE(entry_id uuid, title text, body text, item_kind text, item_subtype text, lane text, shape text, is_first_time boolean, occurred_start timestamp with time zone, occurred_end timestamp with time zone, date_precision text, occurred_label text, occurred_timezone text, revision integer, updated_at timestamp with time zone, tag_names text[])
+-- Timeline adds stored_title; title keeps its earlier stand-in for the Web deployed before this migration.
+drop function if exists public.timeline_workspace();
+
+create function public.timeline_workspace()
+ RETURNS TABLE(entry_id uuid, title text, body text, item_kind text, item_subtype text, lane text, shape text, is_first_time boolean, occurred_start timestamp with time zone, occurred_end timestamp with time zone, date_precision text, occurred_label text, occurred_timezone text, revision integer, updated_at timestamp with time zone, tag_names text[], stored_title text)
  LANGUAGE sql
  STABLE
  SET search_path TO ''
 AS $function$
   select
     entries.id,
-    coalesce(btrim(entries.title), ''),
+    coalesce(nullif(btrim(entries.title), ''), nullif(split_part(btrim(entries.body), E'\n', 1), ''), 'Untitled milestone'),
     entries.body,
     entries.item_kind,
     entries.item_subtype,
@@ -577,7 +694,8 @@ AS $function$
         where entry_tags.entry_id = entries.id and entry_tags.owner_id = entries.owner_id
       ),
       '{}'::text[]
-    )
+    ),
+    coalesce(btrim(entries.title), '')
   from public.entries
   left join public.milestones
     on milestones.entry_id = entries.id
@@ -591,6 +709,9 @@ AS $function$
   order by entries.occurred_start nulls last, lower(entries.title), entries.id;
 $function$
 ;
+
+revoke all on function public.timeline_workspace() from public, anon;
+grant execute on function public.timeline_workspace() to authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.first_times_workspace()
  RETURNS TABLE(entry_id uuid, title text, body text, occurred_start timestamp with time zone, occurred_end timestamp with time zone, date_precision text, occurred_label text, occurred_timezone text, revision integer, updated_at timestamp with time zone, tag_names text[], attachments jsonb)
