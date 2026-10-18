@@ -300,6 +300,19 @@
   z-index: var(--mt-layout-layer-popover) !important;
 }
 
+/* Open pickers sit in the top layer; the positioner itself stays invisible. */
+.datePickerPositioner[popover],
+.timePickerPositioner[popover] {
+  right: auto;
+  bottom: auto;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  color: inherit;
+  background: transparent;
+}
+
 .datePickerContent {
   width: min(var(--mt-size-date-picker-width), calc(100vw - 24px));
   padding: var(--mt-space-3);
