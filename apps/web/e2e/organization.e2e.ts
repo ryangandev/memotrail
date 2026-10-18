@@ -165,14 +165,6 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       path: test.info().outputPath("memotrail-tags-consistent.png"),
     });
 
-    expect(
-      (
-        await client
-          .from("profiles")
-          .update({ birth_date: "1990-01-01" })
-          .eq("user_id", owner)
-      ).error,
-    ).toBeNull();
     await page.goto("/timeline");
     await page.getByRole("button", { name: "Add to Timeline" }).click();
     await page

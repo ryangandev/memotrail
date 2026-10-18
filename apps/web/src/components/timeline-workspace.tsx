@@ -70,7 +70,7 @@ type PositionedStyle = CSSProperties & {
 
 type GridStyle = CSSProperties & {
   "--timeline-canvas-width": string;
-  "--timeline-today-offset": string;
+  "--timeline-today-percent": number;
 };
 
 export function TimelineWorkspace({
@@ -94,12 +94,13 @@ export function TimelineWorkspace({
 }) {
   const [selection, setSelection] = useState<EditorSelection | null>(null);
   const [birthDate, setBirthDate] = useState(serverBirthDate);
-  const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(
-    birthDateAvailable && serverBirthDate === null && loadError === null,
-  );
+  const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(false);
   const items = useMemo(() => lanes.flatMap((lane) => lane.items), [lanes]);
   const labelProbe = useRef<HTMLSpanElement>(null);
   const measureLabel = useLabelMeasure(labelProbe);
+  const viewport = useRef<HTMLDivElement>(null);
+  const laneLabel = useRef<HTMLDivElement>(null);
+  const fillWidth = useCanvasFillWidth(viewport, laneLabel);
   const layout = useMemo(
     () =>
       createTimelineLayout(
@@ -109,8 +110,9 @@ export function TimelineWorkspace({
         })),
         new Date(referenceDate),
         birthDate,
+        fillWidth,
       ),
-    [birthDate, items, measureLabel, referenceDate],
+    [birthDate, fillWidth, items, measureLabel, referenceDate],
   );
   const positions = useMemo(
     () => new Map(layout.positions.map((position) => [position.id, position])),
@@ -118,7 +120,7 @@ export function TimelineWorkspace({
   );
   const gridStyle: GridStyle = {
     "--timeline-canvas-width": `${layout.canvasWidth}px`,
-    "--timeline-today-offset": `${(layout.todayPercent / 100) * layout.canvasWidth}px`,
+    "--timeline-today-percent": layout.todayPercent,
   };
 
   function startCreation(type: CreationType, lane: MilestoneLane = "other") {
@@ -232,12 +234,22 @@ export function TimelineWorkspace({
             <div
               className={styles.timelineViewport}
               data-testid="timeline-viewport"
+              ref={viewport}
             >
               <div className={styles.timelineGrid} style={gridStyle}>
-                <div className={styles.axisCorner}>Lane</div>
+                <div className={styles.axisCorner} ref={laneLabel}>
+                  Lane
+                </div>
                 <div className={styles.axis} data-testid="timeline-axis">
                   {layout.yearMarkers.map((marker) => (
                     <span
+                      data-edge={
+                        marker.leftPercent === 0
+                          ? "start"
+                          : marker.leftPercent === 100
+                            ? "end"
+                            : undefined
+                      }
                       key={marker.year}
                       style={{ left: `${marker.leftPercent}%` }}
                     >
@@ -531,10 +543,10 @@ function BirthDatePrompt({
             onClick={onClose}
             type="button"
           >
-            Not now
+            Cancel
           </Button>
           <Button variant="primary" disabled={!birthDate || busy} type="submit">
-            {busy ? "Saving…" : "Start my Timeline"}
+            {busy ? "Saving…" : "Save birth date"}
           </Button>
         </div>
       </form>
@@ -570,7 +582,11 @@ function LaneRow({
           <Icon name="plus" size={15} />
         </button>
       </div>
-      <div className={styles.laneCanvas} style={{ height: rowHeight }}>
+      <div
+        className={styles.laneCanvas}
+        data-testid="timeline-lane"
+        style={{ height: rowHeight }}
+      >
         {layout.yearMarkers.map((marker) => (
           <span
             aria-hidden="true"
@@ -666,6 +682,31 @@ function useLabelMeasure(probe: RefObject<HTMLSpanElement | null>) {
   }, [probe]);
 
   return measure;
+}
+
+// Tracks the width beside the lane labels, so an empty or short Timeline fills its card.
+// The server and first render use the minimum canvas, which keeps hydration stable.
+function useCanvasFillWidth(
+  viewport: RefObject<HTMLDivElement | null>,
+  laneLabel: RefObject<HTMLDivElement | null>,
+) {
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const element = viewport.current;
+    const label = laneLabel.current;
+    if (!element || !label) return;
+    const observer = new ResizeObserver(() =>
+      setWidth(
+        element.getBoundingClientRect().width -
+          label.getBoundingClientRect().width,
+      ),
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [laneLabel, viewport]);
+
+  return width;
 }
 
 function addLabel(lane: TimelineLaneGroup) {

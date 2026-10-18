@@ -435,11 +435,6 @@ test("A First Time is a milestone that First Times lists and the Entry editor ch
   await page.goto(`/first-times/${id}`);
   await expect(page).toHaveURL(`/items/${id}`);
   await page.goto("/timeline");
-  // This person has no birth date, so Timeline first asks for one in a dialog.
-  await page
-    .getByRole("dialog", { name: "When did your story begin?" })
-    .getByRole("button", { name: "Not now", exact: true })
-    .click();
   await expect(
     page
       .getByRole("region", { name: "Timeline by lane" })

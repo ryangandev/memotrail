@@ -49,7 +49,7 @@ An age recorded before Not sure existed stays an age when its Entry is edited.
 Leaving the date empty stores Unknown, so Unknown is not a separate choice.
 Moving to a coarser choice keeps what is known, and moving to a finer one starts empty rather than inventing a day or month.
 Web date forms share one calendar control with day, month, year, optional hour-and-minute, editable numeric-entry, picker-only, and size variants.
-Editable date fields accept digits and add their own separators; the first-visit birth-date prompt is picker-only, while Settings also permits numeric editing.
+Editable date fields accept digits and add their own separators; the Timeline birth-date prompt is picker-only, while Settings also permits numeric editing.
 Settings owns the user's default timezone for new exact Timeline timestamps.
 An exact Timeline timestamp shows a directly editable timezone select, may override the Settings default on its Entry, and labels every option with the UTC offset for the relevant date.
 Date-only and uncertain Timeline forms keep timezone controls out of the primary form.
@@ -170,7 +170,9 @@ Timeline has four fixed lanes, in this order: Places lived, Vehicles, Work and s
 Homes fill Places lived and Vehicles fill Vehicles; each milestone chooses Work and study or Other milestones.
 There are no custom tracks, and lanes cannot be renamed, reordered, or hidden.
 Web Timeline has one view, the lanes; there is no style setting.
-The first Timeline visit asks for a private birth date, uses it as the story's starting point, and keeps it editable in Settings.
+An optional private birth date becomes the story's starting point; Set birth date on Timeline and Settings add it, and Timeline never asks for it unprompted.
+Without one, Timeline starts from the earliest dated item, and an empty Timeline shows the current year.
+Adding to Timeline never waits on a birth date.
 Add to Timeline asks whether the user is adding a milestone, a First Time, a Home, or a Vehicle.
 A milestone or First Time opens the Entry editor with the milestone already marked; a Home or Vehicle opens its focused editor.
 Each lane's add shortcut does the same for that lane, and a milestone added to Work and study starts as a Period.

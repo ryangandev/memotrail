@@ -37,11 +37,6 @@ test("Timeline summary keeps its separators between facts on phones", async ({
 
   await page.setViewportSize({ width: 320, height: 720 });
   await page.goto("/timeline");
-  // The account has no birth date yet, so the prompt opens first.
-  await page
-    .getByRole("dialog", { name: "When did your story begin?" })
-    .getByRole("button", { name: "Not now", exact: true })
-    .click();
   const summary = page.getByLabel("Timeline summary");
   await expect(summary).toContainText("1 item");
   // The range ends a little past today, so its last year depends on the date.
@@ -130,11 +125,6 @@ test("Dot-separated rows across the workspace keep their separators between fact
   }[] = [
     {
       path: "/timeline",
-      open: () =>
-        page
-          .getByRole("dialog", { name: "When did your story begin?" })
-          .getByRole("button", { name: "Not now", exact: true })
-          .click(),
       rows: 1,
     },
     {
