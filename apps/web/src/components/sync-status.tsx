@@ -19,13 +19,13 @@ import {
  */
 export function SyncStatus() {
   const captureQueue = useCaptureQueue();
-  const { isSyncing, items, lastError, synchronize } = captureQueue;
+  const { isSyncing, items, lastError, synchronize, unreadable } = captureQueue;
   const [isOpen, setIsOpen] = useState(false);
   const isVisible = hasWaitingCaptures(captureQueue);
   const { rejected, waiting } = countPendingCaptures(items);
 
   // Once everything syncs or is discarded, the list closes with its indicator.
-  if (isOpen && items.length === 0) setIsOpen(false);
+  if (isOpen && items.length === 0 && unreadable.length === 0) setIsOpen(false);
 
   if (!isVisible && !isOpen) {
     return null;
@@ -37,6 +37,9 @@ export function SyncStatus() {
       : null,
     rejected > 0
       ? `MemoTrail did not accept ${countLabel(rejected, "Entry")}; copy what you want to keep, then discard ${rejected === 1 ? "it" : "them"}.`
+      : null,
+    unreadable.length > 0
+      ? `${countLabel(unreadable.length, "saved Entry")} on this device could not be read; copy what you want to keep, then discard ${unreadable.length === 1 ? "it" : "them"}.`
       : null,
   ]
     .filter(Boolean)
@@ -67,6 +70,7 @@ export function SyncStatus() {
           busy={isSyncing}
           onClick={() => void synchronize()}
           rejected={rejected}
+          unreadable={unreadable.length}
           waiting={waiting}
         />
       }
@@ -76,7 +80,7 @@ export function SyncStatus() {
           {lastError}
         </p>
       ) : null}
-      <PendingCaptureList items={items} />
+      <PendingCaptureList items={items} unreadable={unreadable} />
     </Dialog>
   );
 }
@@ -88,16 +92,20 @@ export function SyncStatus() {
 export function SyncStatusButton({
   busy,
   rejected,
+  unreadable = 0,
   waiting,
   ...props
 }: {
   busy: boolean;
   rejected: number;
+  /** Saved captures that could not be read; they wait for the person too. */
+  unreadable?: number;
   waiting: number;
 } & Omit<ComponentPropsWithRef<"button">, "children" | "title" | "type">) {
   const label = [
     waiting > 0 ? `${waiting} pending` : null,
     rejected > 0 ? `${rejected} not accepted` : null,
+    unreadable > 0 ? `${unreadable} unreadable` : null,
   ]
     .filter(Boolean)
     .join(" · ");
@@ -106,11 +114,11 @@ export function SyncStatusButton({
       {...props}
       aria-busy={busy}
       className={syncStatusStyles.syncStatus}
-      data-rejected={rejected > 0 || undefined}
+      data-rejected={rejected > 0 || unreadable > 0 || undefined}
       data-ui-sync-status
       title={
-        rejected > 0
-          ? "Review captures MemoTrail did not accept and sync the rest"
+        rejected > 0 || unreadable > 0
+          ? "Review captures MemoTrail did not accept or could not read, and sync the rest"
           : "Sync now and review captures waiting on this device"
       }
       type="button"

@@ -10,6 +10,10 @@ import {
   queuedOccurrence,
   queuedRejection,
   isQueuedInboxEntry,
+  discardUnreadableCapture,
+  inboxQuarantineKey,
+  loadUnreadableCaptures,
+  unreadableAttachmentIds,
 } from "./inbox-queue";
 import { occurrencePrecisions, resolveOccurrenceDraft } from "./occurrence";
 import { createEntryRichText, plainTextDocument } from "./rich-text";
@@ -39,7 +43,7 @@ describe("Precision-aware offline capture", () => {
         version: 3,
       };
       expect(isQueuedInboxEntry(entry)).toBe(true);
-      const stored = parseInboxQueue(JSON.stringify([entry]));
+      const stored = parseInboxQueue(JSON.stringify([entry])).entries;
       expect(stored).toEqual([entry]);
       expect(queuedOccurrence(stored[0])).toMatchObject(result.value!);
     });
@@ -83,6 +87,7 @@ function memoryStorage() {
   const values = new Map<string, string>();
 
   return {
+    values,
     getItem: vi.fn((key: string) => values.get(key) ?? null),
     removeItem: vi.fn((key: string) => values.delete(key)),
     setItem: vi.fn((key: string, value: string) => values.set(key, value)),
@@ -100,9 +105,8 @@ describe("Inbox synchronization queue", () => {
     expect(enqueueInboxEntry(storage, "owner-a", entry)).toEqual([entry]);
     expect(loadInboxQueue(storage, "owner-a")[0].bodyRich).toEqual(bodyRich);
     expect(
-      parseInboxQueue(
-        JSON.stringify([{ ...entry, body: "A different body." }]),
-      ),
+      parseInboxQueue(JSON.stringify([{ ...entry, body: "A different body." }]))
+        .entries,
     ).toEqual([]);
   });
 
@@ -178,14 +182,36 @@ describe("Inbox synchronization queue", () => {
     ]);
   });
 
-  it("fails closed for malformed, oversized, and duplicate stored queues", () => {
-    expect(parseInboxQueue("not json")).toEqual([]);
-    expect(
-      parseInboxQueue(JSON.stringify([{ ...queuedEntry(), version: 3 }])),
-    ).toEqual([]);
+  it("sets aside malformed, future, and conflicting stored items instead of dropping them", () => {
+    expect(parseInboxQueue("not json")).toEqual({
+      entries: [],
+      unreadable: ["not json"],
+    });
+    const future = { ...queuedEntry(), version: 3 };
+    expect(parseInboxQueue(JSON.stringify([future]))).toEqual({
+      entries: [],
+      unreadable: [future],
+    });
+    // An identical copy is the same capture; a different one must not be lost.
     expect(
       parseInboxQueue(JSON.stringify([queuedEntry(), queuedEntry()])),
-    ).toEqual([]);
+    ).toEqual({ entries: [queuedEntry()], unreadable: [] });
+    const conflicting = queuedEntry({ body: "Another version." });
+    expect(
+      parseInboxQueue(JSON.stringify([queuedEntry(), conflicting])),
+    ).toEqual({ entries: [queuedEntry()], unreadable: [conflicting] });
+  });
+
+  it("keeps every capture of a queue past the usual size limit", () => {
+    const entries = Array.from({ length: 101 }, (_, index) =>
+      queuedEntry({
+        id: `f4d2df16-a506-4be6-a63e-${String(index).padStart(12, "0")}`,
+      }),
+    );
+    const parsed = parseInboxQueue(JSON.stringify(entries));
+
+    expect(parsed.entries).toHaveLength(101);
+    expect(parsed.unreadable).toEqual([]);
   });
 
   it("migrates the text-only version 1 queue", () => {
@@ -200,7 +226,7 @@ describe("Inbox synchronization queue", () => {
       version: 1,
     };
 
-    expect(parseInboxQueue(JSON.stringify([legacy]))).toEqual([
+    expect(parseInboxQueue(JSON.stringify([legacy])).entries).toEqual([
       { ...legacy, attachments: [], version: 2 },
     ]);
   });
@@ -219,13 +245,15 @@ describe("Inbox synchronization queue", () => {
       title: null,
     });
 
-    expect(parseInboxQueue(JSON.stringify([photoOnly]))).toEqual([photoOnly]);
+    expect(parseInboxQueue(JSON.stringify([photoOnly])).entries).toEqual([
+      photoOnly,
+    ]);
     expect(
       parseInboxQueue(
         JSON.stringify([
           { ...photoOnly, attachments: [attachment, attachment] },
         ]),
-      ),
+      ).entries,
     ).toEqual([]);
   });
 
@@ -239,6 +267,148 @@ describe("Inbox synchronization queue", () => {
     expect(storage.removeItem).not.toHaveBeenCalledWith(
       inboxQueueKey("owner-a"),
     );
+  });
+});
+
+describe("Unreadable captures in the queue", () => {
+  const unreadableId = "9b2b6c1e-8f35-4c63-8d57-4a8d1d0a3c11";
+  const unreadableBody = "Something I wrote offline that I must not lose.";
+
+  function seedMixedQueue(storage: ReturnType<typeof memoryStorage>) {
+    const valid = queuedEntry();
+    // Valid when it was queued; a later release tightened a rule it now breaks.
+    const stale = {
+      ...queuedEntry({ id: unreadableId }),
+      body: unreadableBody,
+      occurredAt: "not a date",
+    };
+    storage.setItem(inboxQueueKey("owner-a"), JSON.stringify([stale, valid]));
+    return { stale, valid };
+  }
+
+  function everythingStored(storage: ReturnType<typeof memoryStorage>) {
+    return [...storage.values.values()].join("\n");
+  }
+
+  it("never loses the writing of a capture that no longer validates", () => {
+    const storage = memoryStorage();
+    const { valid } = seedMixedQueue(storage);
+
+    enqueueInboxEntry(
+      storage,
+      "owner-a",
+      queuedEntry({ id: "a220e8e7-1228-4490-9a66-4e71e35879d8" }),
+    );
+    removeInboxQueueEntry(storage, "owner-a", valid.id);
+
+    expect(everythingStored(storage)).toContain(unreadableBody);
+  });
+
+  it("reads past an unreadable capture without writing anything", () => {
+    const storage = memoryStorage();
+    const { valid } = seedMixedQueue(storage);
+    storage.setItem.mockClear();
+
+    const parsed = parseInboxQueue(storage.getItem(inboxQueueKey("owner-a")));
+
+    expect(parsed.entries).toEqual([valid]);
+    expect(parsed.unreadable).toHaveLength(1);
+    expect(loadInboxQueue(storage, "owner-a")).toEqual([valid]);
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it("keeps a queue that is not valid JSON, and its writing, through later captures", () => {
+    const storage = memoryStorage();
+    const damaged = `[{"body":"${unreadableBody}"`;
+    storage.setItem(inboxQueueKey("owner-a"), damaged);
+
+    expect(loadUnreadableCaptures(storage, "owner-a")).toEqual([
+      { key: JSON.stringify(damaged), text: damaged, value: damaged },
+    ]);
+    const entry = queuedEntry();
+    expect(enqueueInboxEntry(storage, "owner-a", entry)).toEqual([entry]);
+
+    expect(loadInboxQueue(storage, "owner-a")).toEqual([entry]);
+    expect(loadUnreadableCaptures(storage, "owner-a")).toHaveLength(1);
+    expect(everythingStored(storage)).toContain(unreadableBody);
+  });
+
+  it("offers the title and body of an unreadable capture to copy", () => {
+    const storage = memoryStorage();
+    seedMixedQueue(storage);
+
+    const [capture] = loadUnreadableCaptures(storage, "owner-a");
+
+    expect(capture.text).toBe(unreadableBody);
+  });
+
+  it("never writes the queue when the unreadable items cannot be set aside", () => {
+    const storage = memoryStorage();
+    const { stale, valid } = seedMixedQueue(storage);
+    const before = storage.getItem(inboxQueueKey("owner-a"));
+    storage.setItem.mockImplementation(() => {
+      throw new Error("Quota exceeded");
+    });
+
+    expect(
+      enqueueInboxEntry(
+        storage,
+        "owner-a",
+        queuedEntry({ id: "a220e8e7-1228-4490-9a66-4e71e35879d8" }),
+      ),
+    ).toBeNull();
+    expect(removeInboxQueueEntry(storage, "owner-a", valid.id)).toBeNull();
+    expect(storage.getItem(inboxQueueKey("owner-a"))).toBe(before);
+    expect(storage.removeItem).not.toHaveBeenCalled();
+    expect(JSON.parse(before!)).toContainEqual(stale);
+  });
+
+  it("keeps an unreadable capture across later syncs and sets it aside once", () => {
+    const storage = memoryStorage();
+    const { valid } = seedMixedQueue(storage);
+
+    removeInboxQueueEntry(storage, "owner-a", valid.id);
+    removeInboxQueueEntry(storage, "owner-a", valid.id);
+
+    expect(storage.getItem(inboxQueueKey("owner-a"))).toBeNull();
+    expect(
+      JSON.parse(storage.getItem(inboxQuarantineKey("owner-a"))!),
+    ).toHaveLength(1);
+    expect(loadUnreadableCaptures(storage, "owner-a")).toHaveLength(1);
+  });
+
+  it("discards only the unreadable capture the person chose", () => {
+    const storage = memoryStorage();
+    const { valid } = seedMixedQueue(storage);
+    const other = { id: "not-a-uuid", body: "Another unreadable one." };
+    storage.setItem(
+      inboxQueueKey("owner-a"),
+      JSON.stringify([
+        ...JSON.parse(storage.getItem(inboxQueueKey("owner-a"))!),
+        other,
+      ]),
+    );
+    const [first, second] = loadUnreadableCaptures(storage, "owner-a");
+
+    expect(discardUnreadableCapture(storage, "owner-a", first.key)).toBe(true);
+
+    expect(loadUnreadableCaptures(storage, "owner-a")).toEqual([second]);
+    expect(loadInboxQueue(storage, "owner-a")).toEqual([valid]);
+    expect(discardUnreadableCapture(storage, "owner-a", second.key)).toBe(true);
+    expect(loadUnreadableCaptures(storage, "owner-a")).toEqual([]);
+    expect(storage.getItem(inboxQuarantineKey("owner-a"))).toBeNull();
+    expect(loadInboxQueue(storage, "owner-a")).toEqual([valid]);
+  });
+
+  it("names the photos an unreadable capture holds", () => {
+    expect(
+      unreadableAttachmentIds({
+        attachments: [{ id: "photo-1" }, { id: 4 }, null, { id: "photo-2" }],
+      }),
+    ).toEqual(["photo-1", "photo-2"]);
+    expect(unreadableAttachmentIds("text")).toEqual([]);
+    expect(unreadableAttachmentIds({ attachments: "none" })).toEqual([]);
   });
 });
 
@@ -307,7 +477,7 @@ describe("Rejected captures in the queue", () => {
     ]) {
       const [stored] = parseInboxQueue(
         JSON.stringify([{ ...queuedEntry(), rejection: malformed }]),
-      );
+      ).entries;
       expect(stored.id).toBe(queuedEntry().id);
       expect(queuedRejection(stored)).toBeNull();
     }

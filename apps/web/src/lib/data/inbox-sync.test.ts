@@ -470,6 +470,51 @@ describe("Workspace capture synchronization", () => {
     expect(store.getSnapshot().items).toEqual([]);
   });
 
+  it("lists an unreadable capture, keeps it through a sync, and discards it on request", async () => {
+    const storage = memoryStorage();
+    const unreadable = {
+      ...queuedEntry(2, { withPhoto: true }),
+      body: "Written offline before a rule changed.",
+      occurredAt: "not a date",
+    };
+    storage.setItem(
+      inboxQueueKey(ownerId),
+      JSON.stringify([unreadable, queuedEntry(1)]),
+    );
+    const { removePhotoDrafts, store, transport } = setup({ storage });
+
+    expect(store.getSnapshot().unreadable).toMatchObject([
+      { text: "Written offline before a rule changed." },
+    ]);
+    expect(hasWaitingCaptures(store.getSnapshot())).toBe(true);
+    await store.synchronize();
+
+    // The valid capture synced; the unreadable one is still on this device.
+    expect(transport.syncEntry).toHaveBeenCalledTimes(1);
+    expect(store.getSnapshot().items).toEqual([]);
+    const [{ key }] = store.getSnapshot().unreadable;
+    expect(key).toContain("Written offline before a rule changed.");
+    expect(hasWaitingCaptures(store.getSnapshot())).toBe(true);
+
+    await expect(store.discardUnreadable(key)).resolves.toBe(true);
+    expect(removePhotoDrafts).toHaveBeenCalledWith([
+      queuedEntry(2, { withPhoto: true }).attachments[0].id,
+    ]);
+    expect(store.getSnapshot().unreadable).toEqual([]);
+    expect(hasWaitingCaptures(store.getSnapshot())).toBe(false);
+  });
+
+  it("keeps an unreadable capture whose photos could not be removed", async () => {
+    const storage = memoryStorage();
+    storage.setItem(inboxQueueKey(ownerId), JSON.stringify([{ id: 7 }]));
+    const { removePhotoDrafts, store } = setup({ storage });
+    const [{ key }] = store.getSnapshot().unreadable;
+    removePhotoDrafts.mockRejectedValueOnce(new Error("blocked"));
+
+    await expect(store.discardUnreadable(key)).resolves.toBe(false);
+    expect(store.getSnapshot().unreadable).toHaveLength(1);
+  });
+
   it("refuses a capture this browser cannot store", () => {
     const { storage, store, transport } = setup();
     storage.setItem.mockImplementationOnce(() => {

@@ -533,12 +533,18 @@ export function CaptureComposer({
               ) : null
             }
             className={captureComposerStyles.pendingHeader}
-            detail={countLabel(captureQueue.items.length, "Entry")}
+            detail={countLabel(
+              captureQueue.items.length + captureQueue.unreadable.length,
+              "Entry",
+            )}
             headingId={`${idPrefix}-pending-heading`}
             title="Pending sync"
             variant="list"
           />
-          <PendingCaptureList items={captureQueue.items} />
+          <PendingCaptureList
+            items={captureQueue.items}
+            unreadable={captureQueue.unreadable}
+          />
         </section>
       ) : null}
     </>

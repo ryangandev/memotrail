@@ -59,12 +59,22 @@ export function inboxQueueKey(ownerId: string) {
   return `memotrail:inbox-queue:${encodeURIComponent(ownerId)}`;
 }
 
+export function inboxQuarantineKey(ownerId: string) {
+  return `memotrail:inbox-queue-quarantine:${encodeURIComponent(ownerId)}`;
+}
+
+/** Whether a changed storage key belongs to this person's queue or its quarantine. */
+export function isInboxQueueStorageKey(key: string, ownerId: string) {
+  return key === inboxQueueKey(ownerId) || key === inboxQuarantineKey(ownerId);
+}
+
+/** Reads the captures that can be sent. Reading never writes to storage. */
 export function loadInboxQueue(
   storage: QueueStorage,
   ownerId: string,
 ): QueuedInboxEntry[] {
   try {
-    return parseInboxQueue(storage.getItem(inboxQueueKey(ownerId)));
+    return parseInboxQueue(storage.getItem(inboxQueueKey(ownerId))).entries;
   } catch {
     return [];
   }
@@ -75,7 +85,10 @@ export function enqueueInboxEntry(
   ownerId: string,
   entry: QueuedInboxEntry,
 ) {
-  const currentQueue = loadInboxQueue(storage, ownerId);
+  const state = readQueueState(storage, ownerId);
+  if (!state) return null;
+
+  const currentQueue = state.entries;
 
   if (currentQueue.some((queuedEntry) => queuedEntry.id === entry.id)) {
     return currentQueue;
@@ -87,12 +100,7 @@ export function enqueueInboxEntry(
 
   const nextQueue = [...currentQueue, entry];
 
-  try {
-    storage.setItem(inboxQueueKey(ownerId), JSON.stringify(nextQueue));
-    return nextQueue;
-  } catch {
-    return null;
-  }
+  return writeQueue(storage, ownerId, state, nextQueue) ? nextQueue : null;
 }
 
 export function removeInboxQueueEntry(
@@ -100,21 +108,12 @@ export function removeInboxQueueEntry(
   ownerId: string,
   entryId: string,
 ) {
-  const nextQueue = loadInboxQueue(storage, ownerId).filter(
-    (entry) => entry.id !== entryId,
-  );
+  const state = readQueueState(storage, ownerId);
+  if (!state) return null;
 
-  try {
-    if (nextQueue.length === 0) {
-      storage.removeItem(inboxQueueKey(ownerId));
-    } else {
-      storage.setItem(inboxQueueKey(ownerId), JSON.stringify(nextQueue));
-    }
+  const nextQueue = state.entries.filter((entry) => entry.id !== entryId);
 
-    return nextQueue;
-  } catch {
-    return null;
-  }
+  return writeQueue(storage, ownerId, state, nextQueue) ? nextQueue : null;
 }
 
 /**
@@ -127,19 +126,17 @@ export function rejectInboxQueueEntry(
   entryId: string,
   rejection: QueuedInboxRejection,
 ) {
-  const currentQueue = loadInboxQueue(storage, ownerId);
+  const state = readQueueState(storage, ownerId);
+  if (!state) return null;
+
+  const currentQueue = state.entries;
   if (!currentQueue.some((entry) => entry.id === entryId)) return currentQueue;
 
   const nextQueue = currentQueue.map((entry) =>
     entry.id === entryId ? { ...entry, rejection } : entry,
   );
 
-  try {
-    storage.setItem(inboxQueueKey(ownerId), JSON.stringify(nextQueue));
-    return nextQueue;
-  } catch {
-    return null;
-  }
+  return writeQueue(storage, ownerId, state, nextQueue) ? nextQueue : null;
 }
 
 /**
@@ -162,34 +159,261 @@ export function queuedRejection(
     : null;
 }
 
-export function parseInboxQueue(value: string | null): QueuedInboxEntry[] {
+/**
+ * What a stored queue holds: the captures that can be sent, and every stored
+ * item that cannot be read as one. An unreadable item is never dropped; it is
+ * kept so the person can copy its writing.
+ */
+export type ParsedInboxQueue = {
+  entries: QueuedInboxEntry[];
+  unreadable: unknown[];
+};
+
+export function parseInboxQueue(value: string | null): ParsedInboxQueue {
   if (!value) {
-    return [];
+    return { entries: [], unreadable: [] };
   }
 
+  let queue: unknown;
   try {
-    const queue = JSON.parse(value) as unknown;
+    queue = JSON.parse(value);
+  } catch {
+    return { entries: [], unreadable: [value] };
+  }
 
-    if (!Array.isArray(queue) || queue.length > maximumQueueSize) {
-      return [];
+  if (!Array.isArray(queue)) {
+    return { entries: [], unreadable: [value] };
+  }
+
+  const entries: QueuedInboxEntry[] = [];
+  const unreadable: unknown[] = [];
+  const seen = new Map<string, string>();
+
+  for (const item of queue as unknown[]) {
+    const entry = isQueuedInboxEntry(item)
+      ? item
+      : isLegacyQueuedInboxEntry(item)
+        ? { ...item, attachments: [], version: 2 as const }
+        : null;
+    if (!entry) {
+      unreadable.push(item);
+      continue;
     }
 
-    const parsedQueue = queue.flatMap((entry) => {
-      if (isQueuedInboxEntry(entry)) {
-        return [entry];
-      }
+    const serialized = JSON.stringify(entry);
+    const earlier = seen.get(entry.id);
+    if (earlier === undefined) {
+      seen.set(entry.id, serialized);
+      entries.push(entry);
+    } else if (earlier !== serialized) {
+      // The same id with different content: keep the first and set this aside.
+      unreadable.push(item);
+    }
+  }
 
-      if (isLegacyQueuedInboxEntry(entry)) {
-        return [{ ...entry, attachments: [], version: 2 as const }];
-      }
+  return { entries, unreadable };
+}
 
-      return [];
+/** An item that could not be read as a capture, set aside with its date. */
+export type QuarantinedCapture = { quarantinedAt: string; value: unknown };
+
+/** An unreadable stored capture as the person sees it. */
+export type UnreadableCapture = {
+  /** Identifies the item in storage; stable until it is discarded. */
+  key: string;
+  /** The title and body it holds, or its stored form when it holds neither. */
+  text: string;
+  value: unknown;
+};
+
+const unknownQuarantineDate = new Date(0).toISOString();
+
+function stored(value: unknown) {
+  return JSON.stringify(value) ?? "null";
+}
+
+function readQueueState(
+  storage: QueueStorage,
+  ownerId: string,
+): ParsedInboxQueue | null {
+  try {
+    return parseInboxQueue(storage.getItem(inboxQueueKey(ownerId)));
+  } catch {
+    return null;
+  }
+}
+
+function readQuarantine(
+  storage: QueueStorage,
+  ownerId: string,
+): QuarantinedCapture[] {
+  const value = storage.getItem(inboxQuarantineKey(ownerId));
+  if (!value) return [];
+
+  let items: unknown;
+  try {
+    items = JSON.parse(value);
+  } catch {
+    // Even a damaged quarantine keeps what it holds.
+    return [{ quarantinedAt: unknownQuarantineDate, value }];
+  }
+  if (!Array.isArray(items))
+    return [{ quarantinedAt: unknownQuarantineDate, value }];
+
+  return (items as unknown[]).map((item) =>
+    typeof item === "object" &&
+    item !== null &&
+    "value" in item &&
+    typeof (item as QuarantinedCapture).quarantinedAt === "string"
+      ? (item as QuarantinedCapture)
+      : { quarantinedAt: unknownQuarantineDate, value: item },
+  );
+}
+
+/** Adds items to the quarantine unless it already holds them. Throws if it cannot. */
+function quarantine(storage: QueueStorage, ownerId: string, items: unknown[]) {
+  const held = readQuarantine(storage, ownerId);
+  const known = new Set(held.map(({ value }) => stored(value)));
+  const added: QuarantinedCapture[] = [];
+  for (const value of items) {
+    const key = stored(value);
+    if (known.has(key)) continue;
+    known.add(key);
+    added.push({ quarantinedAt: new Date().toISOString(), value });
+  }
+  if (added.length === 0) return;
+
+  storage.setItem(
+    inboxQuarantineKey(ownerId),
+    JSON.stringify([...held, ...added]),
+  );
+}
+
+/**
+ * Stores the captures that can be sent. Anything unreadable in the stored
+ * queue is set aside first, and nothing is written when that fails, so a
+ * write can never delete what it could not read.
+ */
+function writeQueue(
+  storage: QueueStorage,
+  ownerId: string,
+  state: ParsedInboxQueue,
+  nextQueue: QueuedInboxEntry[],
+) {
+  try {
+    if (state.unreadable.length > 0)
+      quarantine(storage, ownerId, state.unreadable);
+
+    if (nextQueue.length === 0) {
+      storage.removeItem(inboxQueueKey(ownerId));
+    } else {
+      storage.setItem(inboxQueueKey(ownerId), JSON.stringify(nextQueue));
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function recoverableText(value: unknown) {
+  if (typeof value === "string") return value;
+  if (typeof value !== "object" || value === null) return "";
+
+  const { body, bodyRich, title } = value as Record<string, unknown>;
+  const richText =
+    typeof bodyRich === "object" && bodyRich !== null
+      ? (bodyRich as Record<string, unknown>).text
+      : undefined;
+  return [
+    typeof title === "string" ? title : "",
+    typeof body === "string" && body
+      ? body
+      : typeof richText === "string"
+        ? richText
+        : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
+/** Every stored capture that cannot be sent, in quarantine or still in the queue. */
+export function loadUnreadableCaptures(
+  storage: QueueStorage,
+  ownerId: string,
+): UnreadableCapture[] {
+  try {
+    const state = readQueueState(storage, ownerId);
+    const values = [
+      ...readQuarantine(storage, ownerId).map(({ value }) => value),
+      ...(state?.unreadable ?? []),
+    ];
+    const seen = new Set<string>();
+    return values.flatMap((value) => {
+      const key = stored(value);
+      if (seen.has(key)) return [];
+      seen.add(key);
+      return [{ key, text: recoverableText(value) || key, value }];
     });
-    const uniqueIds = new Set(parsedQueue.map((entry) => entry.id));
-
-    return uniqueIds.size === parsedQueue.length ? parsedQueue : [];
   } catch {
     return [];
+  }
+}
+
+/** The photo IDs an unreadable capture refers to, so they stay out of the draft. */
+export function unreadableAttachmentIds(value: unknown) {
+  if (typeof value !== "object" || value === null) return [];
+  const { attachments } = value as { attachments?: unknown };
+  if (!Array.isArray(attachments)) return [];
+  return (attachments as unknown[]).flatMap((attachment) =>
+    typeof attachment === "object" &&
+    attachment !== null &&
+    typeof (attachment as { id?: unknown }).id === "string"
+      ? [(attachment as { id: string }).id]
+      : [],
+  );
+}
+
+/**
+ * Removes one unreadable capture for good. Every other unreadable item is set
+ * aside first, so only the one the person chose is deleted.
+ */
+export function discardUnreadableCapture(
+  storage: QueueStorage,
+  ownerId: string,
+  key: string,
+) {
+  try {
+    const state = readQueueState(storage, ownerId);
+    if (!state) return false;
+
+    const kept: QuarantinedCapture[] = [];
+    const seen = new Set<string>();
+    for (const item of [
+      ...readQuarantine(storage, ownerId),
+      ...state.unreadable.map((value) => ({
+        quarantinedAt: new Date().toISOString(),
+        value,
+      })),
+    ]) {
+      const itemKey = stored(item.value);
+      if (itemKey === key || seen.has(itemKey)) continue;
+      seen.add(itemKey);
+      kept.push(item);
+    }
+
+    if (kept.length === 0) storage.removeItem(inboxQuarantineKey(ownerId));
+    else storage.setItem(inboxQuarantineKey(ownerId), JSON.stringify(kept));
+
+    // The queue only loses items that are now safe in the quarantine.
+    if (state.unreadable.length > 0) {
+      if (state.entries.length === 0)
+        storage.removeItem(inboxQueueKey(ownerId));
+      else
+        storage.setItem(inboxQueueKey(ownerId), JSON.stringify(state.entries));
+    }
+    return true;
+  } catch {
+    return false;
   }
 }
 
