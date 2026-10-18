@@ -209,7 +209,7 @@ export function FocusedRecordSpecimen() {
   return (
     <Specimen
       api="FocusedRecordView · kindLabel · title · photos · facts · story · tags · onEdit · children"
-      description="The focused Home, Vehicle, and Someday page: photos, labeled facts that skip empty values, then Story and Organize."
+      description="The focused Home and Vehicle page: photos, labeled facts that skip empty values, then Story and Organize."
       id="focused-record"
       title="FocusedRecord"
     >

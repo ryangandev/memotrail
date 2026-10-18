@@ -1,7 +1,7 @@
 "use client";
 import { notify } from "@/components/app-toast";
 import { PageHeader } from "@/components/page-header";
-import { Button, ButtonLink } from "@/components/button";
+import { Button } from "@/components/button";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useState } from "react";
@@ -10,13 +10,7 @@ import { EntryEditorDialog } from "./entry-editor-dialog";
 import { EntryPhotos } from "./entry-photos";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { Icon } from "./icon";
-import { DatePickerField } from "./date-picker-field";
-import { TextField } from "./text-field";
-import {
-  extractGoalFromItem,
-  loadEditableEntry,
-  trashWikiItem,
-} from "@/app/items/actions";
+import { loadEditableEntry, trashWikiItem } from "@/app/items/actions";
 import {
   entryDateAddsToTitle,
   entryDateLabel,
@@ -30,8 +24,6 @@ import { timelineLaneLabels } from "@/lib/data/milestone";
 import styles from "@/components/entry-detail-view.module.css";
 
 const sourceLinkLabels: Record<string, string> = {
-  derived: "Open extracted item",
-  derived_from: "Open source item",
   exploration_source: "Open source item",
   exploration_conclusion: "Open saved conclusion",
 };
@@ -123,19 +115,6 @@ export function EntryDetailView({
             // The editor refreshes the page after it saves.
             onSaved={() => setEditing(null)}
           />
-        )}
-        {active && entry.item_kind !== "goal" && (
-          <GoalExtraction
-            key={`${entry.id}:${entry.revision}`}
-            entry={entry}
-            disabled={busy}
-            onBusyChange={setBusy}
-          />
-        )}
-        {active && entry.item_kind === "goal" && (
-          <ButtonLink href={`/goals/${entry.id}`} variant="secondary">
-            Open in Someday
-          </ButtonLink>
         )}
         {active ? (
           <Button
@@ -249,108 +228,5 @@ function CurrentItem({
         ))}
       </dl>
     </article>
-  );
-}
-function GoalExtraction({
-  entry,
-  disabled,
-  onBusyChange,
-}: {
-  entry: EntryDetail;
-  disabled: boolean;
-  onBusyChange: (busy: boolean) => void;
-}) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [goalId, setGoalId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [title, setTitle] = useState(entry.title ?? "");
-  const [targetDate, setTargetDate] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  if (!open)
-    return (
-      <Button
-        variant="secondary"
-        type="button"
-        disabled={disabled}
-        onClick={() => {
-          setGoalId(crypto.randomUUID());
-          setOpen(true);
-        }}
-      >
-        Add to Someday
-      </Button>
-    );
-  return (
-    <form
-      aria-label="Add to Someday"
-      className={styles.conversion}
-      onSubmit={async (event) => {
-        event.preventDefault();
-        setBusy(true);
-        onBusyChange(true);
-        setError(null);
-        try {
-          if (!goalId) throw Error("Missing Someday item identity");
-          const result = await extractGoalFromItem({
-            goalId,
-            sourceId: entry.id,
-            sourceRevision: entry.revision,
-            title,
-            targetDate: targetDate || null,
-          });
-          if (result.error) setError(result.error);
-          else if (result.goalId) {
-            setOpen(false);
-            router.push(`/goals/${result.goalId}`);
-          }
-        } catch {
-          setError(
-            "Could not confirm it was added. Refresh to check the source before retrying.",
-          );
-        } finally {
-          setBusy(false);
-          onBusyChange(false);
-        }
-      }}
-    >
-      <h3>Add this to Someday</h3>
-      <p>
-        This adds a separate item to Someday and links it back to this source.
-        The source keeps its writing, dates, and photos.
-      </p>
-      <fieldset disabled={busy || disabled}>
-        <TextField
-          disabled={busy || disabled}
-          label="What do you want to do?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={200}
-          required
-        />
-        <DatePickerField
-          disabled={busy}
-          label="Target date"
-          value={targetDate}
-          onChange={setTargetDate}
-        />
-        <div className={styles.controls}>
-          <Button
-            variant="secondary"
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              setGoalId(null);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button variant="primary" type="submit">
-            {busy ? "Adding..." : "Add to Someday"}
-          </Button>
-        </div>
-      </fieldset>
-      {error && <p role="alert">{error}</p>}
-    </form>
   );
 }

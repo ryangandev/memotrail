@@ -7,7 +7,6 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 const scenarios = [
-  { name: "Someday item", kind: "goal", provider: false },
   { name: "Home", kind: "home", provider: false },
   { name: "Vehicle", kind: "vehicle", provider: false },
   { name: "Home with a provider address", kind: "home", provider: true },
@@ -19,15 +18,6 @@ const scenarios = [
 ] as const;
 
 const records = {
-  goal: {
-    add: "Add to Someday",
-    nameField: "Title",
-    partial: "Saved",
-    saved: "Changes saved.",
-    path: "/goals",
-    itemKind: "goal",
-    subtype: "goal",
-  },
   home: {
     add: "Add Home",
     nameField: "Home name",
@@ -259,7 +249,6 @@ async function savedLocations(
   kind: keyof typeof records,
   entryID: string,
 ) {
-  if (kind === "goal") return [];
   const links = await client
     .from("entry_locations")
     .select("location_id")

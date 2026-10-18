@@ -11,9 +11,7 @@ export async function cleanupMediaFixture(
   expect(apiURL).toBe("http://127.0.0.1:54321");
   expect(owner).toMatch(/^[a-f0-9-]{36}$/);
   const user = await client.auth.admin.getUserById(owner);
-  expect(user.data.user?.email).toMatch(
-    /^(media-|goal-conversion-|goal-extraction-).+@memotrail\.local$/,
-  );
+  expect(user.data.user?.email).toMatch(/^media-.+@memotrail\.local$/);
   // A canceled browser load can still finish its bounded server worker.
   // The database deletion guard makes this a retry, never an orphan-producing success.
   await expect
