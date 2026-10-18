@@ -13,9 +13,11 @@ const nextConfig: NextConfig = {
     "exifr",
   ],
   // Library replaced the separate search page, the Inbox, and version
-  // history, and tags replaced Collections. Redirecting here, before any rendering, keeps old
-  // links to one request instead of a rendered page that then navigates
-  // again. Query values pass through to the destination.
+  // history, tags replaced Collections, and the Map was retired. Redirecting
+  // here, before any rendering, keeps old links to one request instead of a
+  // rendered page that then navigates again. Query values pass through to the
+  // destination. Old Someday addresses redirect from `app/goals`, which checks
+  // whether the item still exists.
   async redirects() {
     return [
       { source: "/search", destination: "/library", permanent: false },
@@ -47,6 +49,7 @@ const nextConfig: NextConfig = {
       { source: "/history", destination: "/library", permanent: false },
       { source: "/collections/:path*", destination: "/tags", permanent: false },
       { source: "/people/:path*", destination: "/library", permanent: false },
+      { source: "/map/:path*", destination: "/library", permanent: false },
       {
         source: "/settings/organization",
         destination: "/tags",

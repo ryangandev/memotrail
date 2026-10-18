@@ -12,8 +12,8 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 // Photo changes leave the Entry's revision alone, so an editor that changed a
-// photo can still trash or achieve its record, while another device's writing
-// still conflicts.
+// photo can still trash its record, while another device's writing still
+// conflicts.
 const test = base.extend<{
   account: { client: SupabaseClient; owner: string };
 }>({
@@ -82,18 +82,7 @@ const dates = {
   p_occurred_start: "2017-07-08T12:00:00Z",
   p_occurred_timezone: "UTC",
 };
-const goal = {
-  ...common,
-  p_status: "active",
-  p_target_date: null,
-};
 const records = {
-  goal: {
-    label: "Someday item",
-    path: "/goals",
-    rpc: "save_goal_entry",
-    args: goal,
-  },
   home: {
     label: "Home",
     path: "/homes",
@@ -253,46 +242,12 @@ for (const kind of Object.keys(records) as RecordKind[]) {
   });
 }
 
-test("Goal achievement succeeds after removing a photo in the same editor", async ({
-  page,
-  account: { client },
-}) => {
-  const title = "Photo change achievement";
-  const entry = await createRecord(client, "goal", title);
-  const { editor } = await openWithSavedPhoto(page, client, "goal", entry);
-
-  await removePhoto(page, editor);
-  const achieve = editor.getByRole("button", {
-    name: "Mark done and add First Time",
-    exact: true,
-  });
-  await achieve.click();
-
-  await expect(
-    page.getByText("Marked done, with a linked First Time."),
-  ).toBeVisible();
-  await expect(achieve).toHaveCount(0);
-  await expect(editor.getByText(/changed or is no longer/)).toHaveCount(0);
-  const achieved = await client
-    .from("entries")
-    .select("goals(status)")
-    .eq("id", entry)
-    .single();
-  expect(achieved.data?.goals).toEqual([{ status: "achieved" }]);
-  const links = await client
-    .from("entry_links")
-    .select("target_entry_id")
-    .eq("source_entry_id", entry)
-    .eq("relationship", "achievement");
-  expect(links.data).toHaveLength(1);
-});
-
-test("Goal moves to Trash after a partial photo upload failure", async ({
+test("Home moves to Trash after a partial photo upload failure", async ({
   page,
   account: { client },
 }) => {
   const title = "Photo change partial upload";
-  const entry = await createRecord(client, "goal", title);
+  const entry = await createRecord(client, "home", title);
   let failed = false;
   await page.route("**/storage/v1/object/entry-media/**", async (route) => {
     if (!failed && route.request().method() === "POST") {
@@ -300,10 +255,8 @@ test("Goal moves to Trash after a partial photo upload failure", async ({
       await route.abort("failed");
     } else await route.continue();
   });
-  await page.goto(`/goals/${entry}`);
-  await page
-    .getByRole("button", { name: "Edit Someday item", exact: true })
-    .click();
+  await page.goto(`/homes/${entry}`);
+  await page.getByRole("button", { name: "Edit Home", exact: true }).click();
   const editor = page.getByRole("main");
   const bytes = await photo();
   await editor.locator('input[type="file"]').setInputFiles([
@@ -318,17 +271,17 @@ test("Goal moves to Trash after a partial photo upload failure", async ({
   expect(await currentPhotos(client, entry)).toBe(1);
   await moveToTrash(page, editor, title);
 
-  await expect(page).toHaveURL("/goals");
+  await expect(page).toHaveURL("/homes");
   expect((await entryRow(client, entry)).deleted_at).not.toBeNull();
 });
 
-test("Goal Trash still refuses another device's writing after a photo removal", async ({
+test("Home Trash still refuses another device's writing after a photo removal", async ({
   page,
   account: { client },
 }) => {
   const title = "Photo change conflict";
-  const entry = await createRecord(client, "goal", title);
-  const { editor } = await openWithSavedPhoto(page, client, "goal", entry);
+  const entry = await createRecord(client, "home", title);
+  const { editor } = await openWithSavedPhoto(page, client, "home", entry);
 
   await removePhoto(page, editor);
   expect(
@@ -343,7 +296,7 @@ test("Goal Trash still refuses another device's writing after a photo removal", 
 
   await expect(
     editor.getByText(
-      "This item changed on another device. Close it, refresh, and try again.",
+      "This Home changed on another device. Close it, refresh, and try again.",
     ),
   ).toBeVisible();
   expect((await entryRow(client, entry)).deleted_at).toBeNull();

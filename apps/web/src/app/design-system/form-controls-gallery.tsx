@@ -194,7 +194,6 @@ function SelectFieldSpecimen() {
               <optgroup label="Records">
                 <option value="entries">Entries</option>
                 <option value="entities">Entities</option>
-                <option value="goals">Goals</option>
               </optgroup>
               <optgroup label="Focused records">
                 <option value="first-times">First Times</option>

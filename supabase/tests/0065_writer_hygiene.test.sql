@@ -61,24 +61,6 @@ select is(pg_temp.save_primary(kind,id,null),id,'Removing the ' || kind || ' Loc
 select is((select count(*) from public.entry_locations where entry_id = writers.id and relationship = 'primary'),
   0::bigint,kind || ' removes only the active primary relationship') from writers;
 
--- Goal saves leave Entry links alone and skip unchanged Goal details.
-insert into writers
-select 'goal', entry_id from public.save_goal_entry('Goal','Memories','active',null,'{}',null,null);
-reset role;
-insert into public.entry_links (source_entry_id, target_entry_id, owner_id, relationship)
-values ((select id from writers where kind = 'goal'), (select id from writers where kind = 'entry'), auth.uid(), 'achievement');
-update public.entry_links set created_at = '2000-01-01' where source_entry_id = (select id from writers where kind = 'goal');
-alter table public.goals disable trigger goals_set_updated_at;
-update public.goals set updated_at = '2000-01-01' where entry_id = (select id from writers where kind = 'goal');
-alter table public.goals enable trigger goals_set_updated_at;
-set local role authenticated;
-select entry_id from public.save_goal_entry('Renamed Goal','Memories','active',null,'{}',
-  (select id from writers where kind = 'goal'),1);
-select is((select created_at from public.entry_links where source_entry_id = (select id from writers where kind = 'goal')),
-  '2000-01-01'::timestamptz,'Goal saves leave Entry links unchanged');
-select is((select updated_at from public.goals where entry_id = (select id from writers where kind = 'goal')),
-  '2000-01-01'::timestamptz,'Title-only Goal saves do not update specialized details');
-
 -- Entry saves skip an unchanged milestone.
 reset role;
 alter table public.milestones disable trigger milestones_set_updated_at;

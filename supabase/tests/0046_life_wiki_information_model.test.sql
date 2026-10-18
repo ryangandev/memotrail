@@ -6,7 +6,7 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000103','life-wiki-owner@memotrail.local'),
   ('10000000-0000-0000-0000-000000000104','life-wiki-other@memotrail.local');
 
-select has_column('public','entries','item_kind','Entries distinguish Entry from focused Entity and Goal records');
+select has_column('public','entries','item_kind','Entries distinguish Entry from focused Entity records');
 select has_column('public','entries','item_subtype','Entries retain only focused structural forms');
 select hasnt_column('public','entries','entry_type','Entries no longer expose the transitional Entry type');
 

@@ -8,7 +8,7 @@ insert into auth.users(id,email) values
 
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype) values
   ('98200000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000109','Morning reflection','Learned to pause.','entry','entry'),
-  ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','Learn Spanish','Practice every day.','goal','goal'),
+  ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','Learn Spanish','Practice every day.','entry','entry'),
   ('98200000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000110','Foreign item','Hidden.','entry','entry'),
   ('98200000-0000-4000-8000-000000000006','10000000-0000-0000-0000-000000000109','  ','A tagged capture without a title.','entry','entry'),
   ('98200000-0000-4000-8000-000000000007','10000000-0000-0000-0000-000000000109',' ','Another capture with a blank title.','entry','entry');
@@ -18,8 +18,6 @@ insert into public.tags(id,owner_id,name) values
   ('98200000-0000-4000-8000-000000000101','10000000-0000-0000-0000-000000000109','sorted');
 insert into public.entry_tags(entry_id,tag_id,owner_id) values
   ('98200000-0000-4000-8000-000000000006','98200000-0000-4000-8000-000000000101','10000000-0000-0000-0000-000000000109');
-insert into public.goals(entry_id,owner_id,status) values
-  ('98200000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000109','active');
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype) values
   ('98200000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000109','Harbor flat','Lived near the marina.','entity','home');
 insert into public.homes(entry_id,owner_id) values
@@ -31,7 +29,7 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000109'
 select is(
   (select count(*) from public.wiki_items_workspace('',array[]::text[],array[]::text[],50,0)),
   6::bigint,
-  'The Life Wiki page combines canonical Entries, Entities, and Goals'
+  'The Life Wiki page combines canonical Entries and Entities'
 );
 select is(
   (select max(total_count) from public.wiki_items_workspace('',array[]::text[],array[]::text[],2,0)),
@@ -105,6 +103,12 @@ select throws_ok(
   '22023',
   'invalid_wiki_items_page',
   'Unsupported Kind filters are rejected'
+);
+select throws_ok(
+  $$select * from public.wiki_items_workspace('',array['goal'],array[]::text[],50,0)$$,
+  '22023',
+  'invalid_wiki_items_page',
+  'Someday is no longer a Kind to filter by'
 );
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000110',true);
