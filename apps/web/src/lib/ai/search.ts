@@ -3,6 +3,7 @@ import {
   type RawSearchParams,
   type SearchRequest,
 } from "../data/search-input";
+import { entryDisplayTitle, storedOccurrence } from "../data/occurrence";
 
 export type AISearchInput = { parameters: RawSearchParams; timeZone: string };
 export type SearchPlan = {
@@ -313,7 +314,18 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
       sources.some((s) => s.recordID === row.id)
     )
       return;
-    const title = String(row.title || "Untitled Entry").slice(0, 200);
+    const field = (key: string) =>
+      typeof row[key] === "string" ? (row[key] as string) : null;
+    const title = entryDisplayTitle(
+      field("title"),
+      storedOccurrence({
+        datePrecision: field("date_precision") ?? "unknown",
+        occurredEnd: field("occurred_end"),
+        occurredLabel: field("occurred_label"),
+        occurredStart: field("occurred_start"),
+        occurredTimezone: field("occurred_timezone"),
+      }),
+    ).slice(0, 200);
     const selected = Object.fromEntries(
       [
         "item_kind",

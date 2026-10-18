@@ -15,6 +15,8 @@ The interface is initially English, while Entry content and search support Engli
 ## Product principles
 
 - Capture first, organize later.
+- Capture never asks for a decision, and nothing treats an unorganized Entry as unfinished.
+  An Entry without a title or tags is complete as it is, so no view counts, queues, or nudges it.
 - Use one Entry in many views instead of duplicating content.
 - Let AI suggest, never silently decide or overwrite.
 - Preserve the uncertainty the user supplied, especially for old dates.
@@ -59,6 +61,12 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 
 - Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
 - New captures remain untitled until later editing adds a title.
+- An untitled Entry is named by its date wherever a title is shown; its stored title stays empty.
+  The name follows the date's recorded precision: a day or exact time reads "Sunday, October 18, 2026", a month "October 2026", a year "2026", and a range names both ends.
+  A Not sure date uses its description, and an Entry without a date reads "Undated entry".
+  The date is read in the time zone it was recorded in, so every device and the server show the same name.
+  Lists show the note's first useful line as the summary, and the Item page shows the date as its heading and the note once.
+  Because the date already names it, an untitled Entry does not repeat its date beside the title.
 - The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
   Formatting survives later edits in the rich Entry editor and appears on full note surfaces.
@@ -94,12 +102,11 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 - While paused, new Captures and their photos are not processed for suggestions, even when earlier AI consent remains saved.
 - Suggestions remain editable and require explicit adoption.
 - AI may propose a tag but cannot add it without confirmation.
-- An Entry needs organizing while it has neither a title nor a tag; giving it either takes it off that list.
-  Library offers a Needs organizing view of those Entries, and Dashboard shows up to three of them beside Quick Capture.
-  Needs organizing is a derived view, not a stored state, and Entries on it already belong to the Library.
 - An unwanted Capture moves to Trash from its Item page, with confirmation and the normal restore path.
 - Editing an Entry saves the same Entry without a Kind or subtype choice.
-- Links saved before Inbox was retired still work: an Inbox link opens Needs organizing, and an Inbox review link opens that Entry's Item page.
+- MemoTrail has no Needs organizing list or count.
+  Listing untitled, untagged Entries made a calm archive feel like a backlog, so it was retired.
+- Links saved before Inbox and Needs organizing were retired still work: an Inbox or Needs organizing link opens Library, and an Inbox review link opens that Entry's Item page.
 - Focused forms are reached from Timeline or their focused views rather than the Quick Capture chooser.
 - Any Entry's editor can mark it as a milestone, unmark it, or change its shape, lane, and First Time flag.
 - An existing Entry may still be linked as source material for a new focused record through an explicit action.
@@ -117,7 +124,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
   Maintaining people as structured records cost more than it gave back, so earlier People and their links were deleted; older People links open Library.
 - Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
 - A Location does not require a personal name; an Entry, Home, Vehicle, or First Time can carry its address or coordinates.
-- Timeline, Dashboard, Library, and Needs organizing are views, not organization labels.
+- Timeline, Dashboard, and Library are views, not organization labels.
 - Library is the primary all-items entry point for the Life Wiki.
   Its default browser presents Entries, Entities, and Someday items as paginated rows and opens focused records in their own views.
   A new capture appears there, and in its item count, as soon as it is saved.
@@ -180,13 +187,13 @@ Unanchored Age, Approximate, and Unknown milestones remain visible without a fab
 Dashboard is ordered around:
 
 1. A personal greeting and compact archive counts linking to their destinations.
-2. Quick Capture alongside up to three Entries that need organizing.
+2. Full-width Quick Capture.
 3. A quiet resurfaced memory alongside Now.
-4. Full-width Recent Entries with single-line titles and summaries and optional tags.
+4. Full-width Recent Entries with single-line titles and summaries and optional tags; an untitled Entry is named by its date.
 
 Narrow screens and iOS stack these sections in the same reading order.
 Search stays available in the Web bottom dock, and in the header of each iOS primary tab as a shortcut to Library.
-Archive counts open Timeline, Library, First Times, Tags, or Needs organizing; an Entry that needs organizing opens its Item page.
+Archive counts open Timeline, Library, First Times, or Tags.
 Now lists what is still going on: Periods, Homes, and Vehicles that have started and have no end.
 Each shows its lane and how long it has been going on, opens its Item page, and Now links to Timeline.
 
@@ -311,7 +318,7 @@ Deferred or undecided work includes:
 
 - Habits and reminders;
 - a native iOS Share Extension;
-- bulk organizing of Entries that need it;
+- bulk editing of several Entries at once;
 - optional PWA enhancements;
 - Chinese interface localization;
 - Sign in with Apple and App Store distribution;

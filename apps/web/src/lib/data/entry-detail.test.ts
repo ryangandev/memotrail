@@ -24,9 +24,18 @@ describe("Entry detail", () => {
     );
     expect(entryDateLabel(undated)).toBe("Unknown");
   });
-  it("handles body-only and empty titles", () => {
-    expect(entryTitle({ title: null, body: "  学习记录 " })).toBe("学习记录");
-    expect(entryTitle({ title: null })).toBe("Untitled item");
+  it("names an untitled item by its date, never by its writing", () => {
+    expect(entryTitle({ ...undated, title: " 学习记录 " })).toBe("学习记录");
+    expect(
+      entryTitle({
+        ...undated,
+        title: null,
+        occurred_start: "2026-10-19T03:00:00Z",
+        occurred_timezone: "America/Los_Angeles",
+        date_precision: "exact",
+      }),
+    ).toBe("Sunday, October 18, 2026");
+    expect(entryTitle({ ...undated, title: "" })).toBe("Undated entry");
   });
   it("accepts only Entry identities", () => {
     expect(validEntryID("94000000-0000-4000-8000-000000000001")).toBe(true);

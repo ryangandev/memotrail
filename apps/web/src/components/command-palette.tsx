@@ -45,13 +45,6 @@ const commands: Command[] = [
     label: "Library",
   },
   {
-    description: "Entries without a title or tag",
-    href: "/library?show=needs-organizing",
-    icon: "inbox",
-    keywords: "organize review capture inbox untitled",
-    label: "Needs organizing",
-  },
-  {
     description: "Browse groups across your archive",
     href: "/tags",
     icon: "tag",

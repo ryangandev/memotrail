@@ -15,7 +15,7 @@ import {
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
 import type { PendingCapture } from "@/lib/data/inbox-sync";
-import { occurrenceLabel } from "@/lib/data/occurrence";
+import { entryDisplayTitle, occurrenceLabel } from "@/lib/data/occurrence";
 import styles from "./pending-captures.module.css";
 
 /**
@@ -36,9 +36,12 @@ export function PendingCaptureList({
           key={entry.id}
         >
           <div className={entryFormStyles.entryMeta}>
-            <time dateTime={entry.occurredAt ?? undefined}>
-              {occurrenceLabel(queuedOccurrence(entry))}
-            </time>
+            {/* An untitled capture is already named by its date. */}
+            {entry.title ? (
+              <time dateTime={entry.occurredAt ?? undefined}>
+                {occurrenceLabel(queuedOccurrence(entry))}
+              </time>
+            ) : null}
             {status === "rejected" ? (
               <Badge tone="warm">Not accepted</Badge>
             ) : status === "syncing" ? (
@@ -47,7 +50,7 @@ export function PendingCaptureList({
               <Badge>On this device</Badge>
             )}
           </div>
-          <h3>{entry.title ?? "Untitled Entry"}</h3>
+          <h3>{entryDisplayTitle(entry.title, queuedOccurrence(entry))}</h3>
           {entry.body ? <p>{entry.body}</p> : null}
           {entry.attachments.length > 0 ? (
             <span className={styles.pendingPhotoCount}>

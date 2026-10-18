@@ -41,43 +41,6 @@
   white-space: nowrap;
 }
 
-.organizeList {
-  display: grid;
-}
-
-.organizeItem {
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) 14px;
-  align-items: start;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-4) 0;
-  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  color: var(--mt-color-ink);
-  text-decoration: none;
-}
-
-.organizeItem:last-child {
-  border-bottom: 0;
-}
-
-.organizeItem time,
-.organizeItem > svg {
-  margin-top: var(--mt-space-0-5);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-micro);
-}
-
-.organizeItem strong {
-  display: -webkit-box;
-  overflow: hidden;
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  line-height: var(--mt-line-height-body);
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
 .nowItems {
   display: grid;
   gap: var(--mt-space-3);
@@ -282,9 +245,8 @@
   border-right: 0;
 }
 
-.stat:last-child {
-  grid-column: 1 / -1;
-  border: 0;
+.stat:nth-last-child(-n + 2) {
+  border-bottom: 0;
 }
 
 .stat > svg {
@@ -306,38 +268,9 @@
 
 @container (min-width: 620px) {
   .metrics {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .stat {
-    grid-column: span 2;
-    border: 0;
-  }
-  .stat:nth-child(odd) {
-    border-right: 0;
-  }
-  .stat:nth-last-child(-n + 2) {
-    grid-column: span 3;
-  }
-  .stat:nth-child(-n + 3) {
-    border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  }
-  .stat:nth-child(1),
-  .stat:nth-child(2),
-  .stat:nth-child(4) {
-    border-right: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  }
-}
-
-@container (min-width: 1000px) {
-  .metrics {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-  .stat,
-  .stat:nth-last-child(-n + 2) {
-    grid-column: auto;
-    border: 0;
-  }
-  .stat:nth-child(-n + 3) {
     border-bottom: 0;
   }
   .stat:not(:last-child) {
@@ -348,7 +281,7 @@
 .columns {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  grid-template-areas: "capture organize" "memories now" "recent recent";
+  grid-template-areas: "capture capture" "memories now" "recent recent";
   gap: var(--mt-space-8);
   align-items: start;
 }
@@ -363,40 +296,6 @@
 .nowColumn {
   grid-area: now;
   min-width: 0;
-}
-
-.organizePanel {
-  grid-area: organize;
-  display: flex;
-  min-width: 0;
-  min-height: 0;
-  align-self: stretch;
-  /* Capture owns the row height, even when titles waiting to be organized are long. */
-  contain: size;
-  padding: var(--mt-space-5);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-}
-
-.organizePanel > .section {
-  display: flex;
-  min-height: 0;
-  flex: 1;
-  flex-direction: column;
-}
-
-.organizePanel .sectionHeading {
-  flex: none;
-}
-.organizePanel .organizeList {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  align-content: start;
-}
-.organizePanel .empty {
-  overflow-y: auto;
 }
 
 .loadError {
@@ -416,14 +315,7 @@
 @media (max-width: 900px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "capture" "organize" "memories" "now" "recent";
-  }
-  .organizePanel {
-    contain: none;
-  }
-  .organizePanel .organizeList,
-  .organizePanel .empty {
-    overflow-y: visible;
+    grid-template-areas: "capture" "memories" "now" "recent";
   }
 }
 

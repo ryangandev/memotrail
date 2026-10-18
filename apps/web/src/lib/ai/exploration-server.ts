@@ -2,6 +2,7 @@ import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabasePublicConfig } from "@/lib/supabase/config";
 import { AIError, aiProviderConfigured, generateAI } from "./server";
+import { entryDisplayTitle, storedOccurrence } from "@/lib/data/occurrence";
 import {
   explorationAnswerSchema,
   explorationPrompt,
@@ -68,7 +69,9 @@ export async function explorationWorkspace(
   const entries = rows.length
     ? await client
         .from("entries")
-        .select("id,title,body")
+        .select(
+          "id,title,occurred_start,occurred_end,occurred_label,occurred_timezone,date_precision",
+        )
         .in(
           "id",
           rows.map((row) => row.target_entry_id),
@@ -85,10 +88,16 @@ export async function explorationWorkspace(
         ? [
             {
               id: entry.id,
-              title:
-                entry.title?.trim() ||
-                entry.body.slice(0, 80) ||
-                "Untitled Entry",
+              title: entryDisplayTitle(
+                entry.title,
+                storedOccurrence({
+                  datePrecision: entry.date_precision,
+                  occurredEnd: entry.occurred_end,
+                  occurredLabel: entry.occurred_label,
+                  occurredStart: entry.occurred_start,
+                  occurredTimezone: entry.occurred_timezone,
+                }),
+              ),
               relationship: row.relationship,
             },
           ]

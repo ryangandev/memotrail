@@ -4,6 +4,7 @@ import { displayImageURLs } from "@/lib/media/urls";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { TRASH_PAGE_SIZE, type TrashItemKind } from "./trash-input";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
+import { entryDisplayTitle, storedOccurrence } from "./occurrence";
 
 export type TrashItem = {
   deletedAt: string;
@@ -26,12 +27,20 @@ export type TrashWorkspace = {
   viewer: Viewer;
 };
 
+// Each row carries its Entry's stored title and date: an Entry's own, or the
+// Entry a photo belongs to.
 type TrashRow = {
+  date_precision: string;
   deleted_at: string;
   detail: string | null;
+  entry_title: string;
   expires_at: string;
   item_id: string;
   item_kind: TrashItemKind;
+  occurred_end: string | null;
+  occurred_label: string | null;
+  occurred_start: string | null;
+  occurred_timezone: string | null;
   parent_entry_id: string | null;
   revision: number | null;
   storage_paths: string[];
@@ -77,15 +86,26 @@ export async function getTrashWorkspace(
 }
 
 function itemFromRow(row: TrashRow, imageUrls: Map<string, string>): TrashItem {
+  const entryTitle = entryDisplayTitle(
+    row.entry_title,
+    storedOccurrence({
+      datePrecision: row.date_precision,
+      occurredEnd: row.occurred_end,
+      occurredLabel: row.occurred_label,
+      occurredStart: row.occurred_start,
+      occurredTimezone: row.occurred_timezone,
+    }),
+  );
+  const photo = row.item_kind === "attachment";
   return {
     deletedAt: row.deleted_at,
-    detail: row.detail,
+    detail: photo ? `Photo from ${entryTitle}` : row.detail,
     expiresAt: row.expires_at,
     id: row.item_id,
     imageUrl: imageUrls.get(row.storage_paths[0] ?? "") ?? null,
     kind: row.item_kind,
     revision: row.revision,
-    title: row.title,
+    title: photo ? row.title : entryTitle,
     wikiItemKind: row.wiki_item_kind,
     wikiItemSubtype: row.wiki_item_subtype,
   };
@@ -119,6 +139,12 @@ function isTrashRow(value: unknown): value is TrashRow {
     typeof value.item_id === "string" &&
     typeof value.title === "string" &&
     nullableString(value.detail) &&
+    typeof value.entry_title === "string" &&
+    typeof value.date_precision === "string" &&
+    nullableString(value.occurred_start) &&
+    nullableString(value.occurred_end) &&
+    nullableString(value.occurred_label) &&
+    nullableString(value.occurred_timezone) &&
     typeof value.deleted_at === "string" &&
     typeof value.expires_at === "string" &&
     nullableInteger(value.revision) &&

@@ -136,9 +136,20 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
       await expect(
         page.getByRole("region", { name: "Recent Entries", exact: true }),
       ).toContainText("A kept memory");
+      // An untitled capture is simply kept, named by its date, never queued for review.
+      const untitledRow = page
+        .getByRole("region", { name: "Recent Entries", exact: true })
+        .getByRole("link")
+        .filter({ hasText: "Waiting for a little context" });
+      await expect(untitledRow.getByRole("heading")).toHaveText(
+        "Undated entry",
+      );
       await expect(
-        page.getByRole("region", { name: "Needs organizing", exact: true }),
-      ).toContainText("Waiting for a little context");
+        page.getByRole("region", { name: "Needs organizing" }),
+      ).toHaveCount(0);
+      await expect(page.getByRole("link", { name: /To organize/ })).toHaveCount(
+        0,
+      );
       await expect(
         page.getByRole("region", { name: "A memory for today", exact: true }),
       ).toContainText("A kept memory");
@@ -159,34 +170,32 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         name: "Quick capture",
         exact: true,
       });
-      const organizePanel = page
-        .getByRole("region", { name: "Needs organizing", exact: true })
-        .locator("..");
       for (const width of [1440, 989]) {
         await page.setViewportSize({ width, height: 1000 });
+        // Quick Capture takes the whole row.
         await expect
           .poll(async () => {
-            const [left, right] = await Promise.all([
+            const [captureBox, metricsBox] = await Promise.all([
               capture.boundingBox(),
-              organizePanel.boundingBox(),
+              metrics.boundingBox(),
             ]);
             return (
-              Math.abs(left!.height - right!.height) +
-              Math.abs(left!.y - right!.y)
+              Math.abs(captureBox!.x - metricsBox!.x) +
+              Math.abs(captureBox!.width - metricsBox!.width)
             );
           })
-          .toBeLessThan(2);
-        const [heroBox, metricsBox, captureBox, organizeBox] =
-          await Promise.all([
-            hero.boundingBox(),
-            metrics.boundingBox(),
-            capture.boundingBox(),
-            organizePanel.boundingBox(),
-          ]);
+          .toBeLessThan(1);
+        const [heroBox, metricsBox, captureBox] = await Promise.all([
+          hero.boundingBox(),
+          metrics.boundingBox(),
+          capture.boundingBox(),
+        ]);
         expect(metricsBox!.y).toBeGreaterThanOrEqual(
           heroBox!.y + heroBox!.height,
         );
-        expect(organizeBox!.x).toBeGreaterThan(captureBox!.x);
+        expect(captureBox!.y).toBeGreaterThanOrEqual(
+          metricsBox!.y + metricsBox!.height,
+        );
         const [memoryBox, nowBox, recentBox] = await Promise.all([
           page
             .getByRole("region", { name: "A memory for today", exact: true })
@@ -247,16 +256,9 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         expect(
           Math.abs(metricLayout.firstCellRight - metricLayout.secondCellLeft),
         ).toBeLessThan(1);
-        expect(metricRows.slice(0, 3)).toEqual([
-          metricRows[0],
-          metricRows[0],
-          metricRows[0],
-        ]);
-        if (width === 1440) {
-          expect(metricRows[4]).toBe(metricRows[0]);
-        } else {
-          expect(metricRows[3]).toBeGreaterThan(metricRows[0]);
-          expect(metricRows[4]).toBe(metricRows[3]);
+        // The four counts share one row on wide screens.
+        expect(metricRows).toEqual(Array(4).fill(metricRows[0]));
+        if (width === 989) {
           await page.screenshot({
             path: test.info().outputPath("memotrail-home-dashboard-medium.png"),
             animations: "disabled",
@@ -284,14 +286,24 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             ),
           )
           .toBe(true);
-        const [captureBox, organizeBox] = await Promise.all([
+        const [captureBox, memoryBox] = await Promise.all([
           capture.boundingBox(),
-          organizePanel.boundingBox(),
+          page
+            .getByRole("region", { name: "A memory for today", exact: true })
+            .boundingBox(),
         ]);
-        expect(organizeBox!.y).toBeGreaterThanOrEqual(
+        expect(memoryBox!.y).toBeGreaterThanOrEqual(
           captureBox!.y + captureBox!.height,
         );
-        expect(Math.abs(organizeBox!.x - captureBox!.x)).toBeLessThan(1);
+        // The four counts sit in two rows of two.
+        const narrowRows = await metrics
+          .getByRole("link")
+          .evaluateAll((links) =>
+            links.map((link) => Math.round(link.getBoundingClientRect().top)),
+          );
+        expect(narrowRows[1]).toBe(narrowRows[0]);
+        expect(narrowRows[2]).toBeGreaterThan(narrowRows[0]);
+        expect(narrowRows[3]).toBe(narrowRows[2]);
         const save = page.getByRole("button", {
           name: "Save to Library",
           exact: true,
@@ -338,19 +350,18 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         .first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("region", { name: "Needs organizing", exact: true }),
-    ).toContainText("Captured from Home");
-    await expect(
       page.getByRole("region", { name: "Recent Entries", exact: true }),
     ).toContainText("Captured from Home");
 
     await page
-      .getByRole("link", {
-        name: "Organize Waiting for a little context",
-        exact: true,
-      })
+      .getByRole("region", { name: "Recent Entries", exact: true })
+      .getByRole("link")
+      .filter({ hasText: "Waiting for a little context" })
       .click();
     await expect(page).toHaveURL(`/items/${pendingId}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+      "Undated entry",
+    );
     await expect(
       page.getByRole("button", { name: "Edit Entry", exact: true }),
     ).toBeVisible();

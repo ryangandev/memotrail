@@ -1076,7 +1076,7 @@ test("SectionHeader renders section and list headings at the level the caller pi
   const end = header("list-end");
   const endDetail = await end.getByText("12 items").boundingBox();
   const endAction = await end
-    .getByRole("link", { name: "3 need organizing" })
+    .getByRole("link", { name: "Show all" })
     .boundingBox();
   const endBox = await end.boundingBox();
   expect(endAction!.x + endAction!.width).toBeCloseTo(

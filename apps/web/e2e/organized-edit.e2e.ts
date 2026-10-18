@@ -199,14 +199,6 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
         .locator("[data-entry-rich-text] em")
         .filter({ hasText: /^Updated after organizing$/ }),
     ).toHaveText("Updated after organizing");
-    // A tagged Entry already has a place, so it never needs organizing.
-    await page.goto("/library?show=needs-organizing");
-    await expect(
-      page.getByRole("heading", { name: "Needs organizing", exact: true }),
-    ).toBeVisible();
-    await expect(
-      page.getByText("Everything has a place", { exact: true }),
-    ).toBeVisible();
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

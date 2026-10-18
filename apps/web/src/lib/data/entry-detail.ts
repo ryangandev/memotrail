@@ -1,5 +1,6 @@
 import type { WikiItemKind } from "./wiki-item";
 import type { MilestoneLane, MilestoneShape } from "./milestone";
+import { entryDisplayTitle, storedOccurrence } from "./occurrence";
 
 /** The current Entry the Item page shows, as `entry_detail` returns it. */
 export type EntryDetail = {
@@ -32,15 +33,27 @@ export type EntryDetail = {
   links: { target_entry_id: string; relationship: string }[];
 };
 
-export function entryTitle(value: {
-  title: string | null;
-  body?: string;
-  excerpt?: string;
-}) {
-  return (
-    value.title?.trim() ||
-    (value.body ?? value.excerpt ?? "").trim().slice(0, 80) ||
-    "Untitled item"
+/** What the Item page calls an item: its title, or its date when it has none. */
+export function entryTitle(
+  value: Pick<
+    EntryDetail,
+    | "title"
+    | "occurred_label"
+    | "occurred_start"
+    | "occurred_end"
+    | "occurred_timezone"
+    | "date_precision"
+  >,
+) {
+  return entryDisplayTitle(
+    value.title,
+    storedOccurrence({
+      datePrecision: value.date_precision,
+      occurredEnd: value.occurred_end,
+      occurredLabel: value.occurred_label,
+      occurredStart: value.occurred_start,
+      occurredTimezone: value.occurred_timezone,
+    }),
   );
 }
 
