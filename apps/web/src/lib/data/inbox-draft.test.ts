@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   clearInboxDraft,
   inboxDraftKey,
+  inboxDraftQuarantineKey,
+  inspectInboxDraft,
   loadInboxDraft,
   parseInboxDraft,
   persistInboxDraft,
@@ -10,7 +12,7 @@ import {
 import { createEntryRichText, plainTextDocument } from "./rich-text";
 
 class MemoryStorage implements DraftStorage {
-  private values = new Map<string, string>();
+  values = new Map<string, string>();
 
   getItem(key: string) {
     return this.values.get(key) ?? null;
@@ -24,6 +26,148 @@ class MemoryStorage implements DraftStorage {
     this.values.set(key, value);
   }
 }
+
+describe("A draft that no longer validates", () => {
+  const longBody = "Words I wrote offline. ".repeat(3000);
+
+  function seedOverlongDraft(storage: MemoryStorage) {
+    storage.setItem(
+      inboxDraftKey("owner"),
+      JSON.stringify({
+        body: longBody,
+        occurredAt: null,
+        title: "Kept title",
+        updatedAt: "2026-09-01T15:00:00.000Z",
+        version: 2,
+      }),
+    );
+  }
+
+  it("still shows the writing it can read", () => {
+    const storage = new MemoryStorage();
+    seedOverlongDraft(storage);
+
+    const draft = loadInboxDraft(storage, "owner");
+
+    expect(draft?.title).toBe("Kept title");
+    expect(draft?.body.length).toBeGreaterThan(0);
+    expect(longBody.startsWith(draft!.body)).toBe(true);
+  });
+
+  it("is kept aside before the next keystroke replaces it", () => {
+    const storage = new MemoryStorage();
+    seedOverlongDraft(storage);
+
+    persistInboxDraft(storage, "owner", {
+      body: "A",
+      occurredAt: null,
+      title: "",
+    });
+
+    expect([...storage.values.values()].join("\n")).toContain(longBody);
+  });
+
+  it("is kept aside before the draft is cleared", () => {
+    const storage = new MemoryStorage();
+    seedOverlongDraft(storage);
+
+    clearInboxDraft(storage, "owner");
+
+    expect(storage.getItem(inboxDraftKey("owner"))).toBeNull();
+    expect([...storage.values.values()].join("\n")).toContain(longBody);
+  });
+
+  it("is never replaced when it cannot be kept aside", () => {
+    const storage = new MemoryStorage();
+    seedOverlongDraft(storage);
+    const original = storage.getItem(inboxDraftKey("owner"));
+    const setItem = storage.setItem.bind(storage);
+    storage.setItem = (key, value) => {
+      if (key !== inboxDraftKey("owner")) throw new Error("Quota exceeded");
+      setItem(key, value);
+    };
+
+    expect(
+      persistInboxDraft(storage, "owner", {
+        body: "A",
+        occurredAt: null,
+        title: "",
+      }),
+    ).toBe(false);
+    clearInboxDraft(storage, "owner");
+
+    expect(storage.getItem(inboxDraftKey("owner"))).toBe(original);
+  });
+
+  it("does not keep a draft aside that this device wrote itself", () => {
+    const storage = new MemoryStorage();
+
+    persistInboxDraft(storage, "owner", {
+      body: "First",
+      occurredAt: null,
+      title: "",
+    });
+    persistInboxDraft(storage, "owner", {
+      body: "Second",
+      occurredAt: null,
+      title: "",
+    });
+    clearInboxDraft(storage, "owner");
+
+    expect(storage.getItem(inboxDraftQuarantineKey("owner"))).toBeNull();
+  });
+
+  it("keeps what can be read of each kind of damage", () => {
+    const base = {
+      body: "Body",
+      occurredAt: null,
+      title: "Title",
+      updatedAt: "2026-09-01T15:00:00.000Z",
+      version: 2,
+    };
+    const parsed = (changes: object) =>
+      inspectInboxDraft(JSON.stringify({ ...base, ...changes }));
+
+    expect(parsed({ version: 9 })).toMatchObject({
+      draft: { body: "Body", title: "Title" },
+      isComplete: false,
+    });
+    expect(parsed({ title: "t".repeat(201) }).draft?.title).toHaveLength(200);
+    expect(parsed({ occurredAt: "not-a-date" })).toMatchObject({
+      draft: { body: "Body", occurredAt: null },
+      isComplete: false,
+    });
+    expect(parsed({ updatedAt: "yesterday" })).toMatchObject({
+      draft: { body: "Body" },
+      isComplete: false,
+    });
+    const mismatched = parsed({
+      bodyRich: { document: { type: "doc" }, text: "Other", version: 1 },
+    });
+    expect(mismatched).toMatchObject({
+      draft: { body: "Body" },
+      isComplete: false,
+    });
+    expect(mismatched.draft).not.toHaveProperty("bodyRich");
+    expect(
+      parsed({ version: 3, occurrence: { precision: "invalid" } }),
+    ).toMatchObject({
+      draft: { body: "Body", version: 2 },
+      isComplete: false,
+    });
+    expect(inspectInboxDraft("not json")).toEqual({
+      draft: null,
+      isComplete: false,
+    });
+    expect(inspectInboxDraft(JSON.stringify({ body: 4 }))).toEqual({
+      draft: null,
+      isComplete: false,
+    });
+    expect(inspectInboxDraft(JSON.stringify(base))).toMatchObject({
+      isComplete: true,
+    });
+  });
+});
 
 describe("Inbox draft persistence", () => {
   it("keeps an unfinished date and photo-only date draft without guessing an instant", () => {
@@ -61,7 +205,7 @@ describe("Inbox draft persistence", () => {
     });
   });
 
-  it("rejects malformed v3 date shapes rather than silently dropping uncertainty", () => {
+  it("restores the writing of a draft whose v3 date shape is malformed, without inventing a date", () => {
     const storage = new MemoryStorage();
     const data = {
       version: 3,
@@ -78,7 +222,12 @@ describe("Inbox draft persistence", () => {
         inboxDraftKey("owner"),
         JSON.stringify({ ...data, occurrence }),
       );
-      expect(loadInboxDraft(storage, "owner")).toBeNull();
+      expect(loadInboxDraft(storage, "owner")).toMatchObject({
+        body: "Original",
+        occurredAt: null,
+        version: 2,
+      });
+      expect(loadInboxDraft(storage, "owner")?.occurrence).toBeUndefined();
     }
   });
   it("keeps drafts isolated by MemoTrail owner", () => {
@@ -112,7 +261,10 @@ describe("Inbox draft persistence", () => {
       inboxDraftKey("owner"),
       JSON.stringify({ ...stored, body: "Changed elsewhere" }),
     );
-    expect(loadInboxDraft(storage, "owner")).toBeNull();
+    expect(loadInboxDraft(storage, "owner")).toMatchObject({
+      body: "Changed elsewhere",
+    });
+    expect(loadInboxDraft(storage, "owner")?.bodyRich).toBeUndefined();
   });
 
   it("preserves whitespace and clears empty drafts", () => {
@@ -155,8 +307,9 @@ describe("Inbox draft persistence", () => {
     expect(loadInboxDraft(storage, "owner-a")).toBeNull();
   });
 
-  it("ignores malformed, obsolete, and oversized stored data", () => {
+  it("reads nothing from unusable stored data and keeps what is usable from the rest", () => {
     expect(parseInboxDraft("not json")).toBeNull();
+    expect(parseInboxDraft("[]")).toBeNull();
     expect(
       parseInboxDraft(
         JSON.stringify({
@@ -166,7 +319,7 @@ describe("Inbox draft persistence", () => {
           version: 3,
         }),
       ),
-    ).toBeNull();
+    ).toMatchObject({ body: "content", version: 2 });
     expect(
       parseInboxDraft(
         JSON.stringify({
@@ -176,7 +329,7 @@ describe("Inbox draft persistence", () => {
           version: 1,
         }),
       ),
-    ).toBeNull();
+    ).toMatchObject({ body: "content", title: "t".repeat(200) });
     expect(
       parseInboxDraft(
         JSON.stringify({
@@ -187,7 +340,7 @@ describe("Inbox draft persistence", () => {
           version: 2,
         }),
       ),
-    ).toBeNull();
+    ).toMatchObject({ body: "content", occurredAt: null });
   });
 
   it("migrates a version one text draft without inventing a date", () => {

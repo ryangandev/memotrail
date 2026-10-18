@@ -22,6 +22,9 @@ Supabase migrations and the iOS Xcode project are independent of the Node worksp
 The Web root layout owns the authenticated application shell, including navigation and account context.
 Route pages render only their own server-backed content inside that persistent shell.
 Next.js link prefetching and `app/loading.tsx` provide route fallbacks, while navigation links expose immediate pending feedback when a cold request has not reached the fallback yet.
+`app/error.tsx` and `app/not-found.tsx` render inside that shell through `components/route-fallback.tsx`, so a failed or missing page keeps navigation and offers a retry or Home.
+`app/global-error.tsx` replaces the document only when the root layout itself fails.
+A failed client request, such as saving Appearance offline, is handled where it happened and never reaches these boundaries.
 
 ## Request-to-code map
 
@@ -246,6 +249,11 @@ Pair it with the test file carrying the same feature name.
   Runs skip marked captures and continue with later ones, and a malformed marker only makes the capture sendable again.
   If the marker cannot be stored, the run stops with a retry instead, so the capture is never sent again unmarked.
   Discard, `InboxSyncStore.discard` or `InboxController.discardRejected`, removes only refused captures: their photo drafts first, then the queue entry, so orphaned photos cannot reappear in a composer.
+- Reading the Web queue never writes, and no write persists a reduced queue.
+  Stored items that fail validation, repeat an id with different content, carry a future version, or sit in a damaged queue are kept in the `memotrail:inbox-queue-quarantine:<owner>` key by `lib/data/inbox-queue.ts` before any write, and the write is refused when that fails.
+  Pending sync lists them as unreadable with Copy text and Discard, and their photos stay out of the draft until they are discarded.
+  A Web draft that no longer validates restores what it can, with a notice, and its original is kept under `memotrail:inbox-draft-quarantine:<owner>` before it is replaced.
+  Native `InboxQueueStore.load` still deletes the queue on a failed decode or validation; it is paused and tracked by #24.
 - A per-owner Web Lock serializes runs across tabs, and each capture is reread from storage before it is sent, so a tab skips captures another tab already synced.
   `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Library and Dashboard stay current.
   The tab that sends a capture needs no extra refresh, because the sync Server Actions revalidate and return its current route.

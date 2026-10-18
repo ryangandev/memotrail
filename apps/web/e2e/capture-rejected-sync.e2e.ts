@@ -190,6 +190,90 @@ test("an unreachable MemoTrail still reports offline and retries beside a reject
   expect(attempts.for(rejectedPrefix)).toBe(1);
 });
 
+test("a saved capture this version cannot read is kept, listed, and discarded only on request", async ({
+  context,
+  page,
+  workspace,
+}) => {
+  test.setTimeout(180_000);
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const unreadableText = "Written offline before a rule changed.";
+  const composer = await openDashboardComposer(page);
+  // A capture that was valid when queued but fails today's checks.
+  const unreadable = {
+    attachments: [],
+    body: unreadableText,
+    id: "9b2b6c1e-8f35-4c63-8d57-4a8d1d0a3c11",
+    occurredAt: "not a date",
+    occurredTimezone: "UTC",
+    queuedAt: "2026-09-01T15:00:00.000Z",
+    title: null,
+    version: 2,
+  };
+  await page.evaluate(
+    ([key, value]) => localStorage.setItem(key, value),
+    [
+      `memotrail:inbox-queue:${encodeURIComponent(workspace.owner)}`,
+      JSON.stringify([unreadable]),
+    ],
+  );
+  await page.reload();
+  await expect(
+    composer.getByRole("textbox", { name: "Entry text", exact: true }),
+  ).toBeVisible({ timeout: 90_000 });
+
+  const indicator = page.locator("main > header").getByText("1 unreadable");
+  await expect(indicator).toBeVisible();
+  const pending = page.locator("main").getByRole("region", {
+    name: "Pending sync",
+  });
+  const card = pending.getByRole("article");
+  await expect(card).toHaveCount(1);
+  await expect(card).toContainText("Could not be read");
+  await expect(card).toContainText(unreadableText);
+
+  // A later capture syncs, and the unreadable one is still on this device.
+  await saveCapture(page, composer, "A valid later capture");
+  await expectEntryCount(workspace.client, "A valid later capture", 1);
+  await expect(card).toHaveCount(1);
+  await page.reload();
+  await expect(card).toContainText(unreadableText);
+
+  await card.getByRole("button", { name: "Copy text", exact: true }).click();
+  await expect(page.getByText("Text copied.", { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+    unreadableText,
+  );
+
+  const discard = card.getByRole("button", { name: "Discard", exact: true });
+  await discard.click();
+  const confirmation = page.getByRole("dialog", {
+    name: "Discard this saved Entry?",
+  });
+  await confirmation.getByRole("button", { name: "Cancel" }).click();
+  await expect(card).toHaveCount(1);
+  await discard.click();
+  await confirmation
+    .getByRole("button", { name: "Discard", exact: true })
+    .click();
+  await expect(
+    page.getByText("Saved Entry discarded.", { exact: true }),
+  ).toBeVisible();
+  await expect(pending).toHaveCount(0);
+  await expect(indicator).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      (owner) =>
+        Object.keys(localStorage).filter(
+          (key) =>
+            key.includes(encodeURIComponent(owner)) &&
+            localStorage.getItem(key)?.includes("Written offline"),
+        ),
+      workspace.owner,
+    ),
+  ).toEqual([]);
+});
+
 async function openDashboardComposer(page: Page) {
   await page.goto("/");
   const composer = page

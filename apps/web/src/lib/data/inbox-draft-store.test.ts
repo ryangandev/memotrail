@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   inboxDraftKey,
+  inboxDraftQuarantineKey,
   loadInboxDraft,
   persistInboxDraft,
 } from "./inbox-draft";
@@ -8,6 +9,7 @@ import {
   changedElsewhereVoiceMessage,
   createInboxDraftStore,
   photoDraftsUnavailableMessage,
+  unrestoredDraftMessage,
   type InboxDraftPhotoStorage,
 } from "./inbox-draft-store";
 import type { InboxPhotoDraft } from "./inbox-photo";
@@ -74,6 +76,33 @@ describe("Shared capture draft", () => {
       start: "2020-02-03T04:05:00",
       timezone: "UTC",
     });
+  });
+
+  it("restores what it can of a draft that no longer validates and keeps the original", () => {
+    const storage = memoryStorage();
+    const body = "Offline words. ".repeat(4000);
+    const original = JSON.stringify({
+      body,
+      occurredAt: null,
+      title: "Kept title",
+      updatedAt: "2026-09-01T15:00:00.000Z",
+      version: 2,
+    });
+    storage.setItem(inboxDraftKey(ownerId), original);
+    const { store } = setup({ storage });
+
+    expect(store.getSnapshot()).toMatchObject({
+      hasLocalDraft: true,
+      notice: { isError: true, message: unrestoredDraftMessage },
+      title: "Kept title",
+    });
+    expect(storage.getItem(inboxDraftKey(ownerId))).toBe(original);
+
+    store.update({ title: "Edited" });
+
+    expect(storage.getItem(inboxDraftQuarantineKey(ownerId))).toContain(
+      "Offline words.",
+    );
   });
 
   it("shows every edit to all composers and keeps it on this device", () => {

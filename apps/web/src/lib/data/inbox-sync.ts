@@ -1,8 +1,10 @@
 import type { PhotoUploadProgress } from "@/lib/media/upload";
 import { offlinePhotoSyncMessage } from "./capture-sync-messages";
 import {
+  discardUnreadableCapture,
   enqueueInboxEntry,
   loadInboxQueue,
+  loadUnreadableCaptures,
   parseInboxQueue,
   queuedRejection,
   rejectInboxQueueEntry,
@@ -10,6 +12,8 @@ import {
   type QueueStorage,
   type QueuedInboxEntry,
   type QueuedInboxRejection,
+  type UnreadableCapture,
+  unreadableAttachmentIds,
 } from "./inbox-queue";
 
 /**
@@ -54,6 +58,11 @@ export type InboxSyncSnapshot = {
   isReady: boolean;
   isSyncing: boolean;
   items: readonly PendingCapture[];
+  /**
+   * Stored captures that can no longer be read as one. They are never sent or
+   * deleted unless the person discards them.
+   */
+  unreadable: readonly UnreadableCapture[];
   /** The problem that ended the latest sync run, until a later run clears it. */
   lastError: string | null;
   photoUploadProgress: PhotoUploadProgress | null;
@@ -78,6 +87,11 @@ export type InboxSyncStore = {
    * false when it is not rejected or could not be removed. Never rejects.
    */
   discard: (entryId: string) => Promise<boolean>;
+  /**
+   * Removes an unreadable capture and its photos from this device, resolving
+   * false when it could not be removed. Never rejects.
+   */
+  discardUnreadable: (key: string) => Promise<boolean>;
   /** Stores a capture on this device, then starts its synchronization. */
   enqueue: (entry: QueuedInboxEntry) => QueuedInboxEntry[] | null;
   getServerSnapshot: () => InboxSyncSnapshot;
@@ -102,6 +116,7 @@ const serverSnapshot: InboxSyncSnapshot = {
   lastError: null,
   photoUploadProgress: null,
   runCount: 0,
+  unreadable: [],
 };
 
 /**
@@ -164,18 +179,36 @@ export function createInboxSyncStore({
       if (!ids.has(id)) firstAttemptIds.delete(id);
     entries = queue;
     isLoaded = true;
-    publish({ isReady: true, items: itemsFor(queue) });
+    publish({
+      isReady: true,
+      items: itemsFor(queue),
+      unreadable: readUnreadable(),
+    });
   }
 
   function readQueue() {
     return loadInboxQueue(storage, ownerId);
   }
 
+  /** Keeps the previous list while nothing changed, so readers stay stable. */
+  function readUnreadable() {
+    const next = loadUnreadableCaptures(storage, ownerId);
+    return next.length === snapshot.unreadable.length &&
+      next.every(({ key }, index) => key === snapshot.unreadable[index].key)
+      ? snapshot.unreadable
+      : next;
+  }
+
   function ensureLoaded() {
     if (isLoaded) return;
     isLoaded = true;
     entries = readQueue();
-    snapshot = { ...snapshot, isReady: true, items: itemsFor(entries) };
+    snapshot = {
+      ...snapshot,
+      isReady: true,
+      items: itemsFor(entries),
+      unreadable: readUnreadable(),
+    };
   }
 
   async function attempt(entry: QueuedInboxEntry): Promise<InboxSyncResult> {
@@ -305,7 +338,12 @@ export function createInboxSyncStore({
     const queue = readQueue();
     if (!queue.some(isSendable)) {
       // Only rejected captures, if any, remain; they are never sent again.
-      if (entries.length > 0 || queue.length > 0 || snapshot.lastError) {
+      if (
+        entries.length > 0 ||
+        queue.length > 0 ||
+        snapshot.lastError ||
+        readUnreadable() !== snapshot.unreadable
+      ) {
         replaceEntries(queue);
         publish({ lastError: null });
       }
@@ -340,8 +378,33 @@ export function createInboxSyncStore({
     return true;
   }
 
+  async function discardUnreadable(key: string) {
+    ensureLoaded();
+    const capture = loadUnreadableCaptures(storage, ownerId).find(
+      (unreadable) => unreadable.key === key,
+    );
+    if (!capture) {
+      // Another tab already removed it.
+      replaceEntries(readQueue());
+      return true;
+    }
+
+    try {
+      // Its photos go first, as for a rejected capture, so none is left to
+      // reappear in the composer.
+      await removePhotoDrafts(unreadableAttachmentIds(capture.value));
+    } catch {
+      return false;
+    }
+
+    if (!discardUnreadableCapture(storage, ownerId, key)) return false;
+    replaceEntries(readQueue());
+    return true;
+  }
+
   return {
     discard,
+    discardUnreadable,
     enqueue(entry) {
       ensureLoaded();
       const nextQueue = enqueueInboxEntry(storage, ownerId, entry);
@@ -382,16 +445,21 @@ export function countSyncedInQueueChange(
   oldValue: string | null,
   newValue: string | null,
 ) {
-  const remaining = new Set(parseInboxQueue(newValue).map(({ id }) => id));
+  const remaining = new Set(
+    parseInboxQueue(newValue).entries.map(({ id }) => id),
+  );
   // A rejected capture leaves the queue only when it is discarded.
-  return parseInboxQueue(oldValue).filter(
+  return parseInboxQueue(oldValue).entries.filter(
     (entry) => !remaining.has(entry.id) && isSendable(entry),
   ).length;
 }
 
 /** Whether a pending list should appear; a first online attempt is progress. */
 export function hasWaitingCaptures(snapshot: InboxSyncSnapshot) {
-  return snapshot.items.some((item) => !item.firstAttempt);
+  return (
+    snapshot.unreadable.length > 0 ||
+    snapshot.items.some((item) => !item.firstAttempt)
+  );
 }
 
 /** How many listed captures still sync and how many MemoTrail rejected. */
