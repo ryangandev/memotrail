@@ -54,7 +54,7 @@ states: [default, hover, pressed, focus, disabled, loading]
 
 tokens:
   - container:
-      radius: "{radius.medium}"
+      radius: { web: "{radius.control}", ios: "{radius.medium}" }
       minHeight: "{size.control.medium}"
       paddingInline: "{space.4}"
       paddingBlock: { web: "{space.2}" }
@@ -76,7 +76,7 @@ tokens:
       offset: { web: "{state.focus.ringOffset}" }
   - when: { size: small }
     container:
-      radius: "{radius.small}"
+      radius: { web: "{radius.control}", ios: "{radius.small}" }
       minHeight: "{size.control.small}"
       paddingInline: "{space.3}"
       paddingBlock: { web: "{space.1}" }
@@ -133,8 +133,8 @@ accessibility:
   dynamicType: iOS labels follow Dynamic Type through the label, caption, and body text roles and keep one line, so the control grows taller with the text. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
-  - difference: Controls are 32, 40, and 48 px tall on Web and 34, 44, and 52 pt on iOS.
-    reason: The size.control tokens raise iOS toward the 44 pt touch target while keeping the Web proportions.
+  - difference: Controls are 32, 36, and 44 px tall with 6 px corners on Web, and 34, 44, and 52 pt tall with 12 and 8 pt corners on iOS.
+    reason: The size.control tokens raise iOS toward the 44 pt touch target while keeping the Web proportions. The Web radius.control token tightens pointer-sized controls; native work is paused, so iOS keeps its radii until its next design pass.
   - difference: Web shows hover colors on pointer hover; iOS shows the same colors while pressed.
     reason: Touch has no hover, so iOS gives the hover colors to the press; Web has no separate pressed style.
   - difference: A label that does not fit wraps onto more lines on Web and truncates at the tail on iOS, which also has no vertical padding.

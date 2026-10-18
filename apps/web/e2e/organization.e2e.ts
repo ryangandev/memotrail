@@ -261,7 +261,7 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       .selectOption({ label: "#journeys (0)" });
     await expect(
       travelDialog.getByRole("button", { name: "Merge tag" }),
-    ).toHaveCSS("height", "40px");
+    ).toHaveCSS("height", "36px");
     await travelDialog.getByRole("button", { name: "Merge tag" }).click();
     await page
       .getByRole("dialog", { name: /Merge “travel” into “journeys”\?/ })

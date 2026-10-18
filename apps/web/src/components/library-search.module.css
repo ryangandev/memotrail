@@ -235,7 +235,7 @@
   width: fit-content;
   padding: var(--mt-space-2) var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-small);
+  border-radius: var(--mt-radius-control);
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface);
   font-size: var(--mt-font-size-caption);

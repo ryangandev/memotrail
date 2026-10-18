@@ -199,11 +199,14 @@ Web and iOS draw every visual value from the DTCG tokens in `packages/design-sys
 All 28 shared components have a YAML spec that generates their variant types for both platforms, and both galleries show every specimen the specs list.
 The Claude Design copy is published from `pnpm design-system:export`; values tried there return through pull requests.
 
-The redesign itself waits for Ryan's direction.
-These open design decisions feed it:
+A full redesign is deferred while feature work comes first.
+In its place, a tune moved the palette to warmer paper and night tones with no pure white surface, set Web controls and fields to 32, 36, and 44 px with 6 px corners through `radius.control`, and sized sidebar items to 36 px.
+The logo keeps its original greens through the palette's `brand` group.
+iOS took the shared colors but keeps its own control heights and radii until native work resumes.
+These open design decisions feed a later redesign:
 
 - The type, spacing, and radius scales are named by value, so a retuned scale renames tokens.
-- Six groups of contrast pairs are named exceptions until a palette change: inkFaint metadata, muted text on subtle panels, warm, danger, and warning text in light, and success text on its notice.
+- Six contrast exceptions remain until a palette change: inkFaint metadata in each theme, muted text on subtle panels, and warm, danger, and warning text in light.
 - The brand mark's outer ring and arc use themed colors on iOS and fixed colors on Web, so the platforms differ in dark mode.
 - iOS `accentGroupBorder` looks the same as the shared `accentPanelBorder`, but merging them could shift a color by one rounding level.
 - Web `textSpace` is relative to the text size, so the paragraph gap is shared with iOS only once the Swift generator supports relative units.

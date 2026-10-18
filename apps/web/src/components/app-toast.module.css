@@ -59,7 +59,7 @@
   height: 24px;
   place-items: center;
   padding: 0;
-  border-radius: var(--mt-radius-small);
+  border-radius: var(--mt-radius-control);
   color: var(--mt-color-ink-muted);
   background: transparent;
   cursor: pointer;

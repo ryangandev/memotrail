@@ -170,13 +170,13 @@
 .googleButton {
   display: flex;
   width: 100%;
-  height: 48px;
+  height: var(--mt-size-control-large);
   align-items: center;
   justify-content: center;
   gap: var(--mt-space-3);
   margin-top: var(--mt-space-8);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
   font-size: var(--mt-font-size-body-small);

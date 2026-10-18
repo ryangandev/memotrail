@@ -21,7 +21,7 @@
   height: var(--mt-size-field-small);
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-small);
+  border-radius: var(--mt-radius-control);
   outline: 0;
   color: var(--mt-color-ink);
   background: var(--mt-color-surface);
@@ -102,7 +102,7 @@
 .allAreasButton {
   padding: var(--mt-space-1) var(--mt-space-2);
   border: 0;
-  border-radius: var(--mt-radius-small);
+  border-radius: var(--mt-radius-control);
   background: transparent;
   color: var(--mt-color-ink-muted);
   font: inherit;

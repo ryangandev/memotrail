@@ -31,7 +31,7 @@
   gap: var(--mt-space-2);
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   color: var(--mt-color-ink-faint);
   background: var(--mt-color-surface);
   transition:
@@ -79,7 +79,7 @@
 
 .field[data-size="small"] .control {
   height: var(--mt-size-field-small);
-  border-radius: var(--mt-radius-small);
+  border-radius: var(--mt-radius-control);
 }
 
 .field[data-size="large"] .control {

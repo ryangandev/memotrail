@@ -11,7 +11,7 @@
     },
     "surfaceRaised": {
       "$description": "Raised cards, dialogs, menus, and popovers.",
-      "$value": "{palette.white}"
+      "$value": "{palette.paper.25}"
     },
     "surfaceSubtle": {
       "$description": "Quiet fills, such as hovered rows, secondary buttons, and inset panels.",
@@ -314,8 +314,8 @@
       "$description": "Opaque accent panel, such as a selected goal section.",
       "$value": {
         "colorSpace": "srgb",
-        "components": [0.9333, 0.949, 0.9216],
-        "hex": "#EEF2EB"
+        "components": [0.9255, 0.9373, 0.9059],
+        "hex": "#ECEFE7"
       },
       "$extensions": {
         "com.memotrail": {
@@ -330,8 +330,8 @@
       "$description": "Border of the accent panel.",
       "$value": {
         "colorSpace": "srgb",
-        "components": [0.6078, 0.6588, 0.6078],
-        "hex": "#9BA89B"
+        "components": [0.6118, 0.6588, 0.6039],
+        "hex": "#9CA89A"
       },
       "$extensions": {
         "com.memotrail": {
@@ -420,8 +420,8 @@
       "$description": "Background of a queued capture.",
       "$value": {
         "colorSpace": "srgb",
-        "components": [0.9569, 0.9608, 0.9373],
-        "hex": "#F4F5EF"
+        "components": [0.9451, 0.949, 0.9176],
+        "hex": "#F1F2EA"
       },
       "$extensions": {
         "com.memotrail": {
@@ -436,8 +436,8 @@
       "$description": "Background of a refused capture.",
       "$value": {
         "colorSpace": "srgb",
-        "components": [0.9725, 0.949, 0.9176],
-        "hex": "#F8F2EA"
+        "components": [0.9647, 0.9412, 0.9098],
+        "hex": "#F6F0E8"
       },
       "$extensions": {
         "com.memotrail": {
@@ -461,8 +461,8 @@
       "$description": "Background of tag chips.",
       "$value": {
         "colorSpace": "srgb",
-        "components": [0.9882, 0.9843, 0.9647],
-        "hex": "#FCFBF6"
+        "components": [0.9765, 0.9686, 0.9412],
+        "hex": "#F9F7F0"
       },
       "$extensions": {
         "com.memotrail": {
@@ -477,8 +477,8 @@
       "$description": "Background of timeline lanes, raised with a trace of accent.",
       "$value": {
         "colorSpace": "srgb",
-        "components": [0.9922, 0.9961, 0.9922],
-        "hex": "#FDFEFD"
+        "components": [0.9725, 0.9686, 0.949],
+        "hex": "#F8F7F2"
       },
       "$extensions": {
         "com.memotrail": {
@@ -512,7 +512,7 @@
       "$value": {
         "colorSpace": "srgb",
         "components": {
-          "$ref": "#/palette/white/$value/components"
+          "$ref": "#/palette/paper/25/$value/components"
         },
         "alpha": 0.94
       },
@@ -530,7 +530,7 @@
       "$value": {
         "colorSpace": "srgb",
         "components": {
-          "$ref": "#/palette/white/$value/components"
+          "$ref": "#/palette/paper/25/$value/components"
         },
         "alpha": 0.72
       },
@@ -729,7 +729,7 @@
       "$value": {
         "colorSpace": "srgb",
         "components": {
-          "$ref": "#/palette/white/$value/components"
+          "$ref": "#/palette/paper/25/$value/components"
         },
         "alpha": 0.1
       },
@@ -748,7 +748,7 @@
       "$value": {
         "colorSpace": "srgb",
         "components": {
-          "$ref": "#/palette/white/$value/components"
+          "$ref": "#/palette/paper/25/$value/components"
         },
         "alpha": 0.35
       },
@@ -855,7 +855,7 @@
       "$value": {
         "colorSpace": "srgb",
         "components": {
-          "$ref": "#/palette/white/$value/components"
+          "$ref": "#/palette/paper/25/$value/components"
         },
         "alpha": 0.34
       },
@@ -939,7 +939,7 @@
       "$description": "The brand mark's fixed colors, the same in both themes.",
       "ring": {
         "$description": "The brand mark's outer ring.",
-        "$value": "{palette.green.700}",
+        "$value": "{palette.brand.forest}",
         "$extensions": {
           "com.memotrail": {
             "platforms": ["web"]
@@ -957,7 +957,7 @@
       },
       "innerRing": {
         "$description": "The brand mark's inner ring.",
-        "$value": "{palette.green.400}"
+        "$value": "{palette.brand.sage}"
       }
     }
   },
@@ -968,8 +968,8 @@
         "$description": "Border of a hovered tag chip.",
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.5333, 0.5882, 0.5294],
-          "hex": "#889687"
+          "components": [0.5333, 0.5882, 0.5255],
+          "hex": "#889686"
         },
         "$extensions": {
           "com.memotrail": {
@@ -984,8 +984,8 @@
         "$description": "A hovered timeline period bar.",
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.6784, 0.7569, 0.7216],
-          "hex": "#ADC1B8"
+          "components": [0.6745, 0.7451, 0.702],
+          "hex": "#ACBEB3"
         },
         "$extensions": {
           "com.memotrail": {
@@ -1003,8 +1003,8 @@
         "$description": "Background of a disabled code block.",
         "$value": {
           "colorSpace": "srgb",
-          "components": [0.9333, 0.9137, 0.8745],
-          "hex": "#EEE9DF"
+          "components": [0.9255, 0.9098, 0.8706],
+          "hex": "#ECE8DE"
         },
         "$extensions": {
           "com.memotrail": {
@@ -1024,7 +1024,7 @@
         "$value": {
           "colorSpace": "srgb",
           "components": {
-            "$ref": "#/palette/white/$value/components"
+            "$ref": "#/palette/paper/25/$value/components"
           },
           "alpha": 0.72
         },
@@ -1079,7 +1079,7 @@
         "$value": {
           "colorSpace": "srgb",
           "components": {
-            "$ref": "#/palette/white/$value/components"
+            "$ref": "#/palette/paper/25/$value/components"
           },
           "alpha": 0.32
         },
@@ -1384,7 +1384,7 @@
         "$value": {
           "colorSpace": "srgb",
           "components": {
-            "$ref": "#/palette/white/$value/components"
+            "$ref": "#/palette/paper/25/$value/components"
           },
           "alpha": 0.76
         },
@@ -1489,7 +1489,7 @@
         "$value": {
           "colorSpace": "srgb",
           "components": {
-            "$ref": "#/palette/white/$value/components"
+            "$ref": "#/palette/paper/25/$value/components"
           },
           "alpha": 0.86
         },

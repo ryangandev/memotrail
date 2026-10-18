@@ -39,7 +39,7 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--mt-space-1);
   padding: var(--mt-space-1);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   background: var(--mt-color-surface);
   box-shadow: inset 0 0 0 var(--mt-size-stroke-thin)
     var(--mt-color-border-strong);
@@ -47,12 +47,12 @@
 
 .shape button {
   display: flex;
-  height: 34px;
+  height: 28px;
   align-items: center;
   justify-content: center;
   gap: var(--mt-space-2);
   border: 0;
-  border-radius: var(--mt-radius-small);
+  border-radius: var(--mt-radius-xxsmall);
   color: var(--mt-color-ink-muted);
   background: transparent;
   font-size: var(--mt-font-size-label);
@@ -83,7 +83,7 @@
   height: var(--mt-size-field-medium);
   padding: 0 var(--mt-space-3);
   border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-medium);
+  border-radius: var(--mt-radius-control);
   outline: 0;
   color: var(--mt-color-ink);
   background-color: var(--mt-color-surface);

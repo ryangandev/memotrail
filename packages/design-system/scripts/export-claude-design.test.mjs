@@ -191,7 +191,7 @@ describe("tokens.json", () => {
       (token) => token.name === "mt-color-ink-faint",
     );
     assert.match(ink.usage, /reads on mt-color-canvas/);
-    assert.match(ink.usage, /Contrast exception "inkFaint metadata"/);
+    assert.match(ink.usage, /Contrast exception "inkFaint metadata in light"/);
   });
 
   test("type groups come from the text roles and families from the font stacks", () => {
