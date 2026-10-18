@@ -75,7 +75,7 @@ export function ConfirmationDialogProvider({
           footer={
             <>
               <Button
-                autoFocus
+                data-autofocus
                 onClick={() => finish(false)}
                 type="button"
                 variant="secondary"

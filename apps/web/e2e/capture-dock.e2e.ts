@@ -1,3 +1,5 @@
+import sharp from "sharp";
+import { isTopmostAtCenter } from "./helpers/hit-test";
 import { test, expect } from "./helpers/workspace-test";
 
 test("floating capture opens, restores drafts, saves, and adapts to the viewport", async ({
@@ -206,4 +208,62 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     ).toBe(width);
     await dialog.getByRole("button", { name: "Close quick capture" }).click();
   }
+});
+
+test("a photo preview opened from floating capture stacks above it and returns focus", async ({
+  page,
+  workspace,
+}) => {
+  expect(workspace.owner).toBeTruthy();
+  await page.goto("/library");
+  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  // Quick Capture is a native modal dialog in the top layer, so the preview it
+  // opens must stack above it and stay interactive.
+  const dialog = page.getByRole("dialog", {
+    name: "What’s on your mind?",
+    exact: true,
+  });
+  await expect(
+    dialog.getByRole("textbox", { name: "Entry text", exact: true }),
+  ).toBeFocused();
+  await dialog.locator('input[type="file"]').setInputFiles({
+    name: "dialog-preview.png",
+    mimeType: "image/png",
+    buffer: await sharp({
+      create: { width: 320, height: 240, channels: 3, background: "#7a5c3e" },
+    })
+      .png()
+      .toBuffer(),
+  });
+  const thumbnail = dialog.getByRole("button", {
+    name: "Preview selected dialog-preview.png",
+  });
+  const preview = page.getByRole("dialog", { name: "dialog-preview.png" });
+  const close = preview.getByRole("button", { name: "Close", exact: true });
+
+  await thumbnail.click();
+  await expect(preview).toBeVisible();
+  expect(await isTopmostAtCenter(close)).toBe(true);
+  expect(
+    await preview.evaluate((element) =>
+      element.contains(document.activeElement),
+    ),
+  ).toBe(true);
+  // Escape closes only the preview and returns focus to its thumbnail.
+  await page.keyboard.press("Escape");
+  await expect(preview).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  await expect(thumbnail).toBeFocused();
+
+  await thumbnail.click();
+  await close.click();
+  await expect(preview).toHaveCount(0);
+  await expect(dialog).toBeVisible();
+  await expect(thumbnail).toBeFocused();
+
+  await dialog
+    .getByRole("button", { name: "Remove selected dialog-preview.png" })
+    .click();
+  await dialog.getByRole("button", { name: "Close quick capture" }).click();
+  await expect(dialog).not.toBeVisible();
 });

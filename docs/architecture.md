@@ -378,8 +378,11 @@ Pair it with the test file carrying the same feature name.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
   `packages/design-system/components/button.yaml` specifies Button and ButtonLink with native `mtButtonStyle`.
 - Dialog owns generic editor and confirmation shells, scroll containment, focus trapping/restoration, busy dismissal, and nested overlay containers.
+  Its first focus goes to a `data-autofocus` control, else the first field; React's `autoFocus` fires before the trap starts, so an enclosing dialog's trap takes it back.
   Editor forms retain their handlers; footer submit actions use native form associations.
   Quick Capture uses a native HTML dialog anchored to the workspace bottom, preserving photo-picker cancellation, nested overlays, and focus restoration; its mobile geometry follows the visual viewport when the keyboard opens.
+  The browser shows that dialog in the top layer and makes everything outside it inert, so a Dialog opened over it, such as the photo preview or a confirmation, portals into it and shows its positioner as a manual popover with the scrim as its `::backdrop` (`components/top-layer.ts`).
+  A Dialog's content is a `data-escape-layer`, so Quick Capture leaves its Escape, Tab, and Mod-Enter to it.
   `WorkspaceActionDock` owns the shared bottom position and glass control styling for global Search and Quick Capture.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.

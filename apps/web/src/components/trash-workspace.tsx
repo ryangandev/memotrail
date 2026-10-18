@@ -280,6 +280,7 @@ export function TrashWorkspace({
             <>
               <Button
                 variant="secondary"
+                data-autofocus
                 disabled={Boolean(pending)}
                 onClick={() => setConfirmation(null)}
                 type="button"
@@ -288,7 +289,6 @@ export function TrashWorkspace({
               </Button>
               <Button
                 variant="danger"
-                autoFocus
                 disabled={Boolean(pending)}
                 onClick={() => runAction(confirmation, "delete")}
                 type="button"
