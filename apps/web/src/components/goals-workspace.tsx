@@ -28,6 +28,7 @@ import common from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { DatePickerField } from "@/components/date-picker-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
+import { tagNamesIncludingDraft } from "@/lib/data/organization";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { SectionHeader } from "@/components/section-header";
@@ -357,7 +358,7 @@ export function GoalEditor({
       id: currentId,
       revision: currentRevision,
       status,
-      tagNames: namesIncludingDraft(tagNames, tagInput),
+      tagNames: tagNamesIncludingDraft(tagNames, tagInput, tagOptions),
       targetDate: targetDate || null,
       title,
     };
@@ -749,11 +750,6 @@ async function uploadPhotos(
     registerGoalAttachment,
     onProgress,
   );
-}
-
-function namesIncludingDraft(names: string[], draft: string) {
-  const name = draft.trim();
-  return name ? [...names, name] : names;
 }
 
 function sameNames(first: string[], second: string[]) {

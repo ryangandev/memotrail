@@ -2,6 +2,7 @@ import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { loadTagOptions } from "./tag-options";
 import {
   parseGoalRows,
   type GoalAttachment,
@@ -15,8 +16,6 @@ export type GoalsWorkspace = {
   viewer: Viewer;
 };
 
-type NameRow = { name: string };
-
 export async function getGoalsWorkspace(
   targetId?: string,
 ): Promise<GoalsWorkspace | null> {
@@ -25,12 +24,7 @@ export async function getGoalsWorkspace(
 
   const [goals, tags] = await Promise.all([
     context.client.rpc("goals_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
+    loadTagOptions(context.client, context.userId),
   ]);
 
   const rows = goals.error ? null : parseGoalRows(goals.data);
@@ -67,7 +61,7 @@ export async function getGoalsWorkspace(
       })),
     })),
     loadError: null,
-    tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
+    tagOptions: tags ?? [],
     viewer: context.viewer,
   };
 }

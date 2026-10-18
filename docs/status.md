@@ -46,7 +46,8 @@ The desktop sidebar has a compact icon rail, panel control, and animated width c
 The Web sidebar supports an editor-aware Command B shortcut, and the bottom glass dock groups sparkle-icon New Entry on the left with Search on the right, retaining Command J and Command K.
 The capture dock uses an inset focus ring, a consistent frosted composer surface, and a retained editor with entrance and exit motion; personal visual acceptance is pending.
 Library now combines the organized all-items browser with keyword and filtered search; older `/search` URLs redirect to Library.
-The Entry editor hides AI suggestions and places photos after tags; the Library browser includes every capture as soon as it is saved.
+The Entry editor hides AI suggestions and places tags right under the Note with most used suggestions; the Library browser includes every capture as soon as it is saved.
+Native iOS still adds tags through its picker sheet without most used suggestions and still shows the timezone select for every exact time until it follows Web.
 Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.
 The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed-in user's data and the shared capture, page, image, empty-state, and tag components.
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.

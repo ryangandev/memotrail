@@ -20,6 +20,7 @@ import {
 import styles from "@/components/record-workspace.module.css";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import { EntryOrganizationEditor } from "@/components/entry-organization-editor";
+import { tagNamesIncludingDraft } from "@/lib/data/organization";
 import { LocationPicker } from "@/components/location-picker";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
@@ -425,7 +426,7 @@ export function VehicleEditor({
       occurredStart: resolved.value.occurredAt,
       occurredTimezone: resolved.value.occurredTimezone,
       revision: currentRevision,
-      tagNames: namesIncludingDraft(tagNames, tagInput),
+      tagNames: tagNamesIncludingDraft(tagNames, tagInput, tagOptions),
       title,
     };
     const parsed = parseVehicleEntryInput(input);
@@ -630,6 +631,7 @@ export function VehicleEditor({
             </label>
             <div className={styles.fullField}>
               <OccurrenceEditor
+                defaultTimezone={defaultTimezone}
                 value={occurrence}
                 onChange={setOccurrence}
                 disabled={isPending}
@@ -753,11 +755,6 @@ async function uploadPhotos(
     registerVehicleAttachment,
     onProgress,
   );
-}
-
-function namesIncludingDraft(names: string[], draft: string) {
-  const name = draft.trim();
-  return name ? [...names, name] : names;
 }
 
 function localTimezone() {

@@ -2,6 +2,7 @@ import "server-only";
 import { displayImageURLs } from "@/lib/media/urls";
 
 import { getAuthenticatedContext, type Viewer } from "./inbox";
+import { loadTagOptions } from "./tag-options";
 import { getPrimaryEntryLocations } from "./entry-locations";
 import {
   parseVehicleRows,
@@ -16,8 +17,6 @@ export type VehiclesWorkspace = {
   viewer: Viewer;
 };
 
-type NameRow = { name: string };
-
 export async function getVehiclesWorkspace(
   targetId?: string,
 ): Promise<VehiclesWorkspace | null> {
@@ -26,12 +25,7 @@ export async function getVehiclesWorkspace(
 
   const [vehicles, tags] = await Promise.all([
     context.client.rpc("vehicles_workspace", { p_limit: 100, p_offset: 0 }),
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
+    loadTagOptions(context.client, context.userId),
   ]);
   const rows = vehicles.error ? null : parseVehicleRows(vehicles.data);
   if (!rows) {
@@ -68,7 +62,7 @@ export async function getVehiclesWorkspace(
 
   return {
     loadError: null,
-    tagOptions: tags.error ? [] : (tags.data ?? []).map((item) => item.name),
+    tagOptions: tags ?? [],
     vehicles: visibleRows.map((vehicle) => ({
       ...vehicle,
       location: locations.get(vehicle.id) ?? null,
