@@ -331,3 +331,87 @@ export function occurrenceDurationLabel(
     return "Duration unavailable";
   }
 }
+
+/** An Entry's best-known date as a workspace row stores it. */
+export type StoredOccurrence = {
+  datePrecision: string;
+  occurredEnd?: string | null;
+  occurredLabel: string | null;
+  occurredStart: string | null;
+  occurredTimezone: string | null;
+};
+
+// A row without a usable recorded zone is shown in the fallback zone, normally
+// the viewer's, rather than the server's.
+export function storedOccurrence(
+  value: StoredOccurrence,
+  fallbackTimezone = "UTC",
+): Occurrence {
+  return {
+    datePrecision:
+      occurrencePrecisions.find(
+        (precision) => precision === value.datePrecision,
+      ) ?? "unknown",
+    occurredAt: value.occurredStart,
+    occurredEnd: value.occurredEnd ?? null,
+    occurredLabel: value.occurredLabel,
+    occurredTimezone: validTimezone(value.occurredTimezone)
+      ? value.occurredTimezone
+      : validTimezone(fallbackTimezone)
+        ? fallbackTimezone
+        : "UTC",
+  };
+}
+
+/**
+ * The name of an Entry without a title: its best-known date at the precision it
+ * was recorded, in the zone it was recorded in, because every Entry is a record
+ * of a day.
+ */
+export function occurrenceTitle(value: Occurrence): string {
+  const label = value.occurredLabel?.trim();
+  if (label) return label;
+  if (
+    !value.occurredAt ||
+    !Number.isFinite(Date.parse(value.occurredAt)) ||
+    !["exact", "day", "month", "year", "range"].includes(value.datePrecision)
+  )
+    return "Undated entry";
+  const timeZone = validTimezone(value.occurredTimezone)
+    ? value.occurredTimezone
+    : "UTC";
+  const format = (date: string, options: Intl.DateTimeFormatOptions) =>
+    new Intl.DateTimeFormat("en-US", { ...options, timeZone }).format(
+      new Date(date),
+    );
+  if (value.datePrecision === "year")
+    return format(value.occurredAt, { year: "numeric" });
+  if (value.datePrecision === "month")
+    return format(value.occurredAt, { month: "long", year: "numeric" });
+  if (value.datePrecision !== "range")
+    return format(value.occurredAt, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+  const day = { month: "long", day: "numeric", year: "numeric" } as const;
+  if (!value.occurredEnd || !Number.isFinite(Date.parse(value.occurredEnd)))
+    return `${format(value.occurredAt, day)} onward`;
+  const year = { year: "numeric" } as const;
+  const sameYear =
+    format(value.occurredAt, year) === format(value.occurredEnd, year);
+  const start = format(
+    value.occurredAt,
+    sameYear ? { month: "long", day: "numeric" } : day,
+  );
+  return `${start} - ${format(value.occurredEnd, day)}`;
+}
+
+/** What every surface calls an Entry: its title, or its date when it has none. */
+export function entryDisplayTitle(
+  title: string | null | undefined,
+  occurrence: Occurrence,
+): string {
+  return title?.trim() || occurrenceTitle(occurrence);
+}

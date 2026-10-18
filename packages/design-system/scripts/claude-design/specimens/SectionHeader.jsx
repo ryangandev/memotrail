@@ -47,7 +47,7 @@ export const specimens = {
         <SectionHeader
           action={
             <a href="#section-header" style={link}>
-              3 need organizing
+              Show all
             </a>
           }
           detail="12 items"

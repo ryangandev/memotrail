@@ -17,11 +17,10 @@ import type {
 } from "@/lib/data/home";
 import { greetingInTimezone } from "@/lib/data/home-input";
 import {
+  entryDisplayTitle,
   occurrenceLabel,
-  occurrencePrecisions,
   occurrenceSpanLabel,
-  validTimezone,
-  type Occurrence,
+  storedOccurrence,
 } from "@/lib/data/occurrence";
 import { timelineLaneLabels } from "@/lib/data/milestone";
 import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
@@ -46,30 +45,23 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
           {greetingInTimezone(now, timezone)}, {name}.
         </>
       }
-      description="A calm view of what is active, recent, and waiting for you."
+      description="A calm view of what is going on and what you have kept."
     />
   );
   const capture = <CaptureComposer embedded idPrefix="capture" />;
-  const needsOrganizing = (
-    <NeedsOrganizing
-      needsOrganizing={workspace.needsOrganizing}
-      timezone={workspace.timezone}
-    />
-  );
-  const nowItems = snapshot ? <Now items={snapshot.nowItems} /> : null;
-  const memory = snapshot ? (
-    <Memory memory={workspace.resurfacedMemory} />
+  const nowItems = snapshot ? (
+    <Now items={snapshot.nowItems} timezone={timezone} />
   ) : null;
-  const recent = snapshot ? <Recent entries={snapshot.recentEntries} /> : null;
+  const memory = snapshot ? (
+    <Memory memory={workspace.resurfacedMemory} timezone={timezone} />
+  ) : null;
+  const recent = snapshot ? (
+    <Recent entries={snapshot.recentEntries} timezone={timezone} />
+  ) : null;
   const content = (
     <div className={styles.dashboard}>
       {greeting}
-      {snapshot ? (
-        <Stats
-          needsOrganizingCount={workspace.needsOrganizing?.count ?? null}
-          snapshot={snapshot}
-        />
-      ) : null}
+      {snapshot ? <Stats snapshot={snapshot} /> : null}
       {workspace.loadError || !snapshot ? (
         <>
           <div className={styles.loadError} role="alert">
@@ -81,7 +73,6 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
       ) : (
         <div className={styles.columns}>
           <div className={styles.capturePanel}>{capture}</div>
-          <div className={styles.organizePanel}>{needsOrganizing}</div>
           <div className={styles.memoryColumn}>{memory}</div>
           <div className={styles.nowColumn}>{nowItems}</div>
           <div className={styles.recentRow}>{recent}</div>
@@ -125,68 +116,7 @@ function Section({
   );
 }
 
-function NeedsOrganizing({
-  needsOrganizing,
-  timezone,
-}: {
-  needsOrganizing: HomeWorkspace["needsOrganizing"];
-  timezone: string;
-}) {
-  return (
-    <Section
-      title="Needs organizing"
-      href={needsOrganizingHref}
-      action={
-        needsOrganizing?.count
-          ? `Library · ${needsOrganizing.count}`
-          : "Library"
-      }
-    >
-      {needsOrganizing?.items.length ? (
-        <div className={styles.organizeList}>
-          {needsOrganizing.items.map((item) => (
-            <Link
-              className={styles.organizeItem}
-              href={wikiEntryHref(item)}
-              aria-label={`Organize ${truncate(item.title, 90)}`}
-              key={item.id}
-            >
-              <time dateTime={item.updatedAt}>
-                {dateLabel(item.updatedAt, timezone, false)}
-              </time>
-              <div>
-                <strong>{item.title}</strong>
-              </div>
-              <Icon name="chevron" size={14} />
-            </Link>
-          ))}
-        </div>
-      ) : needsOrganizing ? (
-        <Empty
-          icon="check"
-          title="Everything has a place"
-          text="Captures without a title or tag show up here, so you can sort them when you are ready."
-        />
-      ) : (
-        <Empty
-          icon="clock"
-          title="Not available right now"
-          text="MemoTrail could not check what needs organizing. Refresh to try again."
-        />
-      )}
-    </Section>
-  );
-}
-
-const needsOrganizingHref = "/library?show=needs-organizing";
-
-function Stats({
-  needsOrganizingCount,
-  snapshot,
-}: {
-  needsOrganizingCount: number | null;
-  snapshot: HomeSnapshot;
-}) {
+function Stats({ snapshot }: { snapshot: HomeSnapshot }) {
   const items = [
     {
       value: snapshot.nowCount,
@@ -212,16 +142,6 @@ function Stats({
       href: "/tags",
       icon: "tag",
     },
-    ...(needsOrganizingCount === null
-      ? []
-      : [
-          {
-            value: needsOrganizingCount,
-            label: "To organize",
-            href: needsOrganizingHref,
-            icon: "inbox",
-          } as const,
-        ]),
   ] as const;
   return (
     <nav className={styles.metrics} aria-label="Your archive at a glance">
@@ -236,30 +156,33 @@ function Stats({
   );
 }
 
-function Now({ items }: { items: HomeNowItem[] }) {
+function Now({ items, timezone }: { items: HomeNowItem[]; timezone: string }) {
   return (
     <Section title="Now" href="/timeline" action="Timeline">
       {items.length ? (
         <div className={styles.nowItems}>
-          {items.map((item) => (
-            <Link
-              className={styles.nowItem}
-              key={item.entryId}
-              href={wikiEntryHref({
-                id: item.entryId,
-                itemKind: item.itemKind,
-                itemSubtype: item.itemSubtype,
-              })}
-            >
-              <div>
-                <span className={styles.eyebrow}>
-                  {timelineLaneLabels[item.lane]}
-                </span>
-                <h3>{item.title}</h3>
-              </div>
-              <p>{occurrenceSpanLabel(entryOccurrence(item))}</p>
-            </Link>
-          ))}
+          {items.map((item) => {
+            const occurrence = storedOccurrence(item, timezone);
+            return (
+              <Link
+                className={styles.nowItem}
+                key={item.entryId}
+                href={wikiEntryHref({
+                  id: item.entryId,
+                  itemKind: item.itemKind,
+                  itemSubtype: item.itemSubtype,
+                })}
+              >
+                <div>
+                  <span className={styles.eyebrow}>
+                    {timelineLaneLabels[item.lane]}
+                  </span>
+                  <h3>{entryDisplayTitle(item.title, occurrence)}</h3>
+                </div>
+                <p>{occurrenceSpanLabel(occurrence)}</p>
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <Empty
@@ -272,11 +195,17 @@ function Now({ items }: { items: HomeNowItem[] }) {
   );
 }
 
-function Memory({ memory }: { memory: HomeResurfacedMemory | null }) {
+function Memory({
+  memory,
+  timezone,
+}: {
+  memory: HomeResurfacedMemory | null;
+  timezone: string;
+}) {
   return (
     <Section title="A memory for today" href="/library" action="Library">
       {memory ? (
-        <EntryCard entry={memory} memory />
+        <EntryCard entry={memory} memory timezone={timezone} />
       ) : (
         <Empty
           icon="sparkle"
@@ -288,13 +217,19 @@ function Memory({ memory }: { memory: HomeResurfacedMemory | null }) {
   );
 }
 
-function Recent({ entries }: { entries: HomeEntry[] }) {
+function Recent({
+  entries,
+  timezone,
+}: {
+  entries: HomeEntry[];
+  timezone: string;
+}) {
   return (
     <Section title="Recent Entries" href="/library" action="View all">
       {entries.length ? (
         <div className={styles.recent}>
           {entries.map((entry) => (
-            <EntryCard entry={entry} key={entry.id} />
+            <EntryCard entry={entry} key={entry.id} timezone={timezone} />
           ))}
         </div>
       ) : (
@@ -311,13 +246,19 @@ function Recent({ entries }: { entries: HomeEntry[] }) {
 function EntryCard({
   entry,
   memory = false,
+  timezone,
 }: {
   entry: HomeEntry;
   memory?: boolean;
+  timezone: string;
 }) {
   const cover = entry.attachments.find((attachment) => attachment.imageUrl);
-  const title = entry.title || truncate(entry.body, 72) || "Untitled Entry";
-  const excerpt = excerptAfterTitle(entry.title, entry.body);
+  const occurrence = storedOccurrence(entry, timezone);
+  const title = entryDisplayTitle(entry.title, occurrence);
+  // An untitled Entry is already named by its date, so the date is not repeated.
+  const date = entry.title.trim() ? occurrenceLabel(occurrence) : null;
+  const identity = wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype);
+  const summary = entry.body.trim();
   return (
     <Link
       href={wikiEntryHref(entry)}
@@ -338,24 +279,20 @@ function EntryCard({
         <header className={styles.entryMeta}>
           {memory ? (
             <>
-              <span>
-                {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
-              </span>
-              <span>{occurrenceLabel(entryOccurrence(entry))}</span>
+              <span>{identity}</span>
+              {date ? <span>{date}</span> : null}
             </>
           ) : (
             <>
-              <span className={styles.entryDate}>
-                {occurrenceLabel(entryOccurrence(entry))}
-              </span>
+              {date ? <span className={styles.entryDate}>{date}</span> : null}
               <Badge size="small" tone="outline">
-                {wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype)}
+                {identity}
               </Badge>
             </>
           )}
         </header>
         <h3>{title}</h3>
-        {excerpt ? <p>{truncate(excerpt, memory ? 260 : 170)}</p> : null}
+        {summary ? <p>{truncate(summary, memory ? 260 : 170)}</p> : null}
         {entry.tagNames.length ? (
           <footer className={styles.tags}>
             {entry.tagNames.slice(0, 3).map((name) => (
@@ -389,38 +326,6 @@ function Empty({
       />
     </div>
   );
-}
-
-function dateLabel(value: string, timezone: string | null, year = true) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    ...(year ? { year: "numeric" as const } : {}),
-    timeZone: timezone || "UTC",
-  }).format(new Date(value));
-}
-
-function entryOccurrence(entry: HomeEntry | HomeNowItem): Occurrence {
-  return {
-    occurredAt: entry.occurredStart,
-    occurredEnd: entry.occurredEnd,
-    occurredLabel: entry.occurredLabel,
-    occurredTimezone: validTimezone(entry.occurredTimezone)
-      ? entry.occurredTimezone
-      : "UTC",
-    datePrecision:
-      occurrencePrecisions.find(
-        (precision) => precision === entry.datePrecision,
-      ) || "unknown",
-  };
-}
-
-// An Entry without a title is shown by its first line, so the excerpt starts
-// after that line instead of repeating it.
-function excerptAfterTitle(title: string, body: string) {
-  const text = body.trim();
-  const [firstLine = "", ...rest] = text.split(/\r?\n/);
-  return firstLine.trim() === title.trim() ? rest.join("\n").trim() : text;
 }
 
 function truncate(value: string, length: number) {

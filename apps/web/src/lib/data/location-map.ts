@@ -3,6 +3,12 @@ import "server-only";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { locationDisplayLabel } from "@/lib/locations/location";
 import {
+  entryDisplayTitle,
+  occurrenceLabel,
+  storedOccurrence,
+  type Occurrence,
+} from "@/lib/data/occurrence";
+import {
   isWikiItemKind,
   wikiEntryHref,
   type WikiItemKind,
@@ -12,6 +18,10 @@ export type LocationMapItem = {
   id: string;
   locationId: string;
   title: string;
+  /** Null when the date is unknown or already is the title. */
+  dateLabel: string | null;
+  /** The year the Entry happened in where it was recorded. */
+  year: number | null;
   kind: WikiItemKind;
   subtype: string;
   occurredAt: string | null;
@@ -27,10 +37,14 @@ export type LocationMapItem = {
 type LinkRow = { entry_id: string; location_id: string };
 type EntryRow = {
   id: string;
-  title: string;
+  title: string | null;
   item_kind: string;
   item_subtype: string;
   occurred_start: string | null;
+  occurred_end: string | null;
+  occurred_label: string | null;
+  occurred_timezone: string | null;
+  date_precision: string;
 };
 type LocationRow = {
   id: string;
@@ -81,7 +95,9 @@ export async function getLocationMapWorkspace() {
     const [entriesResult, locationsResult] = await Promise.all([
       context.client
         .from("entries")
-        .select("id,title,item_kind,item_subtype,occurred_start")
+        .select(
+          "id,title,item_kind,item_subtype,occurred_start,occurred_end,occurred_label,occurred_timezone,date_precision",
+        )
         .eq("owner_id", context.userId)
         .is("deleted_at", null)
         .in("id", entryIds)
@@ -122,10 +138,22 @@ export async function getLocationMapWorkspace() {
       const pair = `${entry.id}:${location.id}`;
       if (included.has(pair)) continue;
       included.add(pair);
+      const occurrence = storedOccurrence({
+        datePrecision: entry.date_precision,
+        occurredEnd: entry.occurred_end,
+        occurredLabel: entry.occurred_label,
+        occurredStart: entry.occurred_start,
+        occurredTimezone: entry.occurred_timezone,
+      });
       items.push({
         id: entry.id,
         locationId: location.id,
-        title: entry.title,
+        title: entryDisplayTitle(entry.title, occurrence),
+        dateLabel:
+          entry.title?.trim() && occurrence.datePrecision !== "unknown"
+            ? occurrenceLabel(occurrence)
+            : null,
+        year: occurrenceYear(occurrence),
         kind: entry.item_kind,
         subtype: entry.item_subtype,
         occurredAt: entry.occurred_start,
@@ -153,4 +181,16 @@ export async function getLocationMapWorkspace() {
   }
 
   return { items, loadError: null, truncated };
+}
+
+function occurrenceYear(occurrence: Occurrence) {
+  if (!occurrence.occurredAt || occurrence.datePrecision === "unknown")
+    return null;
+  const year = Number(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: occurrence.occurredTimezone,
+      year: "numeric",
+    }).format(new Date(occurrence.occurredAt)),
+  );
+  return Number.isSafeInteger(year) ? year : null;
 }

@@ -17,7 +17,6 @@ import {
   type HomeResurfacedMemory,
 } from "./home-resurfacing";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
-import { parseWikiItemRows, type WikiItemSummary } from "./wiki-items";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 import { isTimelineLane, type TimelineLane } from "./milestone";
 
@@ -36,6 +35,7 @@ export type HomeNowItem = {
   occurredLabel: string | null;
   occurredStart: string;
   occurredTimezone: string | null;
+  /** The stored title, blank when the Entry has none. */
   title: string;
 };
 
@@ -50,14 +50,7 @@ export type HomeSnapshot = {
   snapshotDate: string;
 };
 
-/** The newest Entries without a title or tag, and how many there are. */
-export type HomeNeedsOrganizing = {
-  count: number;
-  items: WikiItemSummary[];
-} | null;
-
 export type HomeWorkspace = {
-  needsOrganizing: HomeNeedsOrganizing;
   loadError: string | null;
   resurfacedMemory: HomeResurfacedMemory | null;
   snapshot: HomeSnapshot | null;
@@ -77,7 +70,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
     cookieStore.get(homeTimezoneCookieName)?.value,
   );
   const snapshotDate = localDateInTimezone(new Date(), timezone);
-  const [result, resurfacingResult, needsOrganizingResult] = await Promise.all([
+  const [result, resurfacingResult] = await Promise.all([
     context.client.rpc("home_workspace", {
       p_local_date: snapshotDate,
       p_recent_limit: 5,
@@ -87,24 +80,7 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
       p_local_date: snapshotDate,
       p_timezone: timezone,
     }),
-    context.client.rpc("wiki_items_workspace", {
-      p_item_kinds: [],
-      p_item_subtypes: [],
-      p_limit: 3,
-      p_needs_organizing: true,
-      p_offset: 0,
-      p_query: "",
-    }),
   ]);
-  const needsOrganizingItems = needsOrganizingResult.error
-    ? null
-    : parseWikiItemRows(needsOrganizingResult.data);
-  const needsOrganizing = needsOrganizingItems
-    ? {
-        count: needsOrganizingItems[0]?.totalCount ?? 0,
-        items: needsOrganizingItems,
-      }
-    : null;
   const row = result.error ? null : parseHomeRow(result.data);
   const resurfacedMemory = resurfacingResult.error
     ? null
@@ -112,7 +88,6 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
 
   if (!row) {
     return {
-      needsOrganizing,
       loadError: "MemoTrail could not load Home. Refresh to try again.",
       resurfacedMemory: null,
       snapshot: null,
@@ -128,7 +103,6 @@ export async function getHomeWorkspace(): Promise<HomeWorkspace | null> {
   const signedUrls = await signedImageUrls(context.client, attachments);
 
   return {
-    needsOrganizing,
     loadError: null,
     resurfacedMemory: resurfacedMemory
       ? withSignedImageUrls(resurfacedMemory, signedUrls)

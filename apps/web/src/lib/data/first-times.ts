@@ -10,7 +10,12 @@ import {
   entryImageMimeTypes,
   type EntryImageMimeType,
 } from "./entry-photo-input";
-import { occurrencePrecisions, type OccurrencePrecision } from "./occurrence";
+import {
+  entryDisplayTitle,
+  occurrencePrecisions,
+  storedOccurrence,
+  type OccurrencePrecision,
+} from "./occurrence";
 
 export type FirstTimeAttachment = {
   bucketId: string;
@@ -39,6 +44,7 @@ export type FirstTimeEntry = {
   occurredTimezone: string | null;
   revision: number;
   tagNames: string[];
+  /** Its title, or its date when it has none. */
   title: string;
   updatedAt: string;
 };
@@ -118,7 +124,16 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
       occurredTimezone: row.occurred_timezone,
       revision: row.revision,
       tagNames: row.tag_names,
-      title: row.title,
+      title: entryDisplayTitle(
+        row.title,
+        storedOccurrence({
+          datePrecision: row.date_precision,
+          occurredEnd: row.occurred_end,
+          occurredLabel: row.occurred_label,
+          occurredStart: row.occurred_start,
+          occurredTimezone: row.occurred_timezone,
+        }),
+      ),
       updatedAt: row.updated_at,
     })),
     loadError: null,

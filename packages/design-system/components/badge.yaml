@@ -113,7 +113,7 @@ content:
   casing: asWritten
   length: One to three words. A longer name, such as a Collection or tag, truncates at the tail; pass the full text as a tooltip on Web.
   notes:
-    - Statuses use sentence case, such as Needs organizing; kinds, Collections, and tags keep their own names.
+    - Statuses use sentence case, such as Not accepted; kinds, Collections, and tags keep their own names.
     - "Write tags with a leading #, such as #travel."
     - Use uppercase for short kinds and statuses only; it is a visual treatment, so pass the text in its normal case.
 

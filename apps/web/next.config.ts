@@ -31,11 +31,7 @@ const nextConfig: NextConfig = {
         destination: "/items/:entry",
         permanent: false,
       },
-      {
-        source: "/inbox",
-        destination: "/library?show=needs-organizing",
-        permanent: false,
-      },
+      { source: "/inbox", destination: "/library", permanent: false },
       {
         source: "/history",
         has: [

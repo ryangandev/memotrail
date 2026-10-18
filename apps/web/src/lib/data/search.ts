@@ -1,8 +1,9 @@
 import "server-only";
 import {
+  entryDisplayTitle,
   occurrenceLabel,
   occurrencePrecisions,
-  validTimezone,
+  storedOccurrence,
   type OccurrencePrecision,
 } from "./occurrence";
 import type { TagEntryPreview, TagEntryPreviewResult } from "./organization";
@@ -225,9 +226,6 @@ function quickEntryItem(
   row: SearchRow,
   identity: ItemIdentity = identityFromSearchRow(row),
 ): QuickSearchItem {
-  const title =
-    stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry";
-
   return {
     href: wikiEntryHref({
       id: row.entry_id,
@@ -236,7 +234,7 @@ function quickEntryItem(
     id: row.entry_id,
     label: identityLabel(identity),
     subtitle: compactText(row.body) || "Saved Entry",
-    title,
+    title: rowTitle(row),
   };
 }
 
@@ -245,36 +243,35 @@ function tagEntryPreview(
   identity: ItemIdentity = identityFromSearchRow(row),
 ): TagEntryPreview {
   return {
-    date: occurrenceLabel({
-      datePrecision: row.date_precision,
-      occurredAt: stringValue(row.occurred_start),
-      occurredEnd: stringValue(row.occurred_end),
-      occurredLabel: stringValue(row.occurred_label),
-      occurredTimezone: validTimezone(row.occurred_timezone)
-        ? row.occurred_timezone
-        : "UTC",
-    }),
+    // An untitled Entry is already named by its date.
+    date: stringValue(row.title) ? occurrenceLabel(rowOccurrence(row)) : null,
     href: wikiEntryHref({
       id: row.entry_id,
       ...identity,
     }),
     id: row.entry_id,
-    title:
-      stringValue(row.title) ?? firstUsefulLine(row.body) ?? "Untitled Entry",
+    title: rowTitle(row),
     type: identityLabel(identity),
   };
+}
+
+function rowOccurrence(row: SearchRow) {
+  return storedOccurrence({
+    datePrecision: row.date_precision,
+    occurredEnd: stringValue(row.occurred_end),
+    occurredLabel: stringValue(row.occurred_label),
+    occurredStart: stringValue(row.occurred_start),
+    occurredTimezone: row.occurred_timezone,
+  });
+}
+
+function rowTitle(row: SearchRow) {
+  return entryDisplayTitle(row.title, rowOccurrence(row));
 }
 
 function compactText(value: string) {
   const compact = value.replace(/\s+/g, " ").trim();
   return compact.length > 140 ? `${compact.slice(0, 137)}...` : compact;
-}
-
-function firstUsefulLine(value: string) {
-  return value
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .find(Boolean);
 }
 
 function entryFromRow(

@@ -16,7 +16,7 @@ Native iOS still calls the retired People functions until it follows Web.
 Goals became Someday: migration `202610040003` maps Considering and Paused to the open status, shown as Not yet, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
 Native iOS still sends horizons and related links and fails against it until it follows Web.
 The list is named Someday and its open status Not yet; the working name Want to Do is retired.
-Inbox is retired: captures save straight to Library, and Library and the Dashboard show Entries without a title or tag under Needs organizing.
+Inbox is retired: captures save straight to Library.
 Migration `202610040004` marks every Entry organized, keeps new ones organized, and drops the Inbox organize and capture-handoff functions.
 Native iOS still opens Inbox review and calls the retired functions until it follows Web.
 Native iOS is not in use and will be rewritten, so the database keeps no compatibility window for it.
@@ -35,6 +35,11 @@ The date precision controls are settled too: Web date forms choose Day, Month, Y
 Native iOS still shows the eight Date types until it follows Web.
 Web Timeline no longer opens the birth date prompt on its own; native iOS still asks on the first Timeline visit until it follows Web.
 The Web capture composer's Date picks only a day with an optional time, and its action is labeled Save; native still opens the full date editor with Use capture time and saves to Inbox.
+Needs organizing is retired: capture never asks for a decision, so Library and the Dashboard no longer list or count Entries without a title or tag, and Quick Capture takes the Dashboard's full row.
+An untitled Entry is named by its date at its recorded precision on every Web surface, while its stored title stays empty.
+Migration `202610180087` makes the workspaces return blank stored titles with the date fields that name them and replaces the Library Needs organizing filter.
+It and the Web release can ship in either order; once that Web is deployed, a later migration removes the earlier six-argument Library workspace and the Timeline and Trash title stand-ins.
+Native iOS still shows the retired Inbox list, the Dashboard Ready to organize section, and its To organize count, and still expects workspace titles made from an Entry's writing, until it follows Web.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -73,7 +78,7 @@ Use Git history for feature-level implementation and test evidence.
 
 | Area                                                                              | State                                                                                                                                                                        |
 | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox for Needs organizing in Library, while native still shows Inbox                                                                |
+| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox and Needs organizing and names untitled Entries by their date, while native still shows Inbox                                  |
 | Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Someday      | Implemented on Web and iOS; Web simplified Goals into Someday and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web |
 | Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                      |
 | Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                           |
@@ -92,7 +97,7 @@ Use Git history for feature-level implementation and test evidence.
 
 ### 1. Release and accept the Entry-centered Web flow
 
-- Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, Needs organizing, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
+- Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, untitled Entries named by their date, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.

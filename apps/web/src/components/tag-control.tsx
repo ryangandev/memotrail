@@ -339,7 +339,7 @@ function TagEntryList({
               <Link href={entry.href}>
                 <strong>{entry.title}</strong>
                 <span>
-                  {entry.type} · {entry.date}
+                  {entry.date ? `${entry.type} · ${entry.date}` : entry.type}
                 </span>
               </Link>
             </li>
