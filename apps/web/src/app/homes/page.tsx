@@ -22,6 +22,7 @@ export default async function HomesPage({
       homes={workspace.homes}
       loadError={workspace.loadError}
       ownerId={workspace.viewer.id}
+      defaultTimezone={workspace.defaultTimezone}
       tagOptions={workspace.tagOptions}
     />
   );

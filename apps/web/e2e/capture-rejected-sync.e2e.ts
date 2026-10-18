@@ -169,7 +169,7 @@ async function openDashboardComposer(page: Page) {
 
 async function saveCapture(page: Page, composer: Locator, text: string) {
   const save = composer.getByRole("button", {
-    name: "Save to Library",
+    name: "Save",
     exact: true,
   });
   await expect(save).toBeEnabled({ timeout: 60_000 });

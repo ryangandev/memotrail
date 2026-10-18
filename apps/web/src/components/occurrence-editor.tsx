@@ -1,14 +1,17 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 
 import type { OccurrenceDraft } from "@/lib/data/occurrence";
+import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import {
   DatePickerField,
   type DatePickerGranularity,
 } from "@/components/date-picker-field";
 import { TimezoneSelect } from "@/components/timezone-select";
+import { timezoneOptionLabel } from "@/lib/data/timezones";
 import styles from "./date-fields.module.css";
 
 type Precision = OccurrenceDraft["precision"];
@@ -52,6 +55,9 @@ export function OccurrenceEditor({
     value.precision === "age" ? "age" : "approximate",
   );
   const [showDescription, setShowDescription] = useState(Boolean(value.label));
+  const [changingTimezone, setChangingTimezone] = useState(false);
+  const timezoneRef = useRef<HTMLLabelElement>(null);
+  const timezoneLabelId = useId();
   const precisionLabelId = useId();
   const change = (patch: Partial<OccurrenceDraft>) =>
     onChange({ ...value, precision, ...patch });
@@ -68,8 +74,13 @@ export function OccurrenceEditor({
   const presentShown = spanEnd || precision === "range";
   const endMode = presentShown ? (value.endMode ?? "date") : "date";
   const timeToggle = segment === "day" && (span || precision !== "range");
-  const timezoneShown = defaultTimezone === undefined || exact;
   const timezoneIsDefault = value.timezone === defaultTimezone;
+  // An exact time in the Settings time zone names the zone as text with a Change
+  // action, so most edits never meet the select. A date without a time has no zone
+  // to choose, and an editor without a Settings default always shows the select.
+  const timezoneQuiet = exact && timezoneIsDefault && !changingTimezone;
+  const timezoneShown =
+    defaultTimezone === undefined || (exact && !timezoneQuiet);
   const granularity: DatePickerGranularity =
     segment === "month" || segment === "year" ? segment : "day";
 
@@ -168,7 +179,7 @@ export function OccurrenceEditor({
             />
           ) : null}
           {timezoneShown ? (
-            <label>
+            <label ref={timezoneRef}>
               <span>
                 Time zone
                 {defaultTimezone !== undefined ? (
@@ -187,6 +198,33 @@ export function OccurrenceEditor({
                 value={value.timezone}
               />
             </label>
+          ) : null}
+          {timezoneQuiet ? (
+            <div
+              aria-labelledby={timezoneLabelId}
+              className={styles.timezoneSummary}
+              role="group"
+            >
+              <span>
+                <span id={timezoneLabelId}>Time zone</span>
+                <small>Default from Settings</small>
+              </span>
+              <div>
+                <span>{timezoneOptionLabel(value.timezone, value.start)}</span>
+                <Button
+                  aria-label="Change time zone"
+                  onClick={() => {
+                    // The select replaces this action, so it takes the focus.
+                    flushSync(() => setChangingTimezone(true));
+                    timezoneRef.current?.querySelector("select")?.focus();
+                  }}
+                  size="small"
+                  variant="secondary"
+                >
+                  Change
+                </Button>
+              </div>
+            </div>
           ) : null}
         </div>
         <div className={styles.dateToggles}>

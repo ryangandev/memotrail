@@ -1,9 +1,12 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { Icon } from "@/components/icon";
-import { SearchField } from "@/components/search-field";
-import { tagNameCountLimit, tagNameLengthLimit } from "@/lib/data/organization";
+import {
+  existingTagName,
+  tagNameCountLimit,
+  tagNameLengthLimit,
+} from "@/lib/data/organization";
 import styles from "./entry-organization-editor.module.css";
 
 type EntryOrganizationEditorProps = {
@@ -12,10 +15,15 @@ type EntryOrganizationEditorProps = {
   names: string[];
   onChange: (names: string[]) => void;
   onInputChange: (input: string) => void;
+  // The person's tags, most used first.
   options: string[];
 };
 
 const limit = { count: tagNameCountLimit, length: tagNameLengthLimit };
+// Reusing a tag takes one click, so the most used ones are offered as suggestions.
+const suggestionCount = 6;
+// The tag count limit is shown only once an Entry gets close to it.
+const limitNoticeCount = limit.count - 10;
 
 export function EntryOrganizationEditor({
   disabled,
@@ -26,18 +34,21 @@ export function EntryOrganizationEditor({
   options,
 }: EntryOrganizationEditorProps) {
   const editorId = useId();
-  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [focused, setFocused] = useState(false);
   const normalizedNames = new Set(
     names.map((name) => name.toLocaleLowerCase()),
   );
+  const available = options.filter(
+    (option) => !normalizedNames.has(option.toLocaleLowerCase()),
+  );
+  const full = names.length >= limit.count;
   const query = input.trim();
   const normalizedQuery = query.toLocaleLowerCase();
-  const suggestions = query
-    ? options
-        .filter(
-          (option) =>
-            !normalizedNames.has(option.toLocaleLowerCase()) &&
-            option.toLocaleLowerCase().includes(normalizedQuery),
+  const matches = query
+    ? available
+        .filter((option) =>
+          option.toLocaleLowerCase().includes(normalizedQuery),
         )
         .slice(0, 5)
     : [];
@@ -50,149 +61,188 @@ export function EntryOrganizationEditor({
   const canAdd =
     Boolean(query) &&
     query.length <= limit.length &&
-    names.length < limit.count &&
-    !normalizedNames.has(normalizedQuery);
-
-  function closeEditor() {
-    setOpen(false);
-    onInputChange("");
-  }
+    !full &&
+    !alreadyAddedName;
+  const listOpen = focused && Boolean(query);
+  // Suggestions stay while a name is typed, so the fields below never jump.
+  const suggestions =
+    !full && (focused || names.length === 0)
+      ? available.slice(0, suggestionCount)
+      : [];
 
   function addName(value: string) {
-    const name = value.trim();
-    const normalizedName = name.toLocaleLowerCase();
-
+    const name = existingTagName(value, options);
     if (
-      !name ||
-      name.length > limit.length ||
-      names.length >= limit.count ||
-      normalizedNames.has(normalizedName)
-    ) {
-      closeEditor();
-      return;
-    }
-
-    onChange([...names, name]);
-    closeEditor();
+      name &&
+      name.length <= limit.length &&
+      !full &&
+      !normalizedNames.has(name.toLocaleLowerCase())
+    )
+      onChange([...names, name]);
+    onInputChange("");
   }
 
   return (
     <fieldset className={styles.editor} disabled={disabled} data-ui-field>
-      <legend>Tags</legend>
-      <div className={styles.items}>
-        {names.map((name) => (
-          <span className={styles.item} key={name.toLocaleLowerCase()}>
-            <span>{`#${name}`}</span>
-            <button
-              aria-label={`Remove ${name} from Tags`}
-              className={styles.removeButton}
-              onClick={() => onChange(names.filter((item) => item !== name))}
-              type="button"
-            >
-              <Icon name="close" size={12} />
-            </button>
-          </span>
-        ))}
-
-        {open ? (
+      <legend id={`${editorId}-label`}>Tags</legend>
+      <div
+        className={styles.field}
+        onBlur={(event) => {
+          // A name left in the input stays, and saving the Entry adds it.
+          if (!event.currentTarget.contains(event.relatedTarget))
+            setFocused(false);
+        }}
+        onFocus={() => setFocused(true)}
+      >
+        <div className={styles.combobox}>
           <div
-            className={styles.inlineEditor}
-            onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
-                closeEditor();
+            className={styles.control}
+            data-disabled={disabled ? "true" : undefined}
+            onMouseDown={(event) => {
+              // The whole field focuses the tag input, like a text field.
+              if (event.target === event.currentTarget) {
+                event.preventDefault();
+                inputRef.current?.focus();
               }
             }}
           >
-            <SearchField
-              className={styles.searchField}
-              data-escape-layer="organization"
+            {names.map((name) => (
+              <span className={styles.item} key={name.toLocaleLowerCase()}>
+                <span>{`#${name}`}</span>
+                <button
+                  aria-label={`Remove ${name} from Tags`}
+                  className={styles.removeButton}
+                  onClick={() =>
+                    onChange(names.filter((item) => item !== name))
+                  }
+                  type="button"
+                >
+                  <Icon name="close" size={12} />
+                </button>
+              </span>
+            ))}
+            <input
+              aria-autocomplete="list"
               aria-controls={`${editorId}-options`}
-              aria-expanded={Boolean(query)}
-              autoFocus
-              hideLabel
-              label="Search or create a tag"
+              aria-expanded={listOpen}
+              aria-labelledby={`${editorId}-label`}
+              autoComplete="off"
+              className={styles.input}
+              data-escape-layer={query ? "organization" : undefined}
+              enterKeyHint="done"
               maxLength={limit.length}
               onChange={(event) => onInputChange(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Escape") {
+                if (event.key === "Escape" && query) {
                   event.preventDefault();
                   event.stopPropagation();
-                  closeEditor();
+                  onInputChange("");
                 }
                 if (event.key === "Enter" || event.key === ",") {
                   event.preventDefault();
                   if (canAdd) addName(query);
+                  else if (alreadyAddedName) onInputChange("");
+                }
+                if (event.key === "Backspace" && !input && names.length > 0) {
+                  event.preventDefault();
+                  onChange(names.slice(0, -1));
                 }
               }}
-              placeholder="Find or create tag"
+              placeholder={
+                full
+                  ? "Tag limit reached"
+                  : names.length
+                    ? "Add another tag"
+                    : "Add a tag"
+              }
+              readOnly={full}
+              ref={inputRef}
               role="combobox"
-              size="small"
               value={input}
             />
-            {query ? (
-              <div
-                className={styles.suggestions}
-                id={`${editorId}-options`}
-                role="listbox"
-              >
-                {alreadyAddedName ? (
-                  <div
-                    aria-disabled="true"
-                    aria-selected="false"
-                    className={styles.statusOption}
-                    role="option"
-                  >
-                    <Icon name="tag" size={14} />
-                    <span>{alreadyAddedName}</span>
-                    <small>Already added</small>
-                  </div>
-                ) : null}
-                {suggestions.map((suggestion) => (
-                  <button
-                    aria-selected="false"
-                    key={suggestion.toLocaleLowerCase()}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => addName(suggestion)}
-                    role="option"
-                    type="button"
-                  >
-                    <Icon name="tag" size={14} />
-                    <span>{suggestion}</span>
-                    <small>Existing tag</small>
-                  </button>
-                ))}
-                {canAdd && !exactOption ? (
-                  <button
-                    aria-selected="false"
-                    className={styles.createOption}
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => addName(query)}
-                    role="option"
-                    type="button"
-                  >
-                    <Icon name="plus" size={14} />
-                    <span>Create tag</span>
-                    <strong>{query}</strong>
-                  </button>
-                ) : null}
-              </div>
-            ) : null}
           </div>
-        ) : names.length < limit.count ? (
-          <button
-            aria-label="Add tag"
-            className={styles.addButton}
-            onClick={() => setOpen(true)}
-            type="button"
+
+          {listOpen ? (
+            <div
+              className={styles.options}
+              id={`${editorId}-options`}
+              role="listbox"
+            >
+              {alreadyAddedName ? (
+                <div
+                  aria-disabled="true"
+                  aria-selected="false"
+                  className={styles.statusOption}
+                  role="option"
+                >
+                  <Icon name="tag" size={14} />
+                  <span>{alreadyAddedName}</span>
+                  <small>Already added</small>
+                </div>
+              ) : null}
+              {matches.map((match) => (
+                <button
+                  aria-selected="false"
+                  key={match.toLocaleLowerCase()}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => addName(match)}
+                  role="option"
+                  type="button"
+                >
+                  <Icon name="tag" size={14} />
+                  <span>{match}</span>
+                  <small>Existing tag</small>
+                </button>
+              ))}
+              {canAdd && !exactOption ? (
+                <button
+                  aria-selected="false"
+                  className={styles.createOption}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => addName(query)}
+                  role="option"
+                  type="button"
+                >
+                  <Icon name="plus" size={14} />
+                  <span>Create tag</span>
+                  <strong>{query}</strong>
+                </button>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        {suggestions.length > 0 ? (
+          <div
+            aria-label="Most used tags"
+            className={styles.suggestions}
+            role="group"
           >
-            <Icon name="plus" size={15} />
-            <span>Add tag</span>
-          </button>
+            <span aria-hidden="true">Most used</span>
+            {suggestions.map((suggestion) => (
+              <button
+                aria-label={`Add tag ${suggestion}`}
+                className={styles.suggestion}
+                key={suggestion.toLocaleLowerCase()}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  addName(suggestion);
+                  inputRef.current?.focus();
+                }}
+                type="button"
+              >
+                <Icon name="plus" size={12} />
+                <span>{suggestion}</span>
+              </button>
+            ))}
+          </div>
         ) : null}
       </div>
-      <small>
-        {names.length} of {limit.count}
-      </small>
+      {names.length >= limitNoticeCount ? (
+        <small className={styles.limit}>
+          {names.length} of {limit.count} tags
+        </small>
+      ) : null}
     </fieldset>
   );
 }

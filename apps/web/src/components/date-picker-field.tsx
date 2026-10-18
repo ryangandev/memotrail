@@ -60,12 +60,15 @@ export function DatePickerField({
   const [localValue, setLocalValue] = useState(defaultValue);
   const value = controlledValue ?? localValue;
   const inputRef = useRef<HTMLInputElement>(null);
+  // Held in state, since the picker mounts its positioner after it opens.
+  const [calendar, setCalendar] = useState<HTMLDivElement | null>(null);
   function onChange(nextValue: string) {
     if (controlledValue === undefined) setLocalValue(nextValue);
     onValueChange?.(nextValue);
   }
   const pickerId = useId();
   const [pickerOpen, setPickerOpen] = useState(false);
+  useTopLayer(calendar, pickerOpen);
   const dateText = includeTime ? datePart(value) : value;
   const timeText = includeTime ? timePart(value) : "";
   const selected = calendarDate(dateText, granularity);
@@ -228,7 +231,11 @@ export function DatePickerField({
         </DatePicker.Control>
 
         <Portal container={portalContainer}>
-          <DatePicker.Positioner className={styles.datePickerPositioner}>
+          <DatePicker.Positioner
+            className={styles.datePickerPositioner}
+            popover="manual"
+            ref={setCalendar}
+          >
             <DatePicker.Content
               className={styles.datePickerContent}
               data-escape-layer="calendar"
@@ -355,6 +362,9 @@ function TimePicker({
 }) {
   const parts = timeParts(value);
   const title = `Choose ${label.toLowerCase()} time`;
+  const [positioner, setPositioner] = useState<HTMLDivElement | null>(null);
+  const [open, setOpen] = useState(false);
+  useTopLayer(positioner, open);
 
   function change(part: keyof typeof parts, nextValue: string) {
     const next = { ...parts, [part]: nextValue };
@@ -367,6 +377,7 @@ function TimePicker({
 
   return (
     <Popover.Root
+      onOpenChange={(details) => setOpen(details.open)}
       positioning={{ placement: "bottom", strategy: "fixed" }}
       unmountOnExit
     >
@@ -379,7 +390,11 @@ function TimePicker({
         <span>{timeDisplay(parts)}</span>
       </Popover.Trigger>
       <Portal container={portalContainer}>
-        <Popover.Positioner className={styles.timePickerPositioner}>
+        <Popover.Positioner
+          className={styles.timePickerPositioner}
+          popover="manual"
+          ref={setPositioner}
+        >
           <Popover.Content className={styles.timePickerContent}>
             <Popover.Title>{title}</Popover.Title>
             <div className={styles.timePickerFields}>
@@ -438,6 +453,23 @@ function TimeSelect({
       </select>
     </label>
   );
+}
+
+/**
+ * Shows an open picker in the top layer, so a scrolling or translucent
+ * container, such as Quick Capture's native dialog, cannot clip it. The
+ * picker stays in that container's tree, so the container keeps its focus and
+ * theme.
+ */
+function useTopLayer(element: HTMLElement | null, open: boolean) {
+  useEffect(() => {
+    if (!open || !element?.isConnected) return;
+    if (!element.matches(":popover-open")) element.showPopover();
+    return () => {
+      if (element.isConnected && element.matches(":popover-open"))
+        element.hidePopover();
+    };
+  }, [element, open]);
 }
 
 function CalendarHeader() {

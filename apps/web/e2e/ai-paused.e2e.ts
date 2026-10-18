@@ -259,7 +259,7 @@ test("Captures with saved AI consent start no paused suggestion work", async ({
       exact: true,
     });
     const save = capture.getByRole("button", {
-      name: "Save to Library",
+      name: "Save",
       exact: true,
     });
     const toast = page.locator("[data-sonner-toast]");

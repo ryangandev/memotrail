@@ -46,9 +46,7 @@ test("capture keeps formatting when the note ends with a new line", async ({
       bodyRich: { text: "Bold capture\n\n  ", version: 1 },
     });
 
-  await capture
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await capture.getByRole("button", { name: "Save", exact: true }).click();
   await expect(
     page
       .locator("[data-sonner-toast]")

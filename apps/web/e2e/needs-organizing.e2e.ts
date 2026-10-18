@@ -140,7 +140,7 @@ test("captures land in Library and wait under Needs organizing until they have a
     const editor = page.getByRole("dialog", { name: "Edit Entry" });
     await expect(editor.getByRole("textbox", { name: "Title" })).toBeFocused();
     await expect(
-      editor.getByRole("button", { name: "Save to Library" }),
+      editor.getByRole("button", { name: "Save", exact: true }),
     ).toHaveCount(0);
     await expect(
       editor.getByRole("button", { name: "Save changes" }),
@@ -155,7 +155,7 @@ test("captures land in Library and wait under Needs organizing until they have a
         (element, photoElement) =>
           Boolean(
             element.compareDocumentPosition(photoElement as Node) &
-            Node.DOCUMENT_POSITION_PRECEDING,
+            Node.DOCUMENT_POSITION_FOLLOWING,
           ),
         await photos.elementHandle(),
       ),

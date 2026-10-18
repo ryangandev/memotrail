@@ -3,7 +3,6 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type Locator } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { setOccurrencePrecision } from "./helpers/occurrence";
 
 type SidebarMotionFrame = {
   logoCenter: number;
@@ -808,9 +807,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await quickCapture
       .getByRole("button", { name: "Date", exact: true })
       .click();
-    await setOccurrencePrecision(quickCapture, "day");
     await quickCapture
-      .getByRole("button", { name: "Choose occurred", exact: true })
+      .getByRole("button", { name: "Choose date", exact: true })
       .click();
     const captureCalendar = page.locator(
       '[data-scope="date-picker"][data-part="content"][data-state="open"]',
@@ -825,7 +823,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(captureCalendar).not.toBeVisible();
     await expect(quickCapture).toBeVisible();
     await quickCapture
-      .getByRole("button", { name: "Use capture time", exact: true })
+      .getByRole("button", { name: "Date", exact: true })
       .click();
 
     await page.keyboard.press("Escape");
@@ -857,7 +855,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .getByRole("button", { name: "Close quick capture", exact: true })
       .evaluate((element) => element.getBoundingClientRect().right);
     const saveRight = await quickCapture
-      .getByRole("button", { name: "Save to Library", exact: true })
+      .getByRole("button", { name: "Save", exact: true })
       .evaluate((element) => element.getBoundingClientRect().right);
     expect(Math.round(dialogRight - closeRight)).toBe(21);
     expect(Math.round(dialogRight - saveRight)).toBe(21);
@@ -983,7 +981,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       path: test.info().outputPath("memotrail-quick-capture-typing.png"),
     });
     await quickCapture
-      .getByRole("button", { name: "Save to Library", exact: true })
+      .getByRole("button", { name: "Save", exact: true })
       .click();
     await expect(quickCaptureForm).not.toContainText(
       "MemoTrail could not store this Entry",

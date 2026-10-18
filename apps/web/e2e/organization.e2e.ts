@@ -179,15 +179,12 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       .fill("Moved to Seattle");
     await setOccurrencePrecision(momentDialog, "day");
     await fillOccurrenceStart(momentDialog, "2025-03-14");
-    await momentDialog
-      .getByRole("button", { name: "Add tag", exact: true })
-      .click();
-    await momentDialog
-      .getByRole("combobox", { name: "Search or create a tag" })
-      .fill("travel");
-    await momentDialog
-      .getByRole("combobox", { name: "Search or create a tag" })
-      .press("Enter");
+    const momentTags = momentDialog.getByRole("combobox", {
+      name: "Tags",
+      exact: true,
+    });
+    await momentTags.fill("travel");
+    await momentTags.press("Enter");
     await momentDialog
       .getByRole("button", { name: "Add", exact: true })
       .click();

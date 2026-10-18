@@ -6,7 +6,7 @@ const { Button, ButtonLink, Icon } = MemoTrail;
 // A real label for each variant. A variant added to button.yaml shows its own name until it gets
 // one here.
 const labels = {
-  primary: "Save to Library",
+  primary: "Save changes",
   secondary: "Cancel",
   ghost: "Edit",
   danger: "Move to Trash",

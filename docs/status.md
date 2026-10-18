@@ -34,6 +34,7 @@ Item page photos, the export page, and Timeline styles are settled: photos show 
 The date precision controls are settled too: Web date forms choose Day, Month, Year, or Not sure, with Add time and Add end date toggles, and an empty date means Unknown.
 Native iOS still shows the eight Date types until it follows Web.
 Web Timeline no longer opens the birth date prompt on its own; native iOS still asks on the first Timeline visit until it follows Web.
+The Web capture composer's Date picks only a day with an optional time, and its action is labeled Save; native still opens the full date editor with Use capture time and saves to Inbox.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -47,7 +48,8 @@ The desktop sidebar has a compact icon rail, panel control, and animated width c
 The Web sidebar supports an editor-aware Command B shortcut, and the bottom glass dock groups sparkle-icon New Entry on the left with Search on the right, retaining Command J and Command K.
 The capture dock uses an inset focus ring, a consistent frosted composer surface, and a retained editor with entrance and exit motion; personal visual acceptance is pending.
 Library now combines the organized all-items browser with keyword and filtered search; older `/search` URLs redirect to Library.
-The Entry editor hides AI suggestions and places photos after tags; the Library browser includes every capture as soon as it is saved.
+The Entry editor hides AI suggestions and places tags right under the Note with most used suggestions; the Library browser includes every capture as soon as it is saved.
+Native iOS still adds tags through its picker sheet without most used suggestions and still shows the timezone select for every exact time until it follows Web.
 Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.
 The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed-in user's data and the shared capture, page, image, empty-state, and tag components.
 The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
@@ -92,6 +94,8 @@ Use Git history for feature-level implementation and test evidence.
 
 - Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, Needs organizing, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
+- Selecting a draft photo in Quick Capture opens its preview under the native dialog, where the composer covers it and its Close button cannot be reached; the Dashboard composer's preview works.
+  Ark dialogs portal to the page body, below the top layer, so the shared `Dialog` needs a top-layer path before any dialog opens from Quick Capture.
 - Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
   Hosted `service_role` and `anon` get no table access or function execution unless a migration grants it, and new public tables get row level security automatically.

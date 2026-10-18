@@ -120,7 +120,7 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
       .click({ timeout: 5000 });
     const dialog = page.getByRole("dialog");
     await expect(
-      dialog.getByRole("button", { name: "Save to Library", exact: true }),
+      dialog.getByRole("button", { name: "Save", exact: true }),
     ).toHaveCount(0);
     await expect(
       dialog.getByRole("complementary", { name: "AI suggestions" }),

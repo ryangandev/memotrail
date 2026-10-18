@@ -144,6 +144,14 @@
   border-color: var(--mt-color-border);
 }
 
+/* Related actions stay together, so a narrow toolbar wraps whole groups. */
+.toolbarGroup {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--mt-space-0-5);
+}
+
 .toolbarButton {
   position: relative;
   display: grid;
@@ -160,7 +168,7 @@
     background var(--mt-motion-quick);
 }
 
-.toolbarButton:first-child {
+.toolbarGroup:first-child > .toolbarButton:first-child {
   margin-left: calc(var(--mt-space-1-75) * -1);
 }
 
@@ -211,13 +219,13 @@
   transform: translate(-50%, 0);
 }
 
-.toolbarButton:first-child .tooltip {
+.toolbarGroup:first-child > .toolbarButton:first-child .tooltip {
   left: 7px;
   transform: translate(0, -3px);
 }
 
-.toolbarButton:first-child:hover .tooltip,
-.toolbarButton:first-child:focus-visible .tooltip {
+.toolbarGroup:first-child > .toolbarButton:first-child:hover .tooltip,
+.toolbarGroup:first-child > .toolbarButton:first-child:focus-visible .tooltip {
   transform: translate(0, 0);
 }
 
@@ -305,10 +313,22 @@
   }
 }
 
+/* Every action stays visible on a phone: buttons tighten so more fit on a row,
+   and a narrower toolbar wraps whole groups, where a separator would dangle at a
+   line end, so group spacing replaces separators. */
 @media (max-width: 480px) {
   .toolbar {
     flex-wrap: wrap;
+    column-gap: var(--mt-space-3);
     overflow-x: visible;
+  }
+
+  .toolbarButton {
+    width: 28px;
+  }
+
+  .separator {
+    display: none;
   }
 }
 

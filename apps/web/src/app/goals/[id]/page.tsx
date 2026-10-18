@@ -33,6 +33,7 @@ export default async function GoalDetailPage({
     <FocusedRecordDetail
       kind="goal"
       record={record}
+      defaultTimezone={workspace.defaultTimezone}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
     />
