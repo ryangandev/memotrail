@@ -34,7 +34,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts` | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests      |
 | Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`  | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests              |
 | Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                           | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                         |
-| Timeline, Homes, Vehicles, Goals, or First Times         | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                   |
+| Timeline, Homes, Vehicles, or First Times                | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                   |
 | Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules           | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests |
 | Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator      |
 
@@ -56,13 +56,14 @@ Pair it with the test file carrying the same feature name.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
 - `entries` is the canonical content table.
-- `entries.item_kind` distinguishes ordinary Entries, focused Entities, and Goals.
+- `entries.item_kind` distinguishes ordinary Entries and focused Entities.
+  Migration `202610190001` retired the Goal Kind with Someday: every Someday item became an ordinary Entry tagged `someday`, and `entries_item_kind_valid` allows only `entry` and `entity`.
 - `entries.item_subtype` is `entry` for every ordinary Entry and `home` or `vehicle` for an Entity; descriptive writing and event labels are tags.
 - Entries have no Inbox state.
   Migration `202610040004` retired Inbox, and `202610040005` dropped `entries.inbox_status`, `home_workspace.inbox_count`, and the organize flag on Entry review.
   Web `app/inbox/actions.ts` and the `lib/data/inbox*` modules keep their names but now serve capture, sync, and the Entry editor.
 - `milestones` marks an ordinary Entry as a life milestone: `shape` is `moment` or `period`, `lane` is `work_study` or `other`, and `is_first_time` flags a First Time.
-  A date on an ordinary Entry does not put it on Timeline, and `enforce_milestone_entry` rejects a milestone on a Home, Vehicle, or Goal.
+  A date on an ordinary Entry does not put it on Timeline, and `enforce_milestone_entry` rejects a milestone on a Home or Vehicle.
   `timeline_workspace` returns every milestone plus every Home and Vehicle, which land in the `homes` and `vehicles` lanes as Periods without a milestone row.
   `first_times_workspace` returns the Entries whose milestone is a First Time, and `home_workspace.now_items` the Periods, Homes, and Vehicles that started and have no end.
   Migration `202610040009` created `milestones` and dropped `timeline_items`, `timeline_tracks`, their RPCs, and the First Time RPCs.
@@ -92,28 +93,30 @@ Pair it with the test file carrying the same feature name.
   Homes may omit a Location entirely, and typing an address part in the Home editor replaces any chosen search result, so an edited address never keeps old coordinates.
   `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
 - Quick Capture creates an organized `entry:entry` in Library; the Web Entry editor and iOS Inbox review save that same Entry without a Kind selector.
-- Home, Vehicle, and Goal creation starts in Timeline or a focused view; a milestone is an Entry, created in the Entry editor from Timeline or First Times or marked later on its Item page.
+- Home and Vehicle creation starts in Timeline or a focused view; a milestone is an Entry, created in the Entry editor from Timeline or First Times or marked later on its Item page.
 - Migration `202610040004` drops `organize_capture`, `extract_capture_item`, `capture_extraction_source`, and `extract_capture_to_goal`, `_home`, and `_vehicle`, so Captures no longer hand off to focused records.
   Migration `202610040005` removed the Capture source parameter from the Home and Vehicle Location saves, and `202610040008` turned the `source_capture` subtype those handoffs left on a source Entry back into a plain `entry`.
-  Existing `derived` and `derived_from` provenance links stay in the data.
+  Migration `202610190001` deleted the `derived` and `derived_from` provenance links those handoffs and Add to Someday left.
 - A focused-record save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
   After a Home save, the editor holds the saved snapshot, so a retry leaves the Location unchanged instead of creating another one.
-- Web shows Goals as Someday, and the `active` status as Not yet. `goals.status` is `active`, `achieved`, or `let_go`, there is no horizon, and `save_goal_entry` and `extract_goal_from_item` take no related links and never change them.
-  `goals_workspace` returns only `achievement` links.
-- Migration `202610040006` deletes every general `related` link, scrubs them from version history, drops `entry_relations` and `set_entry_relation`, and limits `entry_links.relationship` to `achievement`, `derived`, `derived_from`, `exploration_conclusion`, and `exploration_source`.
-- Web Goal extraction uses a caller-generated target UUID for idempotency, preserves the source revision and identity, and records `derived` plus `derived_from` provenance links so both items remain discoverable.
+- Someday and the Map destination are retired.
+  Migration `202610190001` converted every Goal, including those in Trash, into an `entry:entry` that keeps its title, writing and formatting, photos, Location, tags, created and updated times, and Trash state.
+  Each owner gains one `someday` tag, reusing a differently cased one, which the Entry receives unless it already holds 70 tags; the status and target date become readable lines appended to the writing, such as `Someday status: Done`.
+  It deleted the `achievement`, `derived`, and `derived_from` links, which leaves the First Time a done item created and the source of an item added to Someday as ordinary Entries, and dropped the `goals` table, `save_goal_entry`, `extract_goal_from_item`, `achieve_goal_with_occurrence`, `trash_goal_entry`, and `goals_workspace`.
+  `wiki_items_workspace`, `search_wiki_items`, `archive_wiki_search_evidence`, `default_item_subtype`, and `export_dataset_names` no longer name Goals.
+  Migration `202610190002` removed the `tiles` provider quota, which only the Map's tile proxy used.
+  Web `app/goals/[[...rest]]` redirects an old Someday address to `/items/[entry]` while the Entry exists and to Library otherwise, and `/map` redirects to Library in `next.config.ts`.
+- Migration `202610040006` deletes every general `related` link, scrubs them from version history, drops `entry_relations` and `set_entry_relation`, and limited `entry_links.relationship` to `achievement`, `derived`, `derived_from`, `exploration_conclusion`, and `exploration_source`; `202610190001` removed the first three, leaving only the exploration links.
 - `save_entry` is the Web Entry editor's only save, and it saves plain `entry:entry` Entries only; focused records keep their own editors and RPCs.
   `p_milestone` (`{shape, lane, isFirstTime}` or null) is required, and saving null removes the Entry's milestone.
   It writes plaintext and `body_rich` in one revision, and clears formatting when `p_body_rich` is null and the primary Location when `p_primary_location` is null.
   `p_photo_location` (`{attachmentId, latitude, longitude}`) adds the photo's GPS position as a `photo` Location, and fails with `photo_source_changed` if the photo is no longer the Entry's active original.
   Migration `202610040008` replaced `review_wiki_item_with_location_rich` and its nested review steps, which took a Kind that could only be `entry`, and dropped functions no client called: `save_home_entry`, `save_vehicle_entry`, `save_timeline_entry`, `mark_goal_achieved_with_first_time`, `library_text_matches`, and `save_location`.
 - Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
-  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040008` removed, so it fails against them until it is rewritten to follow Web.
+  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040008` and `202610190001` removed, so it fails against them until it is rewritten to follow Web.
   Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
   Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
   The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
-- Web and iOS create a separately editable Goal with `extract_goal_from_item` when an established Wiki Item inspires a Goal. The caller-generated Goal ID makes lost-response retries idempotent, and the Item page exposes both provenance directions.
-- `convert_entry_to_goal` remains only as an administrative recovery function. Authenticated and anonymous clients have no execute grant because established items must never change Kind through a conversion.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, or media.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich` and carries the exact matching plaintext.
   The `discard_stale_entry_rich_text` trigger removes `body_rich` whenever a write leaves its text different from `body`, so plaintext focused editors, direct client writes, and restores cannot keep outdated formatted text for search or export.
@@ -146,7 +149,7 @@ Pair it with the test file carrying the same feature name.
 - MemoTrail keeps no earlier versions.
   Migration `202610040007` dropped `entry_versions`, `entry_photo_changes`, the history and restore RPCs, and the archiving trigger, deleted every stored version, and purged prepared export snapshots that held them.
   Web `/history` redirects to `/items/[entry]` or `/library` in `next.config.ts`.
-- Save RPCs retain unchanged Location, Timeline, and Entry-link memberships and skip unchanged Home, Vehicle, and Goal detail updates.
+- Save RPCs retain unchanged Location, Timeline, and Entry-link memberships and skip unchanged Home and Vehicle detail updates.
 - Older clients must preserve fields they cannot represent or reject the write safely.
 - AI organization payloads offer optional title, tags, and occurrence suggestions without structural classification.
   The database rejects legacy `entryType`, `classification`, and `collections` payload keys.
@@ -161,16 +164,16 @@ Pair it with the test file carrying the same feature name.
 - Recorded timezone controls calendar interpretation and search overlap.
 - `profiles.timezone` supplies the default for new exact timestamps; an Entry stores its own timezone snapshot and may override that default.
 - Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.
-- Every Web date editor receives the Settings default through `lib/data/profile-timezone.ts`: the Entry editor, Timeline forms, and the Home, Vehicle, and Goal achievement editors on their own pages.
+- Every Web date editor receives the Settings default through `lib/data/profile-timezone.ts`: the Entry editor, Timeline forms, and the Home and Vehicle editors on their own pages.
   They do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
   `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action, and shows the select only when the profile cannot be read.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
 - Workspaces return an Entry's stored title, an empty string when it has none, and never a stand-in made from its writing.
-  Migration `202610180087` made `home_workspace`, `home_resurfaced_memory`, `first_times_workspace`, `goals_workspace`, and `wiki_items_workspace` follow that, with the date fields each needs to name an untitled Entry.
+  Migration `202610180087` made `home_workspace`, `home_resurfaced_memory`, `first_times_workspace`, `goals_workspace` (since dropped), and `wiki_items_workspace` follow that, with the date fields each needs to name an untitled Entry.
   It only adds fields, so the Web deployed before it keeps working whichever ships first.
   Where that Web shows a title without its own fallback, the earlier stand-in stays until a later migration removes it: `timeline_workspace` adds `stored_title`, and `trash_workspace` adds `entry_title`, the stored title of the row's Entry or of the Entry a photo belongs to, with that Entry's date.
 - Web `entryDisplayTitle` and `occurrenceTitle` in `lib/data/occurrence.ts` name an untitled Entry by its date at its recorded precision, read in its recorded time zone with the fixed `en-US` locale, so the server and every browser render the same text.
-  Every Web surface that shows an Entry title goes through them: Dashboard, Library, Library search, the Command Palette, Pending sync, the Item page and its page title, Map, Timeline, First Times, Someday, Trash, and AI search.
+  Every Web surface that shows an Entry title goes through them: Dashboard, Library, Library search, the Command Palette, Pending sync, the Item page and its page title, Timeline, First Times, Trash, and AI search.
 - An optional private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings; without it, `createTimelineLayout` starts from the earliest dated item, padded.
 - Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.
   `TimelineWorkspace` measures titles in the lane item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Period only when the bar holds it.
@@ -195,7 +198,7 @@ Pair it with the test file carrying the same feature name.
   The list groups Goals by reflective state like Web `goalSections`, and a Goal's own page pages past the first 100 Goals to find it, like Web `getGoalsWorkspace(targetId)`.
   The editor keeps the Web Related Items picker and, for a saved Bucket List Goal, the milestone panel, which records the achievement through `achieve_goal_with_occurrence` and stays open.
   `App/ConnectedItemsSection.swift` lists a record's Connected Items and routes them like Web `wikiEntryHref`: Moments and Periods open on the Timeline, and other records open their own page through `WikiItemDestinationView`.
-- Native Goals code predates the Web Someday simplification: it sends horizons and related links to the save and extraction RPCs that migration `202610040003` replaces, so it fails until native follows Web.
+- Native Goals code predates the Web Someday simplification and now the Web removal of Someday: it calls the save, extraction, and achievement RPCs and reads the `goals` table that migrations `202610040003` and `202610190001` replaced or dropped, so it fails until native follows Web.
 - Native Inbox code predates the Web retirement of Inbox: its Inbox lists only `unreviewed` Entries, so it stays empty, and its Capture handoffs call `extract_capture_to_goal`, `_home`, and `_vehicle`, which migration `202610040004` drops, so they fail until native follows Web.
 - Native People code predates the Web removal of People and calls functions that migration `202610040002` drops; it is retired when native follows Web.
 - Native `Features/People` followed Web `/people` and `/people/[id]` with `PeopleView`, `PersonDetailView`, and `PersonEditorSheet` over `PeopleController`.
@@ -459,7 +462,7 @@ Pair it with the test file carrying the same feature name.
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
 - New route pages choose the narrowest variant that fits their content; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
-- Home, Vehicle, First Time, and Goal result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+- Home, Vehicle, and First Time result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
   Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
 - Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
@@ -478,14 +481,10 @@ Pair it with the test file carrying the same feature name.
 - Server-only Supabase, Geoapify, and AI credentials exist only in trusted environments.
 - Web address searches and static maps pass through authenticated route handlers, so `GEOAPIFY_API_KEY` is never exposed to the browser.
   The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
-- Both maps read current Entry-Location links through owner-scoped RLS.
-  Native Map reads page in stable order with a 5,000-link cap and publish only complete results; Kind/year filters apply to the loaded set.
-  Native MapKit provides the base map and collision-based annotation clusters without a provider key or device-location permission.
-  Native `LocationMapView` lays out Web's map page, and a chosen pin or cluster lists its Entries in the panel below the map, like Web `selectedIds`.
-  The Web Map proxies Geoapify raster tiles through an authenticated route.
-  Its 5,000-link bound is ordered newest first and explicitly disclosed in the UI; filters apply to loaded results.
-- Interactive tiles and static Location previews accept only light or dark theme parameters; authenticated routes choose allowlisted Geoapify styles while keeping the provider key server-side.
-- Search, preview, and tile routes each consume an owner-scoped hourly database quota before contacting Geoapify.
+- The Web Map destination is retired along with its tile proxy and Leaflet; Web shows a Location only as an editor preview and on record cards.
+  The native Map still reads current Entry-Location links through owner-scoped RLS, pages them in stable order with a 5,000-link cap, and uses MapKit clustering in `Features/Map`, until native follows Web.
+- Static Location previews accept only light or dark theme parameters; the authenticated route chooses an allowlisted Geoapify style while keeping the provider key server-side.
+- Address search and preview routes each consume an owner-scoped hourly database quota before contacting Geoapify.
 - iOS receives public backend configuration and the Web API base URL.
 - `lib/auth/api.ts` verifies Web cookie or native bearer identity for media, metadata, and export independently of AI availability.
   AI routes add their own pause gate before shared authentication, and native AI entry points remain paused as well.

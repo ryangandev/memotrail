@@ -296,7 +296,7 @@ test("Home Trash still refuses another device's writing after a photo removal", 
 
   await expect(
     editor.getByText(
-      "This item changed on another device. Close it, refresh, and try again.",
+      "This Home changed on another device. Close it, refresh, and try again.",
     ),
   ).toBeVisible();
   expect((await entryRow(client, entry)).deleted_at).toBeNull();
