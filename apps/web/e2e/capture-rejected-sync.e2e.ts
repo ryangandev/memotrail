@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { clickUnlessSynced } from "./helpers/capture-sync";
+import { isTopmostAtCenter } from "./helpers/hit-test";
 import { test, expect } from "./helpers/workspace-test";
 
 // A capture MemoTrail will never accept is not an offline capture: it is kept
@@ -73,6 +74,37 @@ test("a rejected capture can be copied and discarded while later captures sync",
     rejectedText,
   );
 
+  // Quick Capture is a native modal dialog in the top layer, so the shared
+  // confirmation it asks for must stack above it and stay interactive.
+  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  const quickCapture = page.getByRole("dialog", {
+    name: "What’s on your mind?",
+    exact: true,
+  });
+  const quickDiscard = quickCapture
+    .getByRole("region", { name: "Pending sync" })
+    .getByRole("button", { name: "Discard", exact: true });
+  await quickDiscard.click();
+  const confirmation = page.getByRole("dialog", {
+    name: "Discard this pending Entry?",
+  });
+  const cancel = confirmation.getByRole("button", { name: "Cancel" });
+  await expect(cancel).toBeFocused();
+  expect(await isTopmostAtCenter(cancel)).toBe(true);
+  // Escape dismisses only the confirmation and returns focus to Discard.
+  await page.keyboard.press("Escape");
+  await expect(confirmation).toBeHidden();
+  await expect(quickCapture).toBeVisible();
+  await expect(quickDiscard).toBeFocused();
+  await quickDiscard.click();
+  await cancel.click();
+  await expect(confirmation).toBeHidden();
+  await expect(quickDiscard).toBeFocused();
+  await quickCapture
+    .getByRole("button", { name: "Close quick capture" })
+    .click();
+  await expect(quickCapture).not.toBeVisible();
+
   // The header lists it apart from waiting captures and discards it after
   // confirmation, with its queued copy.
   await pendingIndicator(page).click();
@@ -84,18 +116,21 @@ test("a rejected capture can be copied and discarded while later captures sync",
   await expect(
     dialog.getByRole("button", { name: "Retry now", exact: true }),
   ).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Discard", exact: true }).click();
-  const confirmation = page.getByRole("dialog", {
-    name: "Discard this pending Entry?",
+  const headerDiscard = dialog.getByRole("button", {
+    name: "Discard",
+    exact: true,
   });
+  await headerDiscard.click();
   await expect(confirmation).toContainText(
     "Its text will be removed from this device. This cannot be undone.",
   );
-  await confirmation.getByRole("button", { name: "Cancel" }).click();
+  await expect(cancel).toBeFocused();
+  await cancel.click();
   await expect(confirmation).toBeHidden();
+  await expect(headerDiscard).toBeFocused();
   await expect(dialog.getByRole("article")).toHaveCount(1);
 
-  await dialog.getByRole("button", { name: "Discard", exact: true }).click();
+  await headerDiscard.click();
   await confirmation
     .getByRole("button", { name: "Discard", exact: true })
     .click();
