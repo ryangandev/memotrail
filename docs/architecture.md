@@ -163,11 +163,12 @@ Pair it with the test file carrying the same feature name.
   They do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
   `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action, and shows the select only when the profile cannot be read.
 - Timeline, search, Home, and specialized editors must use the same occurrence semantics.
-- A private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings.
+- An optional private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings; without it, `createTimelineLayout` starts from the earliest dated item, padded.
 - Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.
   `TimelineWorkspace` measures titles in the lane item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Period only when the bar holds it.
   A shorter Period draws its bar alone with the title after it, or before it at the end of the Timeline, like a Moment; titles beside an item mask the year and Today lines and end in an ellipsis only past 180 pixels.
   A dashed Today line uses the same reference instant as open Periods, whose bars end against it with a flat right edge.
+  The canvas is at least the width beside the lane labels, measured on the client, so a short Timeline fills its card and a long one scrolls.
 - Every Timeline item is a link to its Item page through `wikiEntryHref`. Creation routes by what is added, not by lane: a milestone or First Time opens `NewEntryDialog` from `components/entry-editor-dialog.tsx` with the milestone preset, and a Home or Vehicle reuses the exported Records editor in a lazy-loaded modal.
 - `components/milestone-fields.tsx` is the Entry editor's Timeline fieldset; turning a Period back into a Moment clears its end date.
 - Timeline server data loads the lanes, the profile's time zone and birth date, and tag choices in parallel.

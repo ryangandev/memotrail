@@ -77,8 +77,10 @@
   display: grid;
   width: calc(var(--timeline-lane-label-width) + var(--timeline-canvas-width));
   min-width: 100%;
-  grid-template-columns: var(--timeline-lane-label-width) var(
-      --timeline-canvas-width
+  /* The canvas column fills the card until the measured width arrives. */
+  grid-template-columns: var(--timeline-lane-label-width) minmax(
+      var(--timeline-canvas-width),
+      1fr
     );
 }
 
@@ -86,7 +88,11 @@
   position: absolute;
   top: 0;
   bottom: 0;
-  left: calc(var(--timeline-lane-label-width) + var(--timeline-today-offset));
+  left: calc(
+    var(--timeline-lane-label-width) +
+      (100% - var(--timeline-lane-label-width)) *
+      var(--timeline-today-percent) / 100
+  );
   z-index: var(--mt-layout-layer-local1);
   width: var(--mt-size-stroke-thin);
   background: repeating-linear-gradient(
@@ -152,6 +158,15 @@
 
 .axis span:last-child {
   transform: translateX(-100%);
+}
+
+/* A year on the very edge keeps clear of the lane border or the card edge. */
+.axis span[data-edge="start"] {
+  transform: translateX(var(--mt-space-2));
+}
+
+.axis span[data-edge="end"] {
+  transform: translateX(calc(-100% - var(--mt-space-2)));
 }
 
 .laneLabel {
