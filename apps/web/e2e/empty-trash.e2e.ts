@@ -4,6 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
+import { test as workspaceTest } from "./helpers/workspace-test";
 
 test("Empty Trash confirms an exact cross-page snapshot and preserves later changes", async ({
   page,
@@ -239,3 +240,70 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }
 });
+
+workspaceTest(
+  "Empty Trash still reports its result once its control is gone",
+  async ({ page, workspace }) => {
+    const id = randomUUID();
+    expect(
+      (
+        await workspace.client.from("entries").insert({
+          id,
+          owner_id: workspace.owner,
+          title: "Deleted after leaving Trash",
+          deleted_at: new Date().toISOString(),
+        })
+      ).error,
+    ).toBeNull();
+    await page.goto("/library");
+    await page
+      .getByRole("navigation", { name: "Primary navigation", exact: true })
+      .getByRole("link", { name: "Trash", exact: true })
+      .click();
+    await expect(page).toHaveURL("/trash");
+    // Hold the photo cleanup that ends the batch, after the item is deleted, so
+    // the control is removed before the batch reports. A refreshed, empty Trash
+    // removes it the same way.
+    let deleted = false;
+    let holdCleanup!: () => void;
+    const cleanupHeld = new Promise<void>((resolve) => (holdCleanup = resolve));
+    let releaseCleanup!: () => void;
+    const cleanupReleased = new Promise<void>(
+      (resolve) => (releaseCleanup = resolve),
+    );
+    await page.route("**/trash", async (route) => {
+      const request = route.request();
+      if (request.method() === "POST" && request.headers()["next-action"]) {
+        if (request.postData()?.includes(id)) deleted = true;
+        else if (deleted) {
+          holdCleanup();
+          await cleanupReleased;
+        }
+      }
+      await route.continue();
+    });
+    await page
+      .getByRole("button", { name: "Empty Trash", exact: true })
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("Empty 1 item from Trash?");
+    await dialog
+      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .click();
+    await cleanupHeld;
+    await page.goBack();
+    await expect(page).toHaveURL("/library");
+    await expect(dialog).toHaveCount(0);
+    releaseCleanup();
+    await expect(
+      page.locator("[data-sonner-toast]").filter({
+        hasText: /(^|\s)1 confirmed item permanently deleted\./,
+      }),
+    ).toBeVisible();
+    // The finished batch does not take the person back to Trash.
+    await expect(page).toHaveURL("/library");
+    expect(
+      (await workspace.client.from("entries").select("id").eq("id", id)).data,
+    ).toEqual([]);
+  },
+);

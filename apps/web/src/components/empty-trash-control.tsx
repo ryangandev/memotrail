@@ -100,14 +100,19 @@ export function EmptyTrashControl({
     );
     const filesRemoved =
       result.deleted === 0 || (await finishTrashCleanup().catch(() => false));
-    if (!alive.current) return;
     deleting.current = false;
-    setRunning(false);
-    close();
+    // The outcome is reported even when this control is gone: the last
+    // deletion can refresh Trash to empty, which removes it before this point.
     onResult({
       status: result.complete ? "deleted" : "error",
       message: emptyTrashResultMessage(result, filesRemoved),
     });
+    if (!alive.current) {
+      onBusy(false);
+      return;
+    }
+    setRunning(false);
+    close();
     onFinish();
   }
   return (
