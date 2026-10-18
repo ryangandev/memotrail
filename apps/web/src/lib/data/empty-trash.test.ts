@@ -58,6 +58,7 @@ describe("confirmed Empty Trash", () => {
       deleted: 2,
       total: 2,
       complete: true,
+      left: false,
     });
     expect(remove.mock.calls).toHaveLength(2);
     expect(progress.mock.calls).toEqual([[1], [2]]);
@@ -81,6 +82,7 @@ describe("confirmed Empty Trash", () => {
         deleted: 1,
         total: 3,
         complete: false,
+        left: false,
       });
       expect(remove).toHaveBeenCalledTimes(2);
     },
@@ -94,27 +96,59 @@ describe("confirmed Empty Trash", () => {
         () => {},
         () => false,
       ),
-    ).toMatchObject({ deleted: 0, complete: false });
+    ).toMatchObject({ deleted: 0, complete: false, left: true });
     expect(remove).not.toHaveBeenCalled();
+  });
+  it("says a batch stopped because the person left Trash", () => {
+    expect(
+      emptyTrashResultMessage({
+        deleted: 3,
+        total: 5,
+        complete: false,
+        left: true,
+      }),
+    ).toBe(
+      "3 of 5 items confirmed deleted. Stopped because you left Trash. Review Trash before trying again.",
+    );
   });
   it("does not claim all of Trash is empty or an uncertain deletion failed", () => {
     expect(
-      emptyTrashResultMessage({ deleted: 2, total: 2, complete: true }),
+      emptyTrashResultMessage({
+        deleted: 2,
+        total: 2,
+        complete: true,
+        left: false,
+      }),
     ).toContain("later was not included");
     expect(
-      emptyTrashResultMessage({ deleted: 1, total: 2, complete: false }),
+      emptyTrashResultMessage({
+        deleted: 1,
+        total: 2,
+        complete: false,
+        left: false,
+      }),
     ).toContain("could not be confirmed");
   });
   it("counts a single item as one item", () => {
     expect(
-      emptyTrashResultMessage({ deleted: 1, total: 1, complete: true }),
+      emptyTrashResultMessage({
+        deleted: 1,
+        total: 1,
+        complete: true,
+        left: false,
+      }),
     ).toMatch(/^1 confirmed item permanently deleted\./);
     expect(
-      emptyTrashResultMessage({ deleted: 0, total: 1, complete: false }),
+      emptyTrashResultMessage({
+        deleted: 0,
+        total: 1,
+        complete: false,
+        left: false,
+      }),
     ).toMatch(/^0 of 1 item confirmed deleted\./);
   });
   it("says when photo files will finish removing later", () => {
-    const result = { deleted: 2, total: 2, complete: true };
+    const result = { deleted: 2, total: 2, complete: true, left: false };
     expect(emptyTrashResultMessage(result)).not.toContain(
       PENDING_MEDIA_PURGE_MESSAGE,
     );

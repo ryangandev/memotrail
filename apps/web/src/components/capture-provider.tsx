@@ -37,6 +37,7 @@ import {
 } from "@/lib/data/inbox-queue";
 import { createCaptureSyncRetry } from "@/lib/data/inbox-sync-retry";
 import {
+  countSyncedInQueueChange,
   createInboxSyncStore,
   type InboxSyncResult,
   type InboxSyncSnapshot,
@@ -105,8 +106,14 @@ export function CaptureProvider({
       if (event.key === null || event.key === inboxDraftKey(ownerId))
         draft.reload();
       if (event.key !== null && event.key !== inboxQueueKey(ownerId)) return;
+      queue.reload();
+      // A stored photo is a draft photo unless a queued capture holds it. The
+      // photo announcement can arrive before this tab sees the new queue, so
+      // the queue change rereads the draft photos too.
+      void draft.reloadPhotos();
       // Another tab synced captures, so this page's Library is stale.
-      if (queue.reload() > 0) router.refresh();
+      if (countSyncedInQueueChange(event.oldValue, event.newValue) > 0)
+        router.refresh();
     }
     function handlePageShow(event: PageTransitionEvent) {
       // A page restored from the back-forward cache missed other tabs' edits.

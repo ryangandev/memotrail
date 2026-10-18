@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { test, expect } from "./helpers/workspace-test";
 import { lineEnd } from "./helpers/keys";
+import { hearOtherTabsLate } from "./helpers/tab-timing";
 
 // The Dashboard composer and Quick Capture edit one draft: whatever one shows,
 // the other shows, and a save or discard in either clears it everywhere.
@@ -184,53 +185,57 @@ test("a draft photo is shared by both composers and queued once", async ({
   expect(await storedPhotoNames(page)).toEqual(["second-photo.png"]);
 });
 
-test("another tab follows the draft and its save", async ({
-  context,
-  page,
-  workspace,
-}) => {
-  test.setTimeout(120_000);
-  const first = await openDashboard(page);
-  const otherPage = await context.newPage();
-  const other = await openDashboard(otherPage);
-  await setMemoTrailReachable(page, false);
-  await setMemoTrailReachable(otherPage, false);
+for (const late of [false, true])
+  test(`another tab follows the draft and its save${late ? ", even when it sees the queue change after the photo change" : ""}`, async ({
+    context,
+    page,
+    workspace,
+  }) => {
+    test.setTimeout(120_000);
+    const first = await openDashboard(page);
+    const otherPage = await context.newPage();
+    // The saved capture's photo news can arrive before the queue that holds it.
+    if (late)
+      await hearOtherTabsLate(otherPage, { staleQueue: true, storageMs: 400 });
+    const other = await openDashboard(otherPage);
+    await setMemoTrailReachable(page, false);
+    await setMemoTrailReachable(otherPage, false);
 
-  await first.dashboardEditor.fill("Written in the first tab");
-  await expect(other.dashboardEditor).toHaveText("Written in the first tab");
-  await addPhoto(first.dashboard, "tab-photo.png");
-  await expect(photoButton(other.dashboard, "tab-photo.png")).toBeVisible();
-  await addPhoto(other.dashboard, "other-tab-photo.png");
-  await expect(
-    photoButton(first.dashboard, "other-tab-photo.png"),
-  ).toBeVisible();
-  await photoButton(first.dashboard, "other-tab-photo.png").click();
-  await expect(photoButton(other.dashboard, "other-tab-photo.png")).toHaveCount(
-    0,
-  );
-  await expect(photoButton(other.dashboard, "tab-photo.png")).toBeVisible();
+    await first.dashboardEditor.fill("Written in the first tab");
+    await expect(other.dashboardEditor).toHaveText("Written in the first tab");
+    await addPhoto(first.dashboard, "tab-photo.png");
+    await expect(photoButton(other.dashboard, "tab-photo.png")).toBeVisible();
+    await addPhoto(other.dashboard, "other-tab-photo.png");
+    await expect(
+      photoButton(first.dashboard, "other-tab-photo.png"),
+    ).toBeVisible();
+    await photoButton(first.dashboard, "other-tab-photo.png").click();
+    await expect(
+      photoButton(other.dashboard, "other-tab-photo.png"),
+    ).toHaveCount(0);
+    await expect(photoButton(other.dashboard, "tab-photo.png")).toBeVisible();
 
-  await first.dashboard
-    .getByRole("button", { name: "Save", exact: true })
-    .click();
-  await expect(first.dashboardEditor).toBeEmpty();
-  await expect(other.dashboardEditor).toBeEmpty();
-  await expect(other.dashboard.getByLabel("Draft photos")).toHaveCount(0);
-  await other.dashboard
-    .getByRole("button", { name: "Save", exact: true })
-    .click();
-  await expect(other.dashboard).toContainText(
-    "Write a title, a note, or add a photo before saving.",
-  );
-  const queue = await queuedCaptures(otherPage, workspace.owner);
-  expect(queue).toHaveLength(1);
-  expect(queue[0]).toMatchObject({
-    body: "Written in the first tab",
-    attachments: [{ name: "tab-photo.png" }],
+    await first.dashboard
+      .getByRole("button", { name: "Save", exact: true })
+      .click();
+    await expect(first.dashboardEditor).toBeEmpty();
+    await expect(other.dashboardEditor).toBeEmpty();
+    await expect(other.dashboard.getByLabel("Draft photos")).toHaveCount(0);
+    await other.dashboard
+      .getByRole("button", { name: "Save", exact: true })
+      .click();
+    await expect(other.dashboard).toContainText(
+      "Write a title, a note, or add a photo before saving.",
+    );
+    const queue = await queuedCaptures(otherPage, workspace.owner);
+    expect(queue).toHaveLength(1);
+    expect(queue[0]).toMatchObject({
+      body: "Written in the first tab",
+      attachments: [{ name: "tab-photo.png" }],
+    });
+    expect(await storedPhotoNames(otherPage)).toEqual(["tab-photo.png"]);
+    await otherPage.close();
   });
-  expect(await storedPhotoNames(otherPage)).toEqual(["tab-photo.png"]);
-  await otherPage.close();
-});
 
 test("voice capture follows the draft into Quick Capture and stops when it closes", async ({
   page,

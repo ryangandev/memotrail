@@ -29,6 +29,8 @@ export type EmptyTrashResult = {
   deleted: number;
   total: number;
   complete: boolean;
+  /** The person left Trash, which stops the batch before its next deletion. */
+  left: boolean;
 };
 
 // Never fetch more targets while deleting. A failed or uncertain response stops
@@ -40,8 +42,12 @@ export async function runEmptyTrash(
   shouldContinue: () => boolean = () => true,
 ): Promise<EmptyTrashResult> {
   let deleted = 0;
+  let left = false;
   for (const item of snapshot) {
-    if (!shouldContinue()) break;
+    if (!shouldContinue()) {
+      left = true;
+      break;
+    }
     try {
       if (!(await remove(item))) break;
     } catch {
@@ -53,6 +59,7 @@ export async function runEmptyTrash(
     deleted,
     total: snapshot.length,
     complete: deleted === snapshot.length,
+    left,
   };
 }
 
@@ -60,8 +67,11 @@ export function emptyTrashResultMessage(
   result: EmptyTrashResult,
   filesRemoved = true,
 ) {
+  const stopped = `${result.deleted} of ${countLabel(result.total, "item")} confirmed deleted.`;
   const message = result.complete
     ? `${countLabel(result.deleted, "confirmed item")} permanently deleted. Anything added to Trash later was not included.`
-    : `${result.deleted} of ${countLabel(result.total, "item")} confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again.`;
+    : result.left
+      ? `${stopped} Stopped because you left Trash. Review Trash before trying again.`
+      : `${stopped} Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again.`;
   return filesRemoved ? message : `${message} ${PENDING_MEDIA_PURGE_MESSAGE}`;
 }

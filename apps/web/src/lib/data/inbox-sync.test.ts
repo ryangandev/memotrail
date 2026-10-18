@@ -6,6 +6,7 @@ import {
   type QueuedInboxEntry,
 } from "./inbox-queue";
 import {
+  countSyncedInQueueChange,
   createInboxSyncStore,
   hasWaitingCaptures,
   offlineSyncMessage,
@@ -244,7 +245,7 @@ describe("Workspace capture synchronization", () => {
     expect(store.getSnapshot().isSyncing).toBe(true);
     // The tab holding the lock sends the first capture meanwhile.
     storage.setItem(inboxQueueKey(ownerId), JSON.stringify([queuedEntry(2)]));
-    expect(store.reload()).toBe(1);
+    store.reload();
     expect(store.getSnapshot().items).toHaveLength(1);
     lock.resolve();
     await running;
@@ -253,10 +254,30 @@ describe("Workspace capture synchronization", () => {
     expect(transport.syncEntry.mock.calls.map(([entry]) => entry.id)).toEqual([
       queuedEntry(2).id,
     ]);
-    // A capture another tab queued is new here, not synced.
     enqueueInboxEntry(storage, ownerId, queuedEntry(3));
-    expect(store.reload()).toBe(0);
+    store.reload();
     expect(store.getSnapshot().items).toHaveLength(1);
+  });
+
+  it("counts what another tab synced from its change, however late this tab hears of it", () => {
+    const queue = (...entries: QueuedInboxEntry[]) => JSON.stringify(entries);
+    // This tab may have reread the queue in its own run before the change
+    // arrives, so the count comes from the change, not from this tab's list.
+    expect(
+      countSyncedInQueueChange(
+        queue(queuedEntry(1), queuedEntry(2)),
+        queue(queuedEntry(2)),
+      ),
+    ).toBe(1);
+    expect(countSyncedInQueueChange(queue(queuedEntry(1)), null)).toBe(1);
+    // A capture another tab queued is new here, not synced.
+    expect(
+      countSyncedInQueueChange(
+        queue(queuedEntry(2)),
+        queue(queuedEntry(2), queuedEntry(3)),
+      ),
+    ).toBe(0);
+    expect(countSyncedInQueueChange(null, null)).toBe(0);
   });
 
   it("does not run, toast, or refresh when nothing is waiting", async () => {
@@ -440,8 +461,12 @@ describe("Workspace capture synchronization", () => {
     await store.synchronize();
 
     const other = setup({ storage });
+    const before = storage.getItem(inboxQueueKey(ownerId));
     await other.store.discard(queuedEntry(1).id);
-    expect(store.reload()).toBe(0);
+    expect(
+      countSyncedInQueueChange(before, storage.getItem(inboxQueueKey(ownerId))),
+    ).toBe(0);
+    store.reload();
     expect(store.getSnapshot().items).toEqual([]);
   });
 
