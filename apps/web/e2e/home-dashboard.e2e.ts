@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
@@ -164,6 +164,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         .locator("..");
       for (const width of [1440, 989]) {
         await page.setViewportSize({ width, height: 1000 });
+        await settleLayout(page);
         await expect
           .poll(async () => {
             const [left, right] = await Promise.all([
@@ -277,6 +278,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
       });
       for (const width of [834, 390]) {
         await page.setViewportSize({ width, height: 844 });
+        await settleLayout(page);
         await expect
           .poll(() =>
             page.evaluate(
@@ -379,3 +381,19 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
     for (const owner of owners) await admin.auth.admin.deleteUser(owner);
   }
 });
+
+/**
+ * Waits for the transitions a resize starts, such as the sidebar easing to its
+ * new width. Each bounding box is read separately, so boxes read while the
+ * layout still moves come from different frames.
+ */
+async function settleLayout(page: Page) {
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation instanceof CSSTransition)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    ),
+  );
+}
