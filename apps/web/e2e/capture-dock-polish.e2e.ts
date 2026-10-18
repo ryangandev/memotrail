@@ -107,9 +107,7 @@ test("a retained composer picks up dashboard edits and can interrupt collapse", 
   // completion callback that would otherwise close it a second time.
   await editor.click();
   await expect(dialog).toBeVisible();
-  await dialog
-    .getByRole("button", { name: "Save to Library", exact: true })
-    .click();
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(editor).toBeEmpty();
   await editor.press("Escape");
   await expect(dialog).not.toBeVisible();

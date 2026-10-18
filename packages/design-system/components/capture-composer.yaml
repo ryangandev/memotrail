@@ -23,7 +23,7 @@ anatomy:
   container: The raised card in the page variant, or the open body of the Quick Capture dialog.
   header: The sparkle on a soft accent circle and the question What's on your mind?, in the page variant only.
   editor: The rich-text writing area, embedded without a field border.
-  occurrence: The relevant date fields, opened in place under the note when people choose a date.
+  occurrence: One date field for a calendar day with an optional time, opened in place under the note when people choose a date; without it the capture keeps the moment it was saved.
   photos: The strip of selected photos, each with a remove button.
   status: A tinted strip for a dictation message, a photo problem, or the draft note.
   actions: The bar with quiet date, voice, and photo actions at the leading edge and the save action at the trailing edge.
@@ -92,8 +92,10 @@ accessibility:
   dynamicType: Text scales with Dynamic Type on iOS and browser zoom on Web. The quiet actions keep their size, and the action bar wraps the save action below them when it cannot fit.
 
 platformDifferences:
-  - difference: iOS saves a capture to the Inbox and labels its action Save to Inbox; Web saves it straight to the Library and labels it Save to Library.
+  - difference: iOS saves a capture to the Inbox and labels its action Save to Inbox; Web saves it straight to the Library and labels it Save.
     reason: docs/product.md retires the Inbox, and Web follows it. The iOS app still writes captures through the retired Inbox queue, so its label says what it does until it moves to the current schema.
+  - difference: Web's date chooses only a day and an optional time; iOS still opens the full date editor, labels the active action Custom date, and offers Use capture time.
+    reason: docs/product.md keeps capture free of date precision, which the Entry editor owns. The iOS composer follows when native work resumes.
   - difference: Web pads the composer 24 px in the page variant and 20 px in the dialog variant above 720 px, and 16 px up to 390 px; iOS uses the 20 and 16 pt phone padding.
     reason: The iOS app runs only on iPhone, so it never reaches the wider layout.
   - difference: Web shows each quiet action's label beside its icon above 720 px and a short status beside the save action; iOS shows icons only and puts every status in the strip above the actions.

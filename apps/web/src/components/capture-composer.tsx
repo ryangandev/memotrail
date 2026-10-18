@@ -1,6 +1,5 @@
 "use client";
 import captureComposerStyles from "@/components/capture-composer.module.css";
-import entryFormStyles from "@/components/entry-form.module.css";
 import { Button } from "@/components/button";
 import { notify } from "@/components/app-toast";
 import {
@@ -26,8 +25,13 @@ import { RichTextEditor } from "@/components/rich-text-editor";
 import { SectionHeader } from "@/components/section-header";
 import { Skeleton } from "@/components/skeleton";
 import { SelectedPhotoPreview } from "@/components/selected-photo-preview";
-import { OccurrenceEditor } from "./occurrence-editor";
-import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
+import { DatePickerField } from "@/components/date-picker-field";
+import {
+  captureDateDraft,
+  captureDateValue,
+  resolveCaptureDate,
+  todayCaptureDate,
+} from "@/lib/data/inbox-capture-date";
 import { entryBodyLimit, parseInboxEntryValues } from "@/lib/data/inbox-input";
 import { countLabel } from "@/lib/count-label";
 import type { QueuedInboxEntry } from "@/lib/data/inbox-queue";
@@ -145,18 +149,12 @@ export function CaptureComposer({
     draft.startVoice();
   }
 
-  function toggleRelevantDate() {
+  // Choosing a date starts on today; turning it off saves the capture time.
+  function toggleDate() {
     draft.update({
       occurrence: occurrence
         ? null
-        : occurrenceDraft({
-            datePrecision: "exact",
-            occurredAt: new Date().toISOString(),
-            occurredEnd: null,
-            occurredLabel: null,
-            occurredTimezone:
-              Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-          }),
+        : todayCaptureDate(new Date(), browserTimezone()),
     });
   }
 
@@ -216,18 +214,7 @@ export function CaptureComposer({
     }
 
     const now = new Date();
-    const parsedDate = occurrence
-      ? resolveOccurrenceDraft(occurrence)
-      : {
-          value: {
-            occurredAt: now.toISOString(),
-            occurredEnd: null,
-            occurredLabel: null,
-            occurredTimezone:
-              Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
-            datePrecision: "exact" as const,
-          },
-        };
+    const parsedDate = resolveCaptureDate(occurrence, now, browserTimezone());
 
     if (parsedDate.error) {
       showFeedback({ isError: true, message: parsedDate.error });
@@ -354,21 +341,22 @@ export function CaptureComposer({
         </div>
         {occurrence ? (
           <div
-            className={`${entryFormStyles.reviewForm} ${captureComposerStyles.captureOccurrencePanel}`}
+            aria-label="Date"
+            className={captureComposerStyles.captureDatePanel}
+            role="group"
           >
-            <OccurrenceEditor
-              value={occurrence}
-              onChange={(value) => draft.update({ occurrence: value })}
+            <DatePickerField
               disabled={isSaving || !draft.isReady || voiceState !== "idle"}
+              hideLabel
+              includeTime
+              label="Date"
+              onChange={(value) =>
+                draft.update({
+                  occurrence: captureDateDraft(value, occurrence.timezone),
+                })
+              }
+              value={captureDateValue(occurrence)}
             />
-            <Button
-              variant="secondary"
-              disabled={isSaving || !draft.isReady || voiceState !== "idle"}
-              onClick={() => draft.update({ occurrence: null })}
-              type="button"
-            >
-              Use capture time
-            </Button>
           </div>
         ) : null}
         {photos.length > 0 ? (
@@ -404,11 +392,11 @@ export function CaptureComposer({
               aria-pressed={Boolean(occurrence)}
               className={`${captureComposerStyles.quietButton} ${occurrence ? captureComposerStyles.activeQuietButton : ""}`}
               disabled={isSaving || !draft.isReady || voiceState !== "idle"}
-              onClick={toggleRelevantDate}
+              onClick={toggleDate}
               type="button"
             >
               <Icon name="calendar" />
-              <span>{occurrence ? "Custom date" : "Date"}</span>
+              <span>Date</span>
             </button>
             <button
               aria-label={
@@ -508,7 +496,7 @@ export function CaptureComposer({
                 ref={submitButtonRef}
                 type="submit"
               >
-                {isSaving || isSyncing ? "Saving…" : "Save to Library"}
+                {isSaving || isSyncing ? "Saving…" : "Save"}
                 <Icon name="chevron" size={16} />
               </Button>
               <span
@@ -516,7 +504,7 @@ export function CaptureComposer({
                 id={`${idPrefix}-save-shortcut`}
                 role="tooltip"
               >
-                <span>Save to Library</span>
+                <span>Save</span>
                 <kbd>⌘ Return</kbd>
               </span>
             </span>
@@ -555,6 +543,10 @@ export function CaptureComposer({
       ) : null}
     </>
   );
+}
+
+function browserTimezone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
 }
 
 function CapturePhoto({

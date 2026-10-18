@@ -154,6 +154,7 @@ Pair it with the test file carrying the same feature name.
 - Exact timestamp, day, month, year, age, range, approximate, and Unknown values remain distinct.
 - Unknown and description-only dates have no fabricated calendar anchor.
 - The Web `OccurrenceEditor` offers Day, Month, Year, and Not sure and maps them, with its Add time and Add end date toggles, onto the stored precisions; `resolveOccurrenceDraft` stores an empty calendar date as Unknown.
+- The Web composer's Date is a day with an optional time: `lib/data/inbox-capture-date.ts` maps it to and from the draft's occurrence, saves an empty field as the capture time, and shows a draft an earlier composer kept at another precision by its day.
 - Recorded timezone controls calendar interpretation and search overlap.
 - `profiles.timezone` supplies the default for new exact Timeline timestamps; an Entry stores its own timezone snapshot and may override that default.
 - Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.
@@ -204,6 +205,7 @@ Pair it with the test file carrying the same feature name.
   Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
 - Web Timeline has only the lane view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
+  Its open calendar and time picker render in the top layer as manual popovers, so a scrolling or translucent container such as Quick Capture's native dialog cannot clip them.
 
 ## Offline rules
 

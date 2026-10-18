@@ -33,6 +33,7 @@ Migrations `202610040001` through `202610040009` were applied to the hosted proj
 Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
 The date precision controls are settled too: Web date forms choose Day, Month, Year, or Not sure, with Add time and Add end date toggles, and an empty date means Unknown.
 Native iOS still shows the eight Date types until it follows Web.
+The Web capture composer's Date picks only a day with an optional time, and its action is labeled Save; native still opens the full date editor with Use capture time and saves to Inbox.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -91,6 +92,8 @@ Use Git history for feature-level implementation and test evidence.
 
 - Verify the Production deployment against the hosted project migrated through `202610040009`, then check Quick Capture, Needs organizing, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
+- Selecting a draft photo in Quick Capture opens its preview under the native dialog, where the composer covers it and its Close button cannot be reached; the Dashboard composer's preview works.
+  Ark dialogs portal to the page body, below the top layer, so the shared `Dialog` needs a top-layer path before any dialog opens from Quick Capture.
 - Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
   Hosted `service_role` and `anon` get no table access or function execution unless a migration grants it, and new public tables get row level security automatically.

@@ -57,7 +57,10 @@ Changing the default never rewrites an existing Entry's recorded timezone.
 
 ## Capture
 
-- Global capture starts with one flexible writing field and may include photos, voice-to-text, and a best-known date.
+- Global capture starts with one flexible writing field and may include photos, voice-to-text, and a date.
+- Recording a thought needs no decision: open the composer, write, and save, with no required field, choice, or extra dialog on the way.
+- A capture is dated by the moment it is saved unless Date picks a calendar day, with an optional time, in the browser's time zone.
+  Month, year, uncertain, and ranged dates, time zones, and date descriptions are set later in the Entry editor.
 - New captures remain untitled until later editing adds a title.
 - The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
@@ -274,10 +277,10 @@ A customizable Command Palette opens from the global search control or Command K
 On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
 The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
-It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save to Library.
+It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save.
 The expanded composer uses one consistent frosted surface across its header, writing area, and action row.
 Web Capture saves to Library with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
-Hovering or focusing Save to Library displays a tooltip with the Command Return shortcut.
+Hovering or focusing Save displays a tooltip with the Command Return shortcut.
 Enter starts a new paragraph, and Shift+Enter inserts a line break; input method composition and nested editing controls do not trigger the save shortcut.
 Escape or the close control collapses it and restores focus to the bottom control without discarding the draft.
 On mobile Web the collapsed control sits above navigation; the expanded composer stays within the visible viewport and scrolls when needed.

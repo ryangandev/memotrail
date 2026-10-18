@@ -140,7 +140,7 @@ test("captures land in Library and wait under Needs organizing until they have a
     const editor = page.getByRole("dialog", { name: "Edit Entry" });
     await expect(editor.getByRole("textbox", { name: "Title" })).toBeFocused();
     await expect(
-      editor.getByRole("button", { name: "Save to Library" }),
+      editor.getByRole("button", { name: "Save", exact: true }),
     ).toHaveCount(0);
     await expect(
       editor.getByRole("button", { name: "Save changes" }),

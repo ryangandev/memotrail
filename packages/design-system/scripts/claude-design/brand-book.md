@@ -13,7 +13,7 @@ Keep every sentence short and plain, and say one thing per sentence.
 Use sentence case for titles, labels, buttons, and menus.
 Capitalize MemoTrail's named places and record types, because they are product terms: Dashboard, Inbox, Timeline, Library, Map, Trash, Settings, Entry, Home, Vehicle, First Time, Someday, Moment, and Period.
 Keep generic nouns lowercase, such as tag, photo, date, and draft.
-Start a button with a verb and name what it acts on, such as "Save to Library" or "Move to Trash".
+Start a button with a verb and name what it acts on, such as "Save changes" or "Move to Trash".
 Write a toast as one finished sentence in the past tense, and an error as what failed, what is still safe, and what to do next.
 Give an empty state an inviting title and one sentence about what will appear there, not an instruction to do work.
 Preserve uncertainty: offer "Not sure" and approximate dates, and never show a day or month the user did not give.
@@ -22,7 +22,7 @@ Use the typographic apostrophe (’) in interface text.
 
 Real copy from the app:
 
-- "Save to Library"
+- "Save changes"
 - "Move to Trash"
 - "Retry now"
 - "What’s on your mind?"
