@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { validTagInput, type TagInput } from "./organization";
+import {
+  existingTagName,
+  tagNamesIncludingDraft,
+  validTagInput,
+  type TagInput,
+} from "./organization";
+import { tagOptionsByUse } from "./tag-options";
 describe("Tag settings", () => {
   const input: TagInput = { name: " 学习 ", id: null, revision: null };
   it("accepts bilingual tags", () => {
@@ -21,5 +27,36 @@ describe("Tag settings", () => {
         revision: 2,
       }),
     ).toBe(true);
+  });
+});
+
+describe("Tag choices", () => {
+  const options = ["Travel", "family"];
+  it("reuses an existing tag that differs only by case", () => {
+    expect(existingTagName(" travel ", options)).toBe("Travel");
+    expect(existingTagName("FAMILY", options)).toBe("family");
+    expect(existingTagName(" Seattle ", options)).toBe("Seattle");
+  });
+  it("saves a typed tag once, as the existing tag", () => {
+    expect(tagNamesIncludingDraft(["family"], " travel", options)).toEqual([
+      "family",
+      "Travel",
+    ]);
+    expect(tagNamesIncludingDraft(["Travel"], "TRAVEL", options)).toEqual([
+      "Travel",
+    ]);
+    expect(tagNamesIncludingDraft(["Travel"], "  ", options)).toEqual([
+      "Travel",
+    ]);
+  });
+  it("orders tags by how many Entries use them, then by name", () => {
+    expect(
+      tagOptionsByUse([
+        { name: "travel", entry_tags: [{ count: 1 }] },
+        { name: "Books", entry_tags: [{ count: 1 }] },
+        { name: "family", entry_tags: [{ count: 4 }] },
+        { name: "unused", entry_tags: [] },
+      ]),
+    ).toEqual(["family", "Books", "travel", "unused"]);
   });
 });

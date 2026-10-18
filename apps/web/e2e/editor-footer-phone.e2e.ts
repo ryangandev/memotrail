@@ -58,15 +58,6 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       })),
     );
 
-    // A birth date keeps Timeline from opening its birth date prompt.
-    expect(
-      (
-        await client
-          .from("profiles")
-          .update({ birth_date: "1990-01-01" })
-          .eq("user_id", owner)
-      ).error,
-    ).toBeNull();
     // Each record is saved the way its editor saves it.
     const saves = await Promise.all([
       client.rpc("save_home_entry_with_occurrence", {

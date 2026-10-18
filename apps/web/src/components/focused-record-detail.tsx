@@ -36,6 +36,7 @@ import {
 import styles from "./focused-record-detail.module.css";
 
 type Shared = {
+  defaultTimezone?: string;
   ownerId: string;
   tagOptions: string[];
 };
@@ -76,6 +77,7 @@ export function FocusedRecordDetail(props: Props) {
   }
 
   const sharedEditorProps = {
+    defaultTimezone: props.defaultTimezone,
     onClose: closeEdit,
     ownerId: props.ownerId,
     presentation: "page" as const,

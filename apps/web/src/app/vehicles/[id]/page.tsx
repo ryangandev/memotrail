@@ -33,6 +33,7 @@ export default async function VehicleDetailPage({
     <FocusedRecordDetail
       kind="vehicle"
       record={record}
+      defaultTimezone={workspace.defaultTimezone}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
     />

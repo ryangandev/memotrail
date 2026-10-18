@@ -58,11 +58,47 @@
   box-shadow: 0 0 0 var(--mt-state-focus-halo-width) var(--mt-state-focus-halo);
 }
 
-.occurrenceEditor label:not(:where([data-ui-checkbox] *)) > span small {
+.occurrenceEditor label:not(:where([data-ui-checkbox] *)) > span small,
+.timezoneSummary > span small {
   margin-left: var(--mt-space-2);
   color: var(--mt-color-ink-faint);
   font-size: var(--mt-font-size-fine);
   font-weight: var(--mt-font-weight-regular);
+}
+
+/* The Settings time zone as text in the select's place, so changing it moves nothing. */
+.timezoneSummary {
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: var(--mt-space-2);
+}
+
+.timezoneSummary > span {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.timezoneSummary > div {
+  display: flex;
+  min-width: 0;
+  min-height: var(--mt-size-field-medium);
+  align-items: center;
+  gap: var(--mt-space-3);
+  color: var(--mt-color-ink);
+  font-size: var(--mt-font-size-label);
+}
+
+.timezoneSummary > div > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timezoneSummary > div > button {
+  flex: none;
 }
 
 .requiredMark {

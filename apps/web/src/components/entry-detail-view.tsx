@@ -113,6 +113,7 @@ export function EntryDetailView({
         )}
         {editing && (
           <EntryEditorDialog
+            defaultTimezone={editing.defaultTimezone}
             entry={editing.entry}
             ownerId={ownerId}
             photos={editing.photos}

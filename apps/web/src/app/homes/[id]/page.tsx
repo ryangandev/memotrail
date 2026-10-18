@@ -25,6 +25,7 @@ export default async function HomeDetailPage({
     <FocusedRecordDetail
       kind="home"
       record={record}
+      defaultTimezone={workspace.defaultTimezone}
       tagOptions={workspace.tagOptions}
       ownerId={workspace.viewer.id}
     />

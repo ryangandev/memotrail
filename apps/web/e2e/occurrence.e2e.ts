@@ -79,6 +79,7 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
           body: "I remember the feeling, not the date.",
           date_precision: "unknown",
           occurred_start: null,
+          occurred_timezone: "Asia/Kathmandu",
         })
       ).error,
     ).toBeNull();
@@ -117,9 +118,10 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
         .click();
       await setOccurrencePrecision(page, precision);
       await fillOccurrenceStart(page, start);
-      await page
-        .getByRole("combobox", { name: "Time zone", exact: true })
-        .selectOption("Asia/Kathmandu");
+      // A date without a time shows no time zone and keeps the recorded one.
+      await expect(
+        page.getByRole("combobox", { name: "Time zone", exact: true }),
+      ).toHaveCount(0);
       await page
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
@@ -135,6 +137,17 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
         occurred_timezone: "Asia/Kathmandu",
       });
     }
+    // A time recorded outside the Settings time zone shows its zone in full.
+    await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
+    await setOccurrencePrecision(page, "exact");
+    await expect(
+      page.getByRole("combobox", { name: "Time zone", exact: true }),
+    ).toHaveValue("Asia/Kathmandu");
+    await expect(
+      page.getByText("Entry override", { exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Cancel", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await setOccurrencePrecision(page, "range");
     await fillOccurrenceStart(page, "2020-01-01");

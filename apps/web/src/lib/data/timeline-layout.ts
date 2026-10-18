@@ -56,10 +56,13 @@ export function estimateLabelWidth(text: string) {
   return Math.ceil(text.length * 6.2);
 }
 
+// The canvas fills the visible width, given as fillWidthPixels, and grows past it to keep
+// each year legible.
 export function createTimelineLayout(
   items: TimelineLayoutSource[],
   referenceDate = new Date(),
   birthDate: string | null = null,
+  fillWidthPixels = 0,
 ): TimelineLayout {
   const validReference = validTime(referenceDate.toISOString()) ?? Date.now();
   const birthTime = validTime(birthDate);
@@ -126,6 +129,7 @@ export function createTimelineLayout(
 
   const canvasWidth = Math.max(
     minimumCanvasWidthPixels,
+    Math.floor(fillWidthPixels),
     yearMarkers.length * yearWidthPixels,
   );
   const positions: TimelinePosition[] = [];

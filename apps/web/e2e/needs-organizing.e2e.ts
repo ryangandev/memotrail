@@ -155,7 +155,7 @@ test("captures land in Library and wait under Needs organizing until they have a
         (element, photoElement) =>
           Boolean(
             element.compareDocumentPosition(photoElement as Node) &
-            Node.DOCUMENT_POSITION_PRECEDING,
+            Node.DOCUMENT_POSITION_FOLLOWING,
           ),
         await photos.elementHandle(),
       ),

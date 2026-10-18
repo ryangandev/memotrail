@@ -65,6 +65,15 @@ for (const kind of ["home", "vehicle"] as const) {
           httpOnly: false,
         })),
       );
+      // The editors default to the Settings time zone like every other date editor.
+      expect(
+        (
+          await client
+            .from("profiles")
+            .update({ timezone: "America/Los_Angeles" })
+            .eq("user_id", owner)
+        ).error,
+      ).toBeNull();
 
       const common = {
         p_title: "Precision chapter",
@@ -113,6 +122,14 @@ for (const kind of ["home", "vehicle"] as const) {
       await page.getByRole("button", { name: editLabel }).click();
       let dialog = page.getByRole("main");
       await expectOccurrencePrecision(dialog, "exact");
+      const timezoneSelect = dialog.getByRole("combobox", {
+        name: "Time zone",
+        exact: true,
+      });
+      await expect(timezoneSelect).toHaveCount(0);
+      await expect(
+        dialog.getByRole("group", { name: "Time zone", exact: true }),
+      ).toContainText("Los Angeles - America");
       await dialog
         .getByRole("button", { name: "Save changes", exact: true })
         .click();
@@ -137,6 +154,7 @@ for (const kind of ["home", "vehicle"] as const) {
       for (const [precision, start, end, label] of samples) {
         await page.getByRole("button", { name: editLabel }).click();
         await setOccurrencePrecision(dialog, precision);
+        await expect(timezoneSelect).toHaveCount(0);
         if (start) await fillOccurrenceStart(dialog, start);
         else await occurrenceStartField(dialog).fill("");
         if (end) await fillOccurrenceEnd(dialog, end);
