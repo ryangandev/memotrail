@@ -1,46 +1,50 @@
 # MemoTrail Status
 
-Last reviewed: 2026-10-10.
+Last reviewed: 2026-10-18.
 
 ## Focus
 
-Web is the client Ryan uses most, so work now focuses on finishing Web before returning to native iOS.
-Native iOS work, including the acceptance items in section 3, is paused until Web is complete; native then follows the finished Web behavior.
-Before more Web building, unclear features and requirements are reviewed with Ryan and settled in [product.md](./product.md).
-The first review removed general links between Entries from Web; source and achievement links remain.
-Product direction is settled before UI questions.
-Collections are merged into tags: each Collection became a tag with the same name and kept its Entries.
-Migration `202610040001` carries this change; native iOS still calls the retired Collection functions until it follows Web.
-People are removed: migration `202610040002` deletes every Person, its Entity Wiki Item, its links, and its version history, and strips People from Entry version snapshots.
-Native iOS still calls the retired People functions until it follows Web.
-Goals became Someday: migration `202610040003` maps Considering and Paused to the open status, shown as Not yet, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
-Native iOS still sends horizons and related links and fails against it until it follows Web.
-The list is named Someday and its open status Not yet; the working name Want to Do is retired.
-Inbox is retired: captures save straight to Library.
-Migration `202610040004` marks every Entry organized, keeps new ones organized, and drops the Inbox organize and capture-handoff functions.
-Native iOS still opens Inbox review and calls the retired functions until it follows Web.
-Native iOS is not in use and will be rewritten, so the database keeps no compatibility window for it.
-Migration `202610040005` drops `entries.inbox_status`, the Dashboard Inbox count, the organize flag on Entry review, the Capture source on Home and Vehicle saves, the constant record source in Library and search, the empty Trash storage path helper, and the native-only review functions.
-General related links are deleted: migration `202610040006` removes them, including those older Goals carried, from the data and version history, and drops the functions that browsed and edited them.
-Version history is removed: migration `202610040007` deletes every stored version and stops recording them, stops photo changes from creating Entry revisions, drops Locations kept only for history, and purges prepared export snapshots.
-`/history` links open the Item page or Library.
-Database leftovers are dropped: migration `202610040008` links Home Locations through `entry_locations` like every other Entry, turns `related` Location links into `photo` links and `source_capture` Entries into plain Entries, drops unused Location columns and functions no client calls, and replaces the Entry review chain with one `save_entry`.
-Timeline shows life milestones: any Entry can be marked as a Moment or a Period in Work and study or Other milestones, and a First Time is a flag on a milestone.
-Homes and Vehicles appear on Timeline in their own lanes, custom tracks are gone, First Times is a filtered view of Entries, and the Dashboard Now block replaces current chapters.
-Migration `202610040009` converts existing Moments, Periods, First Times, and track placements into milestones and turns custom track names into tags.
-Native iOS still calls the retired Timeline and First Time functions until it follows Web.
+On 2026-10-18 Ryan settled a new positioning in [positioning.md](./positioning.md), and [product.md](./product.md) now describes the product it calls for.
+Code has not changed yet, so the rest of this file still describes the implemented product, including Homes, Vehicles, Someday, the Map, and fixed-lane Timeline milestones.
+Web comes first; native iOS is paused, will be rewritten, and follows the finished Web behavior, so the database keeps no compatibility window for it.
+Native iOS still calls functions that earlier migrations retired.
+
+### Open implementation work
+
+Each item is a gap between [product.md](./product.md) and the code.
+
+- **Chapters.** Store a Chapter as an Entry with a span in the existing Entry table, so search, tags, photos, Location, Trash, and export stay uniform.
+  The Entry editor turns an Entry into a Chapter and back, and the Chapter Item page lists every Entry dated inside its span and the Chapters that overlap it.
+- **Homes, Vehicles, and Periods become Chapters.** Migrate every Home, Vehicle, and Period milestone into a Chapter with its dates, writing, photos, tags, and Location.
+  Typed facts such as make, model, year, and color are dropped as fields and kept as text in the Chapter's note.
+  Retire the Home and Vehicle forms, routes, and sidebar destinations; `/homes` and `/vehicles` open Timeline, and their item links open the Item page.
+- **First Time as a mark on any Entry.** Decouple First Time from milestones so it is a checkbox on an Entry, and keep the First Times view.
+  Moment milestones become ordinary Entries, keeping their First Time mark.
+- **Timeline.** Replace the four fixed lanes with Chapter bars that stack automatically when they overlap and First Time points.
+  Remove the Shape and Lane questions, the generic Moment milestone, and lane add shortcuts; Add to Timeline offers Chapter or First Time.
+- **Dashboard Now.** List current Chapters, those started with no end, in place of Periods, Homes, and Vehicles.
+- **Cut Someday.** Migrate every Someday item to an ordinary Entry tagged `someday`, keeping its title, notes, photos, and tags, and its status and target date as text in the note.
+  Remove the Someday list, its routes and editor, Mark done and create First Time, and the source and First Time links between Entries; `/goals` opens Library and an item link opens its Item page.
+- **Cut the Map destination.** Remove `/map` and its navigation; `/map` opens Library.
+  Keep Entry Locations, the Entry editor's Location field, and Geoapify address search.
+- **Semantic search.** Add meaning-based search, on by default, with an embedding model MemoTrail runs itself so no Entry content or query reaches a third party.
+  It must handle English, Chinese, and mixed-language text, and Settings can turn it off.
+- **Chapter and year reviews.** Opt-in, generated by a third-party model, with disclosure before generation of what is sent, to whom, and the provider's real data policy.
+  Reviews show emotional change, recurring themes, and quotes that link to their source Entries.
+  Choose the provider, confirm its training and retention terms, and decide where reviews are stored and whether export includes them.
+- **Chapter suggestions.** Opt-in suggestions that become Chapters only after confirmation.
+- **Import.** Apple Journal, Apple Notes, and Notion import into ordinary Entries with original dates, nothing lost, and no duplicates on re-import; research each source's format first.
+- **Retire the paused AI surfaces.** Replace the paused Beta AI setting with the settings the new search, review, and suggestion capabilities need; title, tag, and filing suggestions stay hidden.
+- **Docs.** Update [architecture.md](./architecture.md) as each area changes.
+
+Questions for Ryan, also listed in [product.md](./product.md#product-boundaries): one writing entrance on the Dashboard and journal framing ([issue #94](https://github.com/ryangandev/memotrail/issues/94)), whether the Dashboard keeps a small daily resurfaced memory, and whether Entry Locations stay.
+Implementation questions to settle with Ryan before migrating: whether a Chapter can carry the First Time mark, since a First Time Period would otherwise lose it, and how Entries whose dates only partly overlap a Chapter should appear.
+
+### Hosted database
+
 Migrations `202610040001` through `202610040009` were applied to the hosted project on 2026-10-05 after a schema and data backup, and `main` at `cf68cab` was deployed to Production.
 Migration `202610180087` was applied to the hosted project on 2026-10-18, right after `main` at `497b9d4` was deployed to Production; it is additive and keeps the older `wiki_items_workspace` signature.
-Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
-The date precision controls are settled too: Web date forms choose Day, Month, Year, or Not sure, with Add time and Add end date toggles, and an empty date means Unknown.
-Native iOS still shows the eight Date types until it follows Web.
-Web Timeline no longer opens the birth date prompt on its own; native iOS still asks on the first Timeline visit until it follows Web.
-The Web capture composer's Date picks only a day with an optional time, and its action is labeled Save; native still opens the full date editor with Use capture time and saves to Inbox.
-Needs organizing is retired: capture never asks for a decision, so Library and the Dashboard no longer list or count Entries without a title or tag, and Quick Capture takes the Dashboard's full row.
-An untitled Entry is named by its date at its recorded precision on every Web surface, while its stored title stays empty.
-Migration `202610180087` makes the workspaces return blank stored titles with the date fields that name them and replaces the Library Needs organizing filter.
-It and the Web release can ship in either order; once that Web is deployed, a later migration removes the earlier six-argument Library workspace and the Timeline and Trash title stand-ins.
-Native iOS still shows the retired Inbox list, the Dashboard Ready to organize section, and its To organize count, and still expects workspace titles made from an Entry's writing, until it follows Web.
+That Web release is deployed, so a later migration can now remove the earlier six-argument Library workspace and the Timeline and Trash title stand-ins.
 Open `audit-2026-10` issues stay tracked in GitHub.
 
 ## Current state
@@ -98,7 +102,8 @@ Use Git history for feature-level implementation and test evidence.
 
 ### 1. Release and accept the Entry-centered Web flow
 
-- Verify the Production deployment against the hosted project migrated through `202610180087`, then check Quick Capture, untitled Entries named by their date, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
+- Verify the Production deployment against the hosted project migrated through `202610180087`, then check Quick Capture, untitled Entries named by their date, Library, First Times, and the Dashboard in a browser.
+  Timeline lanes, Now, Homes, Vehicles, Someday, and the Map are being replaced (see Focus), so they need no acceptance.
 - The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
 - Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
 - The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
@@ -110,7 +115,7 @@ Use Git history for feature-level implementation and test evidence.
 - The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610180087`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
 - Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
 - `localhost:3000` points to the linked cloud Supabase project.
-- Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
+- Accept Entry Location editing with a personal `localhost:3000` record, including provider-backed address search, removal, and manual address edits; the Map destination is being cut, so it needs no acceptance.
 - The accepted shared SearchField is now used across Web search surfaces, including Location, Library search, Tags, organization pickers, and Command Palette.
 - The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel; Production browser acceptance remains pending.
 - Native MapKit now reads current Entry-owned Locations and supports native clustering, Kind/year filters, city shortcuts, and associated record navigation.
@@ -174,8 +179,8 @@ Migration `202610040006` already drops the `entry_relations` and `set_entry_rela
   The browser capture scenario in `ai-paused.e2e.ts` reaches that path only with `MEMOTRAIL_E2E_LIVE_AI=1` and a synthetic `AI_API_KEY`, because the default E2E server disables the provider; both modes pass.
 - The old AI settings, search form, Entry suggestions panel, and exploration UI components and their dedicated styles are deleted, not merely unmounted.
 - The Beta pause page has its own minimal styles; old Explore URLs retain only a redirect, and future AI UI must be designed anew.
-- Do not install a local model or enable Production AI as part of this work.
-- Resume only after worthwhile use cases and redesigned entry points are accepted; decision-model actions remain exploratory.
+- The positioning settles the use cases that replace this pause: semantic search with an embedding model MemoTrail runs itself, and opt-in reviews and Chapter suggestions, each with newly designed UI (see Focus).
+- Do not enable a third-party provider in Production until its disclosure is accepted; decision-model actions remain exploratory.
 - Production deployment and live acceptance remain unverified; native AI entry points now follow the same pause.
 
 ### 5. Complete real interaction acceptance

@@ -3,7 +3,7 @@
 Settled with Ryan on 2026-10-18 through a product-positioning discussion.
 This document says why MemoTrail exists, who it serves, and which ideas belong in it.
 Use it as the filter for every new feature and every removal.
-[product.md](./product.md) still describes current behavior until it is rewritten to match this positioning.
+[product.md](./product.md) describes the product behavior that follows from it.
 
 ## In one sentence
 
@@ -91,13 +91,13 @@ A feature belongs in MemoTrail only when it passes these tests.
 
 AI earns its place in finding and giving back, not in organizing.
 
-| Capability                         | Approach                                                                                                |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Keyword search                     | No AI                                                                                                   |
-| Semantic search                    | On by default, using an embedding model MemoTrail runs itself, so content does not go to a third party  |
-| Chapter and year reviews           | Opt-in; uses a third-party model that does not train on or retain the data, and says what is sent first |
-| Chapter suggestions                | Opt-in, confirmed by the user before a chapter exists                                                   |
-| Title, tag, and filing suggestions | Not a priority                                                                                          |
+| Capability                         | Approach                                                                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Keyword search                     | No AI                                                                                                                        |
+| Semantic search                    | On by default, using an embedding model MemoTrail runs itself, so content does not go to a third party                       |
+| Chapter and year reviews           | Opt-in; uses a third-party model that does not train on the data, states its retention honestly, and says what is sent first |
+| Chapter suggestions                | Opt-in, confirmed by the user before a chapter exists                                                                        |
+| Title, tag, and filing suggestions | Not a priority                                                                                                               |
 
 ## Cold start
 

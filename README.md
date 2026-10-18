@@ -1,13 +1,14 @@
 # MemoTrail
 
-MemoTrail is a private, cross-platform record of a life in progress.
-The repository contains a native SwiftUI iOS app, a responsive Next.js Web app, shared Soft Ledger design tokens, and Supabase infrastructure.
+MemoTrail is the one private place a life is written down: jot down a thought, a mood, something learned, or something lived in seconds, find it again from any half-remembered clue, and get back the story of each chapter of your life.
+[Positioning](./docs/positioning.md) explains why it exists and which features belong.
+The repository contains a responsive Next.js Web app, a native SwiftUI iOS app that follows the finished Web behavior, shared Soft Ledger design tokens, and Supabase infrastructure.
 
 ## Start here
 
 - [Documentation guide](./docs/README.md) routes each request to the smallest useful context.
 - [Current status](./docs/status.md) summarizes what is shipped, what remains, and what is blocked.
-- [Product contract](./docs/product.md) defines current behavior and scope.
+- [Product contract](./docs/product.md) defines intended behavior and scope.
 - [Architecture](./docs/architecture.md) maps system boundaries and requests to likely code.
 
 Agents should also follow the repository-wide instructions in [AGENTS.md](./AGENTS.md).
