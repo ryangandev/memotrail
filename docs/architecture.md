@@ -22,6 +22,9 @@ Supabase migrations and the iOS Xcode project are independent of the Node worksp
 The Web root layout owns the authenticated application shell, including navigation and account context.
 Route pages render only their own server-backed content inside that persistent shell.
 Next.js link prefetching and `app/loading.tsx` provide route fallbacks, while navigation links expose immediate pending feedback when a cold request has not reached the fallback yet.
+`app/error.tsx` and `app/not-found.tsx` render inside that shell through `components/route-fallback.tsx`, so a failed or missing page keeps navigation and offers a retry or Home.
+`app/global-error.tsx` replaces the document only when the root layout itself fails.
+A failed client request, such as saving Appearance offline, is handled where it happened and never reaches these boundaries.
 
 ## Request-to-code map
 

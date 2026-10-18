@@ -196,6 +196,19 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       )
       .toBe("light");
 
+    // Offline, a failed save is reported where it happened; Settings stays.
+    await context.setOffline(true);
+    await darkTheme.check();
+    await expect(
+      page.getByText("Appearance could not be saved", { exact: false }).first(),
+    ).toBeVisible();
+    await expect(main.locator("h1")).toHaveText("Settings");
+    await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+    await expect(systemTheme).toBeChecked();
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await context.setOffline(false);
+
     const timezone = main.getByRole("combobox", {
       name: "Default time zone",
       exact: true,
