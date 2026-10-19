@@ -310,11 +310,15 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       .getByRole("link", { name: "View all Entries for this tag" })
       .click();
     await expect(page).toHaveURL(/\/library\?tag=journeys$/);
+    // Library opens with the tag already chosen in its Tags filter.
+    await page.getByRole("button", { name: "Tags · 1", exact: true }).click();
     await expect(
-      page.getByRole("combobox", { name: "Tag", exact: true }),
-    ).toHaveValue("journeys");
+      page
+        .getByRole("group", { name: "Tags", exact: true })
+        .getByRole("button", { name: "#journeys", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
     await expect(
-      page.getByRole("heading", { name: "Moved to Seattle", exact: true }),
+      page.getByRole("link", { name: /Moved to Seattle/ }),
     ).toBeVisible();
     await page.goto("/tags");
 

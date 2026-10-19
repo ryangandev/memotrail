@@ -90,9 +90,11 @@ function resultCard(page: Page, title: string) {
   });
 }
 
+// Only the rows on screen: a refresh can keep a hidden copy of the list while it streams in.
 function resultTitles(page: Page) {
   return page
     .locator("[data-ui-entry-row] [data-entry-row-title]")
+    .filter({ visible: true })
     .allTextContents();
 }
 
@@ -134,7 +136,7 @@ test("A description finds an Entry that shares no words with it", async ({
   await expect(
     card.getByRole("link", { name: "Saturday afternoon" }),
   ).toHaveAttribute("href", new RegExp(ids.get("Saturday afternoon")!));
-  expect(await resultTitles(page)).toEqual(["Saturday afternoon"]);
+  await expect.poll(() => resultTitles(page)).toEqual(["Saturday afternoon"]);
   await expect(page.getByText("Still preparing")).toHaveCount(0);
 
   await page.screenshot({
@@ -167,11 +169,9 @@ test("A keyword query still ranks by words and adds meaning matches after them",
 
   await page.goto("/search?q=bike");
   await expect(resultCard(page, "Bike notes")).toBeVisible();
-  expect(await resultTitles(page)).toEqual([
-    "Bike notes",
-    "River ride",
-    "Saturday afternoon",
-  ]);
+  await expect
+    .poll(() => resultTitles(page))
+    .toEqual(["Bike notes", "River ride", "Saturday afternoon"]);
   await expect(
     resultCard(page, "Bike notes").getByText("Title", { exact: true }),
   ).toBeVisible();
@@ -185,7 +185,7 @@ test("A keyword query still ranks by words and adds meaning matches after them",
 
   // A quoted phrase asks for exactly those words, so meaning stays out of it.
   await page.goto("/search?q=" + encodeURIComponent('"my bike"'));
-  expect(await resultTitles(page)).toEqual(["River ride"]);
+  await expect.poll(() => resultTitles(page)).toEqual(["River ride"]);
 });
 
 test("Filters constrain meaning matches too", async ({ page, workspace }) => {
@@ -208,32 +208,29 @@ test("Filters constrain meaning matches too", async ({ page, workspace }) => {
 
   const description = encodeURIComponent("the mechanic who repairs bicycles");
   await page.goto("/search?q=" + description);
-  expect((await resultTitles(page)).sort()).toEqual([
-    "Old wheels",
-    "Riding years",
-    "Saturday afternoon",
-  ]);
+  await expect
+    .poll(async () => (await resultTitles(page)).sort())
+    .toEqual(["Old wheels", "Riding years", "Saturday afternoon"]);
 
   await page.goto(`/search?q=${description}&tag=Neighbors`);
-  expect(await resultTitles(page)).toEqual(["Saturday afternoon"]);
+  await expect.poll(() => resultTitles(page)).toEqual(["Saturday afternoon"]);
 
   await page.goto(`/search?q=${description}&type=chapter`);
-  expect(await resultTitles(page)).toEqual(["Riding years"]);
+  await expect.poll(() => resultTitles(page)).toEqual(["Riding years"]);
 
   await page.goto(`/search?q=${description}&type=entry`);
-  expect((await resultTitles(page)).sort()).toEqual([
-    "Old wheels",
-    "Saturday afternoon",
-  ]);
+  await expect
+    .poll(async () => (await resultTitles(page)).sort())
+    .toEqual(["Old wheels", "Saturday afternoon"]);
 
   await page.goto(`/search?q=${description}&from=2026-01-01&to=2026-12-31`);
-  expect(await resultTitles(page)).toEqual(["Saturday afternoon"]);
+  await expect.poll(() => resultTitles(page)).toEqual(["Saturday afternoon"]);
 
   await page.goto(`/search?q=${description}&tag=Nobody`);
   await expect(
     page.getByRole("heading", { name: "No Entries match", exact: true }),
   ).toBeVisible();
-  expect(await resultTitles(page)).toEqual([]);
+  await expect.poll(() => resultTitles(page)).toEqual([]);
 });
 
 test("Search keeps working with words alone when the service is down", async ({
@@ -258,7 +255,7 @@ test("Search keeps working with words alone when the service is down", async ({
       .getByRole("search", { name: "Library search" })
       .getByText("Search by meaning is unavailable right now"),
   ).toBeVisible();
-  expect(await resultTitles(page)).toEqual(["River ride"]);
+  await expect.poll(() => resultTitles(page)).toEqual(["River ride"]);
   await expect(resultCard(page, "River ride").getByText("Body")).toBeVisible();
   await expect(page.getByText("Meaning", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Search unavailable")).toHaveCount(0);

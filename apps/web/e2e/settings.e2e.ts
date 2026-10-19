@@ -156,7 +156,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       )
       .toBe("River");
     await page.goto("/");
-    await expect(page.getByRole("main").locator("h1")).toContainText("River.");
+    await expect(page.getByRole("main").locator("h1")).toHaveText(/, River$/);
     await page.goto("/settings");
     await expect(main.getByText("River", { exact: true })).toBeVisible();
     await preferredName.fill("");
@@ -176,8 +176,8 @@ test("Settings is reachable from the sidebar and owns account controls", async (
       )
       .toBeNull();
     await page.goto("/");
-    await expect(page.getByRole("main").locator("h1")).toContainText(
-      "Settings.",
+    await expect(page.getByRole("main").locator("h1")).toHaveText(
+      /, Settings$/,
     );
     await page.goto("/settings");
 
