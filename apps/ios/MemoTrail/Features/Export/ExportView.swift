@@ -204,9 +204,7 @@ struct ExportView: View {
 
   var body: some View {
     MTPage(width: .compact, spacing: MTSpacing.s5) {
-      MTPageHeader(
-        eyebrow: "Your data", title: "Export",
-        description: "A portable copy of your story. No AI processing.")
+      MTPageHeader(eyebrow: "Your data", title: "Export")
       ExportCard(title: "Export everything") {
         paragraph(
           "One ZIP with complete JSON, readable Entry Markdown, CSV tables, and your original photos. It includes Trash and AI conversations."
@@ -260,12 +258,6 @@ struct ExportView: View {
         }
       }
       recentExports
-      Text(
-        "Downloads stream to disk. If the connection or server time limit interrupts the ZIP, it fails explicitly rather than leaving a falsely complete backup."
-      )
-      .font(MTFont.detail)
-      .foregroundStyle(MTColor.inkMuted)
-      .mtLineSpacing(MTLineHeight.relaxed, textStyle: .caption1)
     }
     .refreshable { await load() }
     .navigationTitle("Export")
