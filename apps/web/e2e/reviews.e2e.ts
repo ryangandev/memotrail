@@ -622,9 +622,12 @@ test("A year review is made from Year reviews, and a quiet notice offers a Chapt
   test.setTimeout(300_000);
   const uiErrors: string[] = [];
   page.on("pageerror", (error) => uiErrors.push(error.message));
+  // The scripted provider keeps every request for the server's life, so the one this test
+  // looks up carries its own marker.
+  const spring = `Spring cleaning ${marker()}`;
   const seeds: SeedEntry[] = [
     ["2025-01-12", "A cold January start", ["winter"]],
-    ["2025-03-03", "Spring cleaning at last", ["home"]],
+    ["2025-03-03", spring, ["home"]],
     ["2025-05-20", "Dinner with the whole family", ["family", "home"]],
     ["2025-07-08", "A week by the lake", ["family"]],
     ["2025-09-14", "Back to a routine", ["home"]],
@@ -659,7 +662,7 @@ test("A year review is made from Year reviews, and a quiet notice offers a Chapt
   await expect(
     panel.getByRole("region", { name: "In your words" }).locator("blockquote"),
   ).toHaveCount(4);
-  const requests = await sent("Spring cleaning at last", "review");
+  const requests = await sent(spring, "review");
   expect(requests).toHaveLength(1);
   expect(JSON.parse(requests[0].input).subject).toEqual({
     kind: "year",
