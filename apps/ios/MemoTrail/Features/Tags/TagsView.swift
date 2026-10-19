@@ -1,13 +1,15 @@
 @preconcurrency import Supabase
 import SwiftUI
 
+// P8: Tags polish.
+
 /// Web `/tags`: every tag as a badge with how many Entries use it, a name search, and New Tag.
 /// Each badge opens the tag's editor, which lists its Entries and merges or deletes it.
 struct TagsView: View {
   let client: SupabaseClient
   let ownerID: UUID
 
-  @State private var tags: [OrganizationItem] = []
+  @State private var tags: [TagItem] = []
   @State private var query = ""
   @State private var appliedQuery = ""
   @State private var totalCount = 0
@@ -17,7 +19,6 @@ struct TagsView: View {
   @State private var errorMessage: String?
   @State private var moreErrorMessage: String?
   @State private var editing: Editing?
-  @State private var opened: ItemLink?
   /// Where to go once the editor has closed, since switching tabs or pushing a page while it
   /// closes would cancel the dismissal.
   @State private var afterEditing: (@MainActor () -> Void)?
@@ -25,7 +26,7 @@ struct TagsView: View {
 
   /// The tag editor: a new tag, or a saved one.
   private struct Editing: Identifiable {
-    let item: OrganizationItem?
+    let item: TagItem?
     var id: UUID? { item?.id }
   }
 
@@ -34,9 +35,9 @@ struct TagsView: View {
   var body: some View {
     MTPage(width: .standard, spacing: MTSpacing.s6) {
       MTPageHeader(
-        eyebrow: "Filter across your archive", title: "Tags",
+        eyebrow: "Group across your archive", title: "Tags",
         description:
-          "Tags are lightweight descriptors such as travel, family, or funny. Use them across Entry types when you want a flexible filter, not a curated chapter."
+          "Tags group related Entries, such as travel, family, or a trip you want to keep together. Use them across Entry types and filter by them anywhere."
       ) {
         Button {
           editing = Editing(item: nil)
@@ -56,13 +57,18 @@ struct TagsView: View {
       afterEditing?()
       afterEditing = nil
     } content: { editing in
-      OrganizationEditorSheet(
-        actions: actions, kind: .tag, item: editing.item, mergeTargets: tags,
-        changed: { await load(query: appliedQuery) },
-        openEntry: { entry in afterEditing = { open(ItemLink(entry)) } },
+      TagEditorSheet(
+        actions: actions, item: editing.item, mergeTargets: tags,
+        changed: {
+          await load(query: appliedQuery)
+          navigator.entriesChanged()
+        },
+        openEntry: { entry in
+          // Tags is a page in the More tab, so its Entries open on that stack.
+          afterEditing = { navigator.morePath.append(ItemLink(entryID: entry.id)) }
+        },
         openAllEntries: { name in afterEditing = { navigator.openLibrary(tag: name) } })
     }
-    .wikiItemDestination($opened, client: client, ownerID: ownerID)
     .task {
       if !hasLoaded { await load() }
     }
@@ -125,10 +131,6 @@ struct TagsView: View {
     }
   }
 
-  private func open(_ link: ItemLink) {
-    navigator.open(link) { opened = $0 }
-  }
-
   private func load(query search: String? = nil) async {
     guard !isLoading else { return }
     isLoading = true
@@ -138,7 +140,7 @@ struct TagsView: View {
     }
     let search = String((search ?? appliedQuery).trimmed.prefix(200))
     do {
-      tags = try await actions.load(.tag, query: search)
+      tags = try await actions.load(query: search)
       totalCount = tags.first?.totalCount ?? 0
       appliedQuery = search
       errorMessage = nil
@@ -153,7 +155,7 @@ struct TagsView: View {
     isLoadingMore = true
     defer { isLoadingMore = false }
     do {
-      let next = try await actions.load(.tag, query: appliedQuery, offset: tags.count)
+      let next = try await actions.load(query: appliedQuery, offset: tags.count)
       let known = Set(tags.map(\.id))
       tags += next.filter { !known.contains($0.id) }
       moreErrorMessage = next.isEmpty && tags.count < totalCount ? "Could not load more tags." : nil
@@ -165,7 +167,7 @@ struct TagsView: View {
 
 /// Web `tagBadge`: the tag's mark, name, and Entry count in one pill that opens its editor.
 private struct TagBadge: View {
-  let tag: OrganizationItem
+  let tag: TagItem
   let edit: () -> Void
 
   var body: some View {

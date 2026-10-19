@@ -2,17 +2,16 @@ import Foundation
 import Observation
 @preconcurrency import Supabase
 
-/// Web `getTimelineWorkspace` and the Timeline actions: tracks with their records, dated First
-/// Times not yet placed, and the Collection and tag names editors suggest.
+/// Web `getTimelineWorkspace`: the Chapters and First Times `timeline_workspace` returns, split
+/// into the Timeline's two bands.
 @MainActor
 @Observable
 final class TimelineController {
-  private(set) var tracks: [TimelineTrack] = []
-  private(set) var collectionOptions: [String] = []
-  private(set) var tagOptions: [String] = []
+  private(set) var chapters: [TimelineItem] = []
+  /// First Times that are not also Chapters; a First Time Chapter is one bar.
+  private(set) var firstTimes: [TimelineItem] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
-  private(set) var isSaving = false
   private(set) var loadErrorMessage: String?
 
   private let client: SupabaseClient
@@ -25,7 +24,7 @@ final class TimelineController {
     self.ownerID = ownerID
   }
 
-  var entries: [TimelineEntry] { tracks.flatMap(\.entries) }
+  var items: [TimelineItem] { chapters + firstTimes }
 
   func load() async {
     let generation = UUID()
@@ -40,168 +39,15 @@ final class TimelineController {
 
     do {
       try await validateSessionOwner()
-      async let rowsRequest = loadRows()
-      async let firstTimesRequest = loadFirstTimes()
-      async let collectionsRequest = loadNames(from: "collections")
-      async let tagsRequest = loadNames(from: "tags")
-      let rows = try await rowsRequest
-      // Like Web, optional First Times and suggestions never block the Timeline itself.
-      let firstTimes = (try? await firstTimesRequest) ?? []
-      let collections = try? await collectionsRequest
-      let tags = try? await tagsRequest
+      let rows: [TimelineItem] = try await client.rpc("timeline_workspace").execute().value
+      try await validateSessionOwner()
       guard loadGeneration == generation else { return }
-      collectionOptions = collections ?? collectionOptions
-      tagOptions = tags ?? tagOptions
-      tracks = TimelineWorkspace.includingUnplacedFirstTimes(
-        TimelineWorkspace.tracks(from: rows), firstTimes: firstTimes)
+      (chapters, firstTimes) = TimelineItems.split(rows)
       loadErrorMessage = nil
     } catch {
       guard loadGeneration == generation, !(error is CancellationError) else { return }
       loadErrorMessage = "MemoTrail could not load your Timeline. Pull to refresh or try again."
     }
-  }
-
-  func save(
-    entry: TimelineEntry?,
-    trackID: UUID,
-    kind: TimelineKind,
-    title: String,
-    body: String,
-    occurrence: EntryOccurrence,
-    collectionNames: [String],
-    tagNames: [String]
-  ) async -> MutationResult {
-    var input: TimelineEntryInput
-
-    do {
-      input = try TimelineEntryInput.validate(
-        entryID: entry?.id,
-        expectedRevision: entry?.revision,
-        trackID: trackID,
-        kind: kind,
-        title: title,
-        body: body,
-        occurredStart: occurrence.start,
-        occurredEnd: kind == .stage ? occurrence.end : nil,
-        datePrecision: occurrence.precision,
-        occurredLabel: occurrence.label ?? "",
-        occurredTimezone: occurrence.timezone,
-        collectionNames: collectionNames,
-        tagNames: tagNames
-      )
-    } catch {
-      return MutationResult(message: error.localizedDescription, status: .error)
-    }
-
-    input.preserveUnchangedBounds(from: entry)
-
-    guard !isSaving else {
-      return MutationResult(message: "A Timeline change is already saving.", status: .error)
-    }
-
-    isSaving = true
-    defer { isSaving = false }
-
-    do {
-      try await validateSessionOwner()
-      let results: [SavedTimelineEntry] =
-        try await client
-        .rpc(
-          "save_timeline_entry_with_organization",
-          params: SaveTimelineEntryParameters(input: input)
-        )
-        .execute()
-        .value
-
-      guard results.first != nil else {
-        return MutationResult(
-          message: entry == nil
-            ? "This Timeline track is no longer available. Refresh and try again."
-            : "This moment changed on another device. Close it, refresh, and try again.",
-          status: .conflict
-        )
-      }
-
-      await reloadAfterMutation()
-      return entry == nil
-        ? MutationResult(message: "Moment created.", status: .created)
-        : MutationResult(message: "Moment saved.", status: .saved)
-    } catch {
-      return MutationResult(
-        message: "MemoTrail could not save this moment. Try again.",
-        status: .error
-      )
-    }
-  }
-
-  func moveToTrash(_ entry: TimelineEntry) async -> MutationResult {
-    guard !isSaving else {
-      return MutationResult(message: "A Timeline change is already saving.", status: .error)
-    }
-
-    isSaving = true
-    defer { isSaving = false }
-
-    do {
-      try await validateSessionOwner()
-      let results: [SavedTimelineEntry] =
-        try await client
-        .rpc(
-          "trash_timeline_entry",
-          params: TrashTimelineEntryParameters(
-            entryID: entry.id,
-            expectedRevision: entry.revision
-          )
-        )
-        .execute()
-        .value
-
-      guard results.first != nil else {
-        return MutationResult(
-          message: "This moment changed on another device. Close it, refresh, and try again.",
-          status: .conflict
-        )
-      }
-
-      await reloadAfterMutation()
-      return MutationResult(message: "Moment moved to Trash.", status: .trashed)
-    } catch {
-      return MutationResult(
-        message: "MemoTrail could not move this moment to Trash. Try again.",
-        status: .error
-      )
-    }
-  }
-
-  /// Replaces any load still running, so the Timeline reflects the change.
-  func reloadAfterMutation() async {
-    await load()
-  }
-
-  private func loadRows() async throws -> [TimelineWorkspaceRow] {
-    try await client
-      .rpc(
-        "timeline_workspace_with_organization",
-        params: TimelineWorkspaceParameters(includeHidden: false)
-      )
-      .execute()
-      .value
-  }
-
-  private func loadFirstTimes() async throws -> [FirstTimeEntry] {
-    let rows: [FirstTimeWorkspaceRow] =
-      try await client
-      .rpc("first_times_workspace_with_occurrence")
-      .execute()
-      .value
-    return FirstTimesWorkspace.entries(from: rows)
-  }
-
-  private func loadNames(from table: String) async throws -> [String] {
-    var query = client.from(table).select("name").eq("owner_id", value: ownerID.uuidString)
-    if table == "collections" { query = query.is("archived_at", value: nil) }
-    let rows: [TimelineOrganizationName] = try await query.order("name").execute().value
-    return rows.map(\.name)
   }
 
   private func validateSessionOwner() async throws {
@@ -210,27 +56,6 @@ final class TimelineController {
       throw TimelineControllerError.ownerChanged
     }
   }
-}
-
-extension TimelineController {
-  struct MutationResult: Equatable, Sendable {
-    enum Status: Equatable, Sendable {
-      case conflict
-      case created
-      case error
-      case saved
-      case trashed
-    }
-
-    let message: String
-    let status: Status
-
-    var succeeded: Bool { [.created, .saved, .trashed].contains(status) }
-  }
-}
-
-private struct TimelineOrganizationName: Decodable, Sendable {
-  let name: String
 }
 
 private enum TimelineControllerError: Error {

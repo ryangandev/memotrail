@@ -267,6 +267,17 @@ struct QueuedCaptureAttachment: Codable, Equatable, Identifiable, Sendable {
   }
 }
 
+extension RegisterEntryAttachmentParameters {
+  /// Registers a queued capture's photo with the facts saved when it was captured.
+  init(entryID: UUID, attachment: QueuedCaptureAttachment, objectPath: String) {
+    self.init(
+      entryID: entryID, attachmentID: attachment.id, objectPath: objectPath,
+      originalFilename: attachment.originalFilename, mimeType: attachment.mimeType,
+      byteSize: attachment.byteSize, pixelWidth: attachment.pixelWidth,
+      pixelHeight: attachment.pixelHeight)
+  }
+}
+
 /// Why MemoTrail refused a queued capture, kept with it like Web's queue `rejection`.
 struct QueuedCaptureRejection: Codable, Equatable, Sendable {
   static let maximumMessageLength = 500

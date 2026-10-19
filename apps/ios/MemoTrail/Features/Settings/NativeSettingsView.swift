@@ -14,7 +14,8 @@ enum NativeAppearance: String, CaseIterable, Sendable {
 }
 
 /// Web `/settings`: the account, what MemoTrail calls you, your Timeline starting point, the
-/// default time zone, appearance, and the paths to AI status, organization, and export.
+/// default time zone, appearance, and the paths to tags, import, and export. iOS searches by
+/// keyword only, so it shows no meaning-search switch, and import stays on the Web.
 struct NativeSettingsView: View {
   let client: SupabaseClient
   let user: AuthenticatedUser
@@ -176,17 +177,16 @@ struct NativeSettingsView: View {
           .accessibilityIdentifier("settings-appearance")
         }
         MTListDivider()
-        SettingsPreferenceLink(
-          icon: .sparkle, title: "AI capabilities · Beta",
-          detail: "Off and unavailable while we rethink how AI can help."
-        ) {
-          AISettingsView()
-        }
-        MTListDivider()
         SettingsWorkspaceLink(
-          icon: .archive, title: "Archive organization",
-          detail: "Open the Library to manage Collections and tags across items.",
-          route: .collections)
+          icon: .tag, title: "Archive organization",
+          detail: "Rename, merge, and clean up the tags across your archive.",
+          route: .tags)
+        MTListDivider()
+        SettingsInfoRow(
+          icon: .plus, title: "Import notes",
+          detail:
+            "Bring notes and journals from another app into your archive. Import is available in MemoTrail on the Web."
+        )
         MTListDivider()
         SettingsPreferenceLink(
           icon: .archive, title: "Export archive",
@@ -419,6 +419,20 @@ private struct SettingsWorkspaceLink: View {
     .buttonStyle(MTListRowButtonStyle())
     .accessibilityLabel(title)
     .accessibilityHint(detail)
+  }
+}
+
+/// A row that leads nowhere on iOS, like Import notes, which stays on the Web.
+private struct SettingsInfoRow: View {
+  let icon: MTIcon
+  let title: String
+  let detail: String
+
+  var body: some View {
+    SettingsPreferenceLabel(icon: icon, title: title, detail: detail)
+      .padding(MTSpacing.s4)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.OptionRow.minHeight, alignment: .leading)
+      .accessibilityElement(children: .combine)
   }
 }
 

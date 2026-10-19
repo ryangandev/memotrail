@@ -10,7 +10,7 @@ struct RootTabView: View {
   private let draftStore: CaptureDraftStore
   private let photoStore: CapturePhotoStore
   @State private var homeController: HomeController
-  @State private var inboxController: CaptureController
+  @State private var captureController: CaptureController
   @State private var captureTitle: String
   @State private var captureNote: NSAttributedString
   @State private var captureOccurrence: OccurrenceDraft?
@@ -39,7 +39,7 @@ struct RootTabView: View {
     _homeController = State(
       initialValue: HomeController(client: client, ownerID: user.id)
     )
-    _inboxController = State(
+    _captureController = State(
       initialValue: CaptureController(
         client: client,
         ownerID: user.id,
@@ -62,7 +62,7 @@ struct RootTabView: View {
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,
         controller: homeController,
-        captureController: inboxController,
+        captureController: captureController,
         captureTitle: $captureTitle,
         captureNote: $captureNote,
         captureOccurrence: $captureOccurrence,
@@ -75,19 +75,6 @@ struct RootTabView: View {
         Label(RootTabDestination.home.title, systemImage: RootTabDestination.home.systemImage)
       }
       .tag(RootTabDestination.home)
-
-      InboxView(
-        client: client,
-        user: user,
-        isAuthenticationBusy: isAuthenticationBusy,
-        signOut: signOut,
-        controller: inboxController
-      )
-      .tabItem {
-        Label(RootTabDestination.inbox.title, systemImage: RootTabDestination.inbox.systemImage)
-      }
-      .tag(RootTabDestination.inbox)
-      .badge(inboxBadgeCount)
 
       TimelineView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
@@ -118,7 +105,7 @@ struct RootTabView: View {
     .environment(navigator)
     .fullScreenCover(isPresented: $navigator.isShowingQuickCapture) {
       QuickCaptureView(
-        controller: inboxController,
+        controller: captureController,
         title: $captureTitle,
         note: $captureNote,
         occurrence: $captureOccurrence,
@@ -137,15 +124,11 @@ struct RootTabView: View {
     .onChange(of: captureOccurrence) {
       persistDraft()
     }
-    .onChange(of: inboxController.pendingEntries.count) { previousCount, count in
-      guard count < previousCount else { return }
-      Task { await homeController.load() }
+    .sheet(isPresented: $navigator.isShowingPendingCaptures) {
+      PendingCapturesSheet(controller: captureController)
     }
-    // Organizing or trashing a capture changes the Dashboard counts and Ready to organize.
-    .onChange(of: inboxController.entries.count) { previousCount, count in
-      guard count < previousCount else { return }
-      Task { await homeController.load() }
-    }
+    // A capture that reached MemoTrail changes every list that shows Entries.
+    .onChange(of: captureController.entriesRevision) { navigator.entriesChanged() }
     .task {
       await loadCapturePhotosIfNeeded()
     }
@@ -184,7 +167,7 @@ struct RootTabView: View {
         try photoStore.load(ownerID: ownerID)
       }.value) ?? []
     let queuedPhotoIDs = Set(
-      inboxController.pendingEntries.flatMap { $0.attachments.map(\.id) }
+      captureController.pendingEntries.flatMap { $0.attachments.map(\.id) }
     )
     capturePhotos = loadedPhotos.filter { !queuedPhotoIDs.contains($0.id) }
     hasLocalDraft =
@@ -213,19 +196,10 @@ struct RootTabView: View {
     hasLocalDraft =
       draftStore.load(ownerID: ownerID) != nil || !capturePhotos.isEmpty
   }
-
-  private var inboxBadgeCount: Int {
-    let synchronizedCount =
-      inboxController.hasLoaded
-      ? inboxController.entries.count
-      : (homeController.snapshot?.inboxCount ?? 0)
-    return synchronizedCount + inboxController.pendingEntries.count
-  }
 }
 
 enum RootTabDestination: String, CaseIterable, Sendable {
   case home
-  case inbox
   case timeline
   case library
   case more
@@ -233,18 +207,16 @@ enum RootTabDestination: String, CaseIterable, Sendable {
   var title: String {
     switch self {
     case .home: "Dashboard"
-    case .inbox: "Inbox"
     case .timeline: "Timeline"
     case .library: "Library"
     case .more: "More"
     }
   }
 
-  /// The Web navigation icons: dashboard grid, inbox tray, timeline, archive box, and more.
+  /// The Web navigation icons: dashboard grid, timeline, archive box, and more.
   var systemImage: String {
     switch self {
     case .home: MTIcon.dashboard.systemName
-    case .inbox: MTIcon.inbox.systemName
     case .timeline: MTIcon.timeline.systemName
     case .library: MTIcon.archive.systemName
     case .more: MTIcon.more.systemName

@@ -2,46 +2,6 @@ import Foundation
 @preconcurrency import Supabase
 import SwiftUI
 
-struct PhotoPlaceDraft: Encodable, Equatable, Sendable {
-  var kind: String = "new"
-  let attachmentId: UUID
-  var placeId: UUID?
-  var revision: Int?
-  var name: String = ""
-  var latitude: Double?
-  var longitude: Double?
-  func validate() throws {
-    guard kind == "new", placeId == nil, revision == nil,
-      !name.trimmed.isEmpty, name.trimmed.count <= 200,
-      let latitude, let longitude, latitude.isFinite, longitude.isFinite,
-      (-90...90).contains(latitude), (-180...180).contains(longitude)
-    else { throw PhotoLocationError.invalidDraft }
-  }
-
-}
-enum PhotoLocationError: LocalizedError {
-  case invalidDraft
-
-  var errorDescription: String? {
-    "Add a Location label and valid photo coordinates, or remove the Location from this draft."
-  }
-}
-
-struct EntryPhotoInfo: Decodable, Identifiable, Sendable {
-  let id: UUID
-  let name: String
-  let imageUrl: String?
-
-  func displayURL(base: URL?) -> URL? {
-    guard let base, let imageUrl else { return nil }
-    return MediaDelivery.validatedURLs(
-      [id.uuidString: imageUrl], paths: [id.uuidString], base: base)[id.uuidString]
-  }
-}
-struct EntryPhotosResponse: Decodable, Sendable {
-  let photos: [EntryPhotoInfo]
-  let hasMore: Bool
-}
 struct PhotoCameraMetadata: Decodable, Sendable {
   let attachmentId: UUID
   let sourceVersion: String
@@ -73,7 +33,7 @@ struct EntryPhotoDatesView: View {
   let ownerID: UUID
   let entryID: UUID
   @Binding var occurrence: OccurrenceDraft
-  @Binding var photoPlace: PhotoPlaceDraft?
+  @Binding var photoLocation: PhotoLocationDraft?
   @State private var photos: [EntryPhotoInfo]?
   @State private var metadata: [UUID: PhotoCameraMetadata] = [:]
   @State private var busy = false
@@ -132,8 +92,8 @@ struct EntryPhotoDatesView: View {
           .font(MTFont.detail)
           .foregroundStyle(MTColor.warm)
       }
-      if photoPlace != nil {
-        PhotoPlaceDraftEditor(value: $photoPlace)
+      if photoLocation != nil {
+        PhotoLocationDraftEditor(value: $photoLocation)
           .disabled(busy)
       }
       if let notice { caption(notice) }
@@ -178,12 +138,11 @@ struct EntryPhotoDatesView: View {
       caption("Private GPS metadata is available. No Location is linked automatically.")
         .textSelection(.enabled)
       Button("Use GPS for a Location") {
-        photoPlace = PhotoPlaceDraft(
-          attachmentId: photo.id, name: "Photo GPS location", latitude: latitude,
-          longitude: longitude)
+        photoLocation = PhotoLocationDraft(
+          attachmentId: photo.id, latitude: latitude, longitude: longitude)
       }
       .mtButtonStyle(.secondary, size: .small)
-      .disabled(busy || (photoPlace?.attachmentId == photo.id && photoPlace?.kind == "new"))
+      .disabled(busy || photoLocation?.attachmentId == photo.id)
     }
   }
 
@@ -212,14 +171,13 @@ struct EntryPhotoDatesView: View {
       if let photo {
         let result: PhotoCameraMetadata = try await MediaDelivery.apiRequest(
           path: "api/media/metadata",
-          query: URLQueryItem(name: "attachmentId", value: photo.id.uuidString), client: client,
-          ownerID: ownerID)
+          query: URLQueryItem(name: "attachmentId", value: photo.id.uuidString.lowercased()),
+          client: client, ownerID: ownerID)
         guard result.attachmentId == photo.id else { throw OccurrenceError.invalidDate }
         metadata[photo.id] = result
       } else {
-        let result: EntryPhotosResponse = try await MediaDelivery.apiRequest(
-          path: "api/media/photos", query: URLQueryItem(name: "entryId", value: entryID.uuidString),
-          client: client, ownerID: ownerID)
+        let result = try await EntryAPI(client: client, ownerID: ownerID).photos(
+          entryID: entryID)
         photos = result.photos
         metadata = [:]
         if result.hasMore { notice = "Showing the first 100 photos." }
@@ -233,9 +191,10 @@ struct EntryPhotoDatesView: View {
   }
 }
 
-/// Web `PhotoPlaceEditor`: the photo's GPS position waiting to be saved as this Entry's Location.
-private struct PhotoPlaceDraftEditor: View {
-  @Binding var value: PhotoPlaceDraft?
+/// Web `PhotoLocationEditor`: the photo's GPS position waiting to be saved as this Entry's
+/// Location.
+private struct PhotoLocationDraftEditor: View {
+  @Binding var value: PhotoLocationDraft?
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
@@ -264,30 +223,5 @@ private struct PhotoPlaceDraftEditor: View {
         MTColor.border, lineWidth: MTSize.Stroke.thin)
     }
     .padding(.top, MTSpacing.s1)
-  }
-}
-
-extension MediaDelivery {
-  static func apiRequest<T: Decodable>(
-    path: String, query: URLQueryItem, client: SupabaseClient, ownerID: UUID
-  ) async throws -> T {
-    guard let base = AppConfiguration.apiURL,
-      var components = URLComponents(
-        url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)
-    else { throw URLError(.badURL) }
-    components.queryItems = [query]
-    guard let url = components.url else { throw URLError(.badURL) }
-    let session = try await client.auth.session
-    guard session.user.id == ownerID else { throw URLError(.userAuthenticationRequired) }
-    var request = URLRequest(url: url)
-    request.httpMethod = "POST"
-    request.timeoutInterval = 45
-    request.cachePolicy = .reloadIgnoringLocalCacheData
-    request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
-    let (data, response) = try await URLSession.shared.data(for: request)
-    guard let http = response as? HTTPURLResponse, http.statusCode == 200,
-      try await client.auth.session.user.id == ownerID
-    else { throw URLError(.badServerResponse) }
-    return try JSONDecoder().decode(T.self, from: data)
   }
 }

@@ -1,19 +1,8 @@
 import SwiftUI
 
-/// A Dashboard link to a record's canonical destination, like Web `wikiEntryHref`.
-struct DashboardRecord: Hashable {
-  let id: UUID
-  let kind: WikiItemKind
-  let subtype: String
+// P6: the Dashboard's final layout.
 
-  init(_ entry: HomeEntry) {
-    id = entry.id
-    kind = entry.itemKind
-    subtype = entry.itemSubtype
-  }
-}
-
-/// The Web Data Ribbon: five archive counts that each open their area.
+/// Web `Stats`: four archive counts that each open their area.
 struct DashboardRibbon: View {
   let snapshot: HomeSnapshot
   let navigator: AppNavigator
@@ -28,7 +17,7 @@ struct DashboardRibbon: View {
   var body: some View {
     let items = [
       Item(
-        value: snapshot.currentStageCount, label: "Life in progress", icon: .timeline,
+        value: snapshot.nowCount, label: "Going on now", icon: .timeline,
         open: { navigator.show(.timeline) }),
       Item(
         value: snapshot.entryCount, label: "Entries kept", icon: .archive,
@@ -37,18 +26,13 @@ struct DashboardRibbon: View {
         value: snapshot.firstTimeCount, label: "First Times", icon: .star,
         open: { navigator.show(.firstTimes) }),
       Item(
-        value: snapshot.collectionCount, label: "Collections", icon: .bulletList,
-        open: { navigator.show(.collections) }),
-      Item(
-        value: snapshot.inboxCount, label: "To organize", icon: .inbox,
-        open: { navigator.show(.inbox) }),
+        value: snapshot.tagCount, label: "Tags", icon: .tag,
+        open: { navigator.show(.tags) }),
     ]
     VStack(spacing: 0) {
       row(items[0], items[1])
       Divider().overlay(MTColor.border)
       row(items[2], items[3])
-      Divider().overlay(MTColor.border)
-      cell(items[4])
     }
     .background(MTColor.surface)
     .clipShape(RoundedRectangle(cornerRadius: MTRadius.large))
@@ -107,43 +91,6 @@ private struct DashboardRibbonButtonStyle: ButtonStyle {
   }
 }
 
-/// A Ready to organize row: capture day, title, optional note line, and a chevron.
-struct DashboardInboxRow: View {
-  let entry: HomeInboxPreview
-  let open: () -> Void
-
-  var body: some View {
-    Button(action: open) {
-      HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
-        Text(entry.createdAt.formatted(.dateTime.month(.abbreviated).day()))
-          .font(MTFont.note)
-          .foregroundStyle(MTColor.inkFaint)
-          .frame(width: MTLayout.Dashboard.dateColumn, alignment: .leading)
-        VStack(alignment: .leading, spacing: MTSpacing.s1) {
-          Text(entry.displayTitle)
-            .font(MTFont.label)
-            .foregroundStyle(MTColor.ink)
-            .lineLimit(entry.excerpt == nil ? 2 : 1)
-          if let excerpt = entry.excerpt {
-            Text(excerpt)
-              .font(MTFont.detail)
-              .foregroundStyle(MTColor.inkMuted)
-              .lineLimit(1)
-          }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        Image(.chevron)
-          .font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
-          .foregroundStyle(MTColor.inkFaint)
-      }
-      .padding(.vertical, MTSpacing.s4)
-      .contentShape(Rectangle())
-    }
-    .buttonStyle(.plain)
-    .accessibilityLabel("Organize \(entry.displayTitle)")
-  }
-}
-
 /// A resurfaced dated Entry with its photo, identity, date, note, and organization.
 struct DashboardMemoryCard: View {
   let entry: HomeEntry
@@ -156,12 +103,12 @@ struct DashboardMemoryCard: View {
       }
       VStack(alignment: .leading, spacing: MTSpacing.s2) {
         HStack(spacing: MTSpacing.s2) {
-          Text(entry.displayType)
+          Text(entry.identityLabel)
           Text(entry.occurrence.displayLabel)
         }
         .font(MTFont.noteStrong)
         .foregroundStyle(MTColor.warm)
-        Text(entry.cardTitle)
+        Text(entry.displayTitle)
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
           .fixedSize(horizontal: false, vertical: true)
@@ -172,9 +119,8 @@ struct DashboardMemoryCard: View {
             .mtLineSpacing(MTLineHeight.body, textStyle: .footnote)
             .lineLimit(3)
         }
-        if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
+        if !entry.tagNames.isEmpty {
           MTFlowLayout(spacing: MTSpacing.s1) {
-            ForEach(entry.collectionNames.prefix(2), id: \.self) { MTBadge(title: $0) }
             ForEach(entry.tagNames.prefix(3), id: \.self) {
               MTBadge(title: "#\($0)", size: .medium)
             }
@@ -195,57 +141,50 @@ struct DashboardMemoryCard: View {
   }
 }
 
-/// A current Timeline chapter: track, title, and the span so far.
-struct DashboardChapterCard: View {
-  let stage: HomeStage
-  let open: () -> Void
+/// Web `Now` item: a Chapter that has started and not ended, with its span and duration so far.
+struct DashboardNowCard: View {
+  let item: HomeNowItem
+  /// The day the snapshot describes, which durations are measured to.
+  let asOf: Date
 
   var body: some View {
-    Button(action: open) {
-      ViewThatFits(in: .horizontal) {
-        HStack(alignment: .center, spacing: MTSpacing.s3) {
-          heading
-          Spacer(minLength: 0)
-          span
-        }
-        VStack(alignment: .leading, spacing: MTSpacing.s2) {
-          heading
-          span
-        }
+    ViewThatFits(in: .horizontal) {
+      HStack(alignment: .center, spacing: MTSpacing.s3) {
+        title
+        Spacer(minLength: 0)
+        span
       }
-      .padding(.vertical, MTSpacing.s4)
-      .padding(.horizontal, MTSpacing.s5)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
-      .overlay {
-        RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
-          MTColor.border, lineWidth: MTSize.Stroke.thin)
+      VStack(alignment: .leading, spacing: MTSpacing.s2) {
+        title
+        span
       }
     }
-    .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
+    .padding(.vertical, MTSpacing.s4)
+    .padding(.horizontal, MTSpacing.s5)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.medium))
+    .overlay {
+      RoundedRectangle(cornerRadius: MTRadius.medium).strokeBorder(
+        MTColor.border, lineWidth: MTSize.Stroke.thin)
+    }
     .accessibilityElement(children: .combine)
   }
 
-  private var heading: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s1) {
-      Text(stage.trackName.uppercased())
-        .mtTextRole(.eyebrow)
-        .foregroundStyle(MTColor.warm)
-      Text(stage.title)
-        .font(MTFont.itemTitle)
-        .foregroundStyle(MTColor.ink)
-        .multilineTextAlignment(.leading)
-    }
+  private var title: some View {
+    Text(item.displayTitle)
+      .font(MTFont.itemTitle)
+      .foregroundStyle(MTColor.ink)
+      .multilineTextAlignment(.leading)
   }
 
   private var span: some View {
-    Text(stage.occurrence.spanLabel)
+    Text("\(item.occurrence.spanLabel) · \(item.occurrence.durationLabel(now: asOf))")
       .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
   }
 }
 
-/// A Recent Entries row: date and identity, Collection prefix and title, note, tags, and photo.
+/// A Recent Entries row: date and identity, title, note, tags, and photo.
 struct DashboardEntryRow: View {
   let entry: HomeEntry
 
@@ -257,10 +196,10 @@ struct DashboardEntryRow: View {
             .font(MTFont.noteStrong)
             .foregroundStyle(MTColor.warm)
             .lineLimit(1)
-          MTBadge(title: entry.displayType, tone: .outline)
+          MTBadge(title: entry.identityLabel, tone: .outline)
             .fixedSize()
         }
-        title
+        Text(entry.displayTitle)
           .font(MTFont.itemTitle)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
@@ -291,11 +230,5 @@ struct DashboardEntryRow: View {
     .padding(.vertical, MTSpacing.s3)
     .contentShape(Rectangle())
     .accessibilityElement(children: .combine)
-  }
-
-  private var title: Text {
-    guard !entry.collectionNames.isEmpty else { return Text(entry.cardTitle) }
-    let prefix = entry.collectionNames.map { "[\($0)]" }.joined(separator: " ")
-    return Text("\(Text(prefix).foregroundStyle(MTColor.inkMuted)) \(entry.cardTitle)")
   }
 }

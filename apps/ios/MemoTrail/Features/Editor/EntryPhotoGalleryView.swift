@@ -100,6 +100,8 @@ struct EntryPhotoGalleryView: View {
     }
   }
 
+  private var api: EntryAPI { EntryAPI(client: client, ownerID: ownerID) }
+
   private func note(_ text: String) -> some View {
     Text(text)
       .font(MTFont.supporting)
@@ -129,7 +131,7 @@ struct EntryPhotoGalleryView: View {
       }
     }
     if items.count > available {
-      failure = "Keep up to \(PhotoDraft.maximumCount) photos with one Entry."
+      failure = PhotoDraft.tooManyMessage
     }
     message = failure
   }
@@ -143,9 +145,7 @@ struct EntryPhotoGalleryView: View {
     for (index, draft) in drafts.enumerated() {
       uploadProgress = (completed: index, total: drafts.count)
       do {
-        if try await !EntryPhotoUpload.attach(
-          draft, entryID: entryID, ownerID: ownerID, client: client)
-        {
+        if try await !api.attachPhoto(draft, entryID: entryID) {
           failed.append(draft)
         }
       } catch {
@@ -171,14 +171,7 @@ struct EntryPhotoGalleryView: View {
     message = nil
     defer { isBusy = false }
     do {
-      guard try await client.auth.session.user.id == ownerID else {
-        throw URLError(.userAuthenticationRequired)
-      }
-      let rows: [TrashedResidenceAttachment] = try await client.rpc(
-        "trash_entry_attachment",
-        params: TrashResidenceAttachmentParameters(attachmentID: photo.id)
-      ).execute().value
-      guard rows.first?.attachmentID == photo.id else { throw URLError(.badServerResponse) }
+      guard try await api.trashPhoto(photo.id) else { throw URLError(.badServerResponse) }
       await fetch()
       MTToastCenter.shared.info("Photo moved to Trash. Restore it from Trash any time.")
       await onChanged()
@@ -198,9 +191,7 @@ struct EntryPhotoGalleryView: View {
 
   private func fetch() async {
     do {
-      let result: EntryPhotosResponse = try await MediaDelivery.apiRequest(
-        path: "api/media/photos", query: URLQueryItem(name: "entryId", value: entryID.uuidString),
-        client: client, ownerID: ownerID)
+      let result = try await api.photos(entryID: entryID)
       try Task.checkCancellation()
       photos = result.photos
       hasMore = result.hasMore

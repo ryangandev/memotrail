@@ -290,19 +290,11 @@ extension TrashController {
 
     /// Web `restoreTrashItem` error messages.
     static func restoreFailure(_ error: Error) -> Notice {
-      if let error = error as? PostgrestError {
-        if error.code == "23505" {
-          return Notice(
-            message:
-              "An active Collection already has this name. Rename it in organization settings, then restore this one.",
-            tone: .error)
-        }
-        if error.message == "trash_media_unavailable" {
-          return Notice(
-            message:
-              "This item's original photos are missing, so it cannot be restored. You can still delete it forever.",
-            tone: .error)
-        }
+      if let error = error as? PostgrestError, error.message == "trash_media_unavailable" {
+        return Notice(
+          message:
+            "This item's original photos are missing, so it cannot be restored. You can still delete it forever.",
+          tone: .error)
       }
       return Notice(message: "MemoTrail could not restore this item. Try again.", tone: .error)
     }

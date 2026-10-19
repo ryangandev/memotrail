@@ -43,9 +43,12 @@ struct HomeSnapshot: Decodable, Equatable, Sendable {
   private static func count(_ values: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys)
     throws -> Int
   {
-    let count =
-      (try? values.decode(Int.self, forKey: key))
-      ?? Int(try values.decode(String.self, forKey: key))
+    let count: Int?
+    if let number = try? values.decode(Int.self, forKey: key) {
+      count = number
+    } else {
+      count = Int(try values.decode(String.self, forKey: key))
+    }
     guard let count, count >= 0 else {
       throw DecodingError.dataCorruptedError(
         forKey: key, in: values, debugDescription: "A count must be a whole number.")

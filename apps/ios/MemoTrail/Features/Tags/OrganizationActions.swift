@@ -1,34 +1,32 @@
 import Foundation
 @preconcurrency import Supabase
 
-/// Web `app/organization/actions.ts`: loads, saves, merges, and removes Collections and tags.
-/// Each change returns Web's message when it did not happen.
+/// Web `app/organization/actions.ts`: loads, saves, merges, and removes tags. Each change returns
+/// Web's message when it did not happen.
 @MainActor
 struct OrganizationActions {
   let client: SupabaseClient
   let ownerID: UUID
 
-  /// One page of Collections or tags, like Web `getOrganizationWorkspace`.
-  func load(_ kind: OrganizationKind, query: String = "", offset: Int = 0, limit: Int? = nil)
-    async throws -> [OrganizationItem]
+  /// One page of tags, like Web `getOrganizationWorkspace`.
+  func load(query: String = "", offset: Int = 0, limit: Int = TagsPageRequest.pageSize)
+    async throws -> [TagItem]
   {
     try await validateSessionOwner()
-    return try await client.rpc(
-      "organization_workspace",
-      params: OrganizationReadRequest(
-        kind: kind, query: query, offset: offset,
-        limit: limit ?? OrganizationReadRequest.pageSize)
+    let rows: [TagItem] = try await client.rpc(
+      "tags_workspace", params: TagsPageRequest(query: query, offset: offset, limit: limit)
     ).execute().value
+    try await validateSessionOwner()
+    return rows
   }
 
-  /// Web `saveOrganization`.
-  func save(_ input: OrganizationSaveRequest) async -> String? {
-    guard input.isValid else { return input.invalidMessage }
+  /// Web `saveTag`: creates a tag when the request has no id, otherwise renames it.
+  func save(_ input: TagSaveRequest) async -> String? {
+    guard input.isValid else { return TagSaveRequest.invalidMessage }
     return await run(
-      unchanged:
-        "This item changed on another device or moved to Trash. Refresh before editing again."
+      unchanged: "This tag changed on another device. Refresh before editing again."
     ) {
-      try await client.rpc("save_organization", params: input).execute().value
+      try await client.rpc("save_tag", params: input).execute().value
     } failed: { error in
       (error as? PostgrestError)?.code == "23505"
         ? "This name already exists. Choose a different name; nothing was merged or overwritten."
@@ -36,22 +34,8 @@ struct OrganizationActions {
     }
   }
 
-  /// Web `trashCollection`.
-  func trashCollection(_ item: OrganizationItem) async -> String? {
-    await run(
-      unchanged: "This Collection changed on another device. Refresh before trying again."
-    ) {
-      try await client.rpc(
-        "trash_collection",
-        params: CollectionTrashRequest(id: item.id, expectedRevision: item.revision)
-      ).execute().value
-    } failed: { _ in
-      "Could not move this Collection to Trash. Try again."
-    }
-  }
-
   /// Web `mergeTags`.
-  func mergeTags(_ source: OrganizationItem, into target: OrganizationItem) async -> String? {
+  func mergeTags(_ source: TagItem, into target: TagItem) async -> String? {
     let request = TagMergeRequest(
       sourceID: source.id, sourceRevision: source.revision, targetID: target.id,
       targetRevision: target.revision)
@@ -66,14 +50,14 @@ struct OrganizationActions {
   }
 
   /// Web `deleteUnusedTag`.
-  func deleteUnusedTag(_ item: OrganizationItem) async -> String? {
-    await run(
+  func deleteUnusedTag(_ item: TagItem) async -> String? {
+    guard item.revision > 0 else { return "Choose a valid tag." }
+    return await run(
       unchanged:
         "This tag is still used by an Entry or changed elsewhere. Merge it or remove it from those Entries first."
     ) {
       try await client.rpc(
-        "delete_unused_tag",
-        params: CollectionTrashRequest(id: item.id, expectedRevision: item.revision)
+        "delete_unused_tag", params: TagDeleteRequest(id: item.id, expectedRevision: item.revision)
       ).execute().value
     } failed: { _ in
       "Could not delete this tag. Try again."
@@ -82,10 +66,8 @@ struct OrganizationActions {
 
   /// Web `getTagEntryPreviews`: the first five Entries using a tag.
   func tagEntryPreviews(_ name: String) async -> Result<[SearchEntry], OrganizationFailure> {
-    guard
-      let request = try? EntrySearchRequest.validate(
-        query: "", classifications: [], collectionNames: [], tagNames: [name], dateFrom: nil,
-        dateTo: nil, limit: 5)
+    guard !name.trimmed.isEmpty,
+      let request = try? EntrySearchRequest.validate(query: "", tagNames: [name], limit: 5)
     else { return .failure(OrganizationFailure(message: "Choose a valid tag.")) }
     do {
       try await validateSessionOwner()

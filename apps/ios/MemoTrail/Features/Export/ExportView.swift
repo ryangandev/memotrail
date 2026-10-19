@@ -52,6 +52,12 @@ struct ExportMutation: Decodable, Sendable {
   let discarded: Bool?
 }
 enum ExportAPI {
+  /// The JSON error body the export route returns.
+  struct Failure: Decodable {
+    let error: String
+    let code: String?
+  }
+
   static let completion = "MEMOTRAIL_EXPORT_V1_COMPLETE"
   static var tailSize: Int { 22 + completion.utf8.count }
   static func isComplete(_ data: Data) -> Bool {
@@ -82,7 +88,7 @@ enum ExportAPI {
     let request = try await request(input, client: client, ownerID: ownerID)
     let (data, response) = try await URLSession.shared.data(for: request)
     guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
-      let failure = try? JSONDecoder().decode(AIAPI.Failure.self, from: data)
+      let failure = try? JSONDecoder().decode(Failure.self, from: data)
       throw NSError(
         domain: "MemoTrail.Export", code: 1,
         userInfo: [
@@ -190,12 +196,13 @@ struct ExportView: View {
       MTPageHeader(
         eyebrow: "Your archive, to keep", title: "Export archive",
         description: "A portable copy of your story. No AI processing.")
-      ExportCard(title: "Everything, in one ZIP") {
+      // P8: Web's single Export everything flow and Recent exports list.
+      ExportCard(title: "Export everything") {
         paragraph(
-          "Complete JSON, readable Entry Markdown, structured CSV tables, and original photos. Includes Trash, edit history, relationships, and AI conversations."
+          "One ZIP with complete JSON, readable Entry Markdown, CSV tables, and your original photos. It includes Trash and AI conversations."
         )
         paragraph(
-          "The ZIP is not encrypted. Anyone you share it with can read it. Unsynced offline changes are not included; sync every device first."
+          "The ZIP is not encrypted, so anyone you share it with can read it. Sync every device first; changes still waiting offline are not included."
         )
       }
       ExportCard(title: "Prepare a snapshot") {

@@ -11,16 +11,20 @@ struct PendingCaptureRow: View {
   @State private var isDiscarding = false
 
   var body: some View {
-    let presented = entry.presentedEntry
+    let occurrence = entry.effectiveOccurrence
+    let title = entryDisplayTitle(entry.title, occurrence)
     VStack(alignment: .leading, spacing: 0) {
-      Text(presented.occurrence.displayLabel)
-        .font(MTFont.detail)
-        .foregroundStyle(MTColor.inkFaint)
-      Text(presented.displayTitle)
+      // An untitled capture is already named by its date, like Web.
+      if entry.title?.trimmed.nonEmpty != nil {
+        Text(occurrence.displayLabel)
+          .font(MTFont.detail)
+          .foregroundStyle(MTColor.inkFaint)
+          .padding(.bottom, MTSpacing.s2)
+      }
+      Text(title)
         .font(MTFont.itemTitle)
         .foregroundStyle(MTColor.ink)
-        .padding(.top, MTSpacing.s2)
-      if let excerpt = presented.displayExcerpt {
+      if let excerpt = entry.body.trimmed.nonEmpty {
         Text(excerpt.flowingLines)
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
@@ -42,7 +46,7 @@ struct PendingCaptureRow: View {
       }
       .padding(.top, MTSpacing.s3)
       if let rejection = entry.rejection {
-        rejectionDetails(rejection, title: presented.displayTitle)
+        rejectionDetails(rejection, title: title)
       }
     }
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -105,6 +109,59 @@ struct PendingCaptureRow: View {
       MTToastCenter.shared.error(
         "MemoTrail could not discard this Entry from this iPhone. Try again.")
     }
+  }
+}
+
+/// Web `SyncStatus`'s Pending sync dialog: every capture still on this iPhone, with Retry now
+/// while some wait and Copy text and Discard for the ones MemoTrail refused.
+struct PendingCapturesSheet: View {
+  @Bindable var controller: CaptureController
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    MTSheet(
+      title: "Pending sync", description: description, closeLabel: "Close pending sync",
+      closeIdentifier: "capture-pending-close", message: controller.captureError
+    ) {
+      VStack(spacing: 0) {
+        ForEach(controller.pendingEntries) { entry in
+          PendingCaptureRow(entry: entry) { await controller.discardRejected(entry.id) }
+          if entry.id != controller.pendingEntries.last?.id {
+            Divider().overlay(MTColor.border)
+          }
+        }
+      }
+      .accessibilityIdentifier("capture-pending-list")
+    } footer: {
+      if controller.waitingEntryCount > 0 {
+        Button {
+          Task { await controller.synchronizePendingEntries() }
+        } label: {
+          Label(controller.isSyncing ? "Syncing…" : "Retry now", icon: .refresh)
+        }
+        .mtButtonStyle(.secondary)
+        .disabled(controller.isSyncing)
+        .accessibilityIdentifier("capture-pending-retry")
+      }
+    }
+    // Once everything syncs or is discarded, the list closes, like Web.
+    .onChange(of: controller.pendingEntries.isEmpty) { _, isEmpty in
+      if isEmpty { dismiss() }
+    }
+  }
+
+  /// Web's Pending sync description.
+  private var description: String {
+    let waiting = controller.waitingEntryCount
+    let rejected = controller.rejectedEntryCount
+    return [
+      waiting > 0
+        ? "\(countLabel(waiting, "Entry")) saved on this iPhone will sync when MemoTrail can be "
+          + "reached." : nil,
+      rejected > 0
+        ? "MemoTrail did not accept \(countLabel(rejected, "Entry")); copy what you want to keep, "
+          + "then discard \(rejected == 1 ? "it" : "them")." : nil,
+    ].compactMap { $0 }.joined(separator: " ")
   }
 }
 

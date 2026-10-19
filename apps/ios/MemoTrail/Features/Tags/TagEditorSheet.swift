@@ -1,14 +1,14 @@
 import SwiftUI
 
-/// Web `OrganizationControl`'s dialog: names a Collection or tag and sets a Collection's display
-/// order. A saved Collection moves to Trash from here; a saved tag shows its Entries and merges
-/// into another tag, or, once unused, is deleted.
-struct OrganizationEditorSheet: View {
+// P8: Tags polish.
+
+/// Web `TagControl`'s dialog: names a tag. A saved tag shows its Entries and merges into another
+/// tag, or, once unused, is deleted.
+struct TagEditorSheet: View {
   let actions: OrganizationActions
-  let kind: OrganizationKind
-  let item: OrganizationItem?
+  let item: TagItem?
   /// The other loaded tags, which a used tag can merge into.
-  var mergeTargets: [OrganizationItem] = []
+  var mergeTargets: [TagItem] = []
   /// Runs after a change saves, before the sheet closes.
   let changed: @MainActor () async -> Void
   /// Asks to open a tag's Entry, or all of its Entries in Library. The sheet closes first, so the
@@ -18,7 +18,6 @@ struct OrganizationEditorSheet: View {
 
   @Environment(\.dismiss) private var dismiss
   @State private var name: String
-  @State private var order: String
   @State private var targetID: UUID?
   @State private var preview: Result<[SearchEntry], OrganizationFailure>?
   @State private var isWorking = false
@@ -27,60 +26,47 @@ struct OrganizationEditorSheet: View {
   @State private var isConfirmingMerge = false
 
   init(
-    actions: OrganizationActions, kind: OrganizationKind, item: OrganizationItem?,
-    mergeTargets: [OrganizationItem] = [], changed: @escaping @MainActor () async -> Void,
+    actions: OrganizationActions, item: TagItem?,
+    mergeTargets: [TagItem] = [], changed: @escaping @MainActor () async -> Void,
     openEntry: ((SearchEntry) -> Void)? = nil, openAllEntries: ((String) -> Void)? = nil
   ) {
     self.actions = actions
-    self.kind = kind
     self.item = item
     self.mergeTargets = mergeTargets.filter { $0.id != item?.id }
     self.changed = changed
     self.openEntry = openEntry
     self.openAllEntries = openAllEntries
     _name = State(initialValue: item?.name ?? "")
-    _order = State(initialValue: String(item?.sortOrder ?? 0))
   }
 
-  private var input: OrganizationSaveRequest {
-    OrganizationSaveRequest(
-      kind: kind, name: name, sortOrder: kind == .tag ? 0 : Int(order.trimmed) ?? .max,
-      id: item?.id, expectedRevision: item?.revision)
+  private var input: TagSaveRequest {
+    TagSaveRequest(name: name, id: item?.id, expectedRevision: item?.revision)
   }
 
-  private var mergeTarget: OrganizationItem? { mergeTargets.first { $0.id == targetID } }
+  private var mergeTarget: TagItem? { mergeTargets.first { $0.id == targetID } }
 
   var body: some View {
     MTSheet(
-      eyebrow: "\(item == nil ? "New" : "Edit") \(kind.label)",
-      title: item?.name ?? "Create a \(kind.label)", closeLabel: "Close organization editor",
+      eyebrow: item == nil ? "New Tag" : "Edit Tag",
+      title: item?.name ?? "Create a Tag", closeLabel: "Close tag editor",
       closeIdentifier: "close-organization-editor",
-      // Only a saved tag lists its Entries; the other forms fit their few fields.
-      size: kind == .tag && item != nil ? .form : .fitted, isBusy: isWorking,
+      // Only a saved tag lists its Entries; a new one fits its name field.
+      size: item != nil ? .form : .fitted, isBusy: isWorking,
       message: errorMessage
     ) {
-      MTFormSection("\(kind.label) details") {
+      MTFormSection("Tag details") {
         MTTextField(
-          label: "Name", text: $name, isRequired: true, maxLength: kind.nameLimit
+          label: "Name", text: $name, isRequired: true, maxLength: EntryLimits.tagName
         )
-        .textInputAutocapitalization(kind == .tag ? .never : .words)
+        .textInputAutocapitalization(.never)
         .accessibilityIdentifier("organization-name")
-        if kind == .collection {
-          MTTextField(label: "Display order", text: $order, isRequired: true, maxLength: 8)
-            .keyboardType(.numbersAndPunctuation)
-            .accessibilityIdentifier("organization-order")
-        }
-        if item?.isBucketList == true {
-          MTFormNote(
-            "This is your Bucket List Collection. Renaming it preserves Goal milestone behavior.")
-        }
       }
-      if let item, kind == .tag {
+      if let item {
         if item.entryCount > 0 { mergePanel(item) }
         entryPanel(item)
       }
     } accessory: {
-      if let item, kind == .tag {
+      if let item {
         Text("Used by \(countLabel(item.entryCount, "Entry"))")
           .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
@@ -92,47 +78,43 @@ struct OrganizationEditorSheet: View {
         Button("Cancel") { dismiss() }
           .mtButtonStyle(.secondary)
       } primary: {
-        Button(item == nil ? "Create \(kind.label)" : "Save changes") { Task { await save() } }
+        Button(item == nil ? "Create Tag" : "Save changes") { Task { await save() } }
           .mtButtonStyle(isLoading: isWorking)
           .disabled(!input.isValid)
           .accessibilityIdentifier("save-organization")
       }
     }
     .task {
-      if let item, kind == .tag, item.entryCount > 0, preview == nil {
+      if let item, item.entryCount > 0, preview == nil {
         preview = await actions.tagEntryPreviews(item.name)
       }
     }
   }
 
-  /// Move to Trash for a Collection, or Delete unused tag for a tag no Entry uses.
+  /// Delete unused tag, for a tag no Entry uses.
   @ViewBuilder private var removeButton: some View {
-    if let item, kind == .collection || item.entryCount == 0 {
-      Button(kind == .collection ? "Move to Trash" : "Delete unused tag") {
+    if let item, item.entryCount == 0 {
+      Button("Delete unused tag") {
         isConfirmingRemoval = true
       }
       .mtButtonStyle(.danger)
       .accessibilityIdentifier("remove-organization")
       .confirmationDialog(
-        kind == .collection
-          ? "Move “\(item.name)” to Trash?" : "Delete the unused tag “\(item.name)”?",
+        "Delete the unused tag “\(item.name)”?",
         isPresented: $isConfirmingRemoval, titleVisibility: .visible
       ) {
-        Button(kind == .collection ? "Move to Trash" : "Delete tag", role: .destructive) {
+        Button("Delete tag", role: .destructive) {
           Task { await remove(item) }
         }
         Button("Cancel", role: .cancel) {}
       } message: {
-        Text(
-          kind == .collection
-            ? "Entries stay in your archive and the Collection can be restored."
-            : "This tag is unused and will be removed permanently.")
+        Text("This tag is unused and will be removed permanently.")
       }
     }
   }
 
   /// Web's merge panel: a used tag moves every assignment to another tag.
-  private func mergePanel(_ item: OrganizationItem) -> some View {
+  private func mergePanel(_ item: TagItem) -> some View {
     MTFormSection("Merge this tag", tone: .accent) {
       MTFormNote(
         "This tag is used by \(countLabel(item.entryCount, "Entry")). Merge it to preserve every assignment."
@@ -166,7 +148,7 @@ struct OrganizationEditorSheet: View {
   }
 
   /// Web `TagEntryList`: up to five Entries using the tag, and a link to all of them.
-  private func entryPanel(_ item: OrganizationItem) -> some View {
+  private func entryPanel(_ item: TagItem) -> some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
         Text("Entries using this tag")
@@ -213,7 +195,9 @@ struct OrganizationEditorSheet: View {
                   Text(entry.displayTitle)
                     .font(MTFont.listHeading)
                     .foregroundStyle(MTColor.ink)
-                  Text("\(entry.identityLabel) · \(entry.displayDate)")
+                  Text(
+                    entry.displayDate.isEmpty
+                      ? entry.identityLabel : "\(entry.identityLabel) · \(entry.displayDate)")
                     .font(MTFont.detail)
                     .foregroundStyle(MTColor.inkMuted)
                 }
@@ -251,19 +235,16 @@ struct OrganizationEditorSheet: View {
   }
 
   private func save() async {
-    await run("\(kind.label) \(item == nil ? "created" : "saved").") {
+    await run("Tag \(item == nil ? "created" : "saved").") {
       await actions.save(input)
     }
   }
 
-  private func remove(_ item: OrganizationItem) async {
-    await run(kind == .collection ? "Collection moved to Trash." : "Tag deleted.") {
-      kind == .collection
-        ? await actions.trashCollection(item) : await actions.deleteUnusedTag(item)
-    }
+  private func remove(_ item: TagItem) async {
+    await run("Tag deleted.") { await actions.deleteUnusedTag(item) }
   }
 
-  private func merge(_ item: OrganizationItem, into target: OrganizationItem) async {
+  private func merge(_ item: TagItem, into target: TagItem) async {
     await run("Tags merged.") { await actions.mergeTags(item, into: target) }
   }
 

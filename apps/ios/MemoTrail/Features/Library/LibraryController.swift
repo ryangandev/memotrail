@@ -2,8 +2,8 @@ import Foundation
 import Observation
 @preconcurrency import Supabase
 
-/// Web `/library`: browse every organized Wiki Item, or search the Life Wiki and Inbox with a
-/// keyword phrase and Record, Collection, tag, and date filters.
+/// Web `/library`: browse every Entry, or search them with a keyword phrase and Record, tag,
+/// and date filters. iOS searches by keyword only.
 @MainActor
 @Observable
 final class LibraryController {
@@ -12,14 +12,13 @@ final class LibraryController {
   // The search form. A search runs the form as it is when the person submits it or changes a
   // filter; clearing the form returns to browsing.
   var query = ""
-  var classification: WikiItemClassification?
-  var collectionName: String?
+  var record: EntryRecordFilter?
   var tagName: String?
   var dateFrom = ""
   var dateTo = ""
 
   // Browsing.
-  private(set) var items: [WikiItemSummary] = []
+  private(set) var items: [LibraryRow] = []
   private(set) var totalCount = 0
   private(set) var hasLoaded = false
   private(set) var isLoading = false
@@ -38,7 +37,6 @@ final class LibraryController {
   private(set) var moreResultsErrorMessage: String?
 
   // Filter choices.
-  private(set) var collectionOptions: [String] = []
   private(set) var tagOptions: [String] = []
   private(set) var filtersErrorMessage: String?
 
@@ -56,18 +54,14 @@ final class LibraryController {
   var isShowingResults: Bool { activeSearch != nil || searchErrorMessage != nil }
 
   var activeFilterCount: Int {
-    [
-      classification != nil, collectionName != nil, tagName != nil, !dateFrom.isEmpty,
-      !dateTo.isEmpty,
-    ]
-    .filter { $0 }.count
+    [record != nil, tagName != nil, !dateFrom.isEmpty, !dateTo.isEmpty].filter { $0 }.count
   }
 
   var hasCriteria: Bool { !query.trimmed.isEmpty || activeFilterCount > 0 }
 
   /// Changes whenever a filter changes, so the view can run the search again.
   var filterIdentity: [String] {
-    [classification?.rawValue ?? "", collectionName ?? "", tagName ?? "", dateFrom, dateTo]
+    [record?.rawValue ?? "", tagName ?? "", dateFrom, dateTo]
   }
 
   /// More organized records exist past the loaded pages.
@@ -138,8 +132,7 @@ final class LibraryController {
     let request: EntrySearchRequest
     do {
       request = try EntrySearchRequest.validate(
-        query: query, classifications: classification.map { [$0] } ?? [],
-        collectionNames: collectionName.map { [$0] } ?? [], tagNames: tagName.map { [$0] } ?? [],
+        query: query, records: record.map { [$0] } ?? [], tagNames: tagName.map { [$0] } ?? [],
         dateFrom: dateFrom, dateTo: dateTo)
     } catch {
       clearResults()
@@ -176,8 +169,7 @@ final class LibraryController {
   /// Web "Clear all": empties the form and returns to browsing.
   func clearAll() {
     query = ""
-    classification = nil
-    collectionName = nil
+    record = nil
     tagName = nil
     dateFrom = ""
     dateTo = ""
@@ -220,28 +212,21 @@ final class LibraryController {
   private func loadFilterOptions() async {
     do {
       try await validateSessionOwner()
-      async let collections: [OrganizationName] = client.from("collections").select("name")
-        .eq("owner_id", value: ownerID.uuidString).is("archived_at", value: nil).order("name")
-        .execute().value
-      async let tags: [OrganizationName] = client.from("tags").select("name")
-        .eq("owner_id", value: ownerID.uuidString).order("name").execute().value
-      let (collectionNames, tagNames) = try await (collections, tags)
+      let tags: [OrganizationName] = try await client.from("tags").select("name")
+        .eq("owner_id", value: ownerID.uuidString.lowercased()).order("name").execute().value
       try await validateSessionOwner()
-      collectionOptions = collectionNames.map(\.name)
-      tagOptions = tagNames.map(\.name)
+      tagOptions = tags.map(\.name)
       filtersErrorMessage = nil
     } catch {
       guard !(error is CancellationError) else { return }
-      filtersErrorMessage =
-        "Collection and tag filters are temporarily unavailable. Keyword search still works."
+      filtersErrorMessage = "Tag filters are temporarily unavailable. Keyword search still works."
     }
   }
 
-  private func itemsPage(offset: Int) async throws -> [WikiItemSummary] {
+  private func itemsPage(offset: Int) async throws -> [LibraryRow] {
     try await validateSessionOwner()
-    let parameters = WikiItemsPageParameters(
-      pQuery: "", pItemKinds: [], pItemSubtypes: [], pLimit: Self.pageSize, pOffset: offset)
-    let page: [WikiItemSummary] = try await client.rpc("wiki_items_workspace", params: parameters)
+    let parameters = LibraryPageParameters(limit: Self.pageSize, offset: offset)
+    let page: [LibraryRow] = try await client.rpc("wiki_items_workspace", params: parameters)
       .execute().value
     try await validateSessionOwner()
     return page

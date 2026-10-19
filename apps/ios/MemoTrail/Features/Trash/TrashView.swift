@@ -1,8 +1,10 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-/// Web `/trash`: removed Entries, People, Collections, and photos, newest first. Each restores
-/// or, after an explicit confirmation, is deleted forever; Empty Trash deletes a prepared list.
+// P8: Trash dates in the profile time zone, and the Reviews sentence when Reviews exist.
+
+/// Web `/trash`: removed Entries and photos, newest first. Each restores or, after an explicit
+/// confirmation, is deleted forever; Empty Trash deletes a prepared list.
 struct TrashView: View {
   @State private var controller: TrashController
   @State private var confirmation: TrashItem?
@@ -120,7 +122,7 @@ struct TrashView: View {
       MTEmptyState(
         title: "Nothing in Trash",
         message:
-          "Removed Entries, People, and individual photos will appear here. Legacy records remain recoverable too.",
+          "Removed Entries and individual photos will appear here. Legacy records remain recoverable too.",
         icon: .trash)
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
@@ -180,7 +182,7 @@ private struct TrashItemCard: View {
         VStack(alignment: .leading, spacing: 0) {
           MTFlowLayout(spacing: MTSpacing.s2) {
             MTBadge(title: item.displayKind, tone: .warm)
-            Text("Removed \(item.deletionDateLabel)")
+            Text("Removed \(item.deletionDateLabel())")
               .font(MTFont.note)
               .foregroundStyle(MTColor.inkFaint)
           }
@@ -308,7 +310,7 @@ private struct EmptyTrashSheet: View {
     MTSheet(
       eyebrow: "Permanent action", title: "Empty \(countLabel(count, "item")) from Trash?",
       description:
-        "This includes all Trash pages, not just the visible items. Their records, associated history and private photos will be permanently removed. Removing a Collection only removes its grouping, not active Entries. This cannot be undone.",
+        "This includes all Trash pages, not just the visible items. Their records and private photos will be permanently removed. This cannot be undone.",
       closeLabel: "Close", closeIdentifier: "close-empty-trash", size: .fitted,
       isBusy: controller.isEmptying
     ) {

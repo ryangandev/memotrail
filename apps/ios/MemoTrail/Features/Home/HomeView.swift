@@ -1,6 +1,7 @@
 @preconcurrency import Supabase
 import SwiftUI
 
+// P6: the Dashboard's final layout.
 struct HomeView: View {
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
@@ -85,9 +86,8 @@ struct HomeView: View {
         }
 
         if let snapshot = controller.snapshot {
-          readyToOrganize(snapshot)
           memorySection
-          chaptersSection(snapshot.currentStages)
+          nowSection(snapshot)
           recentSection(snapshot.recentEntries)
         } else if controller.isLoading {
           ProgressView("Loading your Dashboard...")
@@ -100,11 +100,7 @@ struct HomeView: View {
       .workspaceToolbar(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
       )
-      .navigationDestination(for: DashboardRecord.self) { record in
-        WikiItemDestinationView(
-          client: client, ownerID: user.id, entryID: record.id, kind: record.kind,
-          subtype: record.subtype)
-      }
+      .itemDestination(client: client, ownerID: user.id)
       .refreshable {
         await refresh()
       }
@@ -114,6 +110,7 @@ struct HomeView: View {
         }
       }
       .onChange(of: navigator.profileRevision) { Task { await controller.load() } }
+      .onChange(of: navigator.entriesRevision) { Task { await controller.load() } }
       .onChange(of: scenePhase) { _, newPhase in
         guard newPhase == .active, controller.hasLoaded else { return }
         Task { await refresh() }
@@ -124,10 +121,12 @@ struct HomeView: View {
   private var pendingCaptureSection: some View {
     // Captures MemoTrail refused need the person, so they read warm like Web's indicator.
     let hasRejected = captureController.rejectedEntryCount > 0
-    return Label(
-      captureController.pendingSummary,
-      icon: hasRejected ? .warning : .history
-    )
+    return Button {
+      navigator.showPendingCaptures()
+    } label: {
+      Label(captureController.pendingSummary, icon: hasRejected ? .warning : .history)
+    }
+    .buttonStyle(.plain)
     .font(MTFont.caption)
     .foregroundStyle(hasRejected ? MTColor.warm : MTColor.inkMuted)
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -151,42 +150,12 @@ struct HomeView: View {
     }
   }
 
-  private func readyToOrganize(_ snapshot: HomeSnapshot) -> some View {
-    section("Ready to organize", action: "Inbox · \(snapshot.inboxCount)") {
-      navigator.show(.inbox)
-    } content: {
-      if controller.inboxPreview.isEmpty {
-        MTEmptyState(
-          title: "A little room to think",
-          message:
-            "Your Inbox is clear. New captures will wait here until you are ready to organize them.",
-          icon: .inbox)
-      } else {
-        VStack(spacing: 0) {
-          ForEach(controller.inboxPreview) { entry in
-            DashboardInboxRow(entry: entry) { navigator.reviewInboxEntry(entry.id) }
-            if entry.id != controller.inboxPreview.last?.id {
-              Divider().overlay(MTColor.border)
-            }
-          }
-        }
-      }
-    }
-    .padding(MTSpacing.s5)
-    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(
-        MTColor.border, lineWidth: MTSize.Stroke.thin)
-    }
-    .accessibilityIdentifier("home-inbox-preview")
-  }
-
   private var memorySection: some View {
     section("A memory for today", action: "Library") {
       navigator.show(.library)
     } content: {
       if let memory = controller.resurfacedMemory {
-        NavigationLink(value: DashboardRecord(memory.entry)) {
+        NavigationLink(value: ItemLink(entryID: memory.entry.id)) {
           DashboardMemoryCard(entry: memory.entry)
         }
         .buttonStyle(MTCardButtonStyle(radius: MTRadius.large))
@@ -200,24 +169,29 @@ struct HomeView: View {
     .accessibilityIdentifier("home-resurfaced-memory")
   }
 
-  private func chaptersSection(_ stages: [HomeStage]) -> some View {
-    section("Current chapters", action: "Timeline") {
+  /// Web `Now`: the Chapters happening now, with durations measured to the snapshot's day.
+  private func nowSection(_ snapshot: HomeSnapshot) -> some View {
+    let asOf = EntryTimestamp.date(from: "\(snapshot.snapshotDate)T12:00:00Z") ?? .now
+    return section("Now", action: "Timeline") {
       navigator.show(.timeline)
     } content: {
-      if stages.isEmpty {
+      if snapshot.nowItems.isEmpty {
         MTEmptyState(
           title: "Life is still unfolding",
-          message: "Current periods and focused records from your Timeline will appear here.",
+          message: "Chapters you are in right now appear here.",
           icon: .timeline)
       } else {
         VStack(spacing: MTSpacing.s3) {
-          ForEach(stages) { stage in
-            DashboardChapterCard(stage: stage) { navigator.openTimelineEntry(stage.id) }
+          ForEach(snapshot.nowItems) { item in
+            NavigationLink(value: ItemLink(entryID: item.id)) {
+              DashboardNowCard(item: item, asOf: asOf)
+            }
+            .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
           }
         }
       }
     }
-    .accessibilityIdentifier("home-current-chapters")
+    .accessibilityIdentifier("home-now")
   }
 
   private func recentSection(_ entries: [HomeEntry]) -> some View {
@@ -232,7 +206,7 @@ struct HomeView: View {
       } else {
         VStack(spacing: 0) {
           ForEach(entries) { entry in
-            NavigationLink(value: DashboardRecord(entry)) {
+            NavigationLink(value: ItemLink(entryID: entry.id)) {
               DashboardEntryRow(entry: entry)
             }
             .buttonStyle(.plain)

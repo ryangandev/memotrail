@@ -3,20 +3,18 @@ import Foundation
 import Observation
 @preconcurrency import Supabase
 
+/// Quick Capture's queue and sync, like Web `capture-provider.tsx` and `inbox-sync.ts`. A capture
+/// is saved on this iPhone first, then sent to MemoTrail in order as a plain Entry in the Library.
 @MainActor
 @Observable
 final class CaptureController {
-  private(set) var entries: [InboxEntry] = []
-  private(set) var collectionOptions: [String] = []
   private(set) var pendingEntries: [QueuedCapture]
-  private(set) var tagOptions: [String] = []
-  private(set) var hasLoaded = false
-  private(set) var isLoading = false
   private(set) var isSaving = false
   private(set) var isSyncing = false
-  private(set) var loadErrorMessage: String?
   /// The latest capture or sync problem, shown in the composer until the next attempt.
   private(set) var captureError: String?
+  /// Counts the sync runs in which an Entry reached MemoTrail, so lists know to reload.
+  private(set) var entriesRevision = 0
   /// Captures saved since the last sync attempt began; that attempt decides how each is announced.
   private var unattemptedCaptureIDs: Set<UUID> = []
   /// Waiting captures already confirmed as safe on this iPhone, which retries do not announce.
@@ -24,15 +22,6 @@ final class CaptureController {
 
   private let client: SupabaseClient
   private let ownerID: UUID
-
-  func aiSuggestions(entryID: UUID, revision: Int, retry: Bool = false) async throws
-    -> EntryAISuggestionResponse
-  {
-    try await AIAPI.post(
-      "suggestions",
-      body: EntryAISuggestionInput(entryID: entryID, revision: revision, retry: retry),
-      client: client, ownerID: ownerID)
-  }
   private let queueStore: CaptureQueueStore
   private let photoStore: CapturePhotoStore
   private let networkMonitor: NWPathMonitor
@@ -58,11 +47,7 @@ final class CaptureController {
       guard path.status == .satisfied else { return }
 
       Task { @MainActor [weak self] in
-        guard let self else { return }
-        let didSync = await self.synchronizePendingEntries()
-        if didSync {
-          await self.load()
-        }
+        _ = await self?.synchronizePendingEntries()
       }
     }
     networkMonitor.start(queue: networkMonitorQueue)
@@ -72,55 +57,10 @@ final class CaptureController {
     networkMonitor.cancel()
   }
 
-  func load() async {
-    guard !isLoading else { return }
-
-    isLoading = true
-    loadErrorMessage = nil
-    defer {
-      isLoading = false
-      hasLoaded = true
-    }
-
-    do {
-      let session = try await client.auth.session
-      guard session.user.id == ownerID else {
-        throw InboxControllerError.ownerChanged
-      }
-
-      let loadedEntries: [InboxEntry] =
-        try await client
-        .from("entries")
-        .select(
-          "id,title,body,metadata,item_kind,item_subtype,inbox_status,created_at,occurred_start,occurred_end,occurred_label,date_precision,occurred_timezone,revision"
-        )
-        .eq("owner_id", value: ownerID.uuidString)
-        .eq("inbox_status", value: "unreviewed")
-        .is("deleted_at", value: nil)
-        .order("created_at", ascending: false)
-        .limit(50)
-        .execute()
-        .value
-
-      let organization = try await loadOrganization(
-        entryIDs: loadedEntries.map(\.id)
-      )
-      collectionOptions = organization.collectionOptions
-      tagOptions = organization.tagOptions
-      entries = loadedEntries.map { entry in
-        entry.withOrganization(
-          collectionNames: organization.collectionNamesByEntry[entry.id] ?? [],
-          tagNames: organization.tagNamesByEntry[entry.id] ?? []
-        )
-      }
-    } catch {
-      loadErrorMessage = "MemoTrail could not load your Inbox. Pull to refresh or try again."
-    }
-  }
-
+  /// Rereads the queue on this iPhone, then sends whatever still waits.
   func refresh() async {
+    pendingEntries = queueStore.load(ownerID: ownerID)
     _ = await synchronizePendingEntries()
-    await load()
   }
 
   func save(
@@ -180,11 +120,7 @@ final class CaptureController {
     unattemptedCaptureIDs.insert(pendingEntry.id)
 
     Task { @MainActor [weak self] in
-      guard let self else { return }
-      let didSync = await self.synchronizePendingEntries()
-      if didSync {
-        await self.load()
-      }
+      _ = await self?.synchronizePendingEntries()
     }
 
     return true
@@ -199,164 +135,6 @@ final class CaptureController {
     return await save(
       title: title, body: captured.body, bodyRich: captured.rich,
       occurrenceDraft: occurrenceDraft, photos: photos)
-  }
-
-  /// Saves the Review Entry sheet, keeping the Inbox list in step like Web `EntryReviewList`.
-  func review(entry: InboxEntry, draft: EntryReviewDraft, intent: ReviewIntent) async
-    -> ReviewResult
-  {
-    let input: InboxReviewInput
-    let revision: Int
-    switch await Self.submitReview(
-      client: client, ownerID: ownerID, entry: entry, draft: draft, intent: intent)
-    {
-    case .failed(let result):
-      return result
-    case .saved(let savedInput, let savedRevision):
-      input = savedInput
-      revision = savedRevision
-    }
-
-    if intent == .done {
-      entries.removeAll { $0.id == entry.id }
-      return ReviewResult(message: "Entry organized.", status: .done)
-    }
-
-    var updatedEntry = InboxEntry(
-      id: entry.id,
-      title: input.title,
-      body: input.body,
-      collectionNames: input.collectionNames,
-      itemKind: input.itemKind,
-      itemSubtype: input.itemSubtype,
-      createdAt: entry.createdAt,
-      occurredStart: input.occurredAt,
-      occurredTimezone: input.occurredTimezone,
-      revision: revision,
-      tagNames: input.tagNames,
-      datePrecision: input.occurrence.precision,
-      occurredEnd: input.occurrence.end,
-      occurredLabel: input.occurrence.label
-    )
-    updatedEntry.inboxStatus = entry.inboxStatus
-    updatedEntry.bodyRich = input.bodyRich
-
-    if let index = entries.firstIndex(where: { $0.id == entry.id }) {
-      entries[index] = updatedEntry
-    }
-    collectionOptions = mergedOptions(collectionOptions, input.collectionNames)
-    tagOptions = mergedOptions(tagOptions, input.tagNames)
-    return ReviewResult(message: "Entry saved.", status: .saved)
-  }
-
-  /// Moves a capture to Trash like Web `trashWikiItem`, only at the revision the person saw.
-  /// Returns a message when the capture could not be moved.
-  func moveToTrash(_ entry: InboxEntry) async -> String? {
-    do {
-      guard try await client.auth.session.user.id == ownerID else {
-        throw InboxControllerError.ownerChanged
-      }
-      let rows: [ExistingEntry] =
-        try await client
-        .from("entries")
-        .update(EntryTrashUpdate(deletedAt: Date()))
-        .eq("id", value: entry.id.uuidString)
-        .eq("owner_id", value: ownerID.uuidString)
-        .eq("revision", value: entry.revision)
-        .is("deleted_at", value: nil)
-        .select("id")
-        .execute()
-        .value
-      guard rows.first?.id == entry.id else {
-        return "This item changed on another device or is already in Trash. Refresh and try again."
-      }
-      entries.removeAll { $0.id == entry.id }
-      return nil
-    } catch is PostgrestError {
-      return "MemoTrail could not move this item to Trash."
-    } catch {
-      return "Could not confirm the move to Trash. Refresh before trying again."
-    }
-  }
-
-  /// Web `reviewInboxEntry`: validates a Review Entry draft and saves it, with its formatting,
-  /// through the review function that leaves the Entry's Location unchanged.
-  static func submitReview(
-    client: SupabaseClient, ownerID: UUID, entry: InboxEntry, draft: EntryReviewDraft,
-    intent: ReviewIntent
-  ) async -> ReviewSubmission {
-    let input: InboxReviewInput
-    do {
-      try draft.photoPlace?.validate()
-      input = try InboxReviewInput.validate(
-        entryID: entry.id,
-        revision: entry.revision,
-        title: draft.title,
-        body: draft.body,
-        bodyRich: draft.bodyRich,
-        collectionNames: draft.collectionNames,
-        itemKind: entry.itemKind,
-        itemSubtype: entry.itemSubtype,
-        occurredAt: draft.occurrence.start,
-        occurredTimezone: draft.occurrence.timezone,
-        tagNames: draft.tagNames,
-        datePrecision: draft.occurrence.precision,
-        occurredEnd: draft.occurrence.end,
-        occurredLabel: draft.occurrence.label
-      )
-    } catch {
-      return .failed(ReviewResult(message: error.localizedDescription, status: .error))
-    }
-
-    do {
-      guard try await client.auth.session.user.id == ownerID else {
-        throw InboxControllerError.ownerChanged
-      }
-
-      var parameters = ReviewEntryParameters(
-        entryID: input.entryID,
-        expectedRevision: input.revision,
-        title: input.title,
-        body: input.body,
-        itemKind: input.itemKind,
-        itemSubtype: input.itemSubtype,
-        occurredStart: input.occurredAt,
-        occurredTimezone: input.occurredTimezone,
-        collectionNames: input.collectionNames,
-        tagNames: input.tagNames,
-        markDone: intent == .done,
-        datePrecision: input.occurrence.precision,
-        occurredEnd: input.occurrence.end,
-        occurredLabel: input.occurrence.label,
-        photoPlace: draft.photoPlace,
-        occurredStartRaw: input.occurredAt == entry.occurredStart ? entry.occurredStartRaw : nil,
-        occurredEndRaw: input.occurrence.end == entry.occurredEnd ? entry.occurredEndRaw : nil
-      )
-      parameters.bodyRich = input.bodyRich
-      let results: [ReviewedEntryResult] =
-        try await client
-        .rpc("review_wiki_item_with_photo_place_rich", params: parameters)
-        .execute()
-        .value
-
-      guard let result = results.first, result.entryID == entry.id else {
-        return .failed(
-          ReviewResult(
-            message:
-              "This Entry changed on another device. Close it, refresh, and review the latest version.",
-            status: .conflict))
-      }
-      return .saved(input, revision: result.revision)
-    } catch let error as PostgrestError where error.code == "40001" {
-      return .failed(
-        ReviewResult(
-          message:
-            "The photo or Location changed. Close this review, refresh, and confirm the latest version before saving.",
-          status: .conflict))
-    } catch {
-      return .failed(
-        ReviewResult(message: "MemoTrail could not save these changes. Try again.", status: .error))
-    }
   }
 
   /// Pending captures that still try to reach MemoTrail.
@@ -376,7 +154,7 @@ final class CaptureController {
 
   /// Sends waiting captures in order, like Web's sync store. A capture MemoTrail refuses is
   /// marked and skipped so later captures still sync; an unreachable MemoTrail stops the run.
-  /// Returns whether an Entry reached the Inbox.
+  /// Returns whether an Entry reached MemoTrail.
   @discardableResult
   func synchronizePendingEntries() async -> Bool {
     guard !isSyncing, pendingEntries.contains(where: { $0.rejection == nil }) else {
@@ -391,7 +169,7 @@ final class CaptureController {
     do {
       let session = try await client.auth.session
       guard session.user.id == ownerID else {
-        throw InboxControllerError.ownerChanged
+        throw CaptureControllerError.ownerChanged
       }
     } catch is URLError {
       // An expired access token cannot be refreshed offline; the capture still waits safely.
@@ -402,7 +180,7 @@ final class CaptureController {
       return false
     }
 
-    var didReachInbox = false
+    var didReachLibrary = false
     var didSyncEntry = false
     var lastSyncedPhotoCount = 0
     var rejectedCount = 0
@@ -444,7 +222,7 @@ final class CaptureController {
             break sending
           }
           // The Entry itself reached MemoTrail; only its photos stay behind.
-          didReachInbox = true
+          didReachLibrary = true
           rejectedCount += 1
           continue sending
         case .session:
@@ -465,17 +243,7 @@ final class CaptureController {
 
       pendingEntries = nextQueue
       confirmedOfflineCaptureIDs.remove(entry.id)
-      if AppConfiguration.aiEnabled {
-        Task { [weak self] in
-          // Optional suggestions cannot delay capture or requeue a successfully saved Entry.
-          guard let self,
-            let revision = try? await EntryPhotoUpload.writingRevision(
-              client: self.client, entryID: entry.id, revision: 1)
-          else { return }
-          _ = try? await self.aiSuggestions(entryID: entry.id, revision: revision)
-        }
-      }
-      didReachInbox = true
+      didReachLibrary = true
       didSyncEntry = true
       lastSyncedPhotoCount = entry.attachments.count
     }
@@ -484,10 +252,11 @@ final class CaptureController {
       // A refused capture may come from a Quick Capture that is already closed.
       MTToastCenter.shared.error(
         "MemoTrail did not accept \(countLabel(rejectedCount, "Entry")). "
-          + "Review \(rejectedCount == 1 ? "it" : "them") in your Inbox.")
+          + "Review \(rejectedCount == 1 ? "it" : "them") in Pending sync.")
     }
 
-    guard !didStop else { return didReachInbox }
+    if didReachLibrary { entriesRevision += 1 }
+    guard !didStop else { return didReachLibrary }
 
     // Every capture that can still sync did, so no problem waits in the composer.
     captureError = nil
@@ -495,11 +264,11 @@ final class CaptureController {
       // Like Web, a synced capture is announced once; only problems stay in the composer.
       MTToastCenter.shared.success(
         lastSyncedPhotoCount > 0
-          ? "Saved to Inbox with \(countLabel(lastSyncedPhotoCount, "photo"))."
-          : "Saved to Inbox.")
+          ? "Saved to Library with \(countLabel(lastSyncedPhotoCount, "photo"))."
+          : "Saved to Library.")
     }
 
-    return didReachInbox
+    return didReachLibrary
   }
 
   /// Removes a capture MemoTrail refused, like Web's Discard in Pending sync. Its photo files
@@ -545,19 +314,19 @@ final class CaptureController {
     "This Entry is already in Trash, so it will not sync again. "
     + "Restore it from Trash to keep it, then discard this copy."
   private static let rejectedPhotoMessage =
-    "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, "
+    "This Entry is in your Library, but MemoTrail cannot accept one of its photos, "
     + "so they will not sync. Discard to remove them from this iPhone."
   private static let changedPhotoMessage =
-    "This Entry is in your Inbox, but one of its photos changed on this iPhone, "
+    "This Entry is in your Library, but one of its photos changed on this iPhone, "
     + "so they will not sync. Discard to remove them from this iPhone."
   private static let tooLargePhotoMessage =
-    "This Entry is in your Inbox, but one of its photos is too large for MemoTrail, "
+    "This Entry is in your Library, but one of its photos is too large for MemoTrail, "
     + "so they will not sync. Discard to remove them from this iPhone."
   private static let unsupportedPhotoMessage =
-    "This Entry is in your Inbox, but one of its photos is a file type MemoTrail does not "
+    "This Entry is in your Library, but one of its photos is a file type MemoTrail does not "
     + "accept, so they will not sync. Discard to remove them from this iPhone."
   private static let missingPhotoMessage =
-    "This Entry is in your Inbox, but one of its photos is no longer on this iPhone, "
+    "This Entry is in your Library, but one of its photos is no longer on this iPhone, "
     + "so they will not sync. Discard to remove them from this iPhone."
   private static let trashedPhotoMessage =
     "This Entry is in Trash, so its photos will not be attached. "
@@ -715,23 +484,9 @@ final class CaptureController {
   }
 
   private func insert(_ entry: QueuedCapture) async throws {
-    let payload = InboxEntryInsert(
-      id: entry.id,
-      ownerID: ownerID,
-      title: entry.title,
-      body: entry.body,
-      occurredStart: entry.effectiveOccurrence.start,
-      occurredTimezone: entry.effectiveOccurrence.timezone,
-      datePrecision: entry.effectiveOccurrence.precision.rawValue,
-      occurredEnd: entry.effectiveOccurrence.end,
-      occurredLabel: entry.effectiveOccurrence.label,
-      clientID: "ios:\(entry.id.uuidString.lowercased())",
-      metadata: entry.bodyRich.map { [EntryRichText.metadataKey: $0] } ?? [:]
-    )
-
     try await client
       .from("entries")
-      .insert(payload)
+      .insert(CaptureInsert(entry, ownerID: ownerID))
       .execute()
   }
 
@@ -828,83 +583,6 @@ final class CaptureController {
       }.value
     }
   }
-
-  private func loadOrganization(entryIDs: [UUID]) async throws -> OrganizationSnapshot {
-    let collectionRows: [OrganizationName] =
-      try await client
-      .from("collections")
-      .select("name")
-      .eq("owner_id", value: ownerID.uuidString)
-      .is("archived_at", value: nil)
-      .order("name")
-      .execute()
-      .value
-    let tagRows: [OrganizationName] =
-      try await client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", value: ownerID.uuidString)
-      .order("name")
-      .execute()
-      .value
-
-    guard !entryIDs.isEmpty else {
-      return OrganizationSnapshot(
-        collectionNamesByEntry: [:],
-        tagNamesByEntry: [:],
-        collectionOptions: collectionRows.map(\.name),
-        tagOptions: tagRows.map(\.name)
-      )
-    }
-
-    let collectionRelationships: [EntryCollectionRelationship] =
-      try await client
-      .from("entry_collections")
-      .select("entry_id,collection:collections(name,archived_at)")
-      .eq("owner_id", value: ownerID.uuidString)
-      .in("entry_id", values: entryIDs)
-      .execute()
-      .value
-    let tagRelationships: [EntryTagRelationship] =
-      try await client
-      .from("entry_tags")
-      .select("entry_id,tag:tags(name)")
-      .eq("owner_id", value: ownerID.uuidString)
-      .in("entry_id", values: entryIDs)
-      .execute()
-      .value
-
-    return OrganizationSnapshot(
-      collectionNamesByEntry: collectionNamesByEntry(collectionRelationships),
-      tagNamesByEntry: tagNamesByEntry(tagRelationships),
-      collectionOptions: collectionRows.map(\.name),
-      tagOptions: tagRows.map(\.name)
-    )
-  }
-}
-
-extension CaptureController {
-  enum ReviewIntent: Sendable {
-    case done
-    case save
-  }
-
-  enum ReviewSubmission: Sendable {
-    case saved(InboxReviewInput, revision: Int)
-    case failed(ReviewResult)
-  }
-
-  struct ReviewResult: Equatable, Sendable {
-    enum Status: Sendable {
-      case conflict
-      case done
-      case error
-      case saved
-    }
-
-    let message: String
-    let status: Status
-  }
 }
 
 private struct ExistingEntry: Decodable, Sendable {
@@ -939,210 +617,6 @@ private struct PhotoSyncStop: Error {
   let message: String
 }
 
-private struct EntryTrashUpdate: Encodable, Sendable {
-  let deletedAt: Date
-
-  enum CodingKeys: String, CodingKey {
-    case deletedAt = "deleted_at"
-  }
-}
-
-struct InboxEntryInsert: Encodable, Sendable {
-  let id: UUID
-  let ownerID: UUID
-  let title: String?
-  let body: String
-  let itemKind = "entry"
-  let itemSubtype = "entry"
-  let inboxStatus = "unreviewed"
-  let occurredStart: Date?
-  let occurredTimezone: String
-  var datePrecision = "exact"
-  var occurredEnd: Date? = nil
-  var occurredLabel: String? = nil
-  let clientID: String
-  /// Web's `metadataWithEntryRichText`: `body_rich` when present, otherwise empty.
-  var metadata: [String: EntryEmphasisContent] = [:]
-
-  enum CodingKeys: String, CodingKey {
-    case id
-    case ownerID = "owner_id"
-    case title
-    case body
-    case itemKind = "item_kind"
-    case itemSubtype = "item_subtype"
-    case inboxStatus = "inbox_status"
-    case occurredStart = "occurred_start"
-    case occurredTimezone = "occurred_timezone"
-    case datePrecision = "date_precision"
-    case occurredEnd = "occurred_end"
-    case occurredLabel = "occurred_label"
-    case clientID = "client_id"
-    case metadata
-  }
-}
-
-struct ReviewEntryParameters: Encodable, Sendable {
-  let entryID: UUID
-  let expectedRevision: Int
-  let title: String?
-  let body: String
-  let itemKind: WikiItemKind
-  let itemSubtype: String
-  let occurredStart: Date?
-  let occurredTimezone: String
-  let collectionNames: [String]
-  let tagNames: [String]
-  let markDone: Bool
-  var datePrecision: DatePrecision = .exact
-  var occurredEnd: Date? = nil
-  var occurredLabel: String? = nil
-  var photoPlace: PhotoPlaceDraft? = nil
-  var occurredStartRaw: String? = nil
-  var occurredEndRaw: String? = nil
-  /// Web `p_body_rich`: the note's formatting, or null to clear formatting that no longer fits.
-  var bodyRich: EntryRichText? = nil
-
-  enum CodingKeys: String, CodingKey {
-    case entryID = "p_entry_id"
-    case expectedRevision = "p_expected_revision"
-    case title = "p_title"
-    case body = "p_body"
-    case itemKind = "p_item_kind"
-    case itemSubtype = "p_item_subtype"
-    case occurredStart = "p_occurred_start"
-    case occurredTimezone = "p_occurred_timezone"
-    case collectionNames = "p_collection_names"
-    case tagNames = "p_tag_names"
-    case markDone = "p_mark_done"
-    case datePrecision = "p_date_precision"
-    case occurredEnd = "p_occurred_end"
-    case occurredLabel = "p_occurred_label"
-    case photoPlace = "p_photo_place"
-    case bodyRich = "p_body_rich"
-  }
-
-  func encode(to encoder: Encoder) throws {
-    var values = encoder.container(keyedBy: CodingKeys.self)
-
-    try values.encode(entryID, forKey: .entryID)
-    try values.encode(expectedRevision, forKey: .expectedRevision)
-    if let title {
-      try values.encode(title, forKey: .title)
-    } else {
-      try values.encodeNil(forKey: .title)
-    }
-    try values.encode(body, forKey: .body)
-    try values.encode(itemKind, forKey: .itemKind)
-    try values.encode(itemSubtype, forKey: .itemSubtype)
-    if let occurredStartRaw {
-      try values.encode(occurredStartRaw, forKey: .occurredStart)
-    } else {
-      try values.encode(occurredStart, forKey: .occurredStart)
-    }
-    try values.encode(occurredTimezone, forKey: .occurredTimezone)
-    try values.encode(collectionNames, forKey: .collectionNames)
-    try values.encode(tagNames, forKey: .tagNames)
-    try values.encode(markDone, forKey: .markDone)
-    try values.encode(datePrecision, forKey: .datePrecision)
-    if let occurredEndRaw {
-      try values.encode(occurredEndRaw, forKey: .occurredEnd)
-    } else {
-      try values.encode(occurredEnd, forKey: .occurredEnd)
-    }
-    try values.encode(occurredLabel, forKey: .occurredLabel)
-    try values.encode(photoPlace, forKey: .photoPlace)
-    try values.encode(bodyRich, forKey: .bodyRich)
-  }
-}
-
-struct ReviewedEntryResult: Decodable, Sendable {
-  let entryID: UUID
-  let revision: Int
-
-  enum CodingKeys: String, CodingKey {
-    case entryID = "entry_id"
-    case revision
-  }
-}
-
-private struct OrganizationName: Decodable, Sendable {
-  let name: String
-}
-
-private struct EntryCollectionRelationship: Decodable, Sendable {
-  let entryID: UUID
-  let collection: InboxCollectionName?
-
-  enum CodingKeys: String, CodingKey {
-    case entryID = "entry_id"
-    case collection
-  }
-}
-
-private struct InboxCollectionName: Decodable, Sendable {
-  let name: String
-  let archivedAt: String?
-  enum CodingKeys: String, CodingKey {
-    case name
-    case archivedAt = "archived_at"
-  }
-}
-
-private struct EntryTagRelationship: Decodable, Sendable {
-  let entryID: UUID
-  let tag: OrganizationName?
-
-  enum CodingKeys: String, CodingKey {
-    case entryID = "entry_id"
-    case tag
-  }
-}
-
-private struct OrganizationSnapshot: Sendable {
-  let collectionNamesByEntry: [UUID: [String]]
-  let tagNamesByEntry: [UUID: [String]]
-  let collectionOptions: [String]
-  let tagOptions: [String]
-}
-
-private func collectionNamesByEntry(
-  _ relationships: [EntryCollectionRelationship]
-) -> [UUID: [String]] {
-  Dictionary(grouping: relationships, by: \.entryID)
-    .mapValues { rows in
-      rows.filter { $0.collection?.archivedAt == nil }.compactMap(\.collection?.name)
-        .sortedCaseInsensitively()
-    }
-}
-
-private func tagNamesByEntry(
-  _ relationships: [EntryTagRelationship]
-) -> [UUID: [String]] {
-  Dictionary(grouping: relationships, by: \.entryID)
-    .mapValues { rows in
-      rows.compactMap(\.tag?.name).sortedCaseInsensitively()
-    }
-}
-
-private func mergedOptions(_ existing: [String], _ added: [String]) -> [String] {
-  var optionsByName = Dictionary(
-    uniqueKeysWithValues: existing.map { ($0.lowercased(), $0) }
-  )
-
-  for name in added {
-    optionsByName[name.lowercased()] = optionsByName[name.lowercased()] ?? name
-  }
-
-  return Array(optionsByName.values).sortedCaseInsensitively()
-}
-
-extension Array where Element == String {
-  fileprivate func sortedCaseInsensitively() -> [String] {
-    sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }
-  }
-}
-
-private enum InboxControllerError: Error {
+private enum CaptureControllerError: Error {
   case ownerChanged
 }
