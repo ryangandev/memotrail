@@ -13,6 +13,9 @@ final class TimelineController {
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var loadErrorMessage: String?
+  /// When the rows were read: the Today line and open Chapters run to here, like Web's
+  /// `referenceDate`.
+  private(set) var referenceDate = Date()
 
   private let client: SupabaseClient
   private let ownerID: UUID
@@ -25,6 +28,12 @@ final class TimelineController {
   }
 
   var items: [TimelineItem] { chapters + firstTimes }
+
+  /// Every Chapter that is also a First Time counts, like Web `firstTimeCount`.
+  var firstTimeCount: Int { firstTimes.count + chapters.filter(\.isFirstTime).count }
+
+  /// Items with no calendar date; the canvas cannot place them.
+  var undated: [TimelineItem] { items.filter { $0.windowStart == nil } }
 
   func load() async {
     let generation = UUID()
@@ -43,6 +52,7 @@ final class TimelineController {
       try await validateSessionOwner()
       guard loadGeneration == generation else { return }
       (chapters, firstTimes) = TimelineItems.split(rows)
+      referenceDate = Date()
       loadErrorMessage = nil
     } catch {
       guard loadGeneration == generation, !(error is CancellationError) else { return }

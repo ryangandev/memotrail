@@ -90,8 +90,35 @@ struct TimelineItem: Decodable, Equatable, Hashable, Identifiable, Sendable {
   /// Web `entryDisplayTitle`: the title, or the date when there is none.
   var displayTitle: String { entryDisplayTitle(title, occurrence) }
 
-  /// A Chapter shows the span it covers, a First Time its date.
+  /// A Chapter shows the span it covers, a First Time its date. Web `timelineItemDateLabel`.
   var dateLabel: String { isChapter ? occurrence.spanLabel : occurrence.displayLabel }
+
+  /// How long a Chapter lasts, or nil when it has no calendar date to measure from. Web
+  /// `timelineItemDurationLabel`.
+  func durationLabel(now: Date) -> String? {
+    isChapter && windowStart != nil ? occurrence.durationLabel(now: now) : nil
+  }
+
+  /// What an item without a calendar date says about when it was. Web `timelineUndatedLabel`.
+  var undatedLabel: String {
+    let description = occurredLabel?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    return description.isEmpty ? "Undated" : "Roughly: \(description)"
+  }
+
+  /// The name a bar or point carries for assistive technology. Web `timelineItemAccessibleName`.
+  var accessibleName: String { "\(displayTitle), \(dateLabel)" }
+
+  /// This item as the layout takes it, or nil without a calendar date. `titleWidth` is the
+  /// title's width at the band item font; a Chapter that is also a First Time adds room for the
+  /// star drawn before its title.
+  func layoutSource(titleWidth: Double) -> TimelineLayoutSource? {
+    guard let windowStart else { return nil }
+    return TimelineLayoutSource(
+      band: isChapter ? .chapters : .firstTimes, id: id.uuidString.lowercased(),
+      labelWidthPixels: titleWidth
+        + (isChapter && isFirstTime ? TimelineMetrics.starAllowancePixels : 0),
+      shape: isChapter ? .bar : .point, windowEnd: windowEnd, windowStart: windowStart)
+  }
 }
 
 /// Web `timelineItems`: Chapters, and the First Times that are not Chapters, each by first

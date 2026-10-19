@@ -97,6 +97,15 @@ enum TimelineMetrics {
   static let minimumBandPixels = 70.0
   static let bandPaddingPixels = 20.0
   static let axisPixels = 48.0
+  static let axisLabelTopPixels = 17.0
+
+  /// A band holds `rows` rows with room above and below.
+  static func bandHeightPixels(rows: Int) -> Double {
+    max(minimumBandPixels, Double(rows) * rowPitchPixels + bandPaddingPixels)
+  }
+
+  /// The Today line's dash and gap.
+  static let todayDashPixels = 5.0
 }
 
 /// Web `estimateLabelWidth`: a title's width before it has been measured.
