@@ -157,7 +157,7 @@ final class ItemPageController {
 
   /// A page of Entries added below the ones shown, leaving out any already listed, since the
   /// list can shift between pages when an Entry is added or dated elsewhere.
-  static func appending(_ page: [ChapterEntry], to entries: [ChapterEntry]) -> [ChapterEntry] {
+  nonisolated static func appending(_ page: [ChapterEntry], to entries: [ChapterEntry]) -> [ChapterEntry] {
     let known = Set(entries.map(\.id))
     return entries + page.filter { !known.contains($0.id) }
   }

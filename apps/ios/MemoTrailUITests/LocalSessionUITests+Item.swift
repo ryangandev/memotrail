@@ -39,6 +39,8 @@ extension LocalSessionUITests {
     // The same page in dark mode.
     XCUIDevice.shared.appearance = .dark
     defer { XCUIDevice.shared.appearance = .light }
+    // The new appearance takes a moment to reach the app.
+    Thread.sleep(forTimeInterval: 1.5)
     attach(app, "Chapters during this time in dark mode")
     reveal(entryButton("First morning in Alfama", in: app), in: app)
     attach(app, "Chapter Entries in dark mode")
@@ -70,7 +72,7 @@ extension LocalSessionUITests {
     XCTAssertTrue(text(title, in: app).exists)
     attach(app, "Entry before Trash")
 
-    // Move to Trash asks first and names the Entry, and Cancel leaves it alone.
+    // Move to Trash asks first and names the Entry, and dismissing the question leaves it alone.
     reveal(app.buttons["item-trash"], in: app).tap()
     let confirm = app.buttons.matching(
       NSPredicate(format: "label == %@ AND identifier != %@", "Move to Trash", "item-trash")
@@ -79,7 +81,8 @@ extension LocalSessionUITests {
     XCTAssertTrue(text("Move “\(title)” to Trash?", in: app).exists)
     XCTAssertTrue(text("You can restore it later from Trash.", in: app).exists)
     attach(app, "Move to Trash confirmation")
-    app.buttons["Cancel"].tap()
+    // The question is a popover, so a tap outside it is the way to cancel.
+    app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7)).tap()
     XCTAssertTrue(confirm.waitForNonExistence(timeout: 5))
     XCTAssertTrue(app.buttons["item-edit"].exists)
 
@@ -95,20 +98,158 @@ extension LocalSessionUITests {
     attach(app, "Trash after moving an Entry from its page")
   }
 
+  func testItemPageShowsASavedReviewReadOnlyWithQuotesThatOpenTheirEntries() throws {
+    let marker = String(UUID().uuidString.prefix(8)).lowercased()
+    let chapterTitle = "The job hunt \(marker)"
+    let review = try storeReview(marker: marker, chapterTitle: chapterTitle)
+    let app = try launchLocalSession()
+    try openFromLibrarySearch(marker, in: app, matching: chapterTitle)
+    XCTAssertTrue(app.navigationBars["Chapter"].waitForExistence(timeout: 10))
+
+    // The review sits above the Entries: facts from the records, then Claude's reading, then the
+    // person's own words, with no way to make, delete, or turn reviews on.
+    let panel = reveal(element("item-review", in: app), in: app)
+    XCTAssertTrue(panel.waitForExistence(timeout: 15))
+    XCTAssertTrue(text("Written by AI", in: app).exists)
+    XCTAssertTrue(text("Read all 5 Entries", in: app).exists)
+    XCTAssertTrue(text("From your records", in: app).exists)
+    XCTAssertTrue(text("Most writing: March 1989 (2 Entries)", in: app).exists)
+    XCTAssertFalse(app.buttons["Make a new review"].exists)
+    attach(app, "Chapter review top")
+    let how = reveal(text("How it felt", in: app), in: app)
+    XCTAssertTrue(how.exists)
+    XCTAssertTrue(text("Anxious, then steadier", in: app).exists)
+    attach(app, "Chapter review interpretation")
+    let words = reveal(text("In your words", in: app), in: app)
+    XCTAssertTrue(words.exists)
+    revealWhole(element("item-review-quote-0", in: app), in: app)
+    attach(app, "Chapter review quotes")
+    XCUIDevice.shared.appearance = .dark
+    defer { XCUIDevice.shared.appearance = .light }
+    Thread.sleep(forTimeInterval: 1.5)
+    attach(app, "Chapter review quotes in dark mode")
+    reveal(text("How it felt", in: app), in: app)
+    attach(app, "Chapter review interpretation in dark mode")
+
+    // A quote opens the Entry it came from.
+    let source = app.buttons.matching(
+      NSPredicate(format: "identifier == %@", "item-review-entry-\(review.worry.uuidString.lowercased())")
+    ).firstMatch
+    reveal(source, in: app).tap()
+    XCTAssertTrue(app.navigationBars["Entry"].waitForExistence(timeout: 10))
+    XCTAssertTrue(text("First rejection", in: app).exists)
+  }
+
   // MARK: Helpers
 
   /// Opens Library ready to type, searches, and opens the first result named like `query`.
-  private func openFromLibrarySearch(_ query: String, in app: XCUIApplication) throws {
+  private func openFromLibrarySearch(
+    _ query: String, in app: XCUIApplication, matching label: String? = nil
+  ) throws {
     XCTAssertTrue(app.buttons["workspace-search"].waitForExistence(timeout: 20))
     app.buttons["workspace-search"].tap()
     let field = app.textFields["Search your Life Wiki"]
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     field.typeText("\(query)\n")
     XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
-    let result = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", query))
-      .firstMatch
+    let result = app.buttons.matching(
+      NSPredicate(format: "label CONTAINS[c] %@", label ?? query)
+    ).firstMatch
     XCTAssertTrue(result.waitForExistence(timeout: 10))
     reveal(result, in: app).tap()
+  }
+
+  /// Saves a dated Chapter with five Entries and stores a review of it the way the Web job does,
+  /// with no model call, so a test can read a review the seed does not hold.
+  private func storeReview(marker: String, chapterTitle: String) throws -> (worry: UUID, chapter: UUID) {
+    func save(_ title: String, _ body: String, chapter: Bool = false, day: String, end: String? = nil)
+      throws -> UUID
+    {
+      let id = UUID()
+      _ = try requestLocalStack(
+        "/rest/v1/rpc/save_entry",
+        body: [
+          "p_entry_id": id.uuidString.lowercased(), "p_expected_revision": nil, "p_title": title,
+          "p_body": body, "p_body_rich": nil, "p_tag_names": [String](),
+          "p_primary_location": nil, "p_photo_location": nil, "p_is_chapter": chapter,
+          "p_is_first_time": false, "p_date_precision": "day",
+          "p_occurred_start": "\(day)T12:00:00Z", "p_occurred_end": end.map { "\($0)T12:00:00Z" },
+          "p_occurred_label": nil, "p_occurred_timezone": "UTC",
+        ])
+      return id
+    }
+    func call(_ name: String, _ body: [String: Any?]) throws -> Any? {
+      try requestLocalStack("/rest/v1/rpc/\(name)", body: body)
+    }
+    let chapter = try save(chapterTitle, "Looking for work.", chapter: true, day: "1989-03-01", end: "1989-06-20")
+    let worry = try save("First rejection", "I felt anxious about the first interview today.", day: "1989-03-05")
+    let practice = try save("Practice", "Practiced questions with my brother.", day: "1989-03-20")
+    let second = try save("Second round", "It went better than I expected.", day: "1989-04-10")
+    let offer = try save("First offer", "My first ever offer arrived.", day: "1989-04-25")
+    let decision = try save("Decision", "I decided to accept the offer.", day: "1989-06-01")
+    let ids = [worry, practice, second, offer, decision].map { $0.uuidString.lowercased() }
+
+    let settings = try XCTUnwrap(try call("review_settings", [:]) as? [String: Any])
+    _ = try call("save_review_preferences", [
+      "p_reviews": true, "p_suggestions": false, "p_disclosure_version": "2026-10-18",
+      "p_expected_revision": settings["revision"] as? Int ?? 0,
+    ])
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy-MM-dd"
+    let plan: [String: Any] = [
+      "disclosureVersion": "2026-10-18", "planHash": String(repeating: "a", count: 64),
+      "mode": "single", "entryIds": ids, "sources": [Any](), "entriesInPeriod": ids.count,
+      "trimmedEntries": 0, "language": "en", "ongoing": false,
+      "steps": [["index": 0, "kind": "review", "entryIds": ids]],
+    ]
+    let job = try XCTUnwrap(
+      try call("claim_entry_review", [
+        "p_scope": "chapter", "p_chapter_id": chapter.uuidString.lowercased(), "p_year": nil,
+        "p_local_date": formatter.string(from: Date()), "p_plan": plan,
+      ]) as? [String: Any])
+    let reviewID = try XCTUnwrap(job["reviewId"] as? String)
+    let started = try XCTUnwrap(job["jobStartedAt"] as? String)
+    _ = try call("claim_review_steps", [
+      "p_review_id": reviewID, "p_job_started_at": started, "p_max": 6,
+    ])
+    let content: [String: Any] = [
+      "summary": "A tense few months that ended well.",
+      "feelings": [
+        "overview": "From worry to relief over one spring.",
+        "phases": [[
+          "feeling": "Anxious, then steadier", "description": "The dread eased as practice built up.",
+          "entryIds": [worry, practice].map { $0.uuidString.lowercased() },
+          "windowStart": "1989-03-05", "windowEnd": "1989-03-21",
+        ]],
+      ],
+      "themes": [[
+        "name": "Interviews", "description": "They kept coming, and each one got easier.",
+        "entryIds": [worry, second].map { $0.uuidString.lowercased() },
+      ]],
+      "quotes": [
+        [
+          "entryId": worry.uuidString.lowercased(), "start": 7, "end": 40,
+          "text": "anxious about the first interview", "why": "It names the worry plainly.",
+        ],
+        [
+          "entryId": second.uuidString.lowercased(), "start": 0, "end": 14,
+          "text": "It went better", "why": "The first sign of a turn.",
+        ],
+      ],
+    ]
+    let sources = try ([chapter] + [worry, practice, second, offer, decision]).map { id in
+      let rows = try requestLocalStack(
+        "/rest/v1/entries?id=eq.\(id.uuidString.lowercased())&select=revision", method: "GET")
+      let revision = try XCTUnwrap((rows as? [[String: Any]])?.first?["revision"] as? Int)
+      return ["entryId": id.uuidString.lowercased(), "revision": revision] as [String: Any]
+    }
+    let stored = try call("store_entry_review", [
+      "p_review_id": reviewID, "p_job_started_at": started, "p_content": content,
+      "p_model": "claude-sonnet-5-5", "p_entries_read": 5, "p_sources": sources,
+    ])
+    XCTAssertEqual(stored as? Bool, true)
+    return (worry, chapter)
   }
 
   /// A row of an Item page's lists, found by the title it shows.
@@ -153,7 +294,7 @@ extension LocalSessionUITests {
     let status = (response as? HTTPURLResponse)?.statusCode ?? 0
     let text = data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
     XCTAssertTrue((200..<300).contains(status), "\(path): \(status) \(text)")
-    return data.flatMap { try? JSONSerialization.jsonObject(with: $0) }
+    return data.flatMap { try? JSONSerialization.jsonObject(with: $0, options: .fragmentsAllowed) }
   }
 
   /// Saves a new dated Entry like the editor does, so a test can move one to Trash without

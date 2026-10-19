@@ -138,8 +138,9 @@ extension NativeContractTests {
     let controller = ItemPageController(client: client, ownerID: ownerID, entryID: main)
     await controller.load()
     XCTAssertEqual(controller.chapterOverlaps.map(\.id), [partlyBefore, nested, firstTime, partlyAfter])
-    XCTAssertTrue(controller.chapterEntries.isEmpty)
-    XCTAssertEqual(controller.chapterEntryCount, 0)
+    // The one ordinary Entry inside the span is listed; the Chapters beside it are not.
+    XCTAssertEqual(controller.chapterEntries.map(\.id), [plainEntry])
+    XCTAssertEqual(controller.chapterEntryCount, 1)
     XCTAssertNil(controller.chapterErrorMessage)
   }
 
