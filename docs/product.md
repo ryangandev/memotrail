@@ -5,7 +5,7 @@ Last reviewed: 2026-10-18.
 ## Product in one minute
 
 MemoTrail is the one private place a life is written down.
-The user jots down a thought, a mood, something learned, or something lived in seconds, finds it again from any half-remembered clue, and gets back the story of each chapter of their life.
+The user jots down a thought, a mood, something learned, or something lived in seconds, finds it again from any half-remembered clue, and gets each chapter of their life back.
 [positioning.md](./positioning.md) explains why it exists, who it is for, and the filter every feature must pass; this document says how the product behaves.
 
 The product rests on three ideas: Entries hold everything the user records, Chapters give that record its shape in time, and Returns bring it back through search and reviews.
@@ -94,8 +94,8 @@ Capture happens in two modes, and both must feel effortless: a mood or sudden re
   The name follows the date's recorded precision: a day or exact time reads "Sunday, October 18, 2026", a month "October 2026", a year "2026", and a range names both ends.
   A Not sure date uses its description, and an Entry without a date reads "Undated entry".
   The date is read in the time zone it was recorded in, so every device and the server show the same name.
-  Lists show the note's first useful line as the summary, and the Item page shows the date as its heading and the note once.
-  The Item page's Date fact appears only when it says more than that heading, such as the time of an exact moment or an end the heading leaves out.
+  Lists show the note's first useful line as the summary, and the Entry page shows the date as its heading and the note once.
+  The Entry page's Date fact appears only when it says more than that heading, such as the time of an exact moment or an end the heading leaves out.
   Because the date already names it, an untitled Entry does not repeat its date beside the title.
 - A Chapter needs a name, so the Entry editor asks for a title when it turns an Entry into a Chapter.
 - The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
@@ -109,7 +109,7 @@ Capture happens in two modes, and both must feel effortless: a mood or sudden re
 - Voice capture produces editable text and never retains the original audio.
 - Editing an Entry saves the same Entry without a Kind or subtype choice.
 - MemoTrail does not suggest titles, tags, or filing; the user organizes Entries only when they want to.
-- An unwanted Capture moves to Trash from its Item page, with confirmation and the normal restore path.
+- An unwanted Capture moves to Trash from its Entry page, with confirmation and the normal restore path.
 
 Original photos remain private and unchanged.
 Photo metadata may be offered as a date or Location suggestion but is never adopted automatically.
@@ -138,7 +138,7 @@ Photo metadata may be offered as a date or Location suggestion but is never adop
 
 Importing from Apple Journal, Apple Notes, and Notion gives a new user a past to search and review on the first day.
 
-- Each imported item becomes an ordinary Entry with its original date, writing, and photos where the source provides them.
+- Each imported note becomes an ordinary Entry with its original date, writing, and photos where the source provides them.
 - Nothing in the imported content is lost: anything without a direct place in an Entry is kept as text in its note.
 - Importing the same content again does not create duplicates.
 - Import never changes or removes the user's existing Entries.
@@ -158,32 +158,32 @@ Importing from Apple Journal, Apple Notes, and Notion gives a new user a past to
   The Tags Library uses compact usage-count badges that open tag management, recent linked Entries, and a path to the complete filtered result set.
 - Renaming a tag preserves its identity and linked Entries.
 - A used tag must be merged into another tag or removed from its Entries before deletion, so organization is never silently lost.
-- MemoTrail has no links between Entries; dates, Chapters, and tags already connect related records.
+- MemoTrail has no links between Entries; dates, Chapters, and tags already connect related Entries.
 - MemoTrail keeps only the current version of each Entry.
   An edit replaces the earlier writing, and Trash is the only way to undo, for a whole Entry or one photo.
 - Adding or removing photos never makes an open Entry editor stale: its Save and Move to Trash still apply.
   Writing or other content changed elsewhere since the editor opened still reports a conflict instead of being overwritten.
 
-### Library and Item pages
+### Library and Entry pages
 
 - Timeline, Dashboard, and Library are views, not organization labels.
-- Library is the primary all-items entry point.
-  Its default browser presents every Entry as paginated rows, with Chapters and First Times labeled.
-  A new capture appears there, and in its item count, as soon as it is saved.
-  Library search supports date, tag, and record filters, such as Chapters only or First Times only, with match context.
+- Library is the primary place to browse every Entry.
+  Its default browser presents every Entry as paginated rows, with Chapters and First Times marked.
+  A new capture appears there, and in its Entry count, as soon as it is saved.
+  Library search supports date, tag, and mark filters, such as Chapters only or First Times only, with match context.
   Library avoids duplicating the sidebar's destinations.
-- Opening an Entry shows its Item page with its current content and primary actions.
-  An Item page shows its photos below its writing as soon as it opens; selecting one opens a preview that pages through them with Previous, Next, and the arrow keys.
-  Photos are added and removed in the Entry editor, not on the Item page.
+- Opening an Entry shows its Entry page with its current content and primary actions.
+  An Entry page shows its photos below its writing as soon as it opens; selecting one opens a preview that pages through them with Previous, Next, and the arrow keys.
+  Photos are added and removed in the Entry editor, not on the Entry page.
   A pencil-and-Edit action changes the fields on that page into an inline form; Add remains a modal creation flow.
-- A Chapter's Item page also lists the Entries and overlapping Chapters described in [Chapters](#chapters), and its review when one exists.
-- Item pages support moving the Entry to Trash, where it remains restorable.
+- A Chapter's Entry page also lists the Entries and overlapping Chapters described in [Chapters](#chapters), and its review when one exists.
+- Entry pages support moving the Entry to Trash, where it remains restorable.
 
 ### Locations
 
 Entry Locations remain in the current scope, but MemoTrail has no Map destination; place is not a primary retrieval clue.
 
-- Locations are private address and coordinate snapshots owned by individual Entries, not Library items or reusable personal records.
+- Locations are private address and coordinate snapshots owned by individual Entries, not Library Entries or reusable places.
 - Any Entry, including a Chapter or a First Time, can carry an address or coordinates without a personal name.
 - The same physical address may appear in several Entries, but each keeps an independent snapshot so later edits never change another Entry.
 - Locations have no user-authored name or notes, no Saved Location catalog, and no Library destination.
@@ -209,7 +209,7 @@ Earlier AI requirements and exploration remain in the [AI direction record](./ai
 - Semantic search finds Entries by meaning, so the user can describe a person or situation without the name, or a feeling without the exact words, and still find what they wrote.
 - Semantic search is on by default and uses an embedding model MemoTrail runs itself, so neither Entry content nor search queries are sent to a third party for search.
 - Settings can turn semantic search off; keyword search always remains.
-- Filters include date, tag, and record, such as Chapters or First Times, so a rough time narrows any search.
+- Filters include date, tag, and mark, such as Chapters or First Times, so a rough time narrows any search.
 - Search results explain why they matched and open the original Entry.
 - The Command Palette shows live results from the same search and opens Library for full search with filters.
 
@@ -224,7 +224,8 @@ When a Chapter ends or a year passes, a review shows what that period held.
 - A review shows how the user's feelings changed over the period, which themes kept returning, and the user's own words from that time.
 - Every quote links to the Entry it came from.
 - A review is separate from the Entries it draws on, and the original Entries are never changed.
-- A Chapter's review appears on its Item page.
+- A Chapter's review appears on its Entry page.
+- Reviews is a destination that lists each ended year with at least 5 dated Entries; each year's page holds its review and links back to Reviews.
 
 ### Chapter suggestions
 
@@ -240,25 +241,25 @@ Each Chapter is a bar across its span, and each First Time is a point on its dat
 Overlapping Chapters stack automatically so every bar stays readable; there are no lanes to choose, name, reorder, or hide.
 Ordinary Entries are not drawn on Timeline; opening a Chapter shows them.
 Web Timeline has one view; there is no style setting.
-An optional private birth date becomes the story's starting point; Set birth date on Timeline and Settings add it, and Timeline never asks for it unprompted.
-Without one, Timeline starts from the earliest dated item, and an empty Timeline shows the current year.
+An optional private birth date becomes Timeline's starting point; Set birth date on Timeline and Settings add it, and Timeline never asks for it unprompted.
+Without one, Timeline starts from the earliest dated Entry, and an empty Timeline shows the current year.
 Adding to Timeline never waits on a birth date.
 Add to Timeline asks whether the user is adding a Chapter or a First Time, and opens the Entry editor with that mark already set.
-Selecting anything on Timeline opens its Item page.
+Selecting anything on Timeline opens its Entry page.
 Unanchored Age, Approximate, and Unknown Chapters and First Times remain visible without a fabricated calendar position.
 
 Dashboard is ordered around:
 
-1. A personal greeting and compact archive counts linking to their destinations.
+1. A personal greeting with today's date, and compact counts linking to their destinations.
 2. Full-width Quick Capture.
 3. A quiet resurfaced memory alongside Now.
 4. Full-width Recent Entries with single-line titles and summaries and optional tags; an untitled Entry is named by its date.
 
 Narrow screens and iOS stack these sections in the same reading order.
 Search stays available in the Web bottom dock, and in the header of each iOS primary tab as a shortcut to Library.
-Archive counts open Timeline, Library, First Times, or Tags.
+The counts open Timeline, Library, First Times, or Tags.
 Now lists the current Chapters: those that have started and have no end.
-Each shows how long it has been going on and opens its Item page, and Now links to Timeline.
+Each shows how long it has been going on and opens its Entry page, and Now links to Timeline.
 Duration labels must not imply more precision than the recorded dates.
 
 Resurfacing uses active, dated Entries only.
@@ -275,25 +276,34 @@ The only notice is an occasional one on the Dashboard that a Chapter or year rev
 ## Experience and navigation
 
 Soft Ledger is the visual direction: minimal, archival, modern, calm, and approachable.
+The Web workspace follows its Quiet ledger layout.
+Every page starts at the same left edge beside the sidebar, at a reading, list, or full width, so titles never move sideways between pages.
+A page header is a serif title with at most one muted meta line and one primary action, with no eyebrow or description.
+Warm is kept for the First Time mark and the logo, dates are muted ink, and the danger color marks only destructive actions and errors.
 Both clients support light and dark appearance, share semantic design intent, and still follow native platform conventions where identical interaction would reduce usability.
 Web appearance is a per-browser choice between System, Light, and Dark; System remains the default and follows operating-system changes.
 iOS appearance is an app-local choice with the same three options.
 
 Mobile uses Dashboard, Timeline, Library, and More in its bottom navigation.
-Library opens with the same all-items browser as Web, including debounced search and filters.
-More opens a compact menu for First Times, Tags, archive tools, and Settings.
-Settings is also reached from the profile control.
+Library opens with the same browser of every Entry as Web, including debounced search and filters.
+More opens a plain list of First Times, Reviews, Tags, Import, Trash, and Settings.
+On mobile Web, a 48px top bar shows the logo, the sync status, and the profile avatar, which opens Settings.
 Settings lets the user choose a preferred name for Dashboard greetings, or clear it to use the Google account name.
 
 Desktop treats Library as a primary destination beside Dashboard and Timeline; Search is part of Library.
-Its sidebar keeps the First Times view separate from Tags, Trash, and the single Settings entry point.
-The desktop sidebar can collapse to a compact icon rail from the top-bar panel control; the width change animates, and the choice persists in this browser without changing mobile navigation.
+Desktop Web has no top bar.
+Its sidebar lists Dashboard, Timeline, and Library; then, after a rule, First Times, Reviews, and Tags; and Import, Trash, and Settings at its foot, without group labels.
+An account row at the bottom of the sidebar shows the profile name and the sync status.
+The current destination is a raised row with a hairline ring.
+A page that belongs to a destination marks it: an Entry page marks Library, a Chapter Timeline, a First Time First Times, and an Entry in Trash Trash, and its header links back there; a page that does not exist marks none.
+The desktop sidebar can collapse to a compact icon rail from the panel control in its header; the width change animates, and the choice persists in this browser without changing mobile navigation.
 Command B (Control B on Windows) also toggles the desktop sidebar when focus is outside text inputs and editors; inside the rich-text editor it retains its Bold behavior.
 The collapsed rail shows the MemoTrail logo without its wordmark above square navigation targets and keeps keyboard focus indicators inside the controls.
 On collapse, the logo's outer ring and accent rotate 90 degrees together while the inner ring turns in the opposite direction over 320ms; expanding reverses the rotation, and reduced motion keeps the mark still.
-The persistent top bar places Back and Forward history controls, then the desktop sidebar panel control; unavailable history directions are disabled.
-The profile control sits at the far right, after the pending sync count when captures are waiting on this device.
+The pending sync count appears beside the profile when captures are waiting on this device.
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry results in place, supports keyboard navigation, and opens Library for full search with filters.
+It also starts a New Entry and goes to every destination, including Reviews, Import, and Export.
+Toasts appear above the dock and the mobile tab bar, never over them.
 On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
 The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
@@ -310,7 +320,7 @@ When an Entry, including a new one, saves but some photos do not attach, the edi
 On Web, selecting a photo thumbnail in an editor or capture draft opens a single-photo dialog without removing it; the separate X control removes the photo.
 Form labels mark required fields with `*` and leave optional fields unmarked.
 
-Older links keep working: `/goals`, `/map`, Inbox, Needs organizing, People, and Explore links open Library; `/homes` and `/vehicles` open Timeline; Collection links open Tags, and an older Library Collection filter reads as a tag filter; an older item link, such as a Someday item, Home, Vehicle, First Time, Inbox review, or version history link, opens its Item page.
+Older links keep working: `/goals`, `/map`, Inbox, Needs organizing, People, and Explore links open Library; `/homes` and `/vehicles` open Timeline; Collection links open Tags, and an older Library Collection filter reads as a tag filter; an older link to one Entry, such as a Someday, Home, Vehicle, First Time, Inbox review, or version history link, opens its Entry page.
 
 ## Privacy, deletion, and portability
 
@@ -318,8 +328,8 @@ Older links keep working: `/goals`, `/map`, Inbox, Needs organizing, People, and
 - All personal data and media are private to the authenticated owner.
 - Deletion first moves supported content to Trash for 30 days.
 - `Delete forever` and `Empty Trash` require explicit confirmation.
-- A permanently deleted item can never be restored, and its private photo files are removed right after; if that removal cannot finish, MemoTrail says so and finishes it the next time Trash opens.
-- An item whose original photos are missing cannot be restored, and MemoTrail explains why; it can still be deleted forever.
+- A permanently deleted Entry or photo can never be restored, and its private photo files are removed right after; if that removal cannot finish, MemoTrail says so and finishes it the next time Trash opens.
+- An Entry whose original photos are missing cannot be restored, and MemoTrail explains why; it can still be deleted forever.
 - An Entry deleted forever cannot be brought back by a capture still waiting on another device.
   To enforce this, MemoTrail keeps only the deleted Entry's ID and deletion time, with no writing, photos, or other content, until the account is deleted.
   This record is not visible in the app and is not part of an export.
