@@ -34,7 +34,7 @@ supabase/
 ## Requirements
 
 - Node.js 24.13 or another compatible Node.js 24 release.
-- pnpm 10.33.
+- pnpm 12.6.
 - Xcode 16 or newer.
 - Supabase CLI 2.116 or newer.
 - Docker Desktop when running the local Supabase stack and database tests.
