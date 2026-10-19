@@ -526,7 +526,7 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
       "A title and a description without an icon or action, for a section that fills in on its own."
     case .emptyStateButton: "The whole state as one button that starts the missing record."
     case .focusedRecordHome:
-      "A Home's page with its photos, facts, Story, and tags, and Edit beside the title."
+      "A record page with its photos, facts, Story, and tags, and Edit beside the title."
     case .iconButtonVariants:
       "Every variant at the default medium size, with add, edit, more, and remove icons."
     case .iconButtonSizes:

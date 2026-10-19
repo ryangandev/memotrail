@@ -288,10 +288,6 @@
       "nestedPopover": {
         "$description": "Popovers opened from popovers.",
         "$value": 90
-      },
-      "mapOverlay": {
-        "$description": "Overlays above the map library's own panes.",
-        "$value": 500
       }
     },
     "field": {

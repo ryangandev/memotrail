@@ -346,13 +346,6 @@
           "components": [0.6118, 0.7137, 0.6471],
           "hex": "#9CB6A5"
         }
-      },
-      "pin": {
-        "$value": {
-          "colorSpace": "srgb",
-          "components": [0.3216, 0.4353, 0.3765],
-          "hex": "#526F60"
-        }
       }
     }
   }

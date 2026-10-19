@@ -58,7 +58,7 @@ export function FirstTimesWorkspace({
         </Button>
       }
       description={
-        <>Keep the small beginnings and major milestones worth finding again.</>
+        <>Keep the small beginnings and big firsts worth finding again.</>
       }
       eyebrow={<>A record of beginnings</>}
       summary={

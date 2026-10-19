@@ -12,7 +12,7 @@ platforms:
 purpose: A labeled single choice from a list of options, optionally in titled groups, on the shared field surface.
 
 use:
-  - Choosing one of a known list, such as a record kind, a sort order, or a linked Goal.
+  - Choosing one of a known list, such as a record kind, a sort order, or a Chapter.
   - Long option lists that read better in titled groups, such as kinds of records.
 
 avoid:

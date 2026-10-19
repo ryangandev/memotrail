@@ -11,9 +11,9 @@ const labels = {
   warm: "First Time",
   success: "Connected",
   danger: "Upload failed",
-  outline: "Someday",
+  outline: "Draft",
   inverse: "3 photos",
-  solidAccent: "Achieved",
+  solidAccent: "Saved",
   glassAccent: "Current",
   glassNeutral: "Earlier",
 };
