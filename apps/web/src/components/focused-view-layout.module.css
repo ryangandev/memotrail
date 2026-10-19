@@ -1,11 +1,14 @@
+/* The summary reads as the page header's meta line, as on Timeline. */
 .summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mt-space-2);
-  margin-top: var(--mt-space-5);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
+  margin-top: var(--mt-space-1-5);
+  color: var(--mt-color-ink-muted);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--page-meta-size);
+  line-height: var(--mt-line-height-message);
 }
 
 .content {

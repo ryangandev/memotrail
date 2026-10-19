@@ -38,9 +38,24 @@ export type TimelineYearMarker = {
   year: number;
 };
 
+// A month start between the year markers, drawn only when the Timeline is zoomed to months.
+export type TimelineMonthMarker = {
+  label: string;
+  leftPercent: number;
+  // 1 for January through 12 for December.
+  month: number;
+  year: number;
+};
+
+// Years fits a life into the visible width with at least 112 px a year; months gives every
+// month 60 px.
+export type TimelineZoom = "years" | "months";
+
 export type TimelineLayout = {
   canvasWidth: number;
   end: string;
+  // Empty when zoomed to years.
+  monthMarkers: TimelineMonthMarker[];
   positions: TimelinePosition[];
   rowCountByBand: Record<string, number>;
   start: string;
@@ -51,6 +66,28 @@ export type TimelineLayout = {
 const minimumRangeMilliseconds = 365 * 24 * 60 * 60 * 1_000;
 const minimumCanvasWidthPixels = 840;
 const yearWidthPixels = 112;
+const monthWidthPixels = 60;
+const dayMilliseconds = 24 * 60 * 60 * 1_000;
+const averageMonthMilliseconds = (365.2425 / 12) * dayMilliseconds;
+// Zoomed to months, the Timeline runs at least half a year past its latest date, so today can
+// sit in the right third of the view with the months ahead still drawn.
+const monthsTrailingMilliseconds = 183 * dayMilliseconds;
+// A month start this close to the birth date's year marker would print over it.
+const minimumMarkerGapPixels = 48;
+const monthLabels = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+] as const;
 // A bar's title sits inside when the bar holds it with its padding and borders.
 const barLabelInsetPixels = 22;
 const minimumBarPixels = 10;
@@ -64,12 +101,13 @@ export function estimateLabelWidth(text: string) {
 }
 
 // The canvas fills the visible width, given as fillWidthPixels, and grows past it to keep
-// each year legible.
+// each year legible, or each month when zoomed to months.
 export function createTimelineLayout(
   items: TimelineLayoutSource[],
   referenceDate = new Date(),
   birthDate: string | null = null,
   fillWidthPixels = 0,
+  zoom: TimelineZoom = "years",
 ): TimelineLayout {
   const validReference = validTime(referenceDate.toISOString()) ?? Date.now();
   const birthTime = validTime(birthDate);
@@ -94,9 +132,12 @@ export function createTimelineLayout(
     earliest = birthTime ?? Math.min(...normalized.map((item) => item.start));
     latest = Math.max(validReference, ...normalized.map((item) => item.end));
     const rawRange = Math.max(latest - earliest, minimumRangeMilliseconds);
-    const padding = Math.max(rawRange * 0.025, 30 * 24 * 60 * 60 * 1_000);
+    const padding = Math.max(rawRange * 0.025, 30 * dayMilliseconds);
     if (birthTime === null) earliest -= padding;
-    latest += padding;
+    latest +=
+      zoom === "months"
+        ? Math.max(padding, monthsTrailingMilliseconds)
+        : padding;
 
     if (latest - earliest < minimumRangeMilliseconds) {
       const difference = minimumRangeMilliseconds - (latest - earliest);
@@ -138,7 +179,46 @@ export function createTimelineLayout(
     minimumCanvasWidthPixels,
     Math.floor(fillWidthPixels),
     yearMarkers.length * yearWidthPixels,
+    zoom === "months"
+      ? Math.ceil((range / averageMonthMilliseconds) * monthWidthPixels)
+      : 0,
   );
+  const monthMarkers: TimelineMonthMarker[] = [];
+
+  if (zoom === "months") {
+    const first = new Date(earliest);
+
+    // Every month start after the first instant, except January, which the year marker holds.
+    for (
+      let index = first.getUTCFullYear() * 12 + first.getUTCMonth() + 1;
+      ;
+      index += 1
+    ) {
+      const year = Math.floor(index / 12);
+      const monthIndex = index % 12;
+      const position = Date.UTC(year, monthIndex, 1);
+
+      if (position > latest) break;
+      if (monthIndex === 0) continue;
+
+      const leftPercent = clamp(((position - earliest) / range) * 100);
+
+      if (
+        birthTime !== null &&
+        (leftPercent / 100) * canvasWidth < minimumMarkerGapPixels
+      ) {
+        continue;
+      }
+
+      monthMarkers.push({
+        label: monthLabels[monthIndex]!,
+        leftPercent,
+        month: monthIndex + 1,
+        year,
+      });
+    }
+  }
+
   const positions: TimelinePosition[] = [];
   const rowCountByBand: Record<string, number> = {};
   const renderedItems = normalized.map((item) => {
@@ -249,6 +329,7 @@ export function createTimelineLayout(
   return {
     canvasWidth,
     end: new Date(latest).toISOString(),
+    monthMarkers,
     positions,
     rowCountByBand,
     start: new Date(earliest).toISOString(),

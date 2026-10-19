@@ -1,13 +1,14 @@
 "use client";
 import { Dialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
-import { Button, ButtonLink } from "@/components/button";
+import { Button } from "@/components/button";
 import { notify } from "@/components/app-toast";
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -17,9 +18,11 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { saveBirthDate } from "@/app/settings/actions";
+import { EmptyState } from "@/components/empty-state";
 import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { PageFrame } from "@/components/page-frame";
+import { SegmentedControl } from "@/components/segmented-control";
 import { SeparatedList } from "@/components/separated-list";
 import { ChapterSuggestionCard } from "@/components/chapter-suggestion-card";
 import type { EntryMarks } from "@/components/entry-marks-fields";
@@ -29,15 +32,20 @@ import {
   createTimelineLayout,
   estimateLabelWidth,
   type TimelineBand,
+  type TimelineLayout,
   type TimelineLayoutSource,
+  type TimelineZoom,
 } from "@/lib/data/timeline-layout";
 import {
   timelineItemAccessibleName,
   timelineItemDateLabel,
-  timelineItemDurationLabel,
-  timelineUndatedLabel,
+  timelineRowDateLabel,
+  timelineToday,
+  timelineYearGroups,
+  type TimelineYearGroup,
 } from "@/lib/data/timeline-presentation";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
+import { countLabel } from "@/lib/count-label";
 import styles from "@/components/timeline-workspace.module.css";
 
 const NewEntryDialog = dynamic(
@@ -56,6 +64,21 @@ type CreationType = "chapter" | "first-time";
 // measured width does not include.
 const starAllowancePixels = 18;
 
+// Where today sits across the visible width when Timeline opens and when Today is pressed: in
+// the right third, with the months ahead still in view.
+const todayAnchor = 0.72;
+
+const zoomOptions = [
+  { label: "Years", value: "years" },
+  { label: "Months", value: "months" },
+] as const;
+
+// Where to scroll once the next layout is drawn: today at its anchor, or the date that was
+// under a given fraction of the view before the zoom changed.
+type ScrollTarget =
+  | { type: "today" }
+  | { fraction: number; time: number; type: "date" };
+
 type PositionedStyle = CSSProperties & {
   "--item-bar-width": string;
   "--item-label-width": string;
@@ -65,7 +88,7 @@ type PositionedStyle = CSSProperties & {
   "--item-width": string;
 };
 
-type GridStyle = CSSProperties & {
+type CanvasStyle = CSSProperties & {
   "--timeline-canvas-width": string;
   "--timeline-today-percent": number;
 };
@@ -97,13 +120,17 @@ export function TimelineWorkspace({
   const [selection, setSelection] = useState<EditorSelection | null>(null);
   const [birthDate, setBirthDate] = useState(serverBirthDate);
   const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(false);
+  const [zoom, setZoom] = useState<TimelineZoom>("months");
   const items = useMemo(
     () => [...chapters, ...firstTimes],
     [chapters, firstTimes],
   );
-  const labelProbe = useRef<HTMLSpanElement>(null);
-  const measureLabel = useLabelMeasure(labelProbe);
+  const barProbe = useRef<HTMLSpanElement>(null);
+  const pointProbe = useRef<HTMLSpanElement>(null);
+  const measureBarLabel = useLabelMeasure(barProbe);
+  const measurePointLabel = useLabelMeasure(pointProbe);
   const viewport = useRef<HTMLDivElement>(null);
+  const todayRule = useRef<HTMLLIElement>(null);
   const fillWidth = useCanvasFillWidth(viewport);
   const layout = useMemo(
     () =>
@@ -114,11 +141,10 @@ export function TimelineWorkspace({
                 {
                   band: item.isChapter ? "chapters" : "first-times",
                   id: item.id,
-                  labelWidthPixels:
-                    measureLabel(item.title) +
-                    (item.isChapter && item.isFirstTime
-                      ? starAllowancePixels
-                      : 0),
+                  labelWidthPixels: item.isChapter
+                    ? measureBarLabel(item.title) +
+                      (item.isFirstTime ? starAllowancePixels : 0)
+                    : measurePointLabel(item.title),
                   shape: item.isChapter ? "bar" : "point",
                   windowEnd: item.windowEnd,
                   windowStart: item.windowStart,
@@ -129,29 +155,97 @@ export function TimelineWorkspace({
         new Date(referenceDate),
         birthDate,
         fillWidth,
+        zoom,
       ),
-    [birthDate, fillWidth, items, measureLabel, referenceDate],
+    [
+      birthDate,
+      fillWidth,
+      items,
+      measureBarLabel,
+      measurePointLabel,
+      referenceDate,
+      zoom,
+    ],
   );
+  // The first measured layout opens at today.
+  const scrollTarget = useRef<ScrollTarget | null>({ type: "today" });
+  const canvas = useRef<HTMLDivElement>(null);
+
+  // Scrolls once a layout is drawn at the measured width: on opening, today in the right
+  // third, and after a zoom, the date that was in view back where it was. Until the first
+  // scroll the canvas is transparent, so the board never flashes the start of life.
+  useLayoutEffect(() => {
+    const element = viewport.current;
+    const target = scrollTarget.current;
+    if (!element || !canvas.current || fillWidth === 0 || !target) return;
+
+    scrollTarget.current = null;
+    element.scrollLeft = targetScrollLeft(target, layout, element.clientWidth);
+    canvas.current.dataset.positioned = "true";
+  }, [fillWidth, layout]);
   const positions = useMemo(
     () => new Map(layout.positions.map((position) => [position.id, position])),
     [layout.positions],
   );
-  const bands: {
-    band: TimelineBand;
-    label: string;
-    members: TimelineItem[];
-  }[] = [
-    { band: "chapters", label: "Chapters", members: chapters },
-    { band: "first-times", label: "First Times", members: firstTimes },
-  ];
-  const gridStyle: GridStyle = {
+  const shownBands = (
+    [
+      { band: "chapters", label: "Chapters", members: chapters },
+      { band: "first-times", label: "First Times", members: firstTimes },
+    ] satisfies {
+      band: TimelineBand;
+      label: string;
+      members: TimelineItem[];
+    }[]
+  ).filter(({ members }) => members.length > 0);
+  const ticks = useMemo(
+    () =>
+      [
+        ...layout.yearMarkers.map((marker) => ({
+          key: `year-${marker.year}`,
+          kind: "year" as const,
+          label: marker.label,
+          leftPercent: marker.leftPercent,
+        })),
+        ...layout.monthMarkers.map((marker) => ({
+          key: `month-${marker.year}-${marker.month}`,
+          kind: "month" as const,
+          label: marker.label,
+          leftPercent: marker.leftPercent,
+        })),
+      ].sort((a, b) => a.leftPercent - b.leftPercent),
+    [layout.monthMarkers, layout.yearMarkers],
+  );
+  const canvasStyle: CanvasStyle = {
     "--timeline-canvas-width": `${layout.canvasWidth}px`,
     "--timeline-today-percent": layout.todayPercent,
   };
-  const now = useMemo(() => new Date(referenceDate), [referenceDate]);
+  // Close to the end of the Timeline, the Today label sits before its line.
+  const todayX = (layout.todayPercent / 100) * layout.canvasWidth;
+  const todayLabelBefore = layout.canvasWidth - todayX < 64;
+  // A tick label that would print under the Today label keeps its line but not its text.
+  const todayLabelStart = todayLabelBefore ? todayX - 56 : todayX + 4;
+  const tickUnderToday = (tick: { kind: string; leftPercent: number }) => {
+    // A tick's label starts 8 px after its line and is about 24 px wide, a year about 32.
+    const start = (tick.leftPercent / 100) * layout.canvasWidth + 8;
+    const end = start + (tick.kind === "year" ? 32 : 24);
+    return start < todayLabelStart + 52 && end > todayLabelStart;
+  };
+  const today = timelineToday(new Date(referenceDate), defaultTimezone);
+  const yearGroups = useMemo(
+    () => timelineYearGroups(items, today),
+    [items, today],
+  );
   const firstTimeCount =
     firstTimes.length + chapters.filter((item) => item.isFirstTime).length;
   const undated = items.filter((item) => !item.windowStart);
+  const startYear = birthDate
+    ? Number(birthDate.slice(0, 4))
+    : items.reduce<number | null>((earliest, item) => {
+        if (!item.windowStart) return earliest;
+        const year = Number(item.windowStart.slice(0, 4));
+        return earliest === null ? year : Math.min(earliest, year);
+      }, null);
+  const offerBirthDate = birthDateAvailable && !birthDate && !loadError;
 
   function startCreation(type: CreationType) {
     setSelection({
@@ -167,45 +261,98 @@ export function TimelineWorkspace({
     setSelection(null);
   }
 
+  function changeZoom(next: TimelineZoom) {
+    const element = viewport.current;
+
+    if (element && element.clientWidth > 0) {
+      // Keep today where it is when it is in view, or else the date in the middle.
+      const start = Date.parse(layout.start);
+      const range = Date.parse(layout.end) - start;
+      const todayX = (layout.todayPercent / 100) * layout.canvasWidth;
+      const todayFraction = (todayX - element.scrollLeft) / element.clientWidth;
+      const fraction =
+        todayFraction >= 0 && todayFraction <= 1 ? todayFraction : 0.5;
+      const x = element.scrollLeft + element.clientWidth * fraction;
+      scrollTarget.current = {
+        fraction,
+        time: start + (x / layout.canvasWidth) * range,
+        type: "date",
+      };
+    }
+
+    setZoom(next);
+  }
+
+  function scrollToToday() {
+    const element = viewport.current;
+    const behavior = prefersReducedMotion() ? "auto" : "smooth";
+
+    if (element && element.clientWidth > 0) {
+      element.scrollTo({
+        behavior,
+        left: todayScrollLeft(layout, element.clientWidth),
+      });
+      return;
+    }
+
+    todayRule.current?.scrollIntoView({ behavior, block: "center" });
+  }
+
   return (
     <PageFrame width="full">
       <PageHeader
         title={<>Timeline</>}
-        action={
-          <Button
-            variant="primary"
-            onClick={() => setSelection({ type: "chooser" })}
-            type="button"
+        meta={
+          <SeparatedList
+            aria-label="Timeline summary"
+            className={styles.summary}
           >
-            <Icon name="plus" />
-            <span>Add to Timeline</span>
-          </Button>
+            <span>{countLabel(chapters.length, "Chapter")}</span>
+            <span>{countLabel(firstTimeCount, "First Time")}</span>
+            {startYear !== null ? <span>{startYear} to today</span> : null}
+            {offerBirthDate ? (
+              <button
+                className={styles.metaAction}
+                onClick={() => setShowBirthDatePrompt(true)}
+                type="button"
+              >
+                Set birth date
+              </button>
+            ) : null}
+          </SeparatedList>
+        }
+        action={
+          loadError ? null : (
+            <>
+              <SegmentedControl
+                className={styles.zoom}
+                label="Zoom"
+                onChange={changeZoom}
+                options={zoomOptions}
+                value={zoom}
+              />
+              {/* With nothing dated, the board already rests on today. */}
+              {layout.positions.length > 0 ? (
+                <Button
+                  onClick={scrollToToday}
+                  type="button"
+                  variant="secondary"
+                >
+                  Today
+                </Button>
+              ) : null}
+              <Button
+                onClick={() => setSelection({ type: "chooser" })}
+                type="button"
+                variant="ghost"
+              >
+                <Icon name="plus" />
+                <span>Add to Timeline</span>
+              </Button>
+            </>
+          )
         }
       />
-      <div className={styles.summary} aria-label="Timeline summary">
-        <SeparatedList>
-          <span>{countLabel(chapters.length, "Chapter")}</span>
-          <span>{countLabel(firstTimeCount, "First Time")}</span>
-          {items.some((item) => item.windowStart) ? (
-            <span>{rangeLabel(layout.start, layout.end)}</span>
-          ) : null}
-        </SeparatedList>
-        {/* Their borders set the buttons apart, so they need no separator. */}
-        <div className={styles.summaryActions}>
-          <ButtonLink href="/reviews" variant="secondary">
-            Year reviews
-          </ButtonLink>
-          {birthDateAvailable && !birthDate && !loadError ? (
-            <Button
-              variant="secondary"
-              onClick={() => setShowBirthDatePrompt(true)}
-              type="button"
-            >
-              Set birth date
-            </Button>
-          ) : null}
-        </div>
-      </div>
 
       {suggestion && !loadError ? (
         <div className={styles.suggestion}>
@@ -220,7 +367,7 @@ export function TimelineWorkspace({
 
       {loadError ? (
         <div className={styles.message} role="alert">
-          <Icon name="clock" size={21} />
+          <Icon name="clock" size={20} />
           <div>
             <strong>Timeline unavailable</strong>
             <p>{loadError}</p>
@@ -230,143 +377,112 @@ export function TimelineWorkspace({
 
       {!loadError ? (
         <>
-          <section
-            className={styles.desktopTimeline}
-            aria-label="Timeline by year"
-          >
-            <div className={styles.timelineHint}>
-              <span>Scroll across years</span>
-              <small>Select anything to open it</small>
-            </div>
+          <section className={styles.board} aria-label="Timeline by year">
             <div
-              className={styles.timelineViewport}
+              className={styles.viewport}
               data-testid="timeline-viewport"
               ref={viewport}
             >
-              <div className={styles.timelineGrid} style={gridStyle}>
+              <div
+                className={styles.canvas}
+                ref={canvas}
+                style={canvasStyle}
+              >
                 <div className={styles.axis} data-testid="timeline-axis">
-                  {layout.yearMarkers.map((marker) => (
+                  {ticks.map((tick) => (
                     <span
                       data-edge={
-                        marker.leftPercent === 0
-                          ? "start"
-                          : marker.leftPercent === 100
-                            ? "end"
-                            : undefined
+                        tick.leftPercent === 100 ? "end" : undefined
                       }
-                      key={marker.year}
-                      style={{ left: `${marker.leftPercent}%` }}
+                      data-hidden={
+                        tickUnderToday(tick) ? "true" : undefined
+                      }
+                      data-tick={tick.kind}
+                      key={tick.key}
+                      style={{ left: `${tick.leftPercent}%` }}
                     >
-                      {marker.label}
+                      {tick.label}
                     </span>
                   ))}
                 </div>
-
-                {items.length === 0 ? (
-                  <div className={styles.band}>
-                    <button
-                      className={styles.emptyTimeline}
-                      onClick={() => setSelection({ type: "chooser" })}
-                      type="button"
-                    >
-                      {emptyLabel}
-                    </button>
+                {/* An empty board keeps its sentence clear of the grid. */}
+                {items.length > 0 ? (
+                  <div aria-hidden="true" className={styles.gridLines}>
+                    {ticks.map((tick) => (
+                      <span
+                        data-tick={tick.kind}
+                        key={tick.key}
+                        style={{ left: `${tick.leftPercent}%` }}
+                      />
+                    ))}
                   </div>
                 ) : null}
-                {bands.map(({ band, label, members }) =>
-                  members.length > 0 ? (
-                    <BandRow
-                      band={band}
-                      items={members}
-                      key={band}
-                      label={label}
-                      layout={layout}
-                      positions={positions}
+
+                {items.length === 0 ? (
+                  <div className={styles.emptyBand}>
+                    <TimelineEmptyState
+                      onAdd={() => setSelection({ type: "chooser" })}
                     />
-                  ) : null,
-                )}
+                  </div>
+                ) : null}
+                {shownBands.map(({ band, label, members }, index) => (
+                  <BandRow
+                    band={band}
+                    items={members}
+                    key={band}
+                    label={label}
+                    last={index === shownBands.length - 1}
+                    layout={layout}
+                    positions={positions}
+                  />
+                ))}
                 <div
                   aria-hidden="true"
                   className={styles.todayLine}
+                  data-label={todayLabelBefore ? "before" : "after"}
                   data-testid="timeline-today"
+                >
+                  <span>Today</span>
+                </div>
+                <span
+                  aria-hidden="true"
+                  className={styles.barProbe}
+                  ref={barProbe}
                 />
                 <span
                   aria-hidden="true"
-                  className={styles.labelProbe}
-                  ref={labelProbe}
+                  className={styles.pointProbe}
+                  ref={pointProbe}
                 />
               </div>
             </div>
-            {undated.length > 0 ? (
-              <section
-                className={styles.undatedItems}
-                aria-label="Without a calendar date"
-              >
-                <h2>Without a calendar date</h2>
-                <p>
-                  These have no calendar date, so they are not placed on the
-                  years above.
-                </p>
-                <div>
-                  {undated.map((item) => (
-                    <Link href={wikiEntryHref(item)} key={item.id}>
-                      {item.title}, {timelineUndatedLabel(item)}
-                    </Link>
-                  ))}
-                </div>
-              </section>
-            ) : null}
           </section>
 
-          <section className={styles.mobileTimeline} aria-label="Timeline list">
+          <section
+            aria-label="Timeline, newest first"
+            className={styles.vertical}
+          >
             {items.length === 0 ? (
-              <p className={styles.mobileEmpty}>{emptyLabel}</p>
-            ) : null}
-            {bands.map(({ band, label, members }) =>
-              members.length > 0 ? (
-                <article className={styles.mobileBand} key={band}>
-                  <header>
-                    <h2>{label}</h2>
-                    <span>{members.length}</span>
-                  </header>
-                  <div
-                    aria-label={label}
-                    className={styles.mobileItems}
-                    role="list"
-                  >
-                    {members.map((item) => {
-                      const duration = timelineItemDurationLabel(item, now);
-                      return (
-                        <Link
-                          href={wikiEntryHref(item)}
-                          key={item.id}
-                          role="listitem"
-                        >
-                          <span
-                            className={
-                              item.isChapter
-                                ? styles.mobileBarMarker
-                                : styles.mobilePointMarker
-                            }
-                          />
-                          <span>
-                            <strong>{item.title}</strong>
-                            <small>
-                              {item.windowStart
-                                ? timelineItemDateLabel(item)
-                                : timelineUndatedLabel(item)}
-                              {duration ? ` · ${duration}` : ""}
-                            </small>
-                          </span>
-                          <Icon name="chevron" size={15} />
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </article>
-              ) : null,
+              <TimelineEmptyState
+                onAdd={() => setSelection({ type: "chooser" })}
+              />
+            ) : (
+              <VerticalTimeline
+                groups={yearGroups}
+                today={today}
+                todayRule={todayRule}
+              />
             )}
           </section>
+
+          {undated.length > 0 ? (
+            <p className={styles.note}>
+              {undated.length === 1
+                ? "1 Entry has no calendar date and is not on the Timeline."
+                : `${undated.length} Entries have no calendar date and are not on the Timeline.`}{" "}
+              <Link href="/library">Find them in Library</Link>
+            </p>
+          ) : null}
         </>
       ) : null}
 
@@ -387,7 +503,7 @@ export function TimelineWorkspace({
         />
       ) : null}
 
-      {birthDateAvailable && showBirthDatePrompt && !birthDate && !loadError ? (
+      {offerBirthDate && showBirthDatePrompt ? (
         <BirthDatePrompt
           maxValue={referenceDate.slice(0, 10)}
           onClose={() => setShowBirthDatePrompt(false)}
@@ -399,6 +515,89 @@ export function TimelineWorkspace({
       ) : null}
     </PageFrame>
   );
+}
+
+function TimelineEmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <EmptyState
+      icon={<Icon name="timeline" />}
+      onClick={onAdd}
+      title={<>Add a Chapter or a First Time to start your Timeline.</>}
+    />
+  );
+}
+
+function VerticalTimeline({
+  groups,
+  today,
+  todayRule,
+}: {
+  groups: TimelineYearGroup[];
+  today: string;
+  todayRule: RefObject<HTMLLIElement | null>;
+}) {
+  const todayLabel = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  }).format(new Date(`${today}T12:00:00Z`));
+
+  return (
+    <div className={styles.rail}>
+      {groups.map((group) => {
+        const rows = group.items.map((item) => (
+          <li key={item.id}>
+            <Link className={styles.verticalItem} href={wikiEntryHref(item)}>
+              <span
+                aria-hidden="true"
+                className={item.isChapter ? styles.railBar : styles.railDot}
+                data-ongoing={
+                  item.isChapter && item.windowEnd === null ? "true" : undefined
+                }
+              />
+              <span className={styles.verticalCopy}>
+                <VerticalDate item={item} year={group.year} />
+                <strong>
+                  {item.isChapter && item.isFirstTime ? (
+                    <span className={styles.firstTimeStar}>
+                      <Icon name="star" size={12} />
+                    </span>
+                  ) : null}
+                  {item.title}
+                </strong>
+              </span>
+            </Link>
+          </li>
+        ));
+
+        if (group.todayIndex !== null) {
+          rows.splice(
+            group.todayIndex,
+            0,
+            <li className={styles.todayRule} key="today" ref={todayRule}>
+              <span>Today · {todayLabel}</span>
+            </li>,
+          );
+        }
+
+        return (
+          <section
+            aria-labelledby={`timeline-year-${group.year}`}
+            className={styles.year}
+            key={group.year}
+          >
+            <h2 id={`timeline-year-${group.year}`}>{group.year}</h2>
+            <ol>{rows}</ol>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
+function VerticalDate({ item, year }: { item: TimelineItem; year: number }) {
+  const label = timelineRowDateLabel(item, year);
+  return label ? <small>{label}</small> : null;
 }
 
 function EditorLoading() {
@@ -565,87 +764,102 @@ function BandRow({
   band,
   items,
   label,
+  last,
   layout,
   positions,
 }: {
   band: TimelineBand;
   items: TimelineItem[];
   label: string;
-  layout: ReturnType<typeof createTimelineLayout>;
-  positions: Map<
-    string,
-    ReturnType<typeof createTimelineLayout>["positions"][number]
-  >;
+  last: boolean;
+  layout: TimelineLayout;
+  positions: Map<string, TimelineLayout["positions"][number]>;
 }) {
   const rowCount = layout.rowCountByBand[band] ?? 1;
-  const rowHeight = Math.max(70, rowCount * 49 + 20);
 
   return (
-    <ul
-      aria-label={label}
+    <div
       className={styles.band}
-      data-testid="timeline-band"
-      style={{ height: rowHeight }}
+      data-band={band}
+      data-last={last ? "true" : undefined}
+      style={{ "--band-rows": rowCount } as CSSProperties}
     >
-      {layout.yearMarkers.map((marker) => (
-        <li
-          aria-hidden="true"
-          className={styles.yearLine}
-          key={marker.year}
-          style={{ left: `${marker.leftPercent}%` }}
-        />
-      ))}
-      {items.map((item) => {
-        const position = positions.get(item.id);
+      <h2 className={styles.bandLabel}>{label}</h2>
+      <ul aria-label={label} className={styles.bandItems} data-testid="timeline-band">
+        {items.map((item) => {
+          const position = positions.get(item.id);
 
-        if (!position) {
-          return null;
-        }
+          if (!position) {
+            return null;
+          }
 
-        const itemStyle: PositionedStyle = {
-          "--item-bar-width": `${position.barWidthPixels}px`,
-          "--item-label-width": `${position.labelWidthPixels}px`,
-          "--item-left": `${position.leftPercent}%`,
-          "--item-offset": `${position.offsetPixels}px`,
-          "--item-row": position.row,
-          "--item-width": `${position.widthPixels}px`,
-        };
-        const dateLabel = timelineItemDateLabel(item);
+          const itemStyle: PositionedStyle = {
+            "--item-bar-width": `${position.barWidthPixels}px`,
+            "--item-label-width": `${position.labelWidthPixels}px`,
+            "--item-left": `${position.leftPercent}%`,
+            "--item-offset": `${position.offsetPixels}px`,
+            "--item-row": position.row,
+            "--item-width": `${position.widthPixels}px`,
+          };
+          const dateLabel = timelineItemDateLabel(item);
 
-        return (
-          <li
-            className={item.isChapter ? styles.barItem : styles.pointItem}
-            data-label={position.labelPlacement}
-            data-ongoing={
-              item.isChapter && item.windowEnd === null ? "true" : undefined
-            }
-            key={item.id}
-            style={itemStyle}
-          >
-            <Link
-              aria-label={timelineItemAccessibleName(item)}
-              href={wikiEntryHref(item)}
-              title={`${item.title} · ${dateLabel}`}
+          return (
+            <li
+              className={item.isChapter ? styles.barItem : styles.pointItem}
+              data-label={position.labelPlacement}
+              data-ongoing={
+                item.isChapter && item.windowEnd === null ? "true" : undefined
+              }
+              key={item.id}
+              style={itemStyle}
             >
-              {!item.isChapter ? (
-                <span className={styles.pointDot} />
-              ) : position.labelPlacement === "inside" ? null : (
-                <span className={styles.bar} />
-              )}
-              <span className={styles.itemTitle}>
-                {item.isChapter && item.isFirstTime ? (
-                  <span className={styles.firstTimeStar}>
-                    <Icon name="star" size={12} />
-                  </span>
-                ) : null}
-                {item.title}
-              </span>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+              <Link
+                aria-label={timelineItemAccessibleName(item)}
+                href={wikiEntryHref(item)}
+                title={`${item.title} · ${dateLabel}`}
+              >
+                {!item.isChapter ? (
+                  <span className={styles.pointDot} />
+                ) : position.labelPlacement === "inside" ? null : (
+                  <span className={styles.bar} />
+                )}
+                <span className={styles.itemTitle}>
+                  {item.isChapter && item.isFirstTime ? (
+                    <span className={styles.firstTimeStar}>
+                      <Icon name="star" size={12} />
+                    </span>
+                  ) : null}
+                  <span className={styles.itemTitleText}>{item.title}</span>
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
+}
+
+// Where the view scrolls to show a target in the given layout.
+function targetScrollLeft(
+  target: ScrollTarget,
+  layout: TimelineLayout,
+  visibleWidth: number,
+) {
+  if (target.type === "today") return todayScrollLeft(layout, visibleWidth);
+  const start = Date.parse(layout.start);
+  const range = Date.parse(layout.end) - start;
+  const x = ((target.time - start) / range) * layout.canvasWidth;
+  return Math.max(0, x - visibleWidth * target.fraction);
+}
+
+function todayScrollLeft(layout: TimelineLayout, visibleWidth: number) {
+  const todayX = (layout.todayPercent / 100) * layout.canvasWidth;
+  return Math.max(0, todayX - visibleWidth * todayAnchor);
+}
+
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 // Measures titles in the band item font once it has loaded, so the layout knows which
@@ -684,30 +898,21 @@ function useLabelMeasure(probe: RefObject<HTMLSpanElement | null>) {
   return measure;
 }
 
-// Tracks the viewport width, so an empty or short Timeline fills its card. The server and
-// first render use the minimum canvas, which keeps hydration stable.
+// Tracks the viewport width, so an empty or short Timeline fills its board. The server and
+// first render use the minimum canvas, which keeps hydration stable; the first measure runs
+// before paint, so the measured layout is the first one seen.
 function useCanvasFillWidth(viewport: RefObject<HTMLDivElement | null>) {
   const [width, setWidth] = useState(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = viewport.current;
     if (!element) return;
-    const observer = new ResizeObserver(() =>
-      setWidth(element.getBoundingClientRect().width),
-    );
+    const measure = () => setWidth(element.getBoundingClientRect().width);
+    measure();
+    const observer = new ResizeObserver(measure);
     observer.observe(element);
     return () => observer.disconnect();
   }, [viewport]);
 
   return width;
-}
-
-const emptyLabel = "Add a Chapter or a First Time to start your Timeline.";
-
-function rangeLabel(start: string, end: string) {
-  return `${new Date(start).getUTCFullYear()} to ${new Date(end).getUTCFullYear()}`;
-}
-
-function countLabel(count: number, noun: string) {
-  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }

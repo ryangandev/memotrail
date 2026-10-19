@@ -3,23 +3,21 @@ import { EmptyState } from "@/components/empty-state";
 import { FocusedViewLayout } from "@/components/focused-view-layout";
 import { SeparatedList } from "@/components/separated-list";
 import { Button } from "@/components/button";
-import { Badge } from "@/components/badge";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import styles from "@/components/first-times-workspace.module.css";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { RecordCardMap } from "@/components/record-card-map";
-import {
-  RecordCard,
-  RecordCardBody,
-  RecordCardVisual,
-} from "@/components/record-card";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
-import { occurrenceLabel, occurrenceSpanLabel } from "@/lib/data/occurrence";
-import { locationDisplayLabel } from "@/lib/locations/location";
+import {
+  firstTimeExcerpt,
+  firstTimePhotos,
+  firstTimeRowDateLabel,
+  firstTimeRowDetails,
+} from "@/lib/data/first-times-presentation";
 import { countLabel } from "@/lib/count-label";
 
 const NewEntryDialog = dynamic(() =>
@@ -42,10 +40,9 @@ export function FirstTimesWorkspace({
   ownerId: string;
   tagOptions: string[];
 }) {
-  const router = useRouter();
   const [adding, setAdding] = useState(false);
   const photoCount = entries.reduce(
-    (count, entry) => count + originalAttachments(entry).length,
+    (count, entry) => count + firstTimePhotos(entry).length,
     0,
   );
 
@@ -67,26 +64,19 @@ export function FirstTimesWorkspace({
       title={<>First Times</>}
     >
       {loadError ? (
-        <div className={styles.message} role="alert">
-          <Icon name="star" size={22} />
-          <div>
-            <strong>First Times unavailable</strong>
-            <p>{loadError}</p>
-          </div>
-        </div>
+        <p className={styles.message} role="alert">
+          {loadError}
+        </p>
       ) : null}
 
       {!loadError && entries.length === 0 ? (
         <EmptyState
-          title={<>Start with a first worth remembering</>}
-          icon={
-            <>
-              <Icon name="star" size={24} />
-            </>
-          }
+          title={<>Add the first time you did something</>}
+          icon={<Icon name="star" size={24} />}
           description={
             <>
-              Only a title is required. Dates, notes, and photos can come later.
+              A first trip, a first job, a first meal for friends. You can also
+              mark any Entry as a First Time.
             </>
           }
           onClick={() => setAdding(true)}
@@ -94,16 +84,11 @@ export function FirstTimesWorkspace({
       ) : null}
 
       {!loadError && entries.length > 0 ? (
-        <section className={styles.firstGrid} aria-label="First Times archive">
+        <ul aria-label="First Times" className={styles.rows}>
           {entries.map((entry, index) => (
-            <FirstTimeCard
-              entry={entry}
-              index={index}
-              key={entry.id}
-              onSelect={() => router.push(`/items/${entry.id}`)}
-            />
+            <FirstTimeRow entry={entry} eager={index < 8} key={entry.id} />
           ))}
-        </section>
+        </ul>
       ) : null}
 
       {adding ? (
@@ -119,111 +104,91 @@ export function FirstTimesWorkspace({
   );
 }
 
-function FirstTimeCard({
+/**
+ * One First Time: its date, its title, a line of what happened, where and how it is
+ * organized, and its first photo or a map of where it happened.
+ */
+function FirstTimeRow({
+  eager,
   entry,
-  index,
-  onSelect,
 }: {
+  eager: boolean;
   entry: FirstTimeEntry;
-  index: number;
-  onSelect: () => void;
 }) {
-  const photos = originalAttachments(entry);
-  const cover = photos[0];
+  const date = firstTimeRowDateLabel(entry);
+  const excerpt = firstTimeExcerpt(entry.body);
+  const details = firstTimeRowDetails(entry);
+  const cover = firstTimePhotos(entry)[0];
+  const mappable =
+    typeof entry.location?.latitude === "number" &&
+    typeof entry.location?.longitude === "number";
 
   return (
-    <RecordCard
-      ariaLabel={`${entry.title}, ${firstTimeDateLabel(entry)}`}
-      className={styles.firstCard}
-      onClick={onSelect}
-    >
-      {cover ? (
-        <RecordCardVisual className={styles.coverPhoto}>
-          {cover.imageUrl ? (
-            <ProgressiveImage alt="" src={cover.imageUrl} />
-          ) : (
-            <span className={styles.coverFallback}>
-              <Icon name="photo" size={22} />
-              Private photo
-            </span>
-          )}
-          {photos.length > 1 ? (
-            <Badge
-              className={styles.photoBadge}
-              size="micro"
-              tone="inverse"
-              uppercase
-            >
-              {photos.length} photos
-            </Badge>
+    <li className={styles.item}>
+      <Link
+        aria-label={[entry.title, date, entry.isChapter ? "Chapter" : null]
+          .filter(Boolean)
+          .join(", ")}
+        className={styles.row}
+        data-thumbnail={cover || mappable ? "" : undefined}
+        data-untitled={entry.untitled ? "" : undefined}
+        href={`/items/${entry.id}`}
+      >
+        <div className={styles.date}>
+          {date ? (
+            <time dateTime={entry.occurredStart ?? undefined}>{date}</time>
           ) : null}
-        </RecordCardVisual>
-      ) : (
-        <RecordCardVisual className={styles.coverPhoto}>
-          <RecordCardMap
-            eager={index < 4}
-            fallback={
-              <span className={styles.cardIndexFallback}>
-                {String(index + 1).padStart(2, "0")}
-              </span>
-            }
-            latitude={entry.location?.latitude}
-            longitude={entry.location?.longitude}
-          />
-        </RecordCardVisual>
-      )}
-
-      <RecordCardBody className={styles.cardBody}>
-        <time dateTime={entry.occurredStart ?? undefined}>
-          {firstTimeDateLabel(entry)}
-        </time>
-        <h2>{entry.title}</h2>
-        {entry.location ? (
-          <p className={styles.locationLine}>
-            <Icon name="map" size={14} />
-            {locationDisplayLabel(entry.location)}
-          </p>
+        </div>
+        <div className={styles.body}>
+          <h2 className={styles.title}>
+            <span className={styles.titleText}>{entry.title}</span>
+            {entry.isChapter ? <ChapterMark /> : null}
+          </h2>
+          {excerpt ? <p className={styles.excerpt}>{excerpt}</p> : null}
+          {details.length > 0 ? (
+            <p className={styles.details}>{details.join(" · ")}</p>
+          ) : null}
+        </div>
+        {cover ? (
+          <span className={styles.thumbnail}>
+            <ProgressiveImage
+              alt=""
+              fallback={<Icon name="photo" size={18} />}
+              loading={eager ? "eager" : "lazy"}
+              src={cover.imageUrl ?? undefined}
+            />
+          </span>
+        ) : mappable ? (
+          <span className={styles.thumbnail}>
+            <RecordCardMap
+              eager={eager}
+              fallback={<Icon name="map" size={18} />}
+              latitude={entry.location?.latitude}
+              longitude={entry.location?.longitude}
+            />
+          </span>
         ) : null}
-        {entry.body ? <p>{truncate(entry.body, 180)}</p> : null}
-        <footer>
-          <div>
-            {entry.tagNames.slice(0, 2).map((name) => (
-              <Badge
-                key={`tag:${name.toLocaleLowerCase()}`}
-                size="micro"
-                tone="neutral"
-              >
-                #{name}
-              </Badge>
-            ))}
-          </div>
-          <Icon name="chevron" size={15} />
-        </footer>
-      </RecordCardBody>
-    </RecordCard>
+      </Link>
+    </li>
   );
 }
 
-function originalAttachments(entry: FirstTimeEntry) {
-  return entry.attachments.filter(
-    (attachment) => attachment.variant === "original",
+/** The green mark of a First Time that is also a Chapter. */
+function ChapterMark() {
+  return (
+    <svg
+      aria-label="Chapter"
+      className={styles.mark}
+      role="img"
+      viewBox="0 0 24 24"
+    >
+      <path
+        d="M5 6v12M19 6v12M5 12h14"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeWidth="1.8"
+      />
+    </svg>
   );
-}
-
-// A First Time that is also a Chapter spans the time it covered.
-function firstTimeDateLabel(entry: FirstTimeEntry) {
-  const occurrence = {
-    datePrecision: entry.datePrecision,
-    occurredAt: entry.occurredStart,
-    occurredEnd: entry.occurredEnd,
-    occurredLabel: entry.occurredLabel,
-    occurredTimezone: entry.occurredTimezone ?? "UTC",
-  };
-  return entry.isChapter
-    ? occurrenceSpanLabel(occurrence)
-    : occurrenceLabel(occurrence);
-}
-
-function truncate(value: string, limit: number) {
-  return value.length > limit ? `${value.slice(0, limit).trimEnd()}…` : value;
 }
