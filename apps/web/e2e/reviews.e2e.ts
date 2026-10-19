@@ -235,11 +235,16 @@ async function makeFirstReview(page: Page, panel: Locator) {
 
 /** Makes a review once reviews are on, retrying a click made before hydration. */
 async function makeReview(page: Page, panel: Locator) {
-  const reading = panel.getByRole("status");
+  // The scripted provider can finish before the progress line is seen, so a
+  // finished review also shows the click was taken.
+  const started = panel
+    .getByRole("status")
+    .or(panel.getByText("Written by AI"))
+    .first();
   await expect(async () => {
-    if (!(await reading.isVisible()))
+    if (!(await started.isVisible()))
       await panel.getByRole("button", { name: "Make a review" }).click();
-    await expect(reading).toBeVisible({ timeout: 2_000 });
+    await expect(started).toBeVisible({ timeout: 2_000 });
   }).toPass(firstCompile);
 }
 
