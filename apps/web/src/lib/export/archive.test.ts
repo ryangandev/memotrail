@@ -81,6 +81,25 @@ describe("complete ZIP streaming", () => {
     expect(hasCompleteExport(data)).toBe(true);
     expect(f.rpc.mock.calls.at(-1)?.[1].p_after).toBe(2);
   });
+  it("lists a readable Entries table and no Home, Vehicle, or milestone tables", async () => {
+    const f = fixture();
+    const data = Buffer.from(
+      await new Response(
+        createExportArchive(
+          f.client,
+          owner,
+          f.snapshot,
+          new AbortController().signal,
+        ),
+      ).arrayBuffer(),
+    );
+    const names = [...data.toString("latin1").matchAll(/(?:tables|data)\/[a-z_]+\.(?:csv|json)/g)].map(
+      (match) => match[0],
+    );
+    expect(names).toContain("tables/entries.csv");
+    expect(names).toContain("data/entries.json");
+    expect(names.join(" ")).not.toMatch(/homes|vehicles|milestones/);
+  });
   it.each([
     { ...media, available: false },
     { ...media, object_path: "other-owner/photo.png" },

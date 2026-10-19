@@ -5,6 +5,8 @@ import {
   appendExportTail,
   csvCell,
   entryMarkdown,
+  entryTableHeader,
+  entryTableLine,
   hasCompleteExport,
   mediaArchivePath,
   parseExportAction,
@@ -53,6 +55,47 @@ describe("portable export contracts", () => {
     expect(result).toContain("occurred_start: null");
     expect(result).toContain('title: "\\"\\n---\\n../title"');
     expect(result.endsWith(body + "\n")).toBe(true);
+  });
+  it("records the Chapter and First Time marks in the Markdown frontmatter", () => {
+    const result = entryMarkdown({
+      id,
+      title: "Living in Portland",
+      body: "Moved in March.",
+      item_kind: "entry",
+      item_subtype: "chapter",
+      is_first_time: true,
+      date_precision: "month",
+    });
+    const lines = result.split("\n");
+    expect(lines).toContain('item_subtype: "chapter"');
+    expect(lines).toContain("is_first_time: true");
+    expect(lines.indexOf("is_first_time: true")).toBe(
+      lines.indexOf('item_subtype: "chapter"') + 1,
+    );
+  });
+  it("writes a readable Entries table with the marks and no writing", () => {
+    expect(entryTableHeader()).toBe(
+      '"id","title","item_subtype","is_first_time","date_precision","occurred_start","occurred_end","occurred_label","occurred_timezone","created_at","updated_at","deleted_at"\r\n',
+    );
+    const line = entryTableLine({
+      id,
+      title: "=HYPERLINK(1)",
+      body: "Private writing stays in entries/*.md",
+      item_subtype: "chapter",
+      is_first_time: false,
+      date_precision: "month",
+      occurred_start: "2019-03-01T12:00:00Z",
+      occurred_end: null,
+      occurred_label: null,
+      occurred_timezone: "UTC",
+      created_at: "2026-09-12T00:00:00Z",
+      updated_at: "2026-09-12T00:00:00Z",
+      deleted_at: null,
+    });
+    expect(line).toContain(`"'=HYPERLINK(1)","chapter","false","month"`);
+    expect(line).not.toContain("Private writing");
+    expect(line.endsWith('"\r\n')).toBe(true);
+    expect(line.split(",")).toHaveLength(12);
   });
   it("quotes CSV safely without changing canonical values", () => {
     expect(csvCell('中文,"hello"\nnext')).toBe('"中文,""hello""\nnext"');

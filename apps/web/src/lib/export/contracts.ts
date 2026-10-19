@@ -80,12 +80,35 @@ export function csvCell(value: unknown) {
     text = "'" + text;
   return `"${text.replaceAll('"', '""')}"`;
 }
+// The readable Entries table leaves out the writing, which entries/*.md already holds. A Chapter
+// is an Entry whose item_subtype is chapter, and a First Time is an Entry marked is_first_time.
+export const ENTRY_TABLE_COLUMNS = [
+  "id",
+  "title",
+  "item_subtype",
+  "is_first_time",
+  "date_precision",
+  "occurred_start",
+  "occurred_end",
+  "occurred_label",
+  "occurred_timezone",
+  "created_at",
+  "updated_at",
+  "deleted_at",
+] as const;
+export function entryTableHeader() {
+  return ENTRY_TABLE_COLUMNS.map(csvCell).join(",") + "\r\n";
+}
+export function entryTableLine(entry: Record<string, unknown>) {
+  return ENTRY_TABLE_COLUMNS.map((key) => csvCell(entry[key])).join(",") + "\r\n";
+}
 export function entryMarkdown(entry: Record<string, unknown>) {
   const fields = [
     "id",
     "title",
     "item_kind",
     "item_subtype",
+    "is_first_time",
     "date_precision",
     "occurred_start",
     "occurred_end",

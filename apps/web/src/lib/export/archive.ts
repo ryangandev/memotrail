@@ -6,6 +6,8 @@ import {
   EXPORT_COMPLETE,
   csvCell,
   entryMarkdown,
+  entryTableHeader,
+  entryTableLine,
   isUUID,
   mediaArchivePath,
   type ExportSnapshot,
@@ -148,6 +150,12 @@ async function* csvRows(rows: AsyncIterable<Row>) {
   }
   if (!fields) yield '"id"\r\n';
 }
+// Entries, with their Chapter and First Time marks, as a readable table in a fixed column order.
+async function* entryTableRows(rows: AsyncIterable<Row>) {
+  yield "\uFEFF";
+  yield entryTableHeader();
+  for await (const row of rows) yield entryTableLine(row);
+}
 const readme = `# MemoTrail complete export
 
 This is a private, unencrypted copy of your archive. Keep it somewhere safe.
@@ -156,7 +164,8 @@ It includes Trash, histories, relationships, AI conversations and usage, and ori
 manifest.json identifies the immutable snapshot and every canonical dataset.
 data/*.json contains complete canonical rows with stable IDs and relationships, including empty datasets.
 entries/*.md contains original Entry writing with metadata; filenames use stable IDs, not titles.
-tables/*.csv contains readable structured views. Empty tables contain an id header only.
+tables/*.csv contains readable structured views. Empty tables contain a header row only.
+A Chapter is an Entry whose item_subtype is chapter, and a First Time is an Entry whose is_first_time is true.
 CSV string cells that could run spreadsheet formulas are prefixed with an apostrophe. JSON remains unchanged.
 media/* contains all registered attachment variants, including originals, named by attachment ID and variant.
 checksums.json maps each media file to its storage identity, byte count, and SHA-256 digest.
@@ -285,10 +294,15 @@ export function createExportArchive(
         `data/${name}.json`,
         jsonRows(datasetRows(client, snapshot, name, signal)),
       );
-      if (["homes", "vehicles", "locations", "milestones"].includes(name))
+      if (name === "locations")
         await add(
           `tables/${name}.csv`,
           csvRows(datasetRows(client, snapshot, name, signal)),
+        );
+      if (name === "entries")
+        await add(
+          "tables/entries.csv",
+          entryTableRows(datasetRows(client, snapshot, name, signal)),
         );
     }
     for await (const entry of datasetRows(
