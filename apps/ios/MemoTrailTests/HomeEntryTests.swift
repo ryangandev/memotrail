@@ -199,7 +199,16 @@ final class HomeEntryTests: XCTestCase {
       WorkspaceRoute.allCases.map(\.title), ["First Times", "Tags", "Trash", "Settings"])
   }
 
-  private var decoder: JSONDecoder { JSONDecoder() }
+  /// The first decoded row. Decoding errors are thrown as they are, not recorded as failures,
+  /// so a test can expect them.
+  private func first<Row: Decodable>(_ type: Row.Type, from rows: [[String: Any]]) throws -> Row {
+    let data = try JSONSerialization.data(withJSONObject: rows)
+    guard let row = try JSONDecoder().decode([Row].self, from: data).first else {
+      throw DecodingError.valueNotFound(
+        Row.self, .init(codingPath: [], debugDescription: "Expected one row."))
+    }
+    return row
+  }
 
   private func decodeSnapshot(
     entryCount: Any = 4,
@@ -262,8 +271,7 @@ final class HomeEntryTests: XCTestCase {
         ],
       ]
     ]
-    let data = try JSONSerialization.data(withJSONObject: object)
-    return try XCTUnwrap(decoder.decode([HomeSnapshot].self, from: data).first)
+    return try first(HomeSnapshot.self, from: object)
   }
 
   private func decodeMemory(
@@ -303,7 +311,6 @@ final class HomeEntryTests: XCTestCase {
         ],
       ]
     ]
-    let data = try JSONSerialization.data(withJSONObject: object)
-    return try XCTUnwrap(decoder.decode([HomeResurfacedMemory].self, from: data).first)
+    return try first(HomeResurfacedMemory.self, from: object)
   }
 }
