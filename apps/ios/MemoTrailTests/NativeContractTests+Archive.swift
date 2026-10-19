@@ -4,8 +4,7 @@ import XCTest
 
 @testable import MemoTrail
 
-// Settings and Trash against the local stack. Carried over for P8 (Settings, Trash, and
-// Export), which owns and verifies them.
+// Tags, Settings, and Trash against the local stack.
 extension NativeContractTests {
   func testSettingsSaveAndClearTheProfileLikeWeb() async throws {
     let (client, ownerID) = try await client()
@@ -130,5 +129,105 @@ extension NativeContractTests {
       "pending_media_purge_paths", params: MediaPurge.Request(limit: MediaPurge.batchSize)
     ).execute().value
     XCTAssertEqual(pending, [])
+  }
+
+  func testTrashShowsDatesInTheProfileZoneAndKnowsWhetherReviewsExist() async throws {
+    let (client, ownerID) = try await client()
+    let settings = SettingsController(client: client, ownerID: ownerID)
+    let saved = await settings.saveTimezone("Asia/Tokyo")
+    XCTAssertTrue(saved.isSaved)
+    let trash = TrashController(client: client, ownerID: ownerID)
+    await trash.load()
+    XCTAssertEqual(trash.timezone, "Asia/Tokyo")
+    XCTAssertNil(trash.loadErrorMessage)
+    // A new account has no Reviews or Chapter suggestions for Delete forever to mention.
+    XCTAssertFalse(trash.reviewsExist)
+    let restored = await settings.saveTimezone("UTC")
+    XCTAssertTrue(restored.isSaved)
+  }
+
+  func testTagsRenameMergeAndDeleteOnlyUnusedTags() async throws {
+    let (client, ownerID) = try await client()
+    let marker = UUID().uuidString.prefix(8).lowercased()
+    let actions = OrganizationActions(client: client, ownerID: ownerID)
+    let api = EntryAPI(client: client, ownerID: ownerID)
+    let taken = "This name already exists. Choose a different name; nothing was merged or overwritten."
+    func saveEntry(_ body: String, tags: [String]) async throws {
+      _ = try await api.save(
+        SaveEntryParameters(
+          entryID: UUID(), expectedRevision: nil, title: nil, body: body, richText: nil,
+          occurrence: EntryOccurrence(precision: .unknown, timezone: "UTC"), tagNames: tags,
+          location: nil, marks: .none))
+    }
+    func tag(_ name: String) async throws -> TagItem {
+      let matches = try await actions.load(query: name)
+      return try XCTUnwrap(matches.first { $0.name == name }, name)
+    }
+
+    // Two used tags come from Entries; a third is created on its own and starts unused.
+    let renaming = "renaming \(marker)"
+    let keeping = "keeping \(marker)"
+    let spare = "spare \(marker)"
+    for index in 1...6 { try await saveEntry("Keep \(index) \(marker)", tags: [keeping]) }
+    try await saveEntry("Rename me \(marker)", tags: [renaming])
+    let created = await actions.save(TagSaveRequest(name: spare, id: nil, expectedRevision: nil))
+    XCTAssertNil(created)
+    let invalid = await actions.save(TagSaveRequest(name: "  ", id: nil, expectedRevision: nil))
+    XCTAssertEqual(invalid, TagSaveRequest.invalidMessage)
+    let duplicate = await actions.save(TagSaveRequest(name: spare, id: nil, expectedRevision: nil))
+    XCTAssertEqual(duplicate, taken)
+
+    // Rename keeps the assignments; a stale revision and a taken name change nothing.
+    let source = try await tag(renaming)
+    XCTAssertEqual(source.entryCount, 1)
+    let renamed = "renamed \(marker)"
+    let clash = await actions.save(
+      TagSaveRequest(name: keeping, id: source.id, expectedRevision: source.revision))
+    XCTAssertEqual(clash, taken)
+    let renameResult = await actions.save(
+      TagSaveRequest(name: renamed, id: source.id, expectedRevision: source.revision))
+    XCTAssertNil(renameResult)
+    let stale = await actions.save(
+      TagSaveRequest(name: "stale \(marker)", id: source.id, expectedRevision: source.revision))
+    XCTAssertEqual(stale, "This tag changed on another device. Refresh before editing again.")
+    let afterRename = try await tag(renamed)
+    XCTAssertEqual(afterRename.id, source.id)
+    XCTAssertEqual(afterRename.entryCount, 1)
+
+    // The tag editor lists up to five of a tag's Entries.
+    guard case .success(let previews) = await actions.tagEntryPreviews(keeping) else {
+      return XCTFail("The first Entries using a tag should load.")
+    }
+    XCTAssertEqual(previews.count, 5)
+    XCTAssertTrue(previews.allSatisfy { $0.tagNames.contains(keeping) })
+
+    // Merging moves every assignment to the destination and removes the source.
+    let destination = try await tag(keeping)
+    XCTAssertEqual(destination.entryCount, 6)
+    let intoItself = await actions.mergeTags(destination, into: destination)
+    XCTAssertEqual(intoItself, "Choose a different destination tag.")
+    let merged = await actions.mergeTags(afterRename, into: destination)
+    XCTAssertNil(merged)
+    let afterMerge = try await tag(keeping)
+    XCTAssertEqual(afterMerge.entryCount, 7)
+    let removed = try await actions.load(query: renamed)
+    XCTAssertTrue(removed.isEmpty)
+    let again = await actions.mergeTags(afterRename, into: destination)
+    XCTAssertEqual(again, "One of these tags changed on another device. Refresh before merging.")
+
+    // Only an unused tag can be deleted.
+    let refused = await actions.deleteUnusedTag(afterMerge)
+    XCTAssertEqual(
+      refused,
+      "This tag is still used by an Entry or changed elsewhere. Merge it or remove it from those Entries first."
+    )
+    let stillUsed = try await tag(keeping)
+    XCTAssertEqual(stillUsed.entryCount, 7)
+    let unused = try await tag(spare)
+    XCTAssertEqual(unused.entryCount, 0)
+    let deleted = await actions.deleteUnusedTag(unused)
+    XCTAssertNil(deleted)
+    let gone = try await actions.load(query: spare)
+    XCTAssertTrue(gone.isEmpty)
   }
 }

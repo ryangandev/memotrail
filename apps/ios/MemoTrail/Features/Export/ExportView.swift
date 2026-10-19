@@ -23,15 +23,17 @@ struct ExportSnapshot: Decodable, Identifiable, Sendable {
   var filename: String {
     "MemoTrail-\(capturedAt.prefix(10))-\(id.uuidString.lowercased().prefix(8)).zip"
   }
-  static func dateLabel(_ value: String) -> String {
-    let parser = ISO8601DateFormatter()
-    parser.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-    var date = parser.date(from: value)
-    if date == nil {
-      parser.formatOptions = [.withInternetDateTime]
-      date = parser.date(from: value)
-    }
-    return date?.formatted(date: .abbreviated, time: .shortened) ?? value
+  /// Web `exportTime`: en-US "MMM d, yyyy, h:mm a" in the profile time zone, UTC when it is not
+  /// valid.
+  static func timeLabel(_ value: String, timezone: String) -> String {
+    guard let date = EntryTimestamp.date(from: value) else { return value }
+    let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone =
+      EntryOccurrence.validTimezone(timezone).flatMap(TimeZone.init(identifier:)) ?? .gmt
+    formatter.dateFormat = "MMM d, yyyy, h:mm a"
+    return formatter.string(from: date)
   }
 }
 struct ExportInput: Encodable, Sendable {
@@ -176,14 +178,21 @@ enum ExportAPI {
   }
 }
 
-/// Web `/settings/export`: what the ZIP holds, preparing a snapshot, and each snapshot's download
-/// and discard. Downloads stream to disk, then save or share through the system sheet.
+/// Web `/settings/export`: one Export everything action that prepares a consistent copy and
+/// downloads it, then the recent exports that can be downloaded again or discarded. Downloads
+/// stream to disk, then save or share through the system sheet.
 struct ExportView: View {
+  /// Keep in step with the server's limit on unexpired exports.
+  nonisolated static let exportLimit = 2
+
+  private enum Phase { case preparing, downloading }
+
   let client: SupabaseClient
   let ownerID: UUID
   @State private var snapshots: [ExportSnapshot] = []
+  @State private var timezone = "UTC"
   @State private var busy = false
-  @State private var downloading = false
+  @State private var phase: Phase?
   @State private var message: String?
   @State private var pendingCreate: UUID?
   @State private var discard: ExportSnapshot?
@@ -191,12 +200,13 @@ struct ExportView: View {
   @State private var sharing = false
   @State private var operation: Task<Void, Never>?
 
+  private var isFull: Bool { snapshots.count >= Self.exportLimit }
+
   var body: some View {
     MTPage(width: .compact, spacing: MTSpacing.s5) {
       MTPageHeader(
         eyebrow: "Your archive, to keep", title: "Export archive",
         description: "A portable copy of your story. No AI processing.")
-      // P8: Web's single Export everything flow and Recent exports list.
       ExportCard(title: "Export everything") {
         paragraph(
           "One ZIP with complete JSON, readable Entry Markdown, CSV tables, and your original photos. It includes Trash and AI conversations."
@@ -204,21 +214,30 @@ struct ExportView: View {
         paragraph(
           "The ZIP is not encrypted, so anyone you share it with can read it. Sync every device first; changes still waiting offline are not included."
         )
+        Button(phase == .preparing ? "Preparing export…" : "Export everything") {
+          exportEverything()
+        }
+        .mtButtonStyle(isLoading: phase == .preparing)
+        .disabled(busy || isFull)
+        .accessibilityIdentifier("export-everything")
+        if isFull {
+          Text("Discard a recent export below to make a new one.")
+            .font(MTFont.detail)
+            .foregroundStyle(MTColor.inkMuted)
+        }
       }
-      ExportCard(title: "Prepare a snapshot") {
-        paragraph(
-          "Capture one consistent moment across your devices. Temporary copies retain that content for 24 hours, even if you later edit or delete the originals. Discard a snapshot to remove its copied content sooner."
-        )
-        paragraph(
-          "Keep up to two snapshots. Original media is verified during download; changed or missing files stop the export."
-        )
-        MTFlowLayout(spacing: MTSpacing.s2_5) {
-          Button("Prepare snapshot") { run { await change("create") } }
-            .mtButtonStyle(isLoading: busy && !downloading && pendingCreate != nil)
-            .disabled(busy || snapshots.count >= 2)
-          Button("Refresh") { run { await load() } }
-            .mtButtonStyle(.secondary)
-            .disabled(busy)
+      if let phase {
+        ExportNotice {
+          HStack(spacing: MTSpacing.s3) {
+            ProgressView().tint(MTColor.accent)
+            paragraph(
+              phase == .preparing
+                ? "Preparing a consistent copy of everything…" : "Downloading to disk…")
+          }
+          if phase == .downloading {
+            Button("Cancel download") { operation?.cancel() }
+              .mtButtonStyle(.secondary)
+          }
         }
       }
       if let message {
@@ -226,16 +245,6 @@ struct ExportView: View {
           paragraph(message)
         }
         .accessibilityIdentifier("export-message")
-      }
-      if downloading {
-        ExportNotice {
-          HStack(spacing: MTSpacing.s3) {
-            ProgressView().tint(MTColor.accent)
-            paragraph("Downloading to disk…")
-          }
-          Button("Cancel download") { operation?.cancel() }
-            .mtButtonStyle(.secondary)
-        }
       }
       if file != nil {
         ExportCard(title: "Complete ZIP ready") {
@@ -250,14 +259,15 @@ struct ExportView: View {
           }
         }
       }
-      snapshotList
+      recentExports
       Text(
-        "Downloads stream to disk. If the connection or server time limit interrupts the ZIP, it is not offered as a complete backup. Retry the same snapshot or prepare a new one."
+        "Downloads stream to disk. If the connection or server time limit interrupts the ZIP, it fails explicitly rather than leaving a falsely complete backup."
       )
       .font(MTFont.detail)
       .foregroundStyle(MTColor.inkMuted)
       .mtLineSpacing(MTLineHeight.relaxed, textStyle: .caption1)
     }
+    .refreshable { await load() }
     .navigationTitle("Export archive")
     .navigationBarTitleDisplayMode(.inline)
     .task { await load() }
@@ -268,51 +278,59 @@ struct ExportView: View {
     .sheet(isPresented: $sharing) { if let file { ExportShareSheet(url: file) } }
   }
 
-  private var snapshotList: some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s4) {
-      Text("Available snapshots")
-        .font(MTFont.panelTitle)
-        .foregroundStyle(MTColor.ink)
-        .accessibilityAddTraits(.isHeader)
-      if snapshots.isEmpty {
-        paragraph("No snapshots yet. Your archive is unchanged.")
-      }
-      ForEach(snapshots) { snapshot in
-        ExportCard(title: ExportSnapshot.dateLabel(snapshot.capturedAt), level: .item) {
-          MTWordFlow(.subheadline) {
-            Text("\(snapshot.rowCount.formatted()) records")
-            MTFlowSeparator()
-            Text("\(snapshot.datasets["entries"] ?? 0) Entries")
-            MTFlowSeparator()
-            Text("\(snapshot.datasets["media_objects"] ?? 0) media files")
-          }
-          .font(MTFont.body)
-          .foregroundStyle(MTColor.inkMuted)
-          .mtLineSpacing(1.65)
-          paragraph("Expires \(ExportSnapshot.dateLabel(snapshot.expiresAt))")
-          MTFlowLayout(spacing: MTSpacing.s2_5) {
-            Button("Download ZIP") { run { await download(snapshot) } }
-              .mtButtonStyle(.secondary)
-              .disabled(busy)
-            Button("Discard snapshot") { discard = snapshot }
-              .mtButtonStyle(.danger)
-              .disabled(busy)
-          }
-          if discard?.id == snapshot.id {
-            // Web's inline confirmation, which keeps the choice beside its snapshot.
-            ExportNotice {
-              paragraph(
-                "Discard this temporary copy? Your original records and downloaded ZIPs will stay unchanged."
-              )
-              MTFlowLayout(spacing: MTSpacing.s2_5) {
-                Button("Confirm discard") {
-                  run { await change("discard", id: snapshot.id) }
-                }
+  /// Web's Recent exports: shown only while an export can still be downloaded again.
+  @ViewBuilder private var recentExports: some View {
+    if !snapshots.isEmpty {
+      VStack(alignment: .leading, spacing: MTSpacing.s4) {
+        VStack(alignment: .leading, spacing: MTSpacing.s2) {
+          Text("Recent exports")
+            .font(MTFont.panelTitle)
+            .foregroundStyle(MTColor.ink)
+            .accessibilityAddTraits(.isHeader)
+          paragraph(
+            "Each export can be downloaded again for 24 hours and keeps the copy it made, even if you later edit or delete records. Discard one to delete its copy sooner."
+          )
+        }
+        ForEach(snapshots) { snapshot in
+          ExportCard(
+            title: ExportSnapshot.timeLabel(snapshot.capturedAt, timezone: timezone),
+            level: .item
+          ) {
+            MTWordFlow(.subheadline) {
+              Text(countLabel(snapshot.rowCount, "record"))
+              MTFlowSeparator()
+              Text(countLabel(snapshot.datasets["entries"] ?? 0, "Entry"))
+              MTFlowSeparator()
+              Text(countLabel(snapshot.datasets["media_objects"] ?? 0, "media file"))
+            }
+            .font(MTFont.body)
+            .foregroundStyle(MTColor.inkMuted)
+            .mtLineSpacing(1.65)
+            paragraph(
+              "Available until \(ExportSnapshot.timeLabel(snapshot.expiresAt, timezone: timezone))"
+            )
+            MTFlowLayout(spacing: MTSpacing.s2_5) {
+              Button("Download again") { downloadAgain(snapshot) }
+                .mtButtonStyle(.secondary)
+                .disabled(busy)
+              Button("Discard") { discard = snapshot }
                 .mtButtonStyle(.danger)
                 .disabled(busy)
-                Button("Keep snapshot") { discard = nil }
-                  .mtButtonStyle(.secondary)
-                  .disabled(busy)
+            }
+            if discard?.id == snapshot.id {
+              // Web's inline confirmation, which keeps the choice beside its export.
+              ExportNotice {
+                paragraph(
+                  "Discard this export? Your records and any ZIP you already downloaded stay unchanged."
+                )
+                MTFlowLayout(spacing: MTSpacing.s2_5) {
+                  Button("Confirm discard") { discardSnapshot(snapshot) }
+                    .mtButtonStyle(.danger)
+                    .disabled(busy)
+                  Button("Keep export") { discard = nil }
+                    .mtButtonStyle(.secondary)
+                    .disabled(busy)
+                }
               }
             }
           }
@@ -330,15 +348,80 @@ struct ExportView: View {
       .frame(maxWidth: .infinity, alignment: .leading)
   }
 
+  /// Runs one action at a time, like Web `run`, and clears its progress when it ends.
   private func run(_ action: @escaping @MainActor () async -> Void) {
     guard !busy else { return }
     busy = true
+    message = nil
     operation = Task {
       await action()
       busy = false
+      phase = nil
       operation = nil
     }
   }
+
+  /// Prepares a consistent copy of everything, then saves it as one ZIP. A retried export reuses
+  /// its id, so a lost answer cannot make a second copy.
+  private func exportEverything() {
+    run {
+      clearFile()
+      let id = pendingCreate ?? UUID()
+      pendingCreate = id
+      phase = .preparing
+      let snapshot: ExportSnapshot
+      do {
+        let result: ExportMutation = try await ExportAPI.post(
+          ExportInput(action: "create", id: id), client: client, ownerID: ownerID)
+        guard let created = result.snapshot else { throw URLError(.badServerResponse) }
+        snapshot = created
+        pendingCreate = nil
+        try Task.checkCancellation()
+        await load()
+      } catch {
+        if let code = (error as NSError).userInfo["serverCode"] as? String,
+          ["expired", "request_unavailable"].contains(code)
+        {
+          pendingCreate = nil
+        }
+        if !Task.isCancelled {
+          message =
+            (error as NSError).domain == "MemoTrail.Export"
+            ? error.localizedDescription : "Could not prepare the export. Try again."
+        }
+        return
+      }
+      await save(snapshot)
+    }
+  }
+
+  private func downloadAgain(_ snapshot: ExportSnapshot) {
+    run {
+      clearFile()
+      await save(snapshot)
+    }
+  }
+
+  private func discardSnapshot(_ snapshot: ExportSnapshot) {
+    run {
+      do {
+        let _: ExportMutation = try await ExportAPI.post(
+          ExportInput(action: "discard", id: snapshot.id), client: client, ownerID: ownerID)
+        try Task.checkCancellation()
+        discard = nil
+        MTToastCenter.shared.success(
+          "Export discarded. Your records and downloaded files are unchanged.")
+        await load()
+      } catch {
+        if !Task.isCancelled {
+          message =
+            (error as NSError).domain == "MemoTrail.Export"
+            ? error.localizedDescription : "Could not discard the export. Try again."
+        }
+      }
+    }
+  }
+
   private func load() async {
     ExportAPI.purgeAbandonedDownloads()
     do {
@@ -346,58 +429,40 @@ struct ExportView: View {
         ExportInput(action: "list"), client: client, ownerID: ownerID)
       try Task.checkCancellation()
       snapshots = result.snapshots
-    } catch { if !Task.isCancelled { message = error.localizedDescription } }
-  }
-  private func change(_ action: String, id: UUID? = nil) async {
-    message = nil
-    do {
-      if action == "create" { if pendingCreate == nil { pendingCreate = UUID() } }
-      let _: ExportMutation = try await ExportAPI.post(
-        ExportInput(action: action, id: action == "create" ? pendingCreate : id), client: client,
-        ownerID: ownerID)
-      if action == "create" { pendingCreate = nil }
-      try Task.checkCancellation()
-      if action == "discard" { discard = nil }
-      MTToastCenter.shared.success(
-        action == "create"
-          ? "Snapshot prepared. Download it on either device within 24 hours."
-          : "Temporary copy discarded. Your records and downloaded files are unchanged.")
-      await load()
+      let profile: ProfileSettings? = try? await client.from("profiles").select("timezone")
+        .eq("user_id", value: ownerID.uuidString).single().execute().value
+      timezone = profile?.timezone ?? "UTC"
     } catch {
-      if let code = (error as NSError).userInfo["serverCode"] as? String,
-        ["expired", "request_unavailable"].contains(code)
-      {
-        pendingCreate = nil
-      }
-      if !Task.isCancelled { message = error.localizedDescription }
+      if !Task.isCancelled { message = "Could not load recent exports. Refresh to retry." }
     }
   }
-  private func download(_ snapshot: ExportSnapshot) async {
-    clearFile()
-    downloading = true
-    message = nil
-    defer { downloading = false }
+
+  /// Streams the ZIP to disk, then offers it to save or share.
+  private func save(_ snapshot: ExportSnapshot) async {
+    phase = .downloading
     do {
       let url = try await ExportAPI.download(snapshot, client: client, ownerID: ownerID)
       if Task.isCancelled {
         ExportAPI.removeDownload(url)
+        message = "Download cancelled. You can download this export again below."
         return
       }
       file = url
-      MTToastCenter.shared.success(
-        "Complete ZIP downloaded. Save or share it before leaving this screen.")
+      MTToastCenter.shared.success("Export ready. Save or share it before leaving this screen.")
     } catch {
       message =
         Task.isCancelled
-        ? "Download cancelled. The snapshot is still available."
-        : "Download did not complete. An original may be missing or changed, or the connection was interrupted. Retry or prepare a new snapshot. No complete ZIP was saved."
+        ? "Download cancelled. You can download this export again below."
+        : "The download did not complete, so no ZIP was saved. An original photo may be missing or changed, or the connection was interrupted. Download it again below, or export again."
     }
   }
+
   private func clearFile() {
     if let file { ExportAPI.removeDownload(file) }
     file = nil
   }
 }
+
 /// Web `export-settings` card: a serif heading over its paragraphs and actions.
 private struct ExportCard<Content: View>: View {
   enum Level { case section, item }

@@ -190,6 +190,63 @@ final class TrashItemTests: XCTestCase {
       "The private photo file and its attachment record will be removed.")
   }
 
+  func testDeleteForeverSaysReviewsGoWithTheEntriesTheyReadOnlyWhenTheyExist() throws {
+    let items = try decodeItems()
+    let sentence = "Reviews that read these Entries are deleted too."
+
+    XCTAssertEqual(
+      items[0].deletionConfirmation(reviewsExist: false),
+      "The Entry, private photos, relationships, and specialized details will be removed. This cannot be undone."
+    )
+    XCTAssertEqual(
+      items[0].deletionConfirmation(reviewsExist: true),
+      "The Entry, private photos, relationships, and specialized details will be removed. \(sentence) This cannot be undone."
+    )
+    // A photo is no Entry, so no Review read it.
+    XCTAssertEqual(
+      items[1].deletionConfirmation(reviewsExist: true),
+      "The private photo file and its attachment record will be removed. This cannot be undone.")
+
+    func settings(_ json: String) throws -> ReviewDeletion {
+      try JSONDecoder().decode(ReviewDeletion.self, from: Data(json.utf8))
+    }
+    XCTAssertFalse(
+      try settings(
+        #"{"reviewsEnabled":true,"reviewCount":0,"pendingSuggestionCount":0,"revision":2}"#
+      ).exist)
+    XCTAssertTrue(
+      try settings(#"{"reviewsEnabled":false,"reviewCount":2,"pendingSuggestionCount":0}"#).exist)
+    XCTAssertTrue(
+      try settings(#"{"reviewCount":0,"pendingSuggestionCount":1}"#).exist)
+    XCTAssertFalse(try settings(#"{"reviewCount":"3","pendingSuggestionCount":null}"#).exist)
+  }
+
+  @MainActor func testEmptyTrashSaysWhenThePersonLeftTrash() async {
+    let targets = (0..<3).map { _ in
+      EmptyTrashTarget(kind: .entry, itemID: UUID(), deletedAt: "2026-09-01T12:00:00Z", revision: 1)
+    }
+    var attempts = 0
+    let task = Task { @MainActor in
+      await EmptyTrashOutcome.run(
+        targets: targets,
+        remove: { _ in
+          attempts += 1
+          if attempts == 2 { withUnsafeCurrentTask { $0?.cancel() } }
+        }, progress: { _ in })
+    }
+    let result = await task.value
+
+    XCTAssertEqual(result, EmptyTrashOutcome(deleted: 2, total: 3, left: true))
+    XCTAssertEqual(
+      result.message,
+      "2 of 3 items confirmed deleted. Stopped because you left Trash. Review Trash before trying again."
+    )
+    XCTAssertEqual(
+      EmptyTrashOutcome(deleted: 1, total: 3, filesRemoved: false, left: true).message,
+      "1 of 3 items confirmed deleted. Stopped because you left Trash. Review Trash before trying again. \(MediaPurge.pendingMessage)"
+    )
+  }
+
   func testTimestampParserAcceptsPostgresPrecisionAndWholeSeconds() {
     XCTAssertNotNil(EntryTimestamp.date(from: "2026-09-02T12:34:56.123456+00:00"))
     XCTAssertNotNil(EntryTimestamp.date(from: "2026-09-02T12:34:56Z"))

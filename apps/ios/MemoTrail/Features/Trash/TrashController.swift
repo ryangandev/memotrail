@@ -15,6 +15,12 @@ final class TrashController {
   private(set) var isEmptying = false
   private(set) var emptyProgress = 0
   private(set) var emptyTotal = 0
+  /// The profile time zone Trash dates are shown in, like Web `getTrashWorkspace`.
+  private(set) var timezone = "UTC"
+  /// Whether Reviews or Chapter suggestions exist, so Delete forever says they go too.
+  private(set) var reviewsExist = false
+  /// When the list was loaded, so every countdown agrees on "now".
+  private(set) var renderedAt = Date()
   var isBusy: Bool { pendingItemID != nil || emptySnapshot != nil }
   var isPreparingEmptyTrash: Bool { pendingItemID == Self.preparingEmptyTrash }
 
@@ -231,7 +237,14 @@ final class TrashController {
         }
       }
 
+      let context = appending ? nil : await loadContext()
+
       guard loadGeneration == generation else { return }
+      if let context {
+        timezone = context.timezone
+        reviewsExist = context.reviewsExist
+        renderedAt = Date()
+      }
       if appending {
         let knownIDs = Set(items.map(\.id))
         items.append(contentsOf: rows.filter { !knownIDs.contains($0.id) })
@@ -247,6 +260,15 @@ final class TrashController {
         totalCount = 0
       }
     }
+  }
+
+  /// What Trash shows beside its rows: the profile time zone for dates, and whether Reviews
+  /// exist. Either failing leaves Web's defaults, UTC and none, rather than failing Trash.
+  private func loadContext() async -> (timezone: String, reviewsExist: Bool) {
+    let profile: ProfileSettings? = try? await client.from("profiles").select("timezone")
+      .eq("user_id", value: ownerID.uuidString).single().execute().value
+    let reviews: ReviewDeletion? = try? await client.rpc("review_settings").execute().value
+    return (profile?.timezone ?? "UTC", reviews?.exist ?? false)
   }
 
   /// Replaces any load still running, so Trash reflects the change.

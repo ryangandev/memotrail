@@ -1,8 +1,6 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-// P8: Tags polish.
-
 /// Web `/tags`: every tag as a badge with how many Entries use it, a name search, and New Tag.
 /// Each badge opens the tag's editor, which lists its Entries and merges or deletes it.
 struct TagsView: View {
@@ -22,6 +20,8 @@ struct TagsView: View {
   /// Where to go once the editor has closed, since switching tabs or pushing a page while it
   /// closes would cancel the dismissal.
   @State private var afterEditing: (@MainActor () -> Void)?
+  /// The Entries revision this page last reacted to, so its own changes reload it only once.
+  @State private var seenRevision = 0
   @Environment(AppNavigator.self) private var navigator
 
   /// The tag editor: a new tag, or a saved one.
@@ -62,6 +62,7 @@ struct TagsView: View {
         changed: {
           await load(query: appliedQuery)
           navigator.entriesChanged()
+          seenRevision = navigator.entriesRevision
         },
         openEntry: { entry in
           // Tags is a page in the More tab, so its Entries open on that stack.
@@ -71,6 +72,12 @@ struct TagsView: View {
     }
     .task {
       if !hasLoaded { await load() }
+    }
+    .onChange(of: navigator.entriesRevision) { _, revision in
+      // An Entry saved, trashed, restored, or synced elsewhere changes the tag counts.
+      guard revision != seenRevision, hasLoaded else { return }
+      seenRevision = revision
+      Task { await load(query: appliedQuery) }
     }
   }
 

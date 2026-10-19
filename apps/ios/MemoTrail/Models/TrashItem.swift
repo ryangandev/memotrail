@@ -142,6 +142,13 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
     return ("\(countLabel(remainingDays, "day")) to restore · through", label)
   }
 
+  /// Web's Delete forever dialog text: what is removed, that Reviews reading an Entry go with it
+  /// when any exist, and that it cannot be undone.
+  func deletionConfirmation(reviewsExist: Bool) -> String {
+    let reviews = reviewsExist && kind != .attachment ? " \(ReviewDeletion.sentence)" : ""
+    return "\(deletionDescription)\(reviews) This cannot be undone."
+  }
+
   /// Web `deletionDescription`: what Delete forever removes.
   var deletionDescription: String {
     switch kind {
@@ -305,17 +312,55 @@ struct EmptyTrashTarget: Decodable, Equatable, Sendable {
   }
 }
 
+/// Web `loadReviewSettings`, reduced to what Trash needs: whether any Review or pending Chapter
+/// suggestion exists, which Delete forever removes along with the Entries it read.
+struct ReviewDeletion: Decodable, Equatable, Sendable {
+  static let sentence = "Reviews that read these Entries are deleted too."
+
+  let reviewCount: Int
+  let pendingSuggestionCount: Int
+
+  var exist: Bool { reviewCount + pendingSuggestionCount > 0 }
+
+  enum CodingKeys: String, CodingKey { case reviewCount, pendingSuggestionCount }
+
+  init(reviewCount: Int = 0, pendingSuggestionCount: Int = 0) {
+    self.reviewCount = reviewCount
+    self.pendingSuggestionCount = pendingSuggestionCount
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    reviewCount = Self.count(values, .reviewCount)
+    pendingSuggestionCount = Self.count(values, .pendingSuggestionCount)
+  }
+
+  /// Counts arrive as numbers; anything else reads as none, like Web.
+  private static func count(_ values: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys)
+    -> Int
+  {
+    guard let count = try? values.decode(Int.self, forKey: key), count > 0 else { return 0 }
+    return count
+  }
+}
+
 struct EmptyTrashOutcome: Equatable, Sendable {
   let deleted: Int
   let total: Int
   /// Whether the private photo files of the deleted items are already removed.
   var filesRemoved = true
+  /// The person left Trash, which stops the run before its next deletion.
+  var left = false
   var complete: Bool { deleted == total }
+  /// Web `emptyTrashResultMessage`.
   var message: String {
+    let stopped = "\(deleted) of \(countLabel(total, "item")) confirmed deleted."
     let message =
       complete
       ? "\(countLabel(deleted, "confirmed item")) permanently deleted. Anything added to Trash later was not included."
-      : "\(deleted) of \(countLabel(total, "item")) confirmed deleted. Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
+      : left
+        ? "\(stopped) Stopped because you left Trash. Review Trash before trying again."
+        : "\(stopped) Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again."
     return filesRemoved ? message : "\(message) \(MediaPurge.pendingMessage)"
   }
   @MainActor
@@ -325,12 +370,21 @@ struct EmptyTrashOutcome: Equatable, Sendable {
     progress: (Int) -> Void
   ) async -> Self {
     var deleted = 0
+    var left = false
     for target in targets {
-      if Task.isCancelled { break }
-      do { try await remove(target) } catch { break }
+      if Task.isCancelled {
+        left = true
+        break
+      }
+      do {
+        try await remove(target)
+      } catch {
+        left = Task.isCancelled
+        break
+      }
       deleted += 1
       progress(deleted)
     }
-    return Self(deleted: deleted, total: targets.count)
+    return Self(deleted: deleted, total: targets.count, left: left)
   }
 }

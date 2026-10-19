@@ -1,14 +1,15 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-// P8: Trash dates in the profile time zone, and the Reviews sentence when Reviews exist.
-
 /// Web `/trash`: removed Entries and photos, newest first. Each restores or, after an explicit
 /// confirmation, is deleted forever; Empty Trash deletes a prepared list.
 struct TrashView: View {
   @State private var controller: TrashController
   @State private var confirmation: TrashItem?
   @State private var batchTask: Task<Void, Never>?
+  /// The Entries revision this page last reacted to, so its own changes reload it only once.
+  @State private var seenRevision = 0
+  @Environment(AppNavigator.self) private var navigator
 
   init(client: SupabaseClient, ownerID: UUID) {
     _controller = State(initialValue: TrashController(client: client, ownerID: ownerID))
@@ -43,6 +44,12 @@ struct TrashView: View {
       // Like Web, opening Trash finishes removing the files of anything deleted forever.
       await controller.finishPendingMediaRemoval()
     }
+    .onChange(of: navigator.entriesRevision) { _, revision in
+      // An Entry moved to Trash, restored, or synced elsewhere shows at once.
+      guard revision != seenRevision else { return }
+      seenRevision = revision
+      Task { await controller.load() }
+    }
     .onDisappear {
       batchTask?.cancel()
       controller.cancelEmptyTrash()
@@ -55,7 +62,7 @@ struct TrashView: View {
         get: { controller.emptySnapshot != nil },
         set: { if !$0 { controller.cancelEmptyTrash() } })
     ) {
-      EmptyTrashSheet(controller: controller) {
+      EmptyTrashSheet(controller: controller, reviewsExist: controller.reviewsExist) {
         batchTask = Task { announce(await controller.emptyTrash()) }
       }
     }
@@ -136,10 +143,15 @@ struct TrashView: View {
         .font(MTFont.detail)
         ForEach(controller.items) { item in
           TrashItemCard(
-            item: item, isDisabled: controller.isBusy || confirmation != nil,
+            item: item, timezone: controller.timezone, renderedAt: controller.renderedAt,
+            isDisabled: controller.isBusy || confirmation != nil,
             isRestoring: controller.pendingItemID == item.id
           ) {
-            Task { announce(await controller.restore(item)) }
+            Task {
+              let notice = await controller.restore(item)
+              announce(notice)
+              if notice?.tone == .success { restored() }
+            }
           } delete: {
             confirmation = item
           }
@@ -151,6 +163,12 @@ struct TrashView: View {
         }
       }
     }
+  }
+
+  /// A restored Entry or photo is back in Library, Tags, and the other tabs.
+  private func restored() {
+    navigator.entriesChanged()
+    seenRevision = navigator.entriesRevision
   }
 
   private func announce(_ notice: TrashController.Notice?) {
@@ -166,6 +184,8 @@ struct TrashView: View {
 /// how long it stays restorable, then Restore and Delete forever.
 private struct TrashItemCard: View {
   let item: TrashItem
+  let timezone: String
+  let renderedAt: Date
   let isDisabled: Bool
   let isRestoring: Bool
   let restore: () -> Void
@@ -182,7 +202,7 @@ private struct TrashItemCard: View {
         VStack(alignment: .leading, spacing: 0) {
           MTFlowLayout(spacing: MTSpacing.s2) {
             MTBadge(title: item.displayKind, tone: .warm)
-            Text("Removed \(item.deletionDateLabel())")
+            Text("Removed \(item.deletionDateLabel(timezone: timezone))")
               .font(MTFont.note)
               .foregroundStyle(MTColor.inkFaint)
           }
@@ -247,7 +267,7 @@ private struct TrashItemCard: View {
 
   /// Web's retention line: how long the item stays restorable, then the date.
   private var retention: some View {
-    let retention = item.retention()
+    let retention = item.retention(referenceDate: renderedAt, timezone: timezone)
     return HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
       Image(.clock).font(.mtIcon(MTSize.Icon.s11))
       if let date = retention.date {
@@ -272,7 +292,7 @@ private struct DeleteForeverSheet: View {
   var body: some View {
     MTSheet(
       eyebrow: "Permanent action", title: "Delete “\(item.title)” forever?",
-      description: "\(item.deletionDescription) This cannot be undone.",
+      description: item.deletionConfirmation(reviewsExist: controller.reviewsExist),
       closeLabel: "Close", closeIdentifier: "close-delete-forever", size: .fitted,
       isBusy: isDeleting
     ) {
@@ -303,6 +323,7 @@ private struct DeleteForeverSheet: View {
 /// Web's Empty Trash dialog: the prepared list only, with progress while it deletes.
 private struct EmptyTrashSheet: View {
   let controller: TrashController
+  let reviewsExist: Bool
   let confirm: () -> Void
 
   var body: some View {
@@ -310,7 +331,7 @@ private struct EmptyTrashSheet: View {
     MTSheet(
       eyebrow: "Permanent action", title: "Empty \(countLabel(count, "item")) from Trash?",
       description:
-        "This includes all Trash pages, not just the visible items. Their records and private photos will be permanently removed. This cannot be undone.",
+        "This includes all Trash pages, not just the visible items. Their records and private photos will be permanently removed.\(reviewsExist ? " \(ReviewDeletion.sentence)" : "") This cannot be undone.",
       closeLabel: "Close", closeIdentifier: "close-empty-trash", size: .fitted,
       isBusy: controller.isEmptying
     ) {

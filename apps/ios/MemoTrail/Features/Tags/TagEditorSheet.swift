@@ -1,7 +1,5 @@
 import SwiftUI
 
-// P8: Tags polish.
-
 /// Web `TagControl`'s dialog: names a tag. A saved tag shows its Entries and merges into another
 /// tag, or, once unused, is deleted.
 struct TagEditorSheet: View {
@@ -195,8 +193,9 @@ struct TagEditorSheet: View {
                   Text(entry.displayTitle)
                     .font(MTFont.listHeading)
                     .foregroundStyle(MTColor.ink)
+                  // An untitled Entry is already named by its date.
                   Text(
-                    entry.displayDate.isEmpty
+                    entry.title == nil || entry.displayDate.isEmpty
                       ? entry.identityLabel : "\(entry.identityLabel) · \(entry.displayDate)")
                     .font(MTFont.detail)
                     .foregroundStyle(MTColor.inkMuted)

@@ -1,7 +1,7 @@
 import XCTest
 
-// Carried over for P8 (Tags, Trash, Settings, Export), which owns and verifies them. P1 moved
-// the counts to the new seed and replaced the retired Collections with seeded Trash items.
+// Tags, Trash, Settings, and Export against the seeded account: "coast" and "family" tags with
+// three Entries each, and an Entry and a photo in Trash.
 extension LocalSessionUITests {
   func testExportPreparesDownloadsAndDiscardsASnapshot() throws {
     try XCTSkipUnless(servesMediaAPI(), "Export needs the local Web API; run with --web.")
@@ -10,31 +10,40 @@ extension LocalSessionUITests {
     app.tabBars.buttons["More"].tap()
     reveal(app.buttons["more-settings"], in: app).tap()
     reveal(app.buttons["Export archive"], in: app).tap()
-    XCTAssertTrue(
-      text("No snapshots yet. Your archive is unchanged.", in: app).waitForExistence(timeout: 15))
+    let export = app.buttons["Export everything"]
+    XCTAssertTrue(export.waitForExistence(timeout: 15))
+    // Nothing is listed until something was exported.
+    XCTAssertFalse(text("Recent exports", in: app).exists)
     attach(app, "Export")
 
-    // Prepare snapshot captures one consistent copy, which downloads as a complete ZIP.
-    app.buttons["Prepare snapshot"].tap()
-    XCTAssertTrue(text("Snapshot prepared.", in: app).waitForExistence(timeout: 30))
-    let download = app.buttons["Download ZIP"]
-    XCTAssertTrue(download.waitForExistence(timeout: 15))
-    reveal(download, in: app).tap()
+    // One action prepares a consistent copy and downloads it as a complete ZIP.
+    export.tap()
     let share = app.buttons["Save or share ZIP"]
-    XCTAssertTrue(share.waitForExistence(timeout: 60))
+    XCTAssertTrue(share.waitForExistence(timeout: 90))
+    XCTAssertTrue(text("Complete ZIP ready", in: app).exists)
     attach(app, "Export ZIP ready")
     app.buttons["Remove local copy"].tap()
     XCTAssertTrue(share.waitForNonExistence(timeout: 5))
 
-    // Discard asks beside the snapshot, then removes the temporary copy.
-    reveal(app.buttons["Discard snapshot"], in: app).tap()
+    // The copy it made stays listed to download again for 24 hours.
+    let again = reveal(app.buttons["Download again"], in: app)
+    XCTAssertTrue(text("Recent exports", in: app).exists)
+    attach(app, "Recent exports")
+    again.tap()
+    XCTAssertTrue(share.waitForExistence(timeout: 90))
+    app.buttons["Remove local copy"].tap()
+    XCTAssertTrue(share.waitForNonExistence(timeout: 5))
+
+    // Discard asks beside the export, then removes its copy.
+    reveal(app.buttons["Discard"], in: app).tap()
     let confirm = app.buttons["Confirm discard"]
     XCTAssertTrue(confirm.waitForExistence(timeout: 5))
     attach(app, "Export discard confirmation")
     confirm.tap()
-    XCTAssertTrue(text("Temporary copy discarded.", in: app).waitForExistence(timeout: 15))
     XCTAssertTrue(
-      text("No snapshots yet. Your archive is unchanged.", in: app).waitForExistence(timeout: 15))
+      text("Export discarded. Your records and downloaded files are unchanged.", in: app)
+        .waitForExistence(timeout: 15))
+    XCTAssertTrue(text("Recent exports", in: app).waitForNonExistence(timeout: 15))
   }
 
   func testSettingsSavesThePreferredNameForTheGreeting() throws {
@@ -58,12 +67,21 @@ extension LocalSessionUITests {
 
     reveal(app.buttons["Save time zone"], in: app)
     attach(app, "Settings preferences")
+    // Import stays on the Web, so Settings says so instead of linking to it.
+    XCTAssertTrue(
+      text("Import is available in MemoTrail on the Web.", in: app).waitForExistence(timeout: 5))
     reveal(text("Private by default", in: app), in: app)
     attach(app, "Settings end")
 
     // The Dashboard greeting follows the saved name.
     app.navigationBars["Settings"].buttons["Done"].tap()
     XCTAssertTrue(text("River.", in: app).waitForExistence(timeout: 10))
+
+    // Archive organization closes Settings and opens Tags.
+    app.buttons["workspace-settings"].tap()
+    reveal(app.buttons["Archive organization"], in: app).tap()
+    XCTAssertTrue(app.buttons["new-tag"].waitForExistence(timeout: 15))
+    XCTAssertTrue(app.navigationBars["Tags"].exists)
   }
 
   func testTagsFindPreviewMergeAddAndDeleteTags() throws {
