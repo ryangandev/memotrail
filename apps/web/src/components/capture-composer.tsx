@@ -603,6 +603,8 @@ function dateChipLabel(occurrence: OccurrenceDraft | null) {
   const value = occurrence ? captureDateValue(occurrence) : "";
   if (!value) return "Today";
   const [day, time] = value.split("T");
+  // A day still being typed has no name yet.
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return "Date";
   const [year, month, date] = day.split("-").map(Number);
   const label = new Intl.DateTimeFormat("en-US", {
     day: "numeric",
@@ -610,7 +612,7 @@ function dateChipLabel(occurrence: OccurrenceDraft | null) {
     timeZone: "UTC",
     year: year === new Date().getFullYear() ? undefined : "numeric",
   }).format(new Date(Date.UTC(year, month - 1, date)));
-  if (!time) return label;
+  if (!time || !/^\d{2}:\d{2}$/.test(time)) return label;
   const [hours, minutes] = time.split(":").map(Number);
   const clock = new Intl.DateTimeFormat("en-US", {
     hour: "numeric",

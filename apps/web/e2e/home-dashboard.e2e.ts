@@ -92,6 +92,7 @@ test("The Dashboard greets the signed-in person and supports capture, navigation
           body: "Still going.",
           item_kind: "entry",
           item_subtype: "chapter",
+          is_first_time: false,
           date_precision: "month",
           occurred_start: "2025-01-01T12:00:00Z",
         },
@@ -101,6 +102,7 @@ test("The Dashboard greets the signed-in person and supports capture, navigation
           body: "Long content that must not expand the recent row. ".repeat(30),
           item_kind: "entry",
           item_subtype: "entry",
+          is_first_time: false,
           date_precision: "unknown",
         },
         {
@@ -109,6 +111,7 @@ test("The Dashboard greets the signed-in person and supports capture, navigation
           body: "Waiting for a little context",
           item_kind: "entry",
           item_subtype: "entry",
+          is_first_time: false,
           date_precision: "unknown",
         },
         {
@@ -117,6 +120,7 @@ test("The Dashboard greets the signed-in person and supports capture, navigation
           body: "Must never appear",
           item_kind: "entry",
           item_subtype: "entry",
+          is_first_time: false,
           date_precision: "day",
           occurred_start: "2020-05-12T12:00:00Z",
         },

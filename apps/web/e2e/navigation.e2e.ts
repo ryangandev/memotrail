@@ -207,20 +207,6 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     });
     // The formatting toolbar waits until the writer engages the editor.
     await expect(homeFormatting).toBeHidden();
-    await homeEntryText.click();
-    await expect(homeFormatting).toBeVisible();
-    const homeBoldIconLeft = await homeFormatting
-      .getByRole("button", { name: "Bold", exact: true })
-      .locator("svg")
-      .evaluate((element) => element.getBoundingClientRect().left);
-    expect(Math.round(homeBoldIconLeft)).toBe(Math.round(homeEntryTextLeft));
-    const homeToolbarBottom = await homeFormatting.evaluate(
-      (element) => element.getBoundingClientRect().bottom,
-    );
-    const homeActionsTop = await homeCapture
-      .locator("[data-capture-actions]")
-      .evaluate((element) => element.getBoundingClientRect().top);
-    expect(Math.round(homeActionsTop - homeToolbarBottom)).toBe(20);
 
     const shell = page.getByRole("complementary").filter({
       has: page.getByRole("navigation", { name: "Primary navigation" }),
@@ -294,6 +280,21 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toHaveAttribute("aria-current", "page");
     await page.goBack();
     await expect(page).toHaveURL(/\/$/);
+    // Engaging the editor shows its toolbar, tucked 8px above the actions row.
+    await homeEntryText.click();
+    await expect(homeFormatting).toBeVisible();
+    const homeBoldIconLeft = await homeFormatting
+      .getByRole("button", { name: "Bold", exact: true })
+      .locator("svg")
+      .evaluate((element) => element.getBoundingClientRect().left);
+    expect(Math.round(homeBoldIconLeft)).toBe(Math.round(homeEntryTextLeft));
+    const homeToolbarBottom = await homeFormatting.evaluate(
+      (element) => element.getBoundingClientRect().bottom,
+    );
+    const homeActionsTop = await homeCapture
+      .locator("[data-capture-actions]")
+      .evaluate((element) => element.getBoundingClientRect().top);
+    expect(Math.round(homeActionsTop - homeToolbarBottom)).toBe(8);
     await expect(shell.getByRole("button", { name: "New entry" })).toHaveCount(
       0,
     );
