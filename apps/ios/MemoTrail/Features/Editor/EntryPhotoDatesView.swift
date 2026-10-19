@@ -11,30 +11,26 @@ struct PhotoCameraMetadata: Decodable, Sendable {
   let latitude: Double?
   let longitude: Double?
 
+  /// Web `photoCalendarDateDraft`: the camera's calendar date as a Day in the draft's zone.
   func calendarDraft(previous: OccurrenceDraft) throws -> OccurrenceDraft {
-    guard let calendarDate,
-      calendarDate.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil
-    else { throw OccurrenceError.invalidDate }
+    guard let calendarDate else {
+      throw SaveEntryError.invalid("This camera date is invalid. Edit the date manually.")
+    }
     var result = previous
-    result.precision = .day
-    result.start = calendarDate
-    result.end = ""
-    result.endMode = .date
-    result.label = ""
-    _ = try result.resolve()
+    try result.useCalendarDate(calendarDate)
     return result
   }
 }
 
-/// Web `EntryPhotoDates`: reads saved photos' camera metadata on request, then offers the
-/// calendar date or GPS position as explicit draft changes.
+/// Web `EntryPhotoDates`: reads a saved photo's camera date or GPS position on request, then
+/// offers it as an explicit draft change. Nothing changes until the editor is saved.
 struct EntryPhotoDatesView: View {
   let client: SupabaseClient
   let ownerID: UUID
-  let entryID: UUID
+  /// The Entry's saved photos.
+  let photos: [EntryPhotoInfo]
   @Binding var occurrence: OccurrenceDraft
   @Binding var photoLocation: PhotoLocationDraft?
-  @State private var photos: [EntryPhotoInfo]?
   @State private var metadata: [UUID: PhotoCameraMetadata] = [:]
   @State private var busy = false
   @State private var errorMessage: String?
@@ -42,29 +38,15 @@ struct EntryPhotoDatesView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      HStack(alignment: .center, spacing: MTSpacing.s3) {
-        Text("Photos & camera dates")
-          .font(MTFont.listHeading)
-          .foregroundStyle(MTColor.ink)
-          .accessibilityAddTraits(.isHeader)
-        Spacer(minLength: 0)
-        Button(
-          busy && photos == nil ? "Loading…" : photos == nil ? "Show photos" : "Refresh photos"
-        ) {
-          Task { await load() }
-        }
-        .mtButtonStyle(.secondary, size: .small)
-        .disabled(busy)
-        .accessibilityIdentifier("review-show-photos")
-      }
-      caption("Read the original photo’s camera metadata. No AI, no automatic changes.")
-      if photos?.isEmpty == true {
-        caption("No saved photos on this Entry.")
-      }
-      ForEach(photos ?? []) { photo in
+      Text("Camera dates")
+        .font(MTFont.listHeading)
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+      caption("Read a saved photo’s camera date or GPS position. No AI, no automatic changes.")
+      ForEach(photos) { photo in
         Divider().overlay(MTColor.border)
         HStack(alignment: .top, spacing: MTSpacing.s3) {
-          if let url = validImageURL(photo) {
+          if let url = photo.displayURL(base: AppConfiguration.apiURL) {
             MTRemoteImage(url: url, accessibilityLabel: photo.name)
               .frame(width: MTLayout.PhotoDate.thumbWidth, height: MTLayout.PhotoDate.thumbHeight)
               .clipShape(RoundedRectangle(cornerRadius: MTRadius.small))
@@ -73,7 +55,7 @@ struct EntryPhotoDatesView: View {
             Text(photo.name)
               .font(MTFont.label)
               .foregroundStyle(MTColor.ink)
-              .textSelection(.enabled)
+              .lineLimit(2)
             Button(metadata[photo.id] == nil ? "Read camera date" : "Read metadata again") {
               Task { await load(photo) }
             }
@@ -91,6 +73,7 @@ struct EntryPhotoDatesView: View {
         Text(errorMessage)
           .font(MTFont.detail)
           .foregroundStyle(MTColor.warm)
+          .fixedSize(horizontal: false, vertical: true)
       }
       if photoLocation != nil {
         PhotoLocationDraftEditor(value: $photoLocation)
@@ -125,7 +108,7 @@ struct EntryPhotoDatesView: View {
           errorMessage = nil
           notice = "Calendar date added to the draft. Review the date, then save your changes."
         } catch {
-          errorMessage = "This camera date is invalid. Edit the date manually."
+          errorMessage = error.localizedDescription
         }
       }
       .mtButtonStyle(.secondary, size: .small)
@@ -136,7 +119,6 @@ struct EntryPhotoDatesView: View {
     }
     if let latitude = info.latitude, let longitude = info.longitude {
       caption("Private GPS metadata is available. No Location is linked automatically.")
-        .textSelection(.enabled)
       Button("Use GPS for a Location") {
         photoLocation = PhotoLocationDraft(
           attachmentId: photo.id, latitude: latitude, longitude: longitude)
@@ -154,39 +136,22 @@ struct EntryPhotoDatesView: View {
       .fixedSize(horizontal: false, vertical: true)
   }
 
-  private func validImageURL(_ photo: EntryPhotoInfo) -> URL? {
-    guard let raw = photo.imageUrl, let base = AppConfiguration.apiURL else { return nil }
-    return MediaDelivery.validatedURLs(
-      [photo.id.uuidString: raw], paths: [photo.id.uuidString], base: base)[photo.id.uuidString]
-  }
-
   @MainActor
-  private func load(_ photo: EntryPhotoInfo? = nil) async {
+  private func load(_ photo: EntryPhotoInfo) async {
     guard !busy else { return }
     busy = true
     errorMessage = nil
     notice = nil
     defer { busy = false }
     do {
-      if let photo {
-        let result: PhotoCameraMetadata = try await MediaDelivery.apiRequest(
-          path: "api/media/metadata",
-          query: URLQueryItem(name: "attachmentId", value: photo.id.uuidString.lowercased()),
-          client: client, ownerID: ownerID)
-        guard result.attachmentId == photo.id else { throw OccurrenceError.invalidDate }
-        metadata[photo.id] = result
-      } else {
-        let result = try await EntryAPI(client: client, ownerID: ownerID).photos(
-          entryID: entryID)
-        photos = result.photos
-        metadata = [:]
-        if result.hasMore { notice = "Showing the first 100 photos." }
-      }
+      let result: PhotoCameraMetadata = try await MediaDelivery.apiRequest(
+        path: "api/media/metadata",
+        query: URLQueryItem(name: "attachmentId", value: photo.id.uuidString.lowercased()),
+        client: client, ownerID: ownerID)
+      guard result.attachmentId == photo.id else { throw URLError(.badServerResponse) }
+      metadata[photo.id] = result
     } catch {
-      errorMessage =
-        photo == nil
-        ? "Photos could not be loaded. Try again."
-        : "Photo metadata is unavailable. The original is unchanged."
+      errorMessage = "Photo metadata is unavailable. The original is unchanged."
     }
   }
 }

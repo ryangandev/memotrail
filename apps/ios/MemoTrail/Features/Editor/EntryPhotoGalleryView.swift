@@ -116,16 +116,7 @@ struct EntryPhotoGalleryView: View {
     var failure: String?
     for item in items.prefix(available) {
       do {
-        guard let data = try await item.loadTransferable(type: Data.self),
-          let mime = PhotoImageType.detect(
-            data: data, typeIdentifiers: item.supportedContentTypes.map(\.identifier))
-        else { throw PhotoDraftError.unsupportedType }
-        let image = UIImage(data: data)
-        pending.append(
-          try PhotoDraft.validate(
-            data: data, mimeType: mime, originalFilename: nil,
-            pixelWidth: image.map { Int($0.size.width * $0.scale) },
-            pixelHeight: image.map { Int($0.size.height * $0.scale) }))
+        pending.append(try await PhotoDraft.load(item))
       } catch {
         failure = error.localizedDescription
       }

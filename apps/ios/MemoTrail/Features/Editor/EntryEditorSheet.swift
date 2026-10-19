@@ -1,7 +1,6 @@
+import PhotosUI
 @preconcurrency import Supabase
 import SwiftUI
-
-// P3: the full Entry editor (photos, date model, tag suggestions, Location preview).
 
 /// What the editor opens with, like Web `NewEntryDialog` and `EntryEditorDialog`.
 enum EntryEditorMode: Equatable {
@@ -17,244 +16,291 @@ enum EntryEditorResult: Equatable {
   case movedToTrash(UUID)
 }
 
-/// Web `EntryEditorDialog`: title, Chapter and First Time marks, note, date, tags, photo
-/// suggestions, and the Entry's Location, saved with `save_entry`.
+/// Web `EntryEditorDialog`, in Web's order: title, note, tags, photos, the Chapter and First
+/// Time marks, the date, the Entry's Location, and camera dates from saved photos. It saves
+/// with `save_entry`, then attaches new photos to the same Entry.
 struct EntryEditorSheet: View {
-  let client: SupabaseClient
-  let ownerID: UUID
-  let mode: EntryEditorMode
   let onSaved: @MainActor (EntryEditorResult) -> Void
 
-  @Environment(\.dismiss) private var dismiss
-  /// Drafted once, so a retried save of a new Entry cannot add it twice.
-  @State private var entryID: UUID
-  @State private var title: String
-  @State private var note: NSAttributedString
-  @State private var isChapter: Bool
-  @State private var isFirstTime: Bool
-  @State private var occurrence: OccurrenceDraft
-  @State private var tagNames: [String]
-  @State private var tagOptions: [String] = []
-  @State private var keepsLocation = true
-  @State private var photoLocation: PhotoLocationDraft?
-  @State private var isSaving = false
-  @State private var isTrashing = false
+  @State private var controller: EntryEditorController
+  @State private var pickerItems: [PhotosPickerItem] = []
+  @State private var removingPhoto: EntryPhotoInfo?
   @State private var isConfirmingTrash = false
-  @State private var errorMessage: String?
-  /// The note as it opened, to tell an untouched note from an edited one.
-  private let openingNote: NSAttributedString
-  /// Web writing with quotes, lists, code, or links that the native editor cannot keep.
-  private let hasWebOnlyFormatting: Bool
+  @State private var isConfirmingNoteEdit = false
+  @Environment(\.dismiss) private var dismiss
 
   init(
     client: SupabaseClient, ownerID: UUID, mode: EntryEditorMode,
     onSaved: @escaping @MainActor (EntryEditorResult) -> Void = { _ in }
   ) {
-    self.client = client
-    self.ownerID = ownerID
-    self.mode = mode
     self.onSaved = onSaved
-    let timezone = TimeZone.current.identifier
-    switch mode {
-    case .new(let marks):
-      _entryID = State(initialValue: UUID())
-      _title = State(initialValue: "")
-      openingNote = NSAttributedString()
-      hasWebOnlyFormatting = false
-      _isChapter = State(initialValue: marks.isChapter)
-      _isFirstTime = State(initialValue: marks.isFirstTime)
-      _occurrence = State(
-        initialValue: OccurrenceDraft(
-          EntryOccurrence(
-            precision: .unknown, start: nil, end: nil, label: nil, timezone: timezone)))
-      _tagNames = State(initialValue: [])
-    case .edit(let entry):
-      _entryID = State(initialValue: entry.id)
-      _title = State(initialValue: entry.title ?? "")
-      let editable = entry.richText.flatMap(EntryEmphasisContent.init)
-      openingNote = editable?.attributedText() ?? NSAttributedString(string: entry.body)
-      hasWebOnlyFormatting = entry.richText != nil && editable == nil
-      _isChapter = State(initialValue: entry.marks.isChapter)
-      _isFirstTime = State(initialValue: entry.marks.isFirstTime)
-      _occurrence = State(
-        initialValue: OccurrenceDraft(
-          entry.occurrence(fallbackTimezone: timezone), undatedTimezone: timezone))
-      _tagNames = State(initialValue: entry.tagNames)
-    }
-    _note = State(initialValue: openingNote)
+    _controller = State(
+      initialValue: EntryEditorController(client: client, ownerID: ownerID, mode: mode))
   }
 
-  private var editing: EditableEntry? {
-    if case .edit(let entry) = mode { entry } else { nil }
-  }
-
-  private var isBusy: Bool { isSaving || isTrashing }
-
-  private var heading: String {
-    guard editing == nil else { return "Edit Entry" }
-    return isChapter ? "Add a Chapter" : isFirstTime ? "Add a First Time" : "Add an Entry"
-  }
+  private var draft: EntryEditorDraft { controller.draft }
 
   var body: some View {
+    @Bindable var controller = controller
     MTSheet(
-      eyebrow: editing == nil ? "New Entry" : "Entry", title: heading,
-      closeLabel: "Close Entry editor", closeIdentifier: "editor-close", isBusy: isBusy,
-      message: errorMessage
+      eyebrow: controller.eyebrow, title: controller.heading,
+      closeLabel: "Close Entry editor", closeIdentifier: "editor-close",
+      isBusy: controller.isBusy, message: controller.errorMessage
     ) {
       MTTextField(
-        label: "Title", text: $title, prompt: isChapter ? "Name this Chapter" : "Add a title",
-        isRequired: isChapter, maxLength: EntryLimits.title
+        label: "Title", text: $controller.draft.title,
+        prompt: draft.marks.isChapter ? "Name this Chapter" : "Add a title",
+        isRequired: draft.marks.isChapter, maxLength: EntryLimits.title
       )
       .accessibilityIdentifier("editor-title")
-      VStack(alignment: .leading, spacing: 0) {
-        MTCheckbox(
-          title: "Chapter",
-          detail: "A stretch of your life, like a home, a job, or a school year.",
-          isOn: $isChapter
-        )
-        .accessibilityIdentifier("editor-chapter")
-        MTCheckbox(
-          title: "First Time", detail: "The first time you did something.", isOn: $isFirstTime
-        )
-        .accessibilityIdentifier("editor-first-time")
-      }
       noteField
-      OccurrenceEditor(value: $occurrence, span: isChapter)
-      MTOrganizationEditor(kind: .tag, names: $tagNames, options: tagOptions)
-      if let location = editing?.primaryLocation, keepsLocation {
-        locationField(location)
-      }
-      if let editing {
+      MTOrganizationEditor(
+        kind: .tag, names: $controller.draft.tagNames, options: controller.tagOptions)
+      photoField
+      marksField
+      OccurrenceEditor(
+        value: $controller.draft.occurrence, span: draft.marks.isChapter,
+        defaultTimezone: controller.settingsTimezone)
+      locationField
+      if let photos = controller.savedPhotos, !photos.isEmpty {
         EntryPhotoDatesView(
-          client: client, ownerID: ownerID, entryID: editing.id, occurrence: $occurrence,
-          photoLocation: $photoLocation)
+          client: controller.client, ownerID: controller.ownerID, photos: photos,
+          occurrence: $controller.draft.occurrence,
+          photoLocation: $controller.draft.photoLocation)
       }
     } footer: {
       footer
     }
-    .task { await loadTagOptions() }
+    .task { await controller.load() }
+    .onChange(of: pickerItems) { _, items in
+      guard !items.isEmpty else { return }
+      Task {
+        await controller.select(items)
+        pickerItems = []
+      }
+    }
+    .confirmationDialog(
+      "Move this photo to Trash?",
+      isPresented: Binding(get: { removingPhoto != nil }, set: { if !$0 { removingPhoto = nil } }),
+      titleVisibility: .visible, presenting: removingPhoto
+    ) { photo in
+      Button("Move photo to Trash", role: .destructive) {
+        Task { await controller.moveSavedPhotoToTrash(photo.id) }
+      }
+      Button("Cancel", role: .cancel) {}
+    } message: { _ in
+      Text("The original will be preserved for recovery.")
+    }
   }
 
-  private var noteField: some View {
+  // MARK: Note
+
+  @ViewBuilder private var noteField: some View {
+    @Bindable var controller = controller
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       MTFieldLabel(title: "Note")
-      MTRichTextEditor(
-        text: $note, placeholder: "Write what you want to remember",
-        accessibilityIdentifier: "editor-body", minimumHeight: MTLayout.RichText.reviewMinHeight)
-      if hasWebOnlyFormatting {
+      if controller.isNoteEditable {
+        MTRichTextEditor(
+          text: $controller.note, placeholder: "Write what you want to remember",
+          accessibilityIdentifier: "editor-body",
+          minimumHeight: MTLayout.RichText.reviewMinHeight)
+      } else if let original = draft.original {
+        webNote(original)
+      }
+    }
+  }
+
+  /// A note with lists, quotes, links, or code from the web stays as it is, shown read-only,
+  /// until the person chooses to edit it here and turn that formatting into paragraphs.
+  private func webNote(_ entry: EditableEntry) -> some View {
+    let shape = RoundedRectangle(cornerRadius: MTRadius.medium)
+    return VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      MTRichTextContent(text: entry.body, richText: entry.richText)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier("editor-web-note")
+      Divider().overlay(MTColor.border)
+      HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s3) {
         Text(
-          "Lists, quotes, links, and code from the web stay as they are unless you edit this note here."
+          "This note has lists, quotes, links, or code from the web. It stays as it is unless you edit it here."
         )
         .font(MTFont.detail)
-        .foregroundStyle(MTColor.inkFaint)
-      }
-    }
-  }
-
-  private func locationField(_ location: EntryLocation) -> some View {
-    VStack(alignment: .leading, spacing: MTSpacing.s2) {
-      MTFieldLabel(title: "Location")
-      HStack(spacing: MTSpacing.s3) {
-        Label(location.label, icon: .map)
-          .font(MTFont.body)
-          .foregroundStyle(MTColor.ink)
-        Spacer(minLength: 0)
-        Button("Remove") { keepsLocation = false }
+        .foregroundStyle(MTColor.inkMuted)
+        .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        Button("Edit note here") { isConfirmingNoteEdit = true }
           .mtButtonStyle(.secondary, size: .small)
-          .accessibilityIdentifier("editor-remove-location")
+          .accessibilityIdentifier("editor-edit-web-note")
+      }
+    }
+    .padding(MTSpacing.s4)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .background(MTColor.surface, in: shape)
+    .overlay { shape.strokeBorder(MTColor.border, lineWidth: MTSize.Stroke.thin) }
+    .confirmationDialog(
+      "Edit this note here?", isPresented: $isConfirmingNoteEdit, titleVisibility: .visible
+    ) {
+      Button("Edit note here") { controller.isEditingWebNote = true }
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text(
+        "Lists, quotes, links, and code become plain paragraphs if you change the note. Close without changing it to keep them."
+      )
+    }
+  }
+
+  // MARK: Photos
+
+  @ViewBuilder private var photoField: some View {
+    if let saved = controller.savedPhotos {
+      MTPhotoField(
+        recordLabel: "Entry",
+        saved: saved.map {
+          MTPhotoField.SavedPhoto(
+            id: $0.id, url: $0.displayURL(base: AppConfiguration.apiURL), name: $0.name)
+        },
+        new: controller.newPhotos.map {
+          MTPhotoField.NewPhoto(
+            id: $0.id, image: controller.newPhotoImages[$0.id], name: $0.originalFilename)
+        },
+        limit: PhotoDraft.maximumCount, selection: $pickerItems,
+        progress: controller.photoProgress,
+        removeSaved: { photo in removingPhoto = saved.first { $0.id == photo.id } },
+        removeNew: { photo in controller.removeNewPhoto(photo.id) }
+      )
+      .disabled(controller.hasMorePhotos)
+    } else {
+      VStack(alignment: .leading, spacing: MTSpacing.s2) {
+        MTFieldLabel(title: "Photos")
+        if controller.photosFailedToLoad {
+          HStack(spacing: MTSpacing.s3) {
+            Text("Photos could not be loaded.")
+              .font(MTFont.detail)
+              .foregroundStyle(MTColor.warm)
+              .frame(maxWidth: .infinity, alignment: .leading)
+            Button("Try again") { Task { await controller.loadPhotos() } }
+              .mtButtonStyle(.secondary, size: .small)
+          }
+        } else {
+          MTLoadingSkeleton(shape: .fill)
+            .frame(height: MTLayout.Grid.photo)
+            .clipShape(RoundedRectangle(cornerRadius: MTRadius.medium))
+            .accessibilityLabel("Loading photos")
+        }
       }
     }
   }
 
-  @ViewBuilder private var footer: some View {
-    HStack(spacing: MTSpacing.s2) {
-      if editing != nil {
+  // MARK: Marks
+
+  private var marksField: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      MTCheckbox(
+        title: "Chapter",
+        detail: "A stretch of your life, like a home, a job, or a school year.",
+        isOn: Binding(
+          get: { draft.marks.isChapter },
+          set: { isOn in
+            controller.draft.changeMarks(
+              EntryMarks(isChapter: isOn, isFirstTime: draft.marks.isFirstTime))
+          })
+      )
+      .accessibilityIdentifier("editor-chapter")
+      MTCheckbox(
+        title: "First Time", detail: "The first time you did something.",
+        isOn: Binding(
+          get: { draft.marks.isFirstTime },
+          set: { isOn in
+            controller.draft.changeMarks(
+              EntryMarks(isChapter: draft.marks.isChapter, isFirstTime: isOn))
+          })
+      )
+      .accessibilityIdentifier("editor-first-time")
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityLabel("Marks")
+  }
+
+  // MARK: Location
+
+  /// Web `LocationPicker` for a saved Location: its preview with Remove. Removing waits for
+  /// Save, so Undo brings it back. Address search stays on the web for now.
+  @ViewBuilder private var locationField: some View {
+    if let opened = draft.original?.primaryLocation {
+      MTLocationPanel(
+        message:
+          "This Entry keeps its own Location. Search for a different address on the web."
+      ) {
+        if let location = draft.location {
+          MTLocationPreview(
+            label: location.label, latitude: location.latitude, longitude: location.longitude,
+            remove: { controller.draft.location = nil }
+          )
+          .accessibilityIdentifier("editor-location")
+        } else {
+          HStack(spacing: MTSpacing.s3) {
+            Text("“\(opened.label)” will be removed when you save.")
+              .font(MTFont.detail)
+              .foregroundStyle(MTColor.inkMuted)
+              .fixedSize(horizontal: false, vertical: true)
+              .frame(maxWidth: .infinity, alignment: .leading)
+            Button("Undo") { controller.draft.location = opened }
+              .mtButtonStyle(.secondary, size: .small)
+              .accessibilityIdentifier("editor-undo-remove-location")
+          }
+        }
+      }
+    }
+  }
+
+  // MARK: Footer
+
+  private var footer: some View {
+    MTSheetFooter {
+      if !draft.isNew {
         Button {
           isConfirmingTrash = true
         } label: {
           Label("Move to Trash", icon: .trash)
         }
-        .mtButtonStyle(.ghost, isLoading: isTrashing)
+        .mtButtonStyle(.ghost, isLoading: controller.isTrashing)
         .accessibilityIdentifier("editor-trash")
-        .entryTrashConfirmation(editing?.displayTitle ?? "", isPresented: $isConfirmingTrash) {
-          Task { await trash() }
+        .entryTrashConfirmation(trashTitle, isPresented: $isConfirmingTrash) {
+          Task { await moveToTrash() }
         }
       }
-      Spacer(minLength: 0)
+    } cancel: {
       Button("Cancel") { dismiss() }
         .mtButtonStyle(.secondary)
-      Button(isSaving ? "Saving…" : editing == nil ? "Add" : "Save changes") {
-        Task { await save() }
-      }
-      .mtButtonStyle(isLoading: isSaving)
-      .accessibilityIdentifier("editor-save")
+    } primary: {
+      Button(controller.saveTitle) { Task { await save() } }
+        .mtButtonStyle(isLoading: controller.isSaving)
+        .accessibilityIdentifier("editor-save")
     }
   }
 
-  /// The saved note: an untouched note keeps its original document, including Web-only
-  /// structure; an edited note saves the editor's formatting.
-  private func noteDraft() -> (body: String, rich: EntryRichText?) {
-    let current = EntryEmphasisContent.capture(note)
-    if let editing, current == EntryEmphasisContent.capture(openingNote) {
-      return (editing.body, editing.richText)
-    }
-    return (current.body, current.rich.flatMap(EntryRichText.init))
+  private var trashTitle: String {
+    let title = draft.title.trimmed
+    return title.isEmpty ? (draft.original?.displayTitle ?? "this Entry") : title
   }
 
-  private func loadTagOptions() async {
-    tagOptions = (try? await EntryAPI(client: client, ownerID: ownerID).tagOptions()) ?? []
-  }
-
-  @MainActor
   private func save() async {
-    guard !isBusy else { return }
-    let marks = EntryMarks(isChapter: isChapter, isFirstTime: isFirstTime)
-    let parameters: SaveEntryParameters
-    do {
-      let resolved = try occurrence.resolve(
-        original: editing?.occurrence(fallbackTimezone: occurrence.timezone), span: isChapter)
-      let note = noteDraft()
-      parameters = try SaveEntryParameters(
-        entryID: entryID, expectedRevision: editing?.revision, title: title, body: note.body,
-        richText: note.rich, occurrence: resolved,
-        tagNames: tagNames.map { existingTagName($0, options: tagOptions) },
-        location: keepsLocation ? editing?.primaryLocation : nil,
-        photoLocation: editing == nil ? nil : photoLocation, marks: marks)
-    } catch {
-      errorMessage = error.localizedDescription
-      return
-    }
-    isSaving = true
-    errorMessage = nil
-    defer { isSaving = false }
-    do {
-      let saved = try await EntryAPI(client: client, ownerID: ownerID).save(parameters)
-      MTToastCenter.shared.success(
-        editing != nil
-          ? "Entry saved."
-          : isChapter ? "Chapter added." : isFirstTime ? "First Time added." : "Entry added.")
+    switch await controller.save() {
+    case .saved(let saved):
       onSaved(.saved(saved))
       dismiss()
-    } catch {
-      errorMessage = error.localizedDescription
+    case .savedWithUnattachedPhotos(let saved):
+      // The Entry changed, so its pages refresh; the editor stays open to retry the photos.
+      onSaved(.saved(saved))
+    case .failed:
+      break
     }
   }
 
-  @MainActor
-  private func trash() async {
-    guard let editing, !isBusy else { return }
-    isTrashing = true
-    errorMessage = nil
-    defer { isTrashing = false }
-    do {
-      try await EntryAPI(client: client, ownerID: ownerID).moveToTrash(
-        id: editing.id, revision: editing.revision)
-      MTToastCenter.shared.info("Entry moved to Trash.")
-      onSaved(.movedToTrash(editing.id))
-      dismiss()
-    } catch {
-      errorMessage = error.localizedDescription
-    }
+  private func moveToTrash() async {
+    guard await controller.moveToTrash() else { return }
+    onSaved(.movedToTrash(draft.entryID))
+    dismiss()
   }
 }
 
