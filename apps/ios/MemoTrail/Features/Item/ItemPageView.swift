@@ -1,12 +1,9 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-// P4: the full Item page (photos in the current card, Chapter contents with pages, Chapters
-// during this time, and an existing Chapter review shown read-only).
-
-/// Web `/items/<entry>`: one Entry's identity and title, Edit and Move to Trash, its writing and
-/// facts, and current photos. A dated Chapter also lists the Entries inside it and the Chapters
-/// during the same time.
+/// Web `/items/<entry>`: one Entry's identity and title, Edit and Move to Trash, its writing,
+/// photos, and facts. A dated Chapter also lists its saved review, the Entries inside it, and
+/// the Chapters during the same time.
 struct ItemPageView: View {
   let client: SupabaseClient
   let ownerID: UUID
@@ -97,12 +94,8 @@ struct ItemPageView: View {
           .font(MTFont.body)
           .foregroundStyle(MTColor.inkMuted)
       }
-      ItemCurrentCard(entry: entry)
-      if !entry.isInTrash {
-        EntryPhotoGalleryView(client: client, ownerID: ownerID, entryID: entryID) {
-          await controller.load()
-        }
-        .id("photos:\(entryID)")
+      ItemCurrentCard(entry: entry) {
+        photos(entry)
       }
       if !entry.isInTrash, entry.subtype == .chapter {
         chapterSections(entry)
@@ -126,53 +119,98 @@ struct ItemPageView: View {
       .mtButtonStyle(.danger, isLoading: isTrashing)
       .disabled(isOpeningEditor || isTrashing)
       .accessibilityIdentifier("item-trash")
-      .entryTrashConfirmation(entry.displayTitle, isPresented: $isConfirmingTrash) {
+      .itemTrashConfirmation(entry.displayTitle, isPresented: $isConfirmingTrash) {
         Task { await moveToTrash() }
       }
     }
   }
 
-  /// A plain version of Web `ChapterSections`.
+  // MARK: Photos
+
+  /// Web: the photos below the writing, or a notice when they could not load. An Entry in Trash
+  /// shows none; they are restored from Trash with it.
+  @ViewBuilder
+  private func photos(_ entry: EntryDetail) -> some View {
+    if entry.isInTrash {
+      EmptyView()
+    } else if controller.photosFailed {
+      Text("Photos could not load. Pull down to refresh and try again.")
+        .font(MTFont.supporting)
+        .foregroundStyle(MTColor.warm)
+        .accessibilityAddTraits(.updatesFrequently)
+        .accessibilityIdentifier("item-photos-error")
+    } else if !controller.photos.isEmpty {
+      ItemPhotosView(photos: controller.photos, hasMore: controller.photosHaveMore)
+    }
+  }
+
+  // MARK: A Chapter
+
+  /// Web `ChapterSections`: the review when there is one, the Entries dated inside the Chapter,
+  /// and the Chapters during the same time.
   @ViewBuilder
   private func chapterSections(_ entry: EntryDetail) -> some View {
+    if let review = controller.review {
+      ItemReviewView(
+        review: review, facts: controller.reviewFacts,
+        spanLabel: entry.chapterDateFacts().span)
+    }
+    VStack(alignment: .leading, spacing: MTSpacing.s3) {
+      MTSectionHeader(
+        "In this Chapter",
+        detail: entry.occurredStart != nil && controller.chapterErrorMessage == nil
+          && controller.hasLoaded ? countLabel(controller.chapterEntryCount, "Entry") : nil)
+      chapterEntries(entry)
+    }
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("item-chapter-entries")
+    if !controller.chapterOverlaps.isEmpty {
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
+        MTSectionHeader("Chapters during this time")
+        ItemOverlapList(overlaps: controller.chapterOverlaps)
+      }
+      .accessibilityElement(children: .contain)
+      .accessibilityIdentifier("item-chapter-overlaps")
+    }
+  }
+
+  @ViewBuilder
+  private func chapterEntries(_ entry: EntryDetail) -> some View {
     if entry.occurredStart == nil {
-      MTDetailSection("In this Chapter") {
+      VStack(alignment: .leading, spacing: MTSpacing.s3) {
         Text("Add a rough start date to see the Entries from this time.")
           .font(MTFont.supporting)
           .foregroundStyle(MTColor.inkMuted)
+        Button("Add a start date") { Task { await openEditor() } }
+          .mtButtonStyle(.secondary)
+          .disabled(isOpeningEditor || isTrashing)
+          .accessibilityIdentifier("item-add-start-date")
       }
     } else if let message = controller.chapterErrorMessage {
-      MTDetailSection("In this Chapter") {
-        Text(message)
+      Text(message)
+        .font(MTFont.supporting)
+        .foregroundStyle(MTColor.warm)
+        .accessibilityAddTraits(.updatesFrequently)
+    } else if controller.chapterEntries.isEmpty {
+      if controller.hasLoaded {
+        Text("No Entries are dated inside this Chapter yet.")
           .font(MTFont.supporting)
-          .foregroundStyle(MTColor.warm)
+          .foregroundStyle(MTColor.inkMuted)
       }
     } else {
-      if controller.chapterEntries.isEmpty {
-        MTDetailSection("In this Chapter") {
-          Text("No Entries from this time yet.")
-            .font(MTFont.supporting)
-            .foregroundStyle(MTColor.inkMuted)
-        }
-      } else {
-        ItemLinkList(
-          title: "In this Chapter · \(countLabel(controller.chapterEntryCount, "Entry"))",
-          rows: controller.chapterEntries.map {
-            ItemLinkList.Row(
-              id: $0.id, title: $0.displayTitle, detail: $0.occurrence.displayLabel)
-          },
-          identifierPrefix: "item-chapter-entry")
-      }
-      if !controller.chapterOverlaps.isEmpty {
-        ItemLinkList(
-          title: "Chapters during this time",
-          rows: controller.chapterOverlaps.map {
-            ItemLinkList.Row(id: $0.id, title: $0.displayTitle, detail: $0.occurrence.spanLabel)
-          },
-          identifierPrefix: "item-chapter-overlap")
+      ItemEntryList(
+        rows: controller.chapterEntries.map { $0.row(coverURL: controller.coverURLs[$0.id]) })
+      if controller.hasMoreEntries || controller.moreEntriesErrorMessage != nil {
+        // The trigger is its own row, so the lazy page creates it only near the end of the list.
+        MTLoadMore(
+          isLoading: controller.isLoadingMoreEntries,
+          message: controller.moreEntriesErrorMessage
+        ) { await controller.loadMoreEntries() }
       }
     }
   }
+
+  // MARK: Actions
 
   private func openEditor() async {
     isOpeningEditor = true
@@ -197,5 +235,21 @@ struct ItemPageView: View {
     MTToastCenter.shared.info("Entry moved to Trash.")
     navigator.entriesChanged()
     dismiss()
+  }
+}
+
+extension View {
+  /// Web `moveToTrash`'s confirmation: the title in quotes, and that Trash can restore it.
+  fileprivate func itemTrashConfirmation(
+    _ title: String, isPresented: Binding<Bool>, confirm: @escaping () -> Void
+  ) -> some View {
+    confirmationDialog(
+      "Move “\(title)” to Trash?", isPresented: isPresented, titleVisibility: .visible
+    ) {
+      Button("Move to Trash", role: .destructive, action: confirm)
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("You can restore it later from Trash.")
+    }
   }
 }
