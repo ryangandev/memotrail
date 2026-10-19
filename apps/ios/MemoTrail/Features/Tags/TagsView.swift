@@ -35,7 +35,7 @@ struct TagsView: View {
   var body: some View {
     MTPage(width: .standard, spacing: MTSpacing.s6) {
       MTPageHeader(
-        eyebrow: "Group across your archive", title: "Tags",
+        eyebrow: "Your data", title: "Tags",
         description:
           "Tags group related Entries, such as travel, family, or a trip you want to keep together. Use them across Entry types and filter by them anywhere."
       ) {

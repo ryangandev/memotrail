@@ -94,7 +94,7 @@ struct OrganizationActions {
       try await validateSessionOwner()
       return try await change() == nil ? unchanged : nil
     } catch OrganizationActionsError.ownerChanged {
-      return "Sign in again to organize your archive."
+      return "Sign in again to manage your tags."
     } catch is URLError {
       return "Could not connect. Your changes are still here to retry."
     } catch {

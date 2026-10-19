@@ -23,7 +23,7 @@ final class NativeWorkspaceUITests: XCTestCase {
   func testSignInFollowsTheWebWelcome() {
     let app = launch("--review-sign-in")
     XCTAssertTrue(
-      app.staticTexts["A quiet place for everything worth keeping."].waitForExistence(timeout: 5))
+      app.staticTexts["The one private place your life is written down."].waitForExistence(timeout: 5))
     XCTAssertTrue(app.staticTexts["Welcome to MemoTrail"].exists)
     XCTAssertTrue(app.staticTexts["Sign in to continue to your private space."].exists)
     XCTAssertTrue(app.buttons["google-sign-in"].exists)
@@ -52,6 +52,11 @@ final class NativeWorkspaceUITests: XCTestCase {
     ] {
       reveal(app.buttons[identifier], in: app).tap()
       XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 3), title)
+      if identifier == "more-firstTimes" {
+        // Without a backend nothing loads, so First Times says so without counting zero.
+        XCTAssertTrue(app.staticTexts["First Times unavailable"].waitForExistence(timeout: 10))
+        XCTAssertFalse(app.otherElements["First Times summary"].exists)
+      }
       attach(app, title)
       app.navigationBars.buttons["More"].tap()
       XCTAssertTrue(app.buttons[identifier].waitForExistence(timeout: 3), identifier)
@@ -65,10 +70,10 @@ final class NativeWorkspaceUITests: XCTestCase {
     reveal(app.buttons["more-settings"], in: app).tap()
     XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
     // Settings links to Tags and Export; import stays on the Web.
-    XCTAssertTrue(reveal(app.buttons["Export archive"], in: app).exists)
-    XCTAssertTrue(app.staticTexts["Import notes"].exists)
+    XCTAssertTrue(reveal(app.buttons["Export"], in: app).exists)
+    XCTAssertTrue(app.staticTexts["Import"].exists)
     attach(app, "Settings")
-    reveal(app.buttons["Archive organization"], in: app).tap()
+    reveal(app.buttons["Tags"], in: app).tap()
     XCTAssertTrue(app.navigationBars["Tags"].waitForExistence(timeout: 3))
     app.navigationBars.buttons["Settings"].tap()
     XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
@@ -173,11 +178,11 @@ final class NativeWorkspaceUITests: XCTestCase {
         .waitForExistence(timeout: 5))
 
     reveal(app.buttons["Open fitted sheet"], in: app).tap()
-    XCTAssertTrue(app.staticTexts["What are you adding?"].waitForExistence(timeout: 3))
+    XCTAssertTrue(app.staticTexts["Add to Timeline"].waitForExistence(timeout: 3))
     Thread.sleep(forTimeInterval: 0.6)
     attach(app, "Fitted sheet")
-    app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Moment")).firstMatch.tap()
-    XCTAssertTrue(app.staticTexts["Moment chosen."].waitForExistence(timeout: 3))
+    app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Chapter")).firstMatch.tap()
+    XCTAssertTrue(app.staticTexts["Chapter chosen."].waitForExistence(timeout: 3))
   }
 
   func testRichWritingDarkLargeTextAndSheetCancel() {
@@ -204,10 +209,10 @@ final class NativeWorkspaceUITests: XCTestCase {
     let app = launchSection("forms")
     let record = reveal(app.buttons["Record, required"], in: app)
     record.tap()
-    XCTAssertTrue(app.buttons["People"].waitForExistence(timeout: 3))
+    XCTAssertTrue(app.buttons["First Times"].waitForExistence(timeout: 3))
     attach(app, "Grouped select menu")
-    app.buttons["People"].tap()
-    XCTAssertEqual(record.value as? String, "People")
+    app.buttons["First Times"].tap()
+    XCTAssertEqual(record.value as? String, "First Times")
 
     let emptyDate = reveal(app.buttons["Empty date"], in: app)
     XCTAssertEqual(emptyDate.value as? String, "Not set")
@@ -229,6 +234,19 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertEqual(
       app.buttons["Default time zone"].value as? String, "(UTC+05:45) Kathmandu - Asia")
 
+    // A checkbox is one element that names its row and reads On or Off.
+    let remind = reveal(app.descendants(matching: .any)["gallery-checkbox-remind"], in: app)
+    XCTAssertEqual(remind.value as? String, "Off")
+    remind.tap()
+    XCTAssertEqual(remind.value as? String, "On")
+    XCTAssertTrue(app.staticTexts["Remind me is on."].exists)
+
+    // With no tags yet, the most used ones are one tap away.
+    let family = reveal(app.buttons["Add tag family"], in: app)
+    attach(app, "Most used tags")
+    family.tap()
+    XCTAssertTrue(app.buttons["Remove family from Tags"].waitForExistence(timeout: 3))
+    XCTAssertFalse(app.buttons["Add tag travel"].exists)
     reveal(app.buttons["organization-add-tag"], in: app).tap()
     let tagSearch = app.textFields["organization-search-tag"]
     XCTAssertTrue(tagSearch.waitForExistence(timeout: 3))
@@ -238,23 +256,30 @@ final class NativeWorkspaceUITests: XCTestCase {
     XCTAssertTrue(app.buttons["milestone"].isSelected)
     tagSearch.typeText("road trip,")
     XCTAssertTrue(app.buttons["road trip"].waitForExistence(timeout: 3))
-    tagSearch.typeText("sunrise")
+    // A name that differs only by case reuses the existing tag.
+    tagSearch.typeText("Lisbon")
     app.buttons["organization-done"].tap()
     XCTAssertTrue(app.buttons["Remove milestone from Tags"].waitForExistence(timeout: 3))
     XCTAssertTrue(app.buttons["Remove road trip from Tags"].exists)
-    XCTAssertTrue(app.buttons["Remove sunrise from Tags"].exists)
-    XCTAssertTrue(app.staticTexts["5 of 50 Tags"].exists)
+    XCTAssertTrue(app.buttons["Remove lisbon from Tags"].exists)
+    // The count shows only near the limit.
+    XCTAssertFalse(
+      app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", " of 70 tags")).firstMatch
+        .exists)
     attach(app, "Added tags")
 
-    reveal(app.buttons["Date type, required"], in: app).tap()
-    app.buttons["Date range"].tap()
+    // A Chapter still going on has Present checked and no end date until it is unchecked.
+    let chapter = app.otherElements["gallery-occurrence-chapter"]
     let present = reveal(
-      app.descendants(matching: .toggle)["Present, This period is still ongoing"], in: app)
-    XCTAssertTrue(app.buttons["End date"].exists)
-    present.tap()
+      chapter.descendants(matching: .any)
+        .matching(NSPredicate(format: "label BEGINSWITH %@", "Present, ")).firstMatch, in: app)
     XCTAssertEqual(present.value as? String, "On")
-    XCTAssertFalse(app.buttons["End date"].exists)
-    attach(app, "Ongoing date range")
+    XCTAssertFalse(chapter.buttons["End date"].exists)
+    attach(app, "Ongoing Chapter date")
+    present.tap()
+    XCTAssertEqual(present.value as? String, "Off")
+    XCTAssertTrue(chapter.buttons["End date"].waitForExistence(timeout: 3))
+    attach(app, "Chapter date with an end")
   }
 
   func testToastsStackPassTouchesThroughAndDismiss() {
@@ -373,6 +398,7 @@ final class NativeWorkspaceUITests: XCTestCase {
       "PageHeader": "primitives", "PhotoViewer": "feedback", "RecordCard": "containers",
       "RichText": "writing", "SearchField": "forms", "SectionHeader": "containers",
       "SelectField": "forms", "SeparatedList": "containers", "Skeleton": "feedback",
+      "SyncStatus": "feedback",
       "TextField": "forms", "TimeZoneField": "forms", "Toast": "feedback",
       "UploadProgress": "feedback",
     ]

@@ -129,7 +129,8 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
     Self.displayDate(expiresAt, timezone: timezone)
   }
 
-  /// Web `trashRetention`: how long the item stays restorable, and the date it runs through.
+  /// Web's Trash facts line: the day the item stays restorable through, or the day it became
+  /// eligible for cleanup once that has passed.
   func retention(referenceDate: Date = Date(), timezone: String = TimeZone.current.identifier)
     -> (status: String, date: String?)
   {
@@ -137,9 +138,8 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
       return ("Retention date unavailable", nil)
     }
     let label = expirationDateLabel(timezone: timezone)
-    let remainingDays = Int(ceil(expirationDate.timeIntervalSince(referenceDate) / 86_400))
-    guard remainingDays > 0 else { return ("Eligible for cleanup since", label) }
-    return ("\(countLabel(remainingDays, "day")) to restore · through", label)
+    guard expirationDate > referenceDate else { return ("Eligible for cleanup since", label) }
+    return ("Restorable through", label)
   }
 
   /// Web's Delete forever dialog text: what is removed, that Reviews reading an Entry go with it
@@ -153,9 +153,9 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
   var deletionDescription: String {
     switch kind {
     case .attachment:
-      "The private photo file and its attachment record will be removed."
+      "The photo will be removed."
     case .entry:
-      "The Entry, private photos, relationships, and specialized details will be removed."
+      "The Entry and its photos will be removed."
     }
   }
 
@@ -301,6 +301,18 @@ struct EmptyTrashTarget: Decodable, Equatable, Sendable {
     case deletedAt = "deleted_at"
     case revision
   }
+  /// Web `trashContents`: what a prepared list holds, such as "30 Entries and 1 photo".
+  static func contents(_ items: [Self]) -> String {
+    let photos = items.filter { $0.kind == .attachment }.count
+    let entries = items.count - photos
+    return [
+      entries > 0 ? countLabel(entries, "Entry") : nil,
+      photos > 0 ? countLabel(photos, "photo") : nil,
+    ]
+    .compactMap { $0 }
+    .joined(separator: " and ")
+  }
+
   static func isValid(_ items: [Self]) -> Bool {
     guard items.count <= 10000 else { return false }
     var seen = Set<String>()

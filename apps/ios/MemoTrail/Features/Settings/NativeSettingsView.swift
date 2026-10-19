@@ -72,7 +72,7 @@ struct NativeSettingsView: View {
       if controller.profile != nil {
         SettingsFormCard(
           title: "What should we call you?",
-          detail: "Used in your Home greeting. Leave blank to use your Google name."
+          detail: "Used in your Dashboard greeting. Leave blank to use your Google name."
         ) {
           MTTextField(
             label: "Preferred name", text: $preferredName, prompt: user.name, maxLength: 80
@@ -178,19 +178,19 @@ struct NativeSettingsView: View {
         }
         MTListDivider()
         SettingsWorkspaceLink(
-          icon: .tag, title: "Archive organization",
-          detail: "Rename, merge, and clean up the tags across your archive.",
+          icon: .tag, title: "Tags",
+          detail: "Rename, merge, and clean up tags.",
           route: .tags)
         MTListDivider()
         SettingsInfoRow(
-          icon: .plus, title: "Import notes",
+          icon: .plus, title: "Import",
           detail:
-            "Bring notes and journals from another app into your archive. Import is available in MemoTrail on the Web."
+            "Bring notes and journals from another app. Import is available in MemoTrail on the Web."
         )
         MTListDivider()
         SettingsPreferenceLink(
-          icon: .archive, title: "Export archive",
-          detail: "Create a complete portable copy of your private archive."
+          icon: .archive, title: "Export",
+          detail: "A complete, portable copy of everything you have written."
         ) {
           ExportView(client: client, ownerID: user.id)
         }
@@ -224,7 +224,7 @@ struct NativeSettingsView: View {
         Text("Private by default")
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
-        Text("Your account and archive are not shared with other MemoTrail users.")
+        Text("Your account and everything you write are not shared with other MemoTrail users.")
           .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
@@ -422,7 +422,7 @@ private struct SettingsWorkspaceLink: View {
   }
 }
 
-/// A row that leads nowhere on iOS, like Import notes, which stays on the Web.
+/// A row that leads nowhere on iOS, like Import, which stays on the Web.
 private struct SettingsInfoRow: View {
   let icon: MTIcon
   let title: String

@@ -103,7 +103,7 @@ struct FirstTimesView: View {
       }
       .padding(.top, MTSpacing.s4)
       .accessibilityElement(children: .contain)
-      .accessibilityLabel("First Times archive")
+      .accessibilityLabel("First Times")
     }
   }
 }

@@ -9,7 +9,7 @@ extension LocalSessionUITests {
     XCTAssertTrue(app.tabBars.buttons["More"].waitForExistence(timeout: 20))
     app.tabBars.buttons["More"].tap()
     reveal(app.buttons["more-settings"], in: app).tap()
-    reveal(app.buttons["Export archive"], in: app).tap()
+    reveal(app.buttons["Export"], in: app).tap()
     let export = app.buttons["Export everything"]
     XCTAssertTrue(export.waitForExistence(timeout: 15))
     // Nothing is listed until something was exported.
@@ -77,9 +77,9 @@ extension LocalSessionUITests {
     app.navigationBars["Settings"].buttons["Done"].tap()
     XCTAssertTrue(text("River.", in: app).waitForExistence(timeout: 10))
 
-    // Archive organization closes Settings and opens Tags.
+    // The Tags row closes Settings and opens Tags.
     app.buttons["workspace-settings"].tap()
-    reveal(app.buttons["Archive organization"], in: app).tap()
+    reveal(app.buttons["Tags"], in: app).tap()
     XCTAssertTrue(app.buttons["new-tag"].waitForExistence(timeout: 15))
     XCTAssertTrue(app.navigationBars["Tags"].exists)
   }

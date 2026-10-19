@@ -19,12 +19,10 @@ struct TrashView: View {
     MTPage(width: .standard, spacing: MTSpacing.s6) {
       MTPageHeader(
         eyebrow: "Recoverable by design", title: "Trash",
-        description:
-          "Restore something you still need, or permanently remove it with an explicit confirmation."
+        description: "Removed Entries and photos stay restorable for 30 days."
       ) {
         retentionBadge
       }
-      retentionNote
       if controller.loadErrorMessage == nil, controller.totalCount > 0 {
         Button(controller.isPreparingEmptyTrash ? "Preparing Trash…" : "Empty Trash") {
           batchTask = Task { announce(await controller.prepareEmptyTrash()) }
@@ -92,27 +90,6 @@ struct TrashView: View {
     .accessibilityElement(children: .combine)
   }
 
-  private var retentionNote: some View {
-    HStack(alignment: .top, spacing: MTSpacing.s3) {
-      Image(.archive)
-        .font(.mtIcon(MTSize.Icon.s17))
-        .foregroundStyle(MTColor.warm)
-        .accessibilityHidden(true)
-      Text(
-        "Items remain recoverable during their retention window. Reaching the shown date makes an item eligible for cleanup, but this screen does not claim it was automatically deleted."
-      )
-      .font(MTFont.detail)
-      .foregroundStyle(MTColor.inkMuted)
-      .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(MTSpacing.s4)
-    .background(MTColor.surface, in: RoundedRectangle(cornerRadius: MTRadius.large))
-    .overlay {
-      RoundedRectangle(cornerRadius: MTRadius.large).strokeBorder(MTColor.border)
-    }
-  }
-
   @ViewBuilder private var content: some View {
     if !controller.hasLoaded {
       HStack(spacing: MTSpacing.s3) {
@@ -129,7 +106,7 @@ struct TrashView: View {
       MTEmptyState(
         title: "Nothing in Trash",
         message:
-          "Removed Entries and individual photos will appear here. Legacy records remain recoverable too.",
+          "Removed Entries and individual photos will appear here.",
         icon: .trash)
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
@@ -327,17 +304,19 @@ private struct EmptyTrashSheet: View {
   let confirm: () -> Void
 
   var body: some View {
-    let count = controller.emptySnapshot?.count ?? controller.emptyTotal
+    let contents =
+      controller.emptySnapshot.map(EmptyTrashTarget.contents)
+      ?? countLabel(controller.emptyTotal, "item")
     MTSheet(
-      eyebrow: "Permanent action", title: "Empty \(countLabel(count, "item")) from Trash?",
+      eyebrow: "Permanent action", title: "Delete \(contents) forever?",
       description:
-        "This includes all Trash pages, not just the visible items. Their records and private photos will be permanently removed.\(reviewsExist ? " \(ReviewDeletion.sentence)" : "") This cannot be undone.",
+        "This includes every page of Trash, not just the visible rows.\(reviewsExist ? " \(ReviewDeletion.sentence)" : "") This cannot be undone.",
       closeLabel: "Close", closeIdentifier: "close-empty-trash", size: .fitted,
       isBusy: controller.isEmptying
     ) {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
         Text(
-          "Only this prepared list is included. Items added to Trash later are not deleted. If an item changes or a request cannot be confirmed, deletion stops for a fresh review."
+          "Only this prepared list is included. Anything added to Trash later is not deleted. If an Entry or photo changes or a request cannot be confirmed, deletion stops for a fresh review."
         )
         .font(MTFont.body)
         .foregroundStyle(MTColor.inkMuted)
@@ -358,7 +337,7 @@ private struct EmptyTrashSheet: View {
           .mtButtonStyle(.secondary)
       } primary: {
         Button(
-          controller.isEmptying ? "Emptying Trash…" : "Permanently delete confirmed items",
+          controller.isEmptying ? "Emptying Trash…" : "Delete forever",
           action: confirm
         )
         .mtButtonStyle(.danger)

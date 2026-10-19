@@ -205,7 +205,7 @@ struct ExportView: View {
   var body: some View {
     MTPage(width: .compact, spacing: MTSpacing.s5) {
       MTPageHeader(
-        eyebrow: "Your archive, to keep", title: "Export archive",
+        eyebrow: "Your data", title: "Export",
         description: "A portable copy of your story. No AI processing.")
       ExportCard(title: "Export everything") {
         paragraph(
@@ -268,7 +268,7 @@ struct ExportView: View {
       .mtLineSpacing(MTLineHeight.relaxed, textStyle: .caption1)
     }
     .refreshable { await load() }
-    .navigationTitle("Export archive")
+    .navigationTitle("Export")
     .navigationBarTitleDisplayMode(.inline)
     .task { await load() }
     .onDisappear {

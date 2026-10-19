@@ -163,7 +163,7 @@ final class TrashItemTests: XCTestCase {
     let expiredDate = try XCTUnwrap(EntryTimestamp.date(from: "2026-10-03T12:34:57Z"))
 
     let restorable = item.retention(referenceDate: referenceDate, timezone: "UTC")
-    XCTAssertEqual(restorable.status, "30 days to restore · through")
+    XCTAssertEqual(restorable.status, "Restorable through")
     XCTAssertEqual(restorable.date, "Oct 2, 2026")
     let expired = item.retention(referenceDate: expiredDate, timezone: "UTC")
     XCTAssertEqual(expired.status, "Eligible for cleanup since")
@@ -183,11 +183,9 @@ final class TrashItemTests: XCTestCase {
     let items = try decodeItems()
 
     XCTAssertEqual(
-      items[0].deletionDescription,
-      "The Entry, private photos, relationships, and specialized details will be removed.")
+      items[0].deletionDescription, "The Entry and its photos will be removed.")
     XCTAssertEqual(
-      items[1].deletionDescription,
-      "The private photo file and its attachment record will be removed.")
+      items[1].deletionDescription, "The photo will be removed.")
   }
 
   func testDeleteForeverSaysReviewsGoWithTheEntriesTheyReadOnlyWhenTheyExist() throws {
@@ -196,16 +194,15 @@ final class TrashItemTests: XCTestCase {
 
     XCTAssertEqual(
       items[0].deletionConfirmation(reviewsExist: false),
-      "The Entry, private photos, relationships, and specialized details will be removed. This cannot be undone."
-    )
+      "The Entry and its photos will be removed. This cannot be undone.")
     XCTAssertEqual(
       items[0].deletionConfirmation(reviewsExist: true),
-      "The Entry, private photos, relationships, and specialized details will be removed. \(sentence) This cannot be undone."
+      "The Entry and its photos will be removed. \(sentence) This cannot be undone."
     )
     // A photo is no Entry, so no Review read it.
     XCTAssertEqual(
       items[1].deletionConfirmation(reviewsExist: true),
-      "The private photo file and its attachment record will be removed. This cannot be undone.")
+      "The photo will be removed. This cannot be undone.")
 
     func settings(_ json: String) throws -> ReviewDeletion {
       try JSONDecoder().decode(ReviewDeletion.self, from: Data(json.utf8))
