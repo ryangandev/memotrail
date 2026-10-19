@@ -42,6 +42,12 @@ const preferences: Array<{
     title: "Archive organization",
   },
   {
+    detail: "Bring notes and journals from another app into your archive.",
+    href: "/settings/import",
+    icon: "plus",
+    title: "Import notes",
+  },
+  {
     detail: "Create a complete portable copy of your private archive.",
     href: "/settings/export",
     icon: "archive",

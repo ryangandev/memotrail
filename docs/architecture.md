@@ -31,15 +31,16 @@ A failed client request, such as saving Appearance offline, is handled where it 
 Use this table to find the first likely files, then search by the product term or RPC name.
 Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/MemoTrail`.
 
-| Request                                                  | Web                                                                                                                                          | iOS                                                                                   | Shared data and tests                                                   |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                                       | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                 |
-| Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`              | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests      |
-| Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`, `lib/search` | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests              |
-| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                        | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                         |
-| Timeline, Homes, Vehicles, or First Times                | matching `app` route, workspace component, and `lib/data` module                                                                             | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                   |
-| Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                        | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests |
-| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                 | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator      |
+| Request                                                  | Web                                                                                                                                          | iOS                                                                                   | Shared data and tests                                                              |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                                       | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                            |
+| Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`              | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests                 |
+| Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`, `lib/search` | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                         |
+| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                        | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                                    |
+| Import from another app                                  | `app/settings/import`, `app/api/import`, `components/import-*`, `lib/import`                                                                 | none yet                                                                              | import migrations `202610190040` to `202610190044` and `0081_import_jobs.test.sql` |
+| Timeline, Homes, Vehicles, or First Times                | matching `app` route, workspace component, and `lib/data` module                                                                             | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                              |
+| Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                        | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests            |
+| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                 | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator                 |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
 The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
@@ -357,6 +358,38 @@ It lives in `lib/search`, outside `lib/ai`, and the AI pause gate does not apply
 - Cross-device synchronization and an application export are not infrastructure backups.
 - Database and original Storage objects need separately protected backups and a tested non-production restore before MemoTrail can be considered recoverable.
 - Automatic 30-day cleanup is not active until its exact scope, backup prerequisites, and rollout are approved.
+
+## Import rules
+
+Import turns an export ZIP from another app into ordinary Entries.
+One engine reads every source, and each source is an adapter in `apps/web/src/lib/import/adapters` that turns a ZIP into candidates.
+The sources are a Markdown folder (which also reads Apple Notes Markdown exports), Apple Journal, Notion, and Day One.
+
+- The browser uploads the ZIP to the private `import-staging` bucket with resumable TUS, as the signed-in user, because a Vercel function body is capped at 4.5 MB.
+  Storage policies let a user write only the exact object of their own `uploading` job and read or delete only their own folder.
+  The size cap is `IMPORT_MAX_ZIP_BYTES` (default 50 MiB, ceiling 5 GiB); a larger cap also needs the hosted Storage file size limit raised.
+- The server never downloads the ZIP whole.
+  `lib/import/storage.ts` reads it through a signed URL by HTTP range requests, and `lib/import/zip.ts` caches 4 MiB blocks and refuses encrypted archives, path traversal, too many members, and extreme compression ratios.
+  Only a Notion export of part ZIPs is expanded, one level deep.
+- Import is a resumable job in Postgres (`import_jobs`, `import_items`) with one active job per user, driven by a single `app/api/import` action route.
+  A scan stores one item per candidate with its content hash and payload.
+  The preview reads totals and a sample, and the person's choices (time zone, tags, folders to leave out, a Notion date property) are stored on the job when it is confirmed.
+  The run action takes a lease, claims batches, writes Entries and photos until a 240 second budget ends, and returns so the page can call it again.
+  Reloading the page, losing the connection, or a function timeout only pauses the job.
+  A full Storage quota moves it to `paused_quota` until the person continues.
+- Imported Entries are created through `save_entry` (or the canonical insert for a photo-only Entry) inside `import_entry`, so later Entry rules apply to them.
+  Photos are uploaded to `entry-media` first and registered second with `register_entry_attachment`, like capture, and an Entry holds at most 12.
+- Imports are idempotent.
+  An Entry id is a version 5 UUID of the owner, source, and source key, and `entry_import_origins` records each source key with a content hash.
+  A repeated import reports each item as created, unchanged, changed in the source (left alone so edits are safe), or deleted earlier (`entry_tombstones`).
+- A date keeps the precision the source has.
+  A day, month, or year is stored at noon in the chosen zone like the editor does, an unreadable date becomes `unknown` with its text as the description, and an ambiguous slashed date is refused rather than guessed.
+  `created_at` stays the import time.
+- Import clients can select job and origin rows but not the `payload` or `media` columns of items, which are read only through `import_job_sample`.
+  The result report is a CSV of source keys, statuses, and reasons with no titles or text.
+  Staged ZIPs are removed when a job ends or goes stale (`expire_import_jobs`), and undo moves a job's untouched Entries to Trash for 30 days.
+- The Apple Journal and Notion adapters are built from third-party importers' reports and synthetic fixtures, so unknown markup degrades to plain text.
+  Change them only against a real export of the same app.
 
 ## Design-system rules
 
