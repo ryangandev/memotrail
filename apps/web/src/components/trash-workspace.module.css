@@ -86,6 +86,10 @@
   white-space: nowrap;
 }
 
+.emptyTrash {
+  display: contents;
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -104,11 +108,17 @@
   color: var(--mt-color-accent);
 }
 
-/* On a phone the actions drop under the text, left aligned, and a long title wraps. */
+/* On a phone the actions drop under the text, left aligned, and a long title wraps. The
+   transparent Empty Trash button lines its text up with the title's edge. */
 @media (max-width: 720px) {
   .row {
-    flex-wrap: wrap;
-    gap: var(--mt-space-2) var(--mt-space-3);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--mt-space-2) 0;
+  }
+
+  .thumb {
+    margin-inline-start: var(--mt-space-3);
   }
 
   .titleText {
@@ -119,7 +129,11 @@
   }
 
   .actions {
-    flex-basis: 100%;
+    grid-column: 1 / -1;
+  }
+
+  .emptyTrash {
+    display: inline-flex;
     margin-inline-start: calc(var(--mt-space-3-5) * -1);
   }
 }

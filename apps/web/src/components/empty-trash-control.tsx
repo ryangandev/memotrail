@@ -185,8 +185,8 @@ export function EmptyTrashControl({
           {" "}
           <p>
             Only this prepared list is included. Anything added to Trash later
-            is not deleted. If an item changes or a request cannot be confirmed,
-            deletion stops for a fresh review.
+            is not deleted. If an Entry or photo changes or a request cannot be
+            confirmed, deletion stops for a fresh review.
           </p>
           {running && (
             <p role="status">

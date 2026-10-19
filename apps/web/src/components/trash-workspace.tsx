@@ -92,16 +92,18 @@ export function TrashWorkspace({
         meta="Removed Entries and photos stay restorable for 30 days."
         action={
           showEmptyTrash ? (
-            <EmptyTrashControl
-              disabled={Boolean(pending) || Boolean(confirmation)}
-              reviewsExist={workspace.reviewsExist}
-              onBusy={setBatchBusy}
-              onResult={announceResult}
-              onFinish={() => {
-                if (workspace.page > 1) router.push("/trash");
-                else router.refresh();
-              }}
-            />
+            <span className={styles.emptyTrash}>
+              <EmptyTrashControl
+                disabled={Boolean(pending) || Boolean(confirmation)}
+                reviewsExist={workspace.reviewsExist}
+                onBusy={setBatchBusy}
+                onResult={announceResult}
+                onFinish={() => {
+                  if (workspace.page > 1) router.push("/trash");
+                  else router.refresh();
+                }}
+              />
+            </span>
           ) : null
         }
       />
