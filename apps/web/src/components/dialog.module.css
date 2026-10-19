@@ -91,9 +91,9 @@
 
 .eyebrow {
   margin: 0 0 var(--mt-space-2);
-  color: var(--mt-color-warm);
+  color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-semibold);
+  font-weight: var(--mt-font-weight-medium);
 }
 
 .body {

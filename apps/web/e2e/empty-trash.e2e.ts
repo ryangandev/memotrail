@@ -134,7 +134,9 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     const open = page.getByRole("button", { name: "Empty Trash", exact: true });
     const dialog = page.getByRole("dialog");
     await open.click();
-    await expect(dialog).toContainText("Empty 31 items from Trash?");
+    await expect(dialog).toContainText(
+      "Delete 30 Entries and 1 photo forever?",
+    );
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
@@ -155,16 +157,16 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       ).error,
     ).toBeNull();
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
-    await expect(
-      page.getByText(/0 of 31 items confirmed deleted/),
-    ).toBeVisible();
+    await expect(page.getByText(/0 of 31 confirmed deleted/)).toBeVisible();
     expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(30);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await open.click();
-    await expect(dialog).toContainText("Empty 30 items from Trash?");
+    await expect(dialog).toContainText(
+      "Delete 29 Entries and 1 photo forever?",
+    );
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
@@ -187,11 +189,11 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       ).error,
     ).toBeNull();
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: /30 confirmed items permanently deleted/,
+        hasText: /29 Entries and 1 photo deleted forever\./,
       }),
     ).toBeVisible({ timeout: 45000 });
     const remaining = await client.rpc("prepare_empty_trash");
@@ -222,15 +224,15 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     expect(
       (await admin.storage.from("entry-media").download(photoPath)).error,
     ).not.toBeNull();
-    // The one item trashed after that list is counted as one item.
+    // The one Entry trashed after that list is counted on its own.
     await open.click();
-    await expect(dialog).toContainText("Empty 1 item from Trash?");
+    await expect(dialog).toContainText("Delete 1 Entry forever?");
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: /(^|\s)1 confirmed item permanently deleted\./,
+        hasText: /(^|\s)1 Entry deleted forever\./,
       }),
     ).toBeVisible({ timeout: 15000 });
     await expect(
@@ -270,7 +272,7 @@ workspaceTest(
     ).toBeNull();
     await page.goto("/library");
     await page
-      .getByRole("navigation", { name: "Primary navigation", exact: true })
+      .getByRole("navigation", { name: "Workspace tools", exact: true })
       .getByRole("link", { name: "Trash", exact: true })
       .click();
     await expect(page).toHaveURL("/trash");
@@ -299,9 +301,9 @@ workspaceTest(
       .getByRole("button", { name: "Empty Trash", exact: true })
       .click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog).toContainText("Empty 1 item from Trash?");
+    await expect(dialog).toContainText("Delete 1 Entry forever?");
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await cleanupHeld;
     await page.goBack();
@@ -310,7 +312,7 @@ workspaceTest(
     releaseCleanup();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: /(^|\s)1 confirmed item permanently deleted\./,
+        hasText: /(^|\s)1 Entry deleted forever\./,
       }),
     ).toBeVisible();
     // The finished batch does not take the person back to Trash.

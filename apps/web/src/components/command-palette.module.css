@@ -78,7 +78,7 @@
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
   font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
 }
 
 .section {
@@ -87,11 +87,11 @@
 
 .sectionLabel {
   margin: var(--mt-space-2);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-type-eyebrow-font-size);
-  font-weight: var(--mt-type-eyebrow-font-weight);
-  letter-spacing: var(--mt-type-eyebrow-letter-spacing);
-  text-transform: var(--mt-type-eyebrow-text-transform);
+  color: var(--mt-color-ink-muted);
+  font-family: var(--mt-type-caption-font-family);
+  font-size: var(--mt-type-caption-font-size);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-type-caption-line-height);
 }
 
 .commandList {
@@ -169,7 +169,7 @@
 
 .notice {
   margin: 0 var(--mt-space-2) var(--mt-space-3);
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
   font-size: var(--mt-font-size-caption);
   line-height: var(--mt-line-height-body);
 }

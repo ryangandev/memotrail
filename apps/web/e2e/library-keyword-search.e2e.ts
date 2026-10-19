@@ -68,7 +68,7 @@ test("Canonical keyword search finds Entries and Chapters", async ({
     ).toBeNull();
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
-      page.getByRole("link", { name: "Learning 学习 flat", exact: true }),
+      page.getByRole("link", { name: /Learning 学习 flat/ }),
     ).toBeVisible();
     await page.screenshot({
       path: test.info().outputPath("memotrail-library-keyword-desktop.png"),
@@ -85,17 +85,20 @@ test("Canonical keyword search finds Entries and Chapters", async ({
         )
       ).error,
     ).toBeNull();
-    await page
-      .getByRole("link", { name: "Learning 学习 flat", exact: true })
-      .click();
+    await page.getByRole("link", { name: /Learning 学习 flat/ }).click();
     await expect(page).toHaveURL(new RegExp(`/items/${home}$`));
     await expect(page.getByRole("main")).toContainText("A standalone Chapter");
     await expect(page.getByRole("textbox", { name: /^Story/ })).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("Paged Memory"));
-    const results = page.getByRole("region", { name: "Results", exact: true });
-    await expect(results).toContainText("105 items");
-    await expect(results.locator("article")).toHaveCount(25);
-    await results.getByRole("link", { name: "Next", exact: true }).click();
+    const results = page.getByRole("region", { name: "Entries", exact: true });
+    await expect(
+      page.getByRole("main").getByText("105 Entries match"),
+    ).toBeVisible();
+    await expect(results.locator("[data-ui-entry-row]")).toHaveCount(25);
+    await results
+      .getByRole("navigation", { name: "Library pages" })
+      .getByRole("link", { name: "Next", exact: true })
+      .click();
     await expect(page).toHaveURL(/page=2/);
     await expect(
       results.getByRole("link", { name: /Paged Memory/ }).first(),
@@ -104,10 +107,10 @@ test("Canonical keyword search finds Entries and Chapters", async ({
       "/search?q=" + encodeURIComponent("学习") + "&type=writing",
     );
     await expect(
-      page.getByText("No matching items", { exact: true }),
+      page.getByRole("heading", { name: "No Entries match", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: "Learning 学习 flat", exact: true }),
+      page.getByRole("link", { name: /Learning 学习 flat/ }),
     ).toHaveCount(0);
     await expect(
       page.getByRole("link", { name: "Learning 学习 library", exact: true }),
@@ -173,14 +176,16 @@ test("Canonical keyword search finds Entries and Chapters", async ({
     ).toBeNull();
     await page.goto(`/items/${home}`);
     await expect(
-      page.getByText("This item is in Trash. Restore it there to change it."),
+      page.getByText(
+        "This Chapter is in Trash. Restore it from Trash to change it.",
+      ),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Edit Chapter" }),
     ).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
-      page.getByRole("link", { name: "Learning 学习 flat", exact: true }),
+      page.getByRole("link", { name: /Learning 学习 flat/ }),
     ).toHaveCount(0);
   } finally {
     await page.close();

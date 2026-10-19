@@ -66,7 +66,7 @@ Use 1-6 short keyword terms, including English and Chinese translations/synonyms
     throw new AIError(
       "invalid_plan",
       502,
-      "AI could not form a safe search plan. No records changed. You can use keyword search.",
+      "AI could not form a safe search plan. No Entries changed. You can use keyword search.",
     );
   const params = evidenceParameters(plan, request);
   params.p_queries = retrievalTerms(plan.queries);
@@ -88,7 +88,7 @@ Use 1-6 short keyword terms, including English and Chinese translations/synonyms
     throw new AIError(
       "search_unavailable",
       503,
-      "Could not retrieve source records. Your records are unchanged.",
+      "Could not retrieve the source Entries. Your Entries are unchanged.",
     );
   let evidence = buildSearchSources(data, params.p_queries);
   const hasMatches = evidence.sources.length > 0;
@@ -104,11 +104,11 @@ Use 1-6 short keyword terms, including English and Chinese translations/synonyms
       throw new AIError(
         "search_unavailable",
         503,
-        "Could not retrieve source records. Your records are unchanged.",
+        "Could not retrieve the source Entries. Your Entries are unchanged.",
       );
     evidence = buildSearchSources(data, params.p_queries);
     evidence.notices.push(
-      "No direct text matches were found. AI inspected a bounded record window within your filters; this is not an exhaustive semantic search.",
+      "No direct text matches were found. AI read a bounded set of Entries within your filters; this is not an exhaustive semantic search.",
     );
   }
   const { sources, notices } = evidence;
@@ -143,7 +143,7 @@ At most 6 findings, each 1-3 citations selecting an allowed reference formed as 
     throw new AIError(
       "ungrounded_answer",
       502,
-      "AI returned an answer with unverifiable source references. It was not shown. Your records are unchanged; keyword search is still available.",
+      "AI returned an answer with unverifiable source references. It was not shown. Your Entries are unchanged; keyword search is still available.",
     );
   return { ...base, ...validated };
 }

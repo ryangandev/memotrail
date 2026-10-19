@@ -1,389 +1,194 @@
-import { Button } from "@/components/button";
-import { Badge } from "@/components/badge";
-import {
-  entryDisplayTitle,
-  occurrenceLabel,
-  occurrenceSpanLabel,
-  validTimezone,
-  type Occurrence,
-} from "@/lib/data/occurrence";
-import Link from "next/link";
-import type { ReactNode } from "react";
-import { EntryRichTextContent } from "@/components/entry-rich-text-content";
+import { Button, ButtonLink } from "@/components/button";
+import { EmptyState } from "@/components/empty-state";
+import { EntryRow, EntryRowGroup, EntryRowList } from "@/components/entry-row";
 import { Icon } from "@/components/icon";
-import { DatePickerField } from "@/components/date-picker-field";
-import { SearchField } from "@/components/search-field";
-import { SectionHeader } from "@/components/section-header";
-import { SelectField } from "@/components/select-field";
-import { SeparatedList } from "@/components/separated-list";
-import {
-  SEARCH_PAGE_SIZE,
-  librarySearchHref,
-  type SearchRequest,
-} from "@/lib/data/search-input";
-import { type SearchEntry, type SearchWorkspace } from "@/lib/data/search";
-import {
-  wikiEntryHref,
-  wikiItemIdentityLabel,
-  wikiItemRecordFilters,
-} from "@/lib/data/wiki-item";
+import { LibraryFilters } from "@/components/library-filters";
+import { groupEntryRows } from "@/lib/data/entry-row";
+import type { LibraryRow, LibraryView } from "@/lib/data/library";
+import { librarySearchHref } from "@/lib/data/search-input";
 import styles from "./library-search.module.css";
 
-export function LibrarySearch({
-  browse,
-  workspace,
-}: {
-  browse: ReactNode;
-  workspace: SearchWorkspace;
-}) {
-  const {
-    entries,
-    filtersError,
-    loadError,
-    request,
-    semantic,
-    tagOptions,
-    totalCount,
-  } = workspace;
+/**
+ * Library below its header: search and filters, then every Entry grouped by the month it
+ * happened, or search results ranked by how well they match.
+ */
+export function LibrarySearch({ view }: { view: LibraryView }) {
+  const { mode, search } = view;
+  const { filtersError, request, semantic, tagOptions } = search;
   // Meaning is part of search whenever it is on, even if the service is down right now.
   const searchesByMeaning =
     semantic.state === "on" || semantic.state === "unavailable";
-  const advancedFilterCount = [
-    request.itemClassifications.length > 0,
-    request.tagNames.length > 0,
-    Boolean(request.dateFrom),
-    Boolean(request.dateTo),
-  ].filter(Boolean).length;
+  const emptyLibrary =
+    mode === "browse" && !view.error && view.totalCount === 0;
+
+  if (emptyLibrary) {
+    return (
+      <div className={styles.emptyLibrary}>
+        <EmptyState
+          actions={
+            <ButtonLink href="/settings/import" variant="secondary">
+              Import Entries
+            </ButtonLink>
+          }
+          description="Every Entry you write or import appears here, newest first by the date it happened."
+          title="Nothing in Library yet"
+        />
+      </div>
+    );
+  }
 
   return (
     <>
-      <form action="/library" method="get">
-        <section className={styles.searchSurface} aria-label="Entry search">
-          <div className={styles.queryRow}>
-            <SearchField
-              defaultValue={request.query}
-              hideLabel
-              id="trail-search"
-              label="Search your Life Wiki"
-              maxLength={200}
-              name="q"
-              placeholder={
-                searchesByMeaning
-                  ? "A word, a name, or what you remember about it..."
-                  : "A phrase, date, or question about your life..."
-              }
-              size="large"
-            />
-            <Button variant="primary" type="submit">
-              Search
-            </Button>
-          </div>
+      <LibraryFilters request={request} tagOptions={tagOptions}>
+        {filtersError ? (
+          <p className={styles.filterNotice} role="status">
+            {filtersError}
+          </p>
+        ) : null}
+        {request.query && semantic.state === "unavailable" ? (
+          <p className={styles.filterNotice} role="status">
+            Search by meaning is unavailable right now, so these results match
+            your words only.
+          </p>
+        ) : null}
+        {request.query && searchesByMeaning && semantic.pendingCount > 0 ? (
+          <p className={styles.statusNotice} role="status">
+            Still preparing {semantic.pendingCount}{" "}
+            {semantic.pendingCount === 1 ? "Entry" : "Entries"} for search by
+            meaning.
+          </p>
+        ) : null}
+      </LibraryFilters>
 
-          <div className={styles.searchScope}>
-            <Badge size="medium">
-              {searchesByMeaning ? "Keyword and meaning" : "Keyword search"}
-            </Badge>
-            <p>
-              {searchesByMeaning
-                ? "Words, names, or a description of what you remember"
-                : "Titles, notes, local dates, tags, and structured details"}
-            </p>
-            {request.hasCriteria ? (
-              <Link className={styles.clearSearch} href="/library">
-                Clear all
-              </Link>
-            ) : null}
-          </div>
-
-          <details
-            className={styles.advancedFilters}
-            open={advancedFilterCount > 0}
-          >
-            <summary>
-              Filters
-              {advancedFilterCount > 0
-                ? ` · ${advancedFilterCount} active`
-                : ""}
-            </summary>
-            <fieldset className={styles.filters}>
-              <legend>Refine results</legend>
-
-              <SelectField
-                defaultValue={request.itemClassifications[0] ?? ""}
-                label="Record"
-                name="type"
-                size="small"
-              >
-                <option value="">All records</option>
-                {wikiItemRecordFilters.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </SelectField>
-
-              <SelectField
-                defaultValue={request.tagNames[0] ?? ""}
-                disabled={tagOptions.length === 0}
-                label="Tag"
-                name="tag"
-                size="small"
-              >
-                <option value="">All tags</option>
-                {tagOptions.map((name) => (
-                  <option key={name.toLocaleLowerCase()} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </SelectField>
-
-              <DatePickerField
-                defaultValue={request.dateFrom ?? ""}
-                key={`from-${request.dateFrom ?? ""}`}
-                label="From"
-                name="from"
-                size="small"
-              />
-              <DatePickerField
-                defaultValue={request.dateTo ?? ""}
-                key={`to-${request.dateTo ?? ""}`}
-                label="To"
-                name="to"
-                size="small"
-              />
-            </fieldset>
-          </details>
-
-          {filtersError ? (
-            <p className={styles.filterNotice} role="status">
-              {filtersError}
-            </p>
-          ) : null}
-          {request.query && semantic.state === "unavailable" ? (
-            <p className={styles.filterNotice} role="status">
-              Search by meaning is unavailable right now, so these results match
-              your words only.
-            </p>
-          ) : null}
-          {request.query && searchesByMeaning && semantic.pendingCount > 0 ? (
-            <p className={styles.statusNotice} role="status">
-              Still preparing {semantic.pendingCount}{" "}
-              {semantic.pendingCount === 1 ? "Entry" : "Entries"} for search by
-              meaning.
-            </p>
-          ) : null}
-        </section>
-      </form>
-      {request.hasCriteria || loadError ? (
-        <SearchResults
-          entries={entries}
-          loadError={loadError}
-          request={request}
-          searchesByMeaning={searchesByMeaning}
-          totalCount={totalCount}
-        />
-      ) : (
-        browse
-      )}
+      <LibraryResults searchesByMeaning={searchesByMeaning} view={view} />
     </>
   );
 }
 
-function SearchResults({
-  entries,
-  loadError,
-  request,
+function LibraryResults({
   searchesByMeaning,
-  totalCount,
+  view,
 }: {
-  entries: SearchEntry[];
-  loadError: string | null;
-  request: SearchRequest;
   searchesByMeaning: boolean;
-  totalCount: number;
+  view: LibraryView;
 }) {
-  if (loadError) {
+  const { error, mode, rows } = view;
+
+  if (error) {
     return (
-      <div className={styles.message} role="alert">
-        <Icon name="search" size={23} />
-        <div>
-          <strong>Search unavailable</strong>
-          <p>{loadError}</p>
-        </div>
+      <div className={styles.results} role="alert">
+        <EmptyState
+          description={error}
+          icon={<Icon name="search" size={20} />}
+          title={
+            mode === "browse" ? "Library could not load" : "Search unavailable"
+          }
+        />
       </div>
     );
   }
 
-  if (entries.length === 0) {
+  if (rows.length === 0) {
     return (
-      <div className={styles.message}>
-        <Icon name="search" size={23} />
-        <div>
-          <strong>No matching items</strong>
-          <p>
-            {searchesByMeaning
-              ? "Try fewer words, describe it differently, remove a filter, or search a broader date."
-              : "Try fewer words, remove a filter, or search for a broader date."}
-          </p>
-        </div>
+      <div className={styles.results}>
+        <EmptyState
+          actions={
+            <ButtonLink href="/library" scroll={false} variant="secondary">
+              Clear all
+            </ButtonLink>
+          }
+          description={
+            mode === "search"
+              ? searchesByMeaning
+                ? "Try fewer words, describe it differently, or remove a filter."
+                : "Try fewer words, another spelling, or remove a filter."
+              : "Try another filter or a wider range of dates."
+          }
+          icon={<Icon name="search" size={20} />}
+          title="No Entries match"
+        />
       </div>
     );
   }
 
   return (
-    <section
-      className={styles.resultsSection}
-      aria-labelledby="results-heading"
-    >
-      <SectionHeader
-        action={
-          totalCount > SEARCH_PAGE_SIZE ? (
-            <span className={styles.resultsPage}>
-              Page {request.page} · {SEARCH_PAGE_SIZE} at a time
-            </span>
-          ) : null
-        }
-        className={styles.resultsHeader}
-        detail={<span aria-live="polite">{resultCountLabel(totalCount)}</span>}
-        headingId="results-heading"
-        title="Results"
-        variant="list"
-      />
-
-      <div className={styles.resultList}>
-        {entries.map((entry) => (
-          <SearchResultCard entry={entry} key={entry.id} />
-        ))}
-      </div>
-
-      <SearchPagination request={request} totalCount={totalCount} />
+    <section aria-label="Entries" className={styles.results}>
+      {mode === "search" ? (
+        <EntryRowList label="Search results">
+          {rows.map((row) => (
+            <LibraryEntryRow key={row.id} row={row} />
+          ))}
+        </EntryRowList>
+      ) : (
+        groupEntryRows(rows, (row) => row.occurrence).map((group) => (
+          <EntryRowGroup key={group.key} label={group.label}>
+            {group.items.map((row) => (
+              <LibraryEntryRow key={row.id} row={row} />
+            ))}
+          </EntryRowGroup>
+        ))
+      )}
+      <LibraryPagination view={view} />
     </section>
   );
 }
 
-function SearchResultCard({ entry }: { entry: SearchEntry }) {
-  const body = entry.body.trim();
-  const hasLongBody = body.length > 280;
-  const occurrence = resultOccurrence(entry);
-
+function LibraryEntryRow({ row }: { row: LibraryRow }) {
   return (
-    <article className={styles.resultCard}>
-      <header>
-        <div className={styles.resultMeta}>
-          <Badge tone="neutral">
-            {wikiItemIdentityLabel(entry.itemSubtype, entry.isFirstTime)}
-          </Badge>
-          {/* An untitled Entry is already named by its date. */}
-          {entry.title ? (
-            <time dateTime={entry.occurredAt ?? undefined}>
-              {resultDateLabel(entry, occurrence)}
-            </time>
-          ) : null}
-        </div>
-        <h3>
-          <Link className={styles.sourceLink} href={wikiEntryHref(entry)}>
-            {entryDisplayTitle(entry.title, occurrence)}
-          </Link>
-        </h3>
-      </header>
-
-      {body ? (
-        <EntryRichTextContent
-          body={body}
-          className={styles.resultBody}
-          richText={entry.bodyRich}
-        />
-      ) : null}
-
-      {hasLongBody ? (
-        <details className={styles.fullEntry}>
-          <summary>Read full note</summary>
-          <EntryRichTextContent
-            body={body}
-            className={styles.fullEntryBody}
-            richText={entry.bodyRich}
-          />
-        </details>
-      ) : null}
-
-      {entry.tagNames.length ? (
-        <div className={styles.organization} aria-label="Item organization">
-          {entry.tagNames.map((name) => (
-            <Badge key={`tag:${name.toLocaleLowerCase()}`} tone="neutral">
-              #{name}
-            </Badge>
-          ))}
-        </div>
-      ) : null}
-
-      <footer>
-        <span className={styles.matchLabel}>Matched in</span>
-        <SeparatedList className={styles.matchReasons}>
-          {entry.matchReasons.map((reason) => (
-            <span key={reason}>{reason}</span>
-          ))}
-        </SeparatedList>
-      </footer>
-
-      {entry.meaningPassage ? (
-        <div className={styles.matchPassage}>
-          <span className={styles.matchLabel}>Closest passage</span>
-          <p>{entry.meaningPassage}</p>
-        </div>
-      ) : null}
-    </article>
+    <EntryRow
+      date={row.date}
+      dateTime={row.dateTime}
+      excerpt={
+        row.excerpt.length
+          ? row.excerpt.map((part, index) =>
+              part.match ? <mark key={index}>{part.text}</mark> : part.text,
+            )
+          : null
+      }
+      href={row.href}
+      isChapter={row.isChapter}
+      isFirstTime={row.isFirstTime}
+      matchReasons={row.matchReasons}
+      tags={row.tags}
+      thumbnail={row.thumbnail}
+      title={row.title}
+    />
   );
 }
 
-function SearchPagination({
-  request,
-  totalCount,
-}: {
-  request: SearchRequest;
-  totalCount: number;
-}) {
-  const hasPrevious = request.page > 1;
-  const hasNext = request.offset + SEARCH_PAGE_SIZE < totalCount;
-
-  if (!hasPrevious && !hasNext) {
-    return null;
-  }
+function LibraryPagination({ view }: { view: LibraryView }) {
+  const { page, pageCount } = view;
+  if (pageCount <= 1) return null;
+  const href = (target: number) =>
+    view.mode === "browse"
+      ? target > 1
+        ? `/library?page=${target}`
+        : "/library"
+      : librarySearchHref(view.search.request, target);
 
   return (
-    <nav className={styles.pagination} aria-label="Search result pages">
-      {hasPrevious ? (
-        <Link href={librarySearchHref(request, request.page - 1)}>
+    <nav aria-label="Library pages" className={styles.pagination}>
+      {page > 1 ? (
+        <ButtonLink href={href(page - 1)} variant="quiet">
           Previous
-        </Link>
+        </ButtonLink>
       ) : (
-        <span />
+        <Button disabled variant="quiet">
+          Previous
+        </Button>
       )}
-      <span>Page {request.page}</span>
-      {hasNext ? (
-        <Link href={librarySearchHref(request, request.page + 1)}>Next</Link>
+      <span>
+        Page {page} of {pageCount}
+      </span>
+      {page < pageCount ? (
+        <ButtonLink href={href(page + 1)} variant="secondary">
+          Next
+        </ButtonLink>
       ) : (
-        <span />
+        <Button disabled variant="secondary">
+          Next
+        </Button>
       )}
     </nav>
   );
-}
-
-function resultCountLabel(count: number) {
-  return `${count} ${count === 1 ? "item" : "items"}`;
-}
-
-function resultOccurrence(entry: SearchEntry): Occurrence {
-  return {
-    ...entry,
-    occurredTimezone: validTimezone(entry.occurredTimezone)
-      ? entry.occurredTimezone
-      : "UTC",
-  };
-}
-
-// A Chapter spans the time it covers.
-function resultDateLabel(entry: SearchEntry, occurrence: Occurrence) {
-  return entry.itemSubtype === "chapter"
-    ? occurrenceSpanLabel(occurrence)
-    : occurrenceLabel(occurrence);
 }

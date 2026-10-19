@@ -140,9 +140,12 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
       });
     });
     await page.goto("/settings");
-    await page.getByRole("link", { name: /Export archive/ }).click();
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: "Export", exact: true })
+      .click();
     await expect(
-      page.getByRole("heading", { name: "Export archive" }),
+      page.getByRole("heading", { name: "Export", exact: true }),
     ).toBeVisible();
     expect(
       (

@@ -59,89 +59,92 @@ export function EntryPhotoDates({
         Read a saved photo&apos;s camera date or GPS position. No AI, no
         automatic changes.
       </p>
-      {photos.map((photo) => {
-        const info = metadata[photo.id];
-        return (
-          <article className={styles.photo} key={photo.id}>
-            {photo.imageUrl ? (
-              <ProgressiveImage
-                alt={photo.name}
-                className={styles.thumbnail}
-                loading="lazy"
-                src={photo.imageUrl}
-              />
-            ) : null}
-            <div>
-              <strong>{photo.name}</strong>
-              <Button
-                variant="secondary"
-                type="button"
-                disabled={busy || disabled}
-                onClick={() => void load(photo)}
-              >
-                {info ? "Read metadata again" : "Read camera date"}
-              </Button>
-              {info ? (
-                <>
-                  <p>
-                    {info.capturedLocal
-                      ? `Camera time: ${info.capturedLocal.replace("T", " ")}${info.offset ? ` (UTC${info.offset})` : " (time zone not recorded)"}`
-                      : "No valid capture date in this photo."}
-                  </p>
-                  {info.calendarDate ? (
-                    <>
-                      <Button
-                        variant="secondary"
-                        type="button"
-                        disabled={busy || disabled}
-                        onClick={() => {
-                          onUseDate(info.calendarDate!);
-                          setNotice(
-                            "Calendar date added to the draft. Review the date, then save your changes.",
-                          );
-                        }}
-                      >
-                        Use calendar date {info.calendarDate}
-                      </Button>
-                      <p>
-                        Uses Day precision and replaces the draft&apos;s date
-                        range. It does not infer a time zone or save until you
-                        confirm.
-                      </p>
-                    </>
-                  ) : null}
-                  {info.latitude !== null && info.longitude !== null ? (
-                    <>
-                      <p className={styles.coordinates}>
-                        Private GPS metadata is available. No Location is linked
-                        automatically.
-                      </p>
-                      <Button
-                        variant="secondary"
-                        type="button"
-                        disabled={
-                          disabled ||
-                          busy ||
-                          photoLocation?.attachmentId === photo.id
-                        }
-                        onClick={() =>
-                          onPhotoLocationChange({
-                            attachmentId: photo.id,
-                            latitude: info.latitude!,
-                            longitude: info.longitude!,
-                          })
-                        }
-                      >
-                        Use GPS for a Location
-                      </Button>
-                    </>
-                  ) : null}
-                </>
+      <ul className={styles.photos}>
+        {photos.map((photo) => {
+          const info = metadata[photo.id];
+          return (
+            <li className={styles.photo} key={photo.id}>
+              {photo.imageUrl ? (
+                <ProgressiveImage
+                  alt={photo.name}
+                  className={styles.thumbnail}
+                  loading="lazy"
+                  src={photo.imageUrl}
+                />
               ) : null}
-            </div>
-          </article>
-        );
-      })}
+              <div>
+                <strong>{photo.name}</strong>
+                <Button
+                  variant="secondary"
+                  size="small"
+                  type="button"
+                  disabled={busy || disabled}
+                  onClick={() => void load(photo)}
+                >
+                  {info ? "Read metadata again" : "Read camera date"}
+                </Button>
+                {info ? (
+                  <>
+                    <p>
+                      {info.capturedLocal
+                        ? `Camera time: ${info.capturedLocal.replace("T", " ")}${info.offset ? ` (UTC${info.offset})` : " (time zone not recorded)"}`
+                        : "No valid capture date in this photo."}
+                    </p>
+                    {info.calendarDate ? (
+                      <>
+                        <Button
+                          variant="secondary"
+                          type="button"
+                          disabled={busy || disabled}
+                          onClick={() => {
+                            onUseDate(info.calendarDate!);
+                            setNotice(
+                              "Calendar date added to the draft. Review the date, then save your changes.",
+                            );
+                          }}
+                        >
+                          Use calendar date {info.calendarDate}
+                        </Button>
+                        <p>
+                          Uses Day precision and replaces the draft&apos;s date
+                          range. It does not infer a time zone or save until you
+                          confirm.
+                        </p>
+                      </>
+                    ) : null}
+                    {info.latitude !== null && info.longitude !== null ? (
+                      <>
+                        <p className={styles.coordinates}>
+                          Private GPS metadata is available. No Location is
+                          linked automatically.
+                        </p>
+                        <Button
+                          variant="secondary"
+                          type="button"
+                          disabled={
+                            disabled ||
+                            busy ||
+                            photoLocation?.attachmentId === photo.id
+                          }
+                          onClick={() =>
+                            onPhotoLocationChange({
+                              attachmentId: photo.id,
+                              latitude: info.latitude!,
+                              longitude: info.longitude!,
+                            })
+                          }
+                        >
+                          Use GPS for a Location
+                        </Button>
+                      </>
+                    ) : null}
+                  </>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
       {error ? <p role="alert">{error}</p> : null}
       {photoLocation ? (
         <PhotoLocationEditor

@@ -1,118 +1,361 @@
-.workspace {
+/* An Entry's or a Chapter's page in the Quiet ledger: writing in large serif ink straight on the
+   canvas, facts in one muted line, and rules instead of boxes. Spacing follows the approved Entry
+   and Chapter mockups. */
+
+.entry,
+.chapter {
   display: grid;
-  gap: var(--mt-space-5);
+  min-width: 0;
+  align-content: start;
 }
-.workspace h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-type-record-title-font-size);
+
+.reading {
+  width: 100%;
+  max-width: var(--frame-reading);
 }
-.workspace
-  p:not(
-    :where(
-      [data-ui-page-header] *,
-      [data-ui-empty-state] *,
-      [data-entry-list] *
-    )
-  ) {
-  color: var(--mt-color-ink-muted);
-  line-height: var(--mt-line-height-paragraph);
+
+/* The facts line under a title: date, places, and tags. */
+.facts {
+  --separated-list-gap: var(--mt-space-2);
+  --separated-list-row-gap: var(--mt-space-0-5);
 }
-.workspace a:not(:where([data-ui-button], [data-entry-list] *)) {
+
+.facts time {
+  font-variant-numeric: tabular-nums;
+}
+
+.tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0 var(--mt-space-3);
+}
+
+.tags a,
+.sources a,
+.trashNotice a,
+.showAll,
+.pagination a {
+  border-radius: var(--mt-radius-xxsmall);
   color: var(--mt-color-accent);
-}
-.backLink {
-  width: fit-content;
-  color: var(--mt-color-ink-muted) !important;
-  font-size: var(--mt-font-size-caption);
   text-decoration: none;
 }
-.backLink:hover {
-  color: var(--mt-color-accent) !important;
+
+.tags a:hover,
+.sources a:hover,
+.trashNotice a:hover,
+.showAll:hover,
+.pagination a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
-.itemActions {
+
+:is(
+  .tags a,
+  .sources a,
+  .trashNotice a,
+  .showAll,
+  .pagination a
+):focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
+}
+
+/* The First Time mark: the one warm accent on the page. */
+.firstTime {
+  display: inline-flex;
+  width: fit-content;
+  height: 24px;
+  align-items: center;
+  gap: var(--mt-space-1-25);
+  margin: var(--mt-space-3-5) 0 0;
+  padding: 0 var(--mt-space-2-25);
+  border-radius: var(--mt-radius-pill);
+  color: var(--mt-color-warm);
+  background: var(--mt-color-warm-subtle);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-none);
+}
+
+.firstTime svg {
+  width: var(--mt-size-icon-13);
+  height: var(--mt-size-icon-13);
+  flex: none;
+}
+
+.trashNotice {
+  margin: var(--mt-space-4) 0 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+}
+
+.alert {
+  margin: var(--mt-space-3) 0 0;
+  color: var(--mt-color-danger);
+  font-size: var(--mt-font-size-body-small);
+}
+
+/* The writing: serif ink on the canvas, sized for reading. */
+.body {
+  margin-top: var(--mt-space-8);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-type-reading-font-family);
+  font-size: var(--mt-type-reading-font-size);
+  line-height: var(--mt-type-reading-line-height);
+  overflow-wrap: anywhere;
+}
+
+.body:is(p) {
+  margin-bottom: 0;
+  white-space: pre-wrap;
+}
+
+.body:not(p) :is(p, ul, ol, blockquote, pre) {
+  margin-bottom: var(--mt-space-4-5);
+}
+
+.body > :last-child {
+  margin-bottom: 0;
+}
+
+/* Code keeps its own face and size inside serif writing. */
+.body :is(pre, code) {
+  font-size: var(--mt-font-size-inline-code);
+}
+
+.bodyEmpty {
+  margin: var(--mt-space-8) 0 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+}
+
+.sources {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mt-space-1) var(--mt-space-4);
+  margin: var(--mt-space-5) 0 0;
+  font-size: var(--mt-font-size-body-small);
+}
+
+.photosError {
+  margin: var(--mt-space-6) 0 0;
+  color: var(--mt-color-danger);
+  font-size: var(--mt-font-size-body-small);
+}
+
+.entry > [data-entry-photos] {
+  margin-top: calc(var(--mt-space-6) + var(--mt-space-1));
+}
+
+/* "In Chapter": each Chapter the Entry falls inside, on a row between rules. */
+.inChapter {
+  margin: calc(var(--mt-space-8) + var(--mt-space-1)) 0 0;
+  padding: 0;
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  list-style: none;
+}
+
+.inChapter li {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mt-space-1) var(--mt-space-2-5);
+  padding: var(--mt-space-3-5) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+}
+
+.chapterIcon {
+  display: inline-flex;
+  width: var(--mt-size-icon-16);
+  height: var(--mt-size-icon-16);
+  flex: none;
+  align-self: center;
+  color: var(--mt-color-accent);
+}
+
+.inChapterTitle {
+  min-width: 0;
+  border-radius: var(--mt-radius-xxsmall);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-callout);
+  overflow-wrap: anywhere;
+  text-decoration: none;
+}
+
+.inChapterTitle:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.inChapterTitle:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
+}
+
+.inChapterSpan {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Edit on the left, Move to Trash at the far end. */
+.actions,
+.headActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mt-space-2);
 }
-.currentItem {
-  display: grid;
-  gap: var(--mt-space-8);
-  padding: clamp(var(--mt-space-6), 5vw, var(--mt-space-11));
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-hairline);
+
+.actions {
+  margin-top: calc(var(--mt-space-6) + var(--mt-space-1));
 }
-.currentBody {
-  color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-body);
-  line-height: var(--mt-line-height-story);
-  overflow-wrap: anywhere;
+
+.headActions {
+  max-width: var(--frame-reading);
+  margin-top: var(--mt-space-5);
 }
-.workspace .currentBody p {
-  color: var(--mt-color-ink);
+
+.headActions:empty {
+  display: none;
 }
-.photosError {
-  margin: 0;
-  color: var(--mt-color-warm);
-  font-size: var(--mt-font-size-label);
-}
-.currentFacts {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--mt-space-4);
-  margin: 0;
-  padding-top: var(--mt-space-5);
-  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-}
-.currentFacts > div {
-  display: grid;
-  min-width: 0;
-  gap: var(--mt-space-1);
-}
-.currentFacts dt {
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-type-fact-label-font-size);
-  letter-spacing: var(--mt-type-fact-label-letter-spacing);
-  text-transform: var(--mt-type-fact-label-text-transform);
-}
-.currentFacts dd {
-  margin: 0;
-  overflow-wrap: anywhere;
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  text-transform: capitalize;
-}
-.currentFacts dd.dateValue {
-  text-transform: none;
-}
-.detailUnavailable {
-  display: grid;
-  justify-items: start;
-  gap: var(--mt-space-3);
-  padding-top: var(--mt-space-12);
-}
-@media (max-width: 700px) {
-  .currentFacts {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-.itemActions .trashAction {
+
+/* The text-only button's padding sits past the column, so its words end on the column edge. */
+.trash {
+  margin-right: calc(var(--mt-space-3-5) * -1);
   margin-left: auto;
 }
 
-@media (max-width: 700px) {
-  .itemActions .trashAction {
-    margin-left: 0;
-  }
+/* A Chapter's title block. Sizes follow PageHeader so every detail page reads alike. */
+.chapterHeader {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
 }
 
-.chapterEmpty {
+.kind {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mt-space-1-5);
+  margin: 0 0 var(--mt-space-1-5);
+  color: var(--mt-color-accent);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-tight);
+}
+
+.kind svg {
+  width: var(--mt-size-icon-15);
+  height: var(--mt-size-icon-15);
+  flex: none;
+}
+
+.chapterTitle {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--page-title-size-detail);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--page-title-line-height);
+  letter-spacing: var(--page-title-tracking-detail);
+  overflow-wrap: anywhere;
+}
+
+.chapterMeta {
+  min-width: 0;
+  margin-top: var(--mt-space-2);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--page-meta-size);
+  line-height: var(--mt-line-height-message);
+}
+
+.description {
+  margin-top: var(--mt-space-4);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-paragraph);
+  overflow-wrap: anywhere;
+}
+
+.description:is(p) {
+  margin-bottom: 0;
+  white-space: pre-wrap;
+}
+
+/* The mini span bar: the Chapter's days on a track of the years it touches. */
+.span {
+  margin-top: var(--mt-space-5-5);
+}
+
+.spanTrack {
+  position: relative;
+  height: 6px;
+  border-radius: var(--mt-radius-pill);
+  background: var(--mt-color-surface-subtle);
+}
+
+.spanTrack i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: var(--mt-space-1-5);
+  border-radius: var(--mt-radius-pill);
+  background: var(--mt-color-accent);
+}
+
+.spanLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--mt-space-1-5);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter [data-entry-photos] {
+  margin-top: calc(var(--mt-space-6) + var(--mt-space-1));
+}
+
+.review {
+  margin-top: var(--mt-space-12);
+}
+
+.section {
+  display: grid;
+  min-width: 0;
+  margin-top: var(--mt-space-12);
+}
+
+.section > [data-ui-section-header] {
+  margin-bottom: var(--mt-space-1-5);
+}
+
+/* The section title's rule already opens the list. */
+.section > [data-ui-entry-row-list] {
+  border-top: 0;
+}
+
+.empty {
   display: grid;
   justify-items: start;
   gap: var(--mt-space-3);
-  margin-top: var(--mt-space-4);
+  margin: var(--mt-space-4) 0 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+}
+
+.empty p {
+  margin: 0;
+}
+
+.showAll {
+  width: fit-content;
+  margin-top: var(--mt-space-3-5);
+  font-size: var(--mt-font-size-body-small);
 }
 
 .pagination {
@@ -121,36 +364,120 @@
   align-items: center;
   gap: var(--mt-space-3);
   margin-top: var(--mt-space-5);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-variant-numeric: tabular-nums;
 }
 
 .pagination > :last-child {
   justify-self: end;
 }
 
-.overlaps {
-  display: grid;
-  margin: var(--mt-space-4) 0 0;
+/* Related Chapters: each one labeled Inside or Overlaps, with its span at the end. */
+.related {
+  margin: 0;
   padding: 0;
-  border-block: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   list-style: none;
 }
 
-.overlaps li {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+.related a {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--mt-space-4);
-  padding: var(--mt-space-3);
+  padding: var(--mt-space-3) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: inherit;
+  text-decoration: none;
 }
 
-.overlaps li + li {
-  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+.related a:hover .relatedTitle {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
-.overlaps small {
-  color: var(--mt-color-ink-faint);
+.related a:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
+}
+
+.relation {
+  color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-caption);
+}
+
+.relatedTitle {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-title-relaxed);
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.relatedSpan {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .body {
+    margin-top: var(--mt-space-6);
+    font-size: var(--mt-type-prose-font-size);
+    line-height: var(--mt-line-height-paragraph);
+  }
+
+  .description {
+    font-size: var(--mt-font-size-callout);
+    line-height: var(--mt-line-height-body);
+  }
+
+  .kind {
+    font-size: var(--mt-font-size-caption);
+  }
+
+  .review,
+  .section {
+    margin-top: var(--mt-space-8);
+  }
+
+  .inChapter {
+    margin-top: calc(var(--mt-space-6) + var(--mt-space-1));
+  }
+
+  .actions {
+    margin-top: var(--mt-space-6);
+  }
+}
+
+@media (max-width: 560px) {
+  .related a {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title title"
+      "relation span";
+    gap: var(--mt-space-0-5) var(--mt-space-3);
+  }
+
+  .relation {
+    grid-area: relation;
+  }
+
+  .relatedTitle {
+    grid-area: title;
+  }
+
+  .relatedSpan {
+    grid-area: span;
+    font-size: var(--mt-font-size-caption);
+  }
+
+  .inChapterSpan {
+    margin-left: calc(var(--mt-size-icon-16) + var(--mt-space-2-5));
+    flex-basis: 100%;
+  }
 }

@@ -35,11 +35,11 @@ export async function trashWikiItem(
   revision: number,
 ): Promise<string | null> {
   if (!validEntryID(id) || !Number.isSafeInteger(revision) || revision < 1) {
-    return "This item cannot be moved to Trash.";
+    return "This Entry cannot be moved to Trash.";
   }
 
   const context = await getAuthenticatedContext();
-  if (!context) return "Sign in again to move this item to Trash.";
+  if (!context) return "Sign in again to move this Entry to Trash.";
 
   const { data, error } = await context.client
     .from("entries")
@@ -50,9 +50,9 @@ export async function trashWikiItem(
     .select("id")
     .maybeSingle();
 
-  if (error) return "MemoTrail could not move this item to Trash.";
+  if (error) return "MemoTrail could not move this Entry to Trash.";
   if (!data) {
-    return "This item changed on another device or is already in Trash. Refresh and try again.";
+    return "This Entry changed on another device or is already in Trash. Refresh and try again.";
   }
 
   revalidatePath("/", "layout");

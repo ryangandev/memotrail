@@ -71,11 +71,11 @@ struct ItemReviewView: View {
     }
   }
 
-  // MARK: From your records
+  // MARK: From your Entries
 
   private func records(_ facts: ReviewFacts) -> some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
-      MTSectionHeader("From your records", variant: .list)
+      MTSectionHeader("From your Entries", variant: .list)
       Text(facts.stats(spanLabel: spanLabel).joined(separator: " · "))
         .font(MTFont.detail)
         .foregroundStyle(MTColor.inkMuted)

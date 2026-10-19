@@ -1,15 +1,22 @@
+/* Values follow packages/design-system/components/sync-status.yaml. Waiting captures are quiet;
+   a capture MemoTrail refused takes the danger color, since it waits for the person. */
+
 .syncStatus {
   display: flex;
-  height: 30px;
+  height: var(--mt-size-control-small);
+  min-width: 0;
+  flex: none;
   align-items: center;
+  justify-content: center;
   gap: var(--mt-space-1-5);
   padding: 0 var(--mt-space-2);
   border: 0;
   border-radius: var(--mt-radius-pill);
-  color: var(--mt-color-ink-faint);
+  color: var(--mt-color-ink-muted);
   background: transparent;
   font: inherit;
-  font-size: var(--mt-font-size-micro);
+  font-size: var(--mt-font-size-caption);
+  white-space: nowrap;
   cursor: pointer;
   transition:
     color var(--mt-motion-quick),
@@ -19,37 +26,49 @@
 .syncStatus:hover,
 .syncStatus[aria-expanded="true"] {
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
+  background: var(--mt-state-hover-surface);
 }
 
 .syncStatus:focus-visible {
   outline: none;
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
+  background: var(--mt-state-hover-surface);
   box-shadow: inset 0 0 0 var(--mt-state-focus-ring-width)
     var(--mt-state-focus-ring);
 }
 
-/* A capture MemoTrail did not accept waits for the person, so it stays visible. */
 .syncStatus[data-rejected] {
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
 }
 
-.syncStatus > span {
+.syncStatus [data-sync-dot] {
   width: 6px;
   height: 6px;
+  flex: none;
   border-radius: 50%;
-  background: var(--mt-color-warm);
+  background: var(--mt-color-ink-faint);
 }
 
-.syncStatus[aria-busy="true"] > span {
+.syncStatus[data-rejected] [data-sync-dot] {
+  background: var(--mt-color-danger);
+}
+
+.syncStatus[aria-busy="true"] [data-sync-dot] {
   animation: sync-status-pulse var(--mt-motion-pulse)
     var(--mt-motion-easing-in-out) infinite;
 }
 
+/* Nothing waits: a quiet word in place of the indicator, where the shell asks for one. */
+.idle {
+  flex: none;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  white-space: nowrap;
+}
+
 .syncError {
   margin-bottom: var(--mt-space-4);
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
   font-size: var(--mt-font-size-caption);
 }
 
@@ -61,8 +80,8 @@
 
 @media (max-width: 720px) {
   .syncStatus {
-    height: 44px;
-    padding-inline: var(--mt-space-3);
+    height: var(--mt-size-control-large);
+    padding-inline: var(--mt-space-2);
   }
 }
 
@@ -71,7 +90,7 @@
     transition: none;
   }
 
-  .syncStatus[aria-busy="true"] > span {
+  .syncStatus[aria-busy="true"] [data-sync-dot] {
     animation: none;
   }
 }

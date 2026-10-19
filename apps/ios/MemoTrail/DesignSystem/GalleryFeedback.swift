@@ -281,9 +281,9 @@
                 id: UUID(), image: GallerySamples.artworkImage, name: "sample-\(new.count + 1).png")
             )
           }
-          .mtButtonStyle(.ghost, size: .small)
+          .mtButtonStyle(.quiet, size: .small)
           Button("Simulate upload") { simulateUpload() }
-            .mtButtonStyle(.ghost, size: .small)
+            .mtButtonStyle(.quiet, size: .small)
             .disabled(new.isEmpty || uploaded != nil)
         }
         Text("\(saved.count) saved · \(new.count) new")

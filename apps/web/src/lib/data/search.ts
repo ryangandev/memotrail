@@ -6,7 +6,11 @@ import {
   storedOccurrence,
   type OccurrencePrecision,
 } from "./occurrence";
-import type { TagEntryPreview, TagEntryPreviewResult } from "./organization";
+import {
+  validTagName,
+  type TagEntryPreview,
+  type TagEntryPreviewResult,
+} from "./organization";
 
 import {
   getAuthenticatedContext,
@@ -137,7 +141,8 @@ export async function getSearchWorkspace(
         p_item_classifications: parsed.request.itemClassifications,
         p_limit: SEARCH_PAGE_SIZE,
         p_offset: parsed.request.offset,
-        p_order: "relevance",
+        // Words rank by how well they match; filters alone list by the date things happened.
+        p_order: parsed.request.query ? "relevance" : "newest",
         p_query: parsed.request.query,
         p_tag_names: parsed.request.tagNames,
         ...semantic.arguments,
@@ -158,7 +163,7 @@ export async function getSearchWorkspace(
       ? []
       : rows.map((row) => entryFromRow(row, bodyRichByEntry.get(row.entry_id))),
     filtersError: filtersUnavailable
-      ? "Tag filters are temporarily unavailable. Keyword search still works."
+      ? "Tags could not load, so Library cannot filter by them right now. Search still works."
       : null,
     loadError:
       parsed.error ??
@@ -206,7 +211,7 @@ export async function getQuickSearchResults(
   return {
     error: entryRows
       ? null
-      : "MemoTrail could not search your archive. Try again.",
+      : "MemoTrail could not search your Entries. Try again.",
     items,
   };
 }
@@ -214,8 +219,9 @@ export async function getQuickSearchResults(
 export async function getTagEntryPreviews(
   tagName: string,
 ): Promise<TagEntryPreviewResult> {
-  const normalizedName = tagName.trim();
-  if (!normalizedName || [...normalizedName].length > 60) {
+  // Any name a tag can be saved with can be browsed.
+  const normalizedName = validTagName(tagName);
+  if (!normalizedName) {
     return { entries: [], error: "Choose a valid tag." };
   }
 

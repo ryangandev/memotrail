@@ -102,7 +102,7 @@ it("uses a declared bounded fallback when cross-language words have no overlap",
     "archive_wiki_search_evidence",
     expect.objectContaining({ p_queries: [""] }),
   );
-  expect(answer.notices.join(" ")).toContain("bounded record window");
+  expect(answer.notices.join(" ")).toContain("bounded set of Entries");
   expect(answer.insufficientEvidence).toBe(true);
 });
 it("never retries or displays forged citations", async () => {
@@ -148,7 +148,7 @@ it("broadens an empty keyword match without discarding manual filters", async ()
   expect(answer.sources.map((source) => source.recordID)).toContain(
     evidence.entries[0].id,
   );
-  expect(answer.notices.join(" ")).toContain("bounded record window");
+  expect(answer.notices.join(" ")).toContain("bounded set of Entries");
 });
 it("rejects an invalid planner response without querying records", async () => {
   generate.mockResolvedValueOnce(output({ queries: ["DROP TABLE"] }));

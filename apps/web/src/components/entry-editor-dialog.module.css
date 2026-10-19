@@ -11,13 +11,13 @@
 
 .requiredMark {
   margin-left: var(--mt-space-0-75);
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
 }
 
 .error {
   padding: var(--mt-space-3);
   border-radius: var(--mt-radius-small);
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
   background: var(--mt-color-danger-tint);
   font-size: var(--mt-font-size-caption);
 }

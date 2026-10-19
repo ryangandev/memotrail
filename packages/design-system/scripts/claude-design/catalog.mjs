@@ -49,7 +49,7 @@ export const bundled = [
       },
     ],
     summary:
-      "Button is the action control, in primary, secondary, ghost, and danger variants and three sizes; ButtonLink draws navigation the same way.",
+      "Button is the action control, in primary, secondary, quiet, and danger variants and three sizes; ButtonLink draws navigation the same way.",
   },
   {
     name: "IconButton",
@@ -92,6 +92,14 @@ export const bundled = [
       "Checkbox is a native checkbox in two sizes with a visible label and an optional explanation.",
   },
   {
+    name: "SegmentedControl",
+    source: "segmented-control.tsx",
+    group: "Inputs",
+    height: 300,
+    summary:
+      "SegmentedControl is one choice among a few short options, a subtle track with the selected segment raised.",
+  },
+  {
     name: "DatePickerField",
     spec: "DateField",
     source: "date-picker-field.tsx",
@@ -131,7 +139,7 @@ export const bundled = [
     group: "Layout",
     height: 370,
     summary:
-      "PageFrame sets a page's maximum width, centering, responsive gutters, and vertical rhythm.",
+      "PageFrame sets a page's maximum width (reading, list, or full) from one fixed left edge, with responsive gutters and vertical rhythm.",
   },
   {
     name: "PageHeader",
@@ -139,7 +147,7 @@ export const bundled = [
     group: "Layout",
     height: 320,
     summary:
-      "PageHeader opens a page with an optional eyebrow, a serif title, a description, and actions.",
+      "PageHeader opens a page with a serif title, an optional muted meta line, at most one primary action, and a back link on a detail page.",
   },
   {
     name: "SectionHeader",
@@ -155,7 +163,33 @@ export const bundled = [
     group: "Content",
     height: 580,
     summary:
-      "Badge is a noninteractive single-line label for a status, type, or tag.",
+      "Badge is a noninteractive single-line label for a status, such as Written by AI or On this device.",
+  },
+  {
+    name: "EntryRow",
+    source: "entry-row.tsx",
+    group: "Content",
+    height: 1500,
+    parts: [
+      {
+        name: "EntryRowList",
+        note: "EntryRowList is the ruled list that holds EntryRow items; give it a label or labelledBy.",
+      },
+      {
+        name: "EntryRowGroup",
+        note: "EntryRowGroup puts a heading, such as a month, above its own EntryRowList.",
+      },
+      {
+        name: "ChapterMark",
+        note: "ChapterMark is the green Chapter icon EntryRow draws with isChapter; use it beside a Chapter's name elsewhere.",
+      },
+      {
+        name: "FirstTimeMark",
+        note: "FirstTimeMark is the warm First Time icon EntryRow draws with isFirstTime.",
+      },
+    ],
+    summary:
+      "EntryRow is one Entry in a ruled list: a muted date column, a serif title, one line of writing, tags, and an optional photo.",
   },
   {
     name: "SeparatedList",
@@ -198,7 +232,7 @@ export const bundled = [
     group: "Patterns",
     height: 520,
     summary:
-      "FocusedViewLayout is the page pattern of a focused view: a wide frame, a page header, a summary row, and content.",
+      "FocusedViewLayout is the page pattern of a focused view: a list frame, a page header with one action, a summary row, and content.",
   },
 ];
 
@@ -232,8 +266,6 @@ export const excluded = {
   "empty-trash-control.tsx": needsData,
   "entry-detail-view.tsx": featureView,
   "entry-editor-dialog.tsx": needsData,
-  "entry-list.tsx":
-    "Lists saved Entries with their photos and Location maps, which need app data.",
   "entry-marks-fields.tsx":
     "Edits the Chapter and First Time marks of an Entry form and is tied to its data model.",
   "entry-organization-editor.tsx": needsData,
@@ -250,6 +282,7 @@ export const excluded = {
   "import-start.tsx": featureView,
   "import-workspace.tsx": featureView,
   "home-dashboard.tsx": featureView,
+  "library-filters.tsx": `${needsRouting} It filters Library through the address bar.`,
   "library-search.tsx": `${featureView} It also reads and writes the URL.`,
   "location-picker.tsx":
     "Searches and saves locations through the app's location API.",
@@ -275,6 +308,10 @@ export const excluded = {
   "search-shortcut-link.tsx": `${needsRouting} It installs a global keyboard shortcut and takes its look from the workspace shell.`,
   "semantic-search-setting.tsx": needsData,
   "selected-photo-preview.tsx": needsDialog,
+  "setting-row.tsx":
+    "A Settings page row with its label, help, and inline Saved; it has no component spec of its own yet.",
+  "setting-switch.tsx":
+    "The Settings page switch, a checkbox drawn as a switch inside a SettingRow; it has no component spec of its own yet.",
   "sync-status.tsx": needsCapture,
   "tag-control.tsx": needsData,
   "timeline-workspace.tsx": featureView,
@@ -288,7 +325,7 @@ export const excluded = {
   "trash-workspace.tsx": featureView,
   "use-effective-theme.ts": "A hook, not a component.",
   "workspace-action-dock.tsx": `${needsRouting} It opens Quick Capture and Search.`,
-  "workspace-history-controls.tsx": needsRouting,
+  "workspace-destination.tsx": `${needsRouting} It draws PageHeader's back link and tells the shell which destination is active.`,
   "workspace-shell.tsx": needsRouting,
 };
 

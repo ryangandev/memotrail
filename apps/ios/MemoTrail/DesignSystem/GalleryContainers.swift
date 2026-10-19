@@ -105,7 +105,7 @@
               recordMessage = "Opened the First Time without a Location."
             } content: {
               MTRecordCardVisual(height: MTLayout.Gallery.sampleVisual) {
-                MTRecordMark(icon: .star, title: "A First Time on your trail")
+                MTRecordMark(icon: .star, title: "A First Time without a photo")
               }
               .overlay(alignment: .topLeading) {
                 MTBadge(title: "Earlier", tone: .glassNeutral, size: .micro, uppercase: true)
@@ -217,9 +217,9 @@
             GalleryCaseSeparator()
             GalleryCase(.sectionHeaderList) {
               VStack(alignment: .leading, spacing: MTSpacing.s4) {
-                MTSectionHeader("All items", variant: .list, detail: "12 items")
+                MTSectionHeader("All Entries", variant: .list, detail: "12 Entries")
                 MTSectionHeader(
-                  "All items", variant: .list, detail: "12 items", detailAlign: .end
+                  "All Entries", variant: .list, detail: "12 Entries", detailAlign: .end
                 ) {
                   MTSectionLink(title: "3 need organizing") {
                     recordMessage = "List link activated."
@@ -295,7 +295,7 @@
                 if title == "Letters from the coast house" { MTListDivider() }
               }
             }
-            MTSectionHeader("All items", variant: .list, detail: "9 items", detailAlign: .end)
+            MTSectionHeader("All Entries", variant: .list, detail: "9 Entries", detailAlign: .end)
           }
         }
 

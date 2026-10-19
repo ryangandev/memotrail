@@ -218,7 +218,7 @@ test("Delete forever removes photo files only after the record, and Trash finish
       .click();
     // Exact text: the removal finished, so no pending-files notice is added.
     await expect(
-      page.getByText("Item permanently deleted.", { exact: true }),
+      page.getByText("Entry deleted forever.", { exact: true }),
     ).toBeVisible(firstCompile);
     await expect(card(page, "Ridge photo deleted in Trash")).toHaveCount(0);
     expect(
@@ -270,7 +270,7 @@ test("Restore refuses missing originals, and a stale Delete forever cannot remov
     await expect(
       toast(
         page,
-        "This item changed on another device. Refresh before trying again.",
+        "This Entry changed on another device. Refresh before trying again.",
       ),
     ).toBeVisible(firstCompile);
     expect(
@@ -297,7 +297,7 @@ test("Restore refuses missing originals, and a stale Delete forever cannot remov
     await expect(
       toast(
         page,
-        "This item's original photos are missing, so it cannot be restored. You can still delete it forever.",
+        "This Entry's original photos are missing, so it cannot be restored. You can still delete it forever.",
       ),
     ).toBeVisible();
     await expect(
@@ -321,7 +321,7 @@ test("Restore refuses missing originals, and a stale Delete forever cannot remov
       .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
-      page.getByText("Item permanently deleted.", { exact: true }),
+      page.getByText("Entry deleted forever.", { exact: true }),
     ).toBeVisible();
     await expect(
       card(page, "Summit photo with a missing original"),

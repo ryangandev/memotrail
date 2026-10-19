@@ -261,7 +261,7 @@ struct EntryEditorSheet: View {
         } label: {
           Label("Move to Trash", icon: .trash)
         }
-        .mtButtonStyle(.ghost, isLoading: controller.isTrashing)
+        .mtButtonStyle(.quiet, isLoading: controller.isTrashing)
         .accessibilityIdentifier("editor-trash")
         .entryTrashConfirmation(trashTitle, isPresented: $isConfirmingTrash) {
           Task { await moveToTrash() }

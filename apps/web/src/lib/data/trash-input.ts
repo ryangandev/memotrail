@@ -78,7 +78,7 @@ function isTimestamp(value: string) {
 
 function invalidItem(): ParseResult {
   return {
-    message: "This Trash item is invalid. Refresh and try again.",
+    message: "MemoTrail could not find this in Trash. Refresh and try again.",
     success: false,
   };
 }

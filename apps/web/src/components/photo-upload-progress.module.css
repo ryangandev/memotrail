@@ -35,7 +35,7 @@
   position: relative;
   z-index: var(--mt-layout-layer-local1);
   color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   font-variant-numeric: tabular-nums;
   font-weight: var(--mt-font-weight-semibold);
 }
@@ -53,7 +53,7 @@
 
 .copy small {
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   font-variant-numeric: tabular-nums;
 }
 

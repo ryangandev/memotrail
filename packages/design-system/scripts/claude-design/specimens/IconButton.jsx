@@ -7,14 +7,14 @@ const { Icon, IconButton } = MemoTrail;
 const samples = {
   primary: ["plus", "Add entry"],
   secondary: ["edit", "Edit entry"],
-  ghost: ["more", "More actions for Travel"],
+  quiet: ["more", "More actions for Travel"],
   danger: ["trash", "Move entry to Trash"],
 };
 
 const caption = {
   color: "var(--mt-color-ink-muted)",
   fontFamily: "var(--mt-font-family-mono)",
-  fontSize: "var(--mt-font-size-fine)",
+  fontSize: "var(--mt-font-size-micro)",
 };
 
 export const specimens = {
@@ -34,7 +34,7 @@ export const specimens = {
     ),
   },
   "icon-button-sizes": {
-    title: "Every size in the ghost variant",
+    title: "Every size in the quiet variant",
     render: () => (
       <Row align="end">
         {iconButtonSizes.map((size) => (

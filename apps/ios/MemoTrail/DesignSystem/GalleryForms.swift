@@ -7,10 +7,10 @@
     @State private var search = ""
     @State private var searchMessage = "Type a query to try this local-only preview."
     @State private var tagQuery = ""
-    @State private var showRecords = "All records"
+    @State private var showRecords = "All"
     @State private var sortOrder = "Newest first"
     @State private var defaultView = "Timeline"
-    @State private var recordFilter = "All records"
+    @State private var recordFilter = "All"
     @State private var date = "2026-09-17"
     @State private var month = "2026-09"
     @State private var year = "2026"
@@ -101,9 +101,9 @@
             GalleryCase(.searchFieldSizes) {
               VStack(alignment: .leading, spacing: MTSpacing.s4) {
                 MTSearchField(
-                  "Compact search", text: .constant(""), prompt: "Search your trail", size: .small)
+                  "Compact search", text: .constant(""), prompt: "Search your Entries", size: .small)
                 HStack(alignment: .bottom, spacing: MTSpacing.s2) {
-                  MTSearchField("Search Library", text: $search, prompt: "Search your trail")
+                  MTSearchField("Search Library", text: $search, prompt: "Search your Entries")
                     .onSubmit(runSearch)
                   Button("Search", action: runSearch).mtButtonStyle(.secondary)
                 }
@@ -146,8 +146,8 @@
                   label: "Sort by", selection: $sortOrder, options: ["Newest first", "Oldest first"],
                   title: { $0 }, size: .small)
                 MTSelectField(
-                  label: "Show records", selection: $showRecords,
-                  options: ["All records", "Entries", "Chapters"], title: { $0 })
+                  label: "Show", selection: $showRecords,
+                  options: ["All", "Entries", "Chapters"], title: { $0 })
                 MTSelectField(
                   label: "Default view", selection: $defaultView,
                   options: ["Dashboard", "Timeline", "Library"], title: { $0 }, size: .large)
@@ -156,10 +156,10 @@
             GalleryCaseSeparator()
             GalleryCase(.selectFieldGroups) {
               MTSelectField(
-                label: "Record", selection: $recordFilter,
+                label: "Kind", selection: $recordFilter,
                 groups: [
-                  MTSelectGroup(options: ["All records"]),
-                  MTSelectGroup(title: "Records", options: ["Entries", "Chapters", "First Times"]),
+                  MTSelectGroup(options: ["All"]),
+                  MTSelectGroup(title: "Entry kinds", options: ["Entries", "Chapters", "First Times"]),
                   MTSelectGroup(title: "In Trash", options: ["Removed Entries", "Removed photos"]),
                 ], title: { $0 }, isRequired: true)
             }
@@ -450,7 +450,7 @@
     var body: some View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: MTSpacing.s2) {
-          ForEach(["All records", "Entries", "Chapters", "First Times"], id: \.self) { title in
+          ForEach(["All", "Entries", "Chapters", "First Times"], id: \.self) { title in
             MTFilterChip(title: title, isSelected: selectedKind == title) { selectedKind = title }
           }
         }

@@ -1,27 +1,31 @@
+/* The review notice is one quiet line between hairlines, not a card: a serif sentence and two
+   small actions, wrapping under it on a narrow screen. */
+
 .card {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: var(--mt-space-3) var(--mt-space-5);
-  padding: var(--mt-space-4) var(--mt-space-5);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
+  gap: var(--mt-space-2) var(--mt-space-5);
+  padding: var(--mt-space-3-5) 0;
+  border-block: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .card p {
   min-width: 0;
+  flex: 1 1 20rem;
   margin: 0;
   color: var(--mt-color-ink);
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-title);
   overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-1);
 }

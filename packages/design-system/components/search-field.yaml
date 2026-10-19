@@ -12,7 +12,7 @@ platforms:
 purpose: A labeled search input with one focus surface for the search icon, the query, and any trailing content.
 
 use:
-  - Searching or filtering a list in place, such as Library, Tags, item relations, or an address lookup.
+  - Searching or filtering a list in place, such as Library, Tags, or an address lookup.
   - The query field of the Web command palette, with its shortcut hint as trailing content.
   - A hidden label where the page title already says what is searched, as in Library.
 

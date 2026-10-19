@@ -114,30 +114,33 @@ test("untitled Entries are named by their date and never wait to be organized", 
   ).toHaveCount(0);
   await expect(page.getByRole("link", { name: /To organize/ })).toHaveCount(0);
   const recent = page.getByRole("region", {
-    name: "Recent Entries",
+    name: "Recent",
     exact: true,
   });
   for (const [title, note] of named.slice(0, 5)) {
     const row = recent.getByRole("link").filter({ hasText: note });
-    await expect(row.getByRole("heading")).toHaveText(title);
+    await expect(row).toHaveAccessibleName(title);
     // The date already names it, so it is not repeated beside the title.
     await expect(row.getByText(title)).toHaveCount(1);
   }
 
   await page.goto("/library");
-  const items = page.getByRole("list", { name: "Library items" });
+  const items = page.getByRole("region", { name: "Entries", exact: true });
   await expect(items.getByRole("listitem")).toHaveCount(8);
   for (const [title, note] of named) {
     const row = items.getByRole("listitem").filter({ hasText: note });
-    await expect(row.locator("strong")).toHaveText(title);
+    await expect(row.getByRole("link")).toHaveAccessibleName(title);
     await expect(row.getByText(title)).toHaveCount(1);
+    // The title already is the date, so the date column stays empty.
+    await expect(row.locator("time")).toHaveCount(0);
   }
+  // Under the October 2026 heading a date leaves out the year.
   await expect(
     items
       .getByRole("listitem")
       .filter({ hasText: "A titled memory" })
-      .locator("small"),
-  ).toHaveText("Oct 1, 2026");
+      .locator("time"),
+  ).toHaveText("Oct 1");
 
   await page.keyboard.press("ControlOrMeta+k");
   const palette = page.getByRole("dialog", { name: "Search MemoTrail" });
@@ -163,22 +166,27 @@ test("untitled Entries are named by their date and never wait to be organized", 
       .getByText("Rain all morning, walked anyway.", { exact: true }),
   ).toHaveCount(1);
   // The heading already is the date, so the Date fact would only repeat it.
-  const facts = page.getByRole("article", { name: "Current item" });
-  await expect(facts.getByText("Date", { exact: true })).toHaveCount(0);
+  const facts = page
+    .getByRole("article", { name: "Entry", exact: true })
+    .locator("[data-entry-facts]");
+  await expect(facts.locator("time")).toHaveCount(0);
   await page.goto(`/items/${exactID}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Saturday, October 3, 2026",
   );
   // An exact moment keeps its Date fact, which adds the time.
-  await expect(facts.getByText("Date", { exact: true })).toBeVisible();
-  await expect(facts).toContainText("Oct 3, 2026, 7:30 AM");
+  await expect(facts.locator("time")).toHaveText(
+    "Saturday, October 3, 2026 at 7:30 AM",
+  );
 
   // Links saved before Needs organizing was retired still open Library.
   for (const retired of ["/inbox", "/library?show=needs-organizing"]) {
     await page.goto(retired);
     await expect(page).toHaveURL(/\/library(\?show=needs-organizing)?$/);
     await expect(
-      page.getByRole("list", { name: "Library items" }).getByRole("listitem"),
+      page
+        .getByRole("region", { name: "Entries", exact: true })
+        .getByRole("listitem"),
     ).toHaveCount(8);
     await expect(
       page.getByRole("heading", { name: "Needs organizing" }),

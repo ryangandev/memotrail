@@ -1068,7 +1068,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 560px) {
   .searchFieldDemo,
   .searchFieldVariants {
     grid-template-columns: 1fr;

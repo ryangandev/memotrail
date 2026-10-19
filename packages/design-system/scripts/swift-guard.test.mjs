@@ -279,8 +279,8 @@ describe("suggest", () => {
       ).includes("MTFont.title"),
     );
     assert.ok(
-      suggestFor(`Text("A").tracking(0.8)`).includes(
-        "mtTextRole(.cardEyebrow)",
+      suggestFor(`Text("A").tracking(0.66)`).includes(
+        "mtTextRole(.badgeSmallCaps)",
       ),
     );
     assert.deepEqual(

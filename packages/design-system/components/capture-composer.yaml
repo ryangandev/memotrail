@@ -12,7 +12,7 @@ platforms:
 purpose: Captures one formatted note with an optional date, voice dictation, and photos, kept as a local draft until it is saved.
 
 use:
-  - The Home Dashboard's composer, as a raised card under the question What's on your mind?
+  - The Dashboard's composer, as a raised card whose placeholder asks What's on your mind?
   - The body of Quick Capture, opened from the action dock, without a card of its own.
 
 avoid:
@@ -21,12 +21,12 @@ avoid:
 
 anatomy:
   container: The raised card in the page variant, or the open body of the Quick Capture dialog.
-  header: The sparkle on a soft accent circle and the question What's on your mind?, in the page variant only.
-  editor: The rich-text writing area, embedded without a field border.
+  header: The sparkle on a soft accent circle and the question What's on your mind?, in the iOS page style only. Web has no header; its editor asks the question as a placeholder.
+  editor: The rich-text writing area, embedded without a field border. On Web its formatting toolbar appears once the writer engages the editor or has typed.
   occurrence: One date field for a calendar day with an optional time, opened in place under the note when people choose a date; without it the capture keeps the moment it was saved.
   photos: The strip of selected photos, each with a remove button.
   status: A tinted strip for a dictation message, a photo problem, or the draft note.
-  actions: The bar with quiet date, voice, and photo actions at the leading edge and the save action at the trailing edge.
+  actions: The bar with the date, voice, and photo actions at the leading edge and the save action at the trailing edge. On Web the actions are quiet chips, and the page variant prints the Command Return hint beside Save.
 
 props:
   variant:
@@ -81,7 +81,8 @@ content:
   casing: sentence
   length: The note has no length limit beyond the Entry body limit; status messages are one short sentence.
   notes:
-    - The placeholder asks What is on your mind?, and the page variant's question reads What's on your mind? in a serif title.
+    - The placeholder asks What's on your mind? on Web. iOS also shows the question as a serif title in its page style.
+    - The date chip reads Today until a day is chosen, then the day, such as Oct 19.
     - The draft message says where the draft lives, such as Draft saved on this device.
 
 accessibility:
@@ -92,13 +93,15 @@ accessibility:
   dynamicType: Text scales with Dynamic Type on iOS and browser zoom on Web. The quiet actions keep their size, and the action bar wraps the save action below them when it cannot fit.
 
 platformDifferences:
-  - difference: Web pads the composer 24 px in the page variant and 20 px in the dialog variant above 720 px, and 16 px up to 390 px; iOS uses the 20 and 16 pt phone padding.
+  - difference: Web has no header in the page variant and asks the question as the editor's placeholder; iOS keeps the sparkle and the serif question above the editor.
+    reason: The Quiet ledger Dashboard puts the question in the writing area itself. iOS follows when it takes up the Quiet ledger design.
+  - difference: Web pads the composer 20 px in both variants above 720 px and 14 px in the page variant up to 720 px; iOS uses the 20 and 16 pt phone padding.
     reason: The iOS app runs only on iPhone, so it never reaches the wider layout.
-  - difference: Web shows each quiet action's label beside its icon above 720 px and a short status beside the save action; iOS shows icons only and puts every status in the strip above the actions.
-    reason: An iPhone has no room for labels and a status in one bar. Web hides them the same way at phone widths.
+  - difference: Web shows the date, voice, and photo actions as quiet chips with labels, drops the voice label at phone widths, and prints the Command Return hint beside Save in the page variant; iOS shows icons only and puts every status in the strip above the actions.
+    reason: An iPhone has no room for labels and a status in one bar, and has no keyboard shortcut to print.
   - difference: The iOS quiet actions are 40 pt wide; Web's are 36 px wide at phone widths.
     reason: The wider target is easier to tap with a thumb, and the bar still fits three actions and the save action on the narrowest iPhone.
-  - difference: Web shows photos in a draft at 88 px in a wide window; iOS shows them at the 76 pt phone size.
+  - difference: Web shows photos in a draft at 72 px in a wide window and 64 px on a phone; iOS shows them at the 76 pt phone size.
     reason: The iOS app runs only on iPhone.
   - difference: Web lists captures waiting to sync under the composer, as Pending sync, and shows photo upload progress beside the save action. iOS lists them under the composer only in Quick Capture, shows a one-line notice that opens Pending sync on the Dashboard, and shows upload progress in its own strip above the actions.
     reason: The Dashboard card already sits above the Dashboard's own sections on a narrow screen, so a notice keeps it short; an iPhone action bar has no room beside the save action.
@@ -106,7 +109,7 @@ platformDifferences:
     reason: docs/product.md asks for the dialog on Web, where hover and a large window make checking a photo before saving useful. On iPhone the thumbnail is the photo the person just picked from their library.
   - difference: The draft message names this device on Web and this iPhone on iOS.
     reason: Each names where the draft is kept in words people use on that platform.
-  - difference: Web's embedded composer on the Home Dashboard fits its tools to the card's own width; iOS always fits the phone width.
+  - difference: Web's embedded composer on the Dashboard wraps its tools to the card's own width; iOS always fits the phone width.
     reason: The Web Dashboard places the composer in a column narrower than the window, while iOS shows it at the full width of the screen.
 
 specimens:

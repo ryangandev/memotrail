@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   const result = await getQuickSearchResults(query);
   if (!result) {
     return Response.json(
-      { error: "Sign in to search your archive.", items: [] },
+      { error: "Sign in to search your Entries.", items: [] },
       { headers, status: 401 },
     );
   }

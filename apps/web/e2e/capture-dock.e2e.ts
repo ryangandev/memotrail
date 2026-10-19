@@ -13,13 +13,12 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     .eq("user_id", workspace.owner);
   expect(profile.error).toBeNull();
   await page.setViewportSize({ width: 1440, height: 960 });
-  await page.goto("/");
-  await expect(
-    page.getByRole("textbox", { name: "Entry text", exact: true }),
-  ).toBeVisible();
+  // The Dashboard holds its own composer and a search-only dock, so the dock pair lives on
+  // the other pages.
+  await page.goto("/library");
   const trigger = page.getByRole("button", { name: "New entry", exact: true });
   const search = page.getByRole("button", {
-    name: "Search your trail",
+    name: "Search everything",
     exact: true,
   });
   const dialog = page.getByRole("dialog", {
@@ -30,22 +29,21 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     name: "Entry text",
     exact: true,
   });
+  // The dock holds the only New entry and Search controls; no header repeats them.
   await expect(
-    page.locator("main > header").getByRole("button", { name: "New entry" }),
-  ).toHaveCount(0);
+    page.getByRole("button", { name: "New entry", exact: true }),
+  ).toHaveCount(1);
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(
-    page
-      .locator("main > header")
-      .getByRole("button", { name: "Search your trail" }),
-  ).toHaveCount(0);
+    page.getByRole("button", { name: "Search everything", exact: true }),
+  ).toHaveCount(1);
   const triggerBox = (await trigger.boundingBox())!;
   const searchBox = (await search.boundingBox())!;
-  expect(triggerBox.y + triggerBox.height).toBeCloseTo(936, 0);
+  expect(triggerBox.y + triggerBox.height).toBeCloseTo(932, 0);
   expect(triggerBox.x + triggerBox.width).toBeLessThan(searchBox.x);
   expect(searchBox.y).toBeCloseTo(triggerBox.y, 0);
   expect((triggerBox.x + searchBox.x + searchBox.width) / 2).toBeCloseTo(
-    (1440 + 224) / 2,
+    (1440 + 240) / 2,
     0,
   );
   await expect(search).toHaveCSS("backdrop-filter", /blur/);
@@ -125,11 +123,6 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     ]);
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
 
-  await page
-    .getByRole("navigation", { name: "Primary navigation", exact: true })
-    .getByRole("link", { name: "Library", exact: true })
-    .click();
-  await expect(page).toHaveURL(/\/library$/);
   await trigger.focus();
   await page.keyboard.press("Control+j");
   await expect(editor).toHaveText("");

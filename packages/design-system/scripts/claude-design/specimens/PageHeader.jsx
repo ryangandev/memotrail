@@ -1,23 +1,20 @@
 const { Button, Icon, PageHeader } = MemoTrail;
 
-// The same headers the Web and iOS galleries show.
+// The same headers the Web gallery shows.
 export const specimens = {
   "page-header-full": {
-    title: "Eyebrow, title, description, and actions",
+    title: "Back link, title, meta line, and one action",
     render: () => (
       <PageHeader
-        actions={
-          <>
-            <Button variant="secondary">Filter</Button>
-            <Button>
-              <Icon name="plus" size={16} />
-              Add memory
-            </Button>
-          </>
+        action={
+          <Button>
+            <Icon name="plus" size={16} />
+            New Entry
+          </Button>
         }
-        description="The moments, people, and places that make up your story."
-        eyebrow="Your life, remembered"
-        title="Memories"
+        back="library"
+        meta="Sunday, September 18"
+        title="Tokyo, spring 2026"
       />
     ),
   },

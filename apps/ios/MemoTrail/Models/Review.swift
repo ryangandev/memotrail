@@ -279,7 +279,7 @@ struct StoredReview: Decodable, Equatable, Identifiable, Sendable {
   }
 }
 
-/// A Chapter's "From your records" facts, computed live from the person's own Entries, like Web
+/// A Chapter's "From your Entries" facts, computed live from the person's own Entries, like Web
 /// `ReviewFacts`.
 struct ReviewFacts: Decodable, Equatable, Sendable {
   struct TopTag: Equatable, Sendable {

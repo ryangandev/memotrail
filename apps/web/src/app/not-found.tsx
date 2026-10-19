@@ -6,14 +6,13 @@ export default function NotFound() {
     <RouteFallback
       actions={
         <>
-          <ButtonLink href="/">Go to Home</ButtonLink>
+          <ButtonLink href="/">Go to Dashboard</ButtonLink>
           <ButtonLink href="/library" variant="secondary">
             Open Library
           </ButtonLink>
         </>
       }
       description="This page does not exist, or it was moved or removed."
-      icon="search"
       title="Page not found"
     />
   );

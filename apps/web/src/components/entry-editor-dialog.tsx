@@ -330,7 +330,6 @@ export function EntryEditorDialog({
       title: <>Move this photo to Trash?</>,
       description: <>The original will be preserved for recovery.</>,
       confirmLabel: "Move photo to Trash",
-      eyebrow: <>Recoverable action</>,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -378,7 +377,6 @@ export function EntryEditorDialog({
         )
       }
       titleId="entry-editor-heading"
-      eyebrow={isNew ? <>New Entry</> : <>Entry</>}
       closeLabel="Close Entry editor"
       busy={isPending}
       size="wide"

@@ -1,5 +1,69 @@
 @import "../styles/generated-tokens.css";
 
+/* Web-only layout variables from the Quiet ledger design. Every page frame starts at
+   --frame-start from the workspace's left edge and keeps at least --frame-end from its right, so
+   a page title sits in the same place on every page. Reading and list are the frame widths in
+   page-frame.yaml; a detail page, one with a back link, starts a little higher. */
+:root {
+  --frame-reading: 720px;
+  --frame-list: var(--mt-layout-page-width-standard);
+  --frame-start: var(--mt-space-16);
+  --frame-end: var(--mt-space-16);
+  --frame-top: var(--mt-space-12);
+  --frame-top-detail: var(--mt-space-10);
+  --frame-bottom: var(--mt-space-10);
+  --frame-full-inline: var(--mt-space-10);
+  --frame-full-top: var(--mt-space-10);
+
+  /* Page and section titles take the display and section title roles, and their compact forms
+     on phones. */
+  --page-title-size: var(--mt-type-display-font-size);
+  --page-title-size-detail: var(--mt-type-display-detail-font-size);
+  --page-title-line-height: var(--mt-type-display-line-height);
+  --page-title-tracking: var(--mt-type-display-letter-spacing);
+  --page-title-tracking-detail: var(--mt-type-display-detail-letter-spacing);
+  --page-meta-size: var(--mt-font-size-body-small);
+  --section-title-size: var(--mt-type-section-title-font-size);
+
+  /* The floating action dock: its control height and its distance from the bottom edge. Toasts
+     rise from just above it, so they never cover the dock or the phone tab bar. */
+  --dock-control-height: 56px;
+  --dock-bottom: var(--mt-space-6);
+  --toast-bottom: calc(
+    var(--dock-bottom) + var(--dock-control-height) + var(--mt-space-3)
+  );
+}
+
+@media (max-width: 900px) {
+  :root {
+    --frame-start: var(--mt-space-6);
+    --frame-end: var(--mt-space-6);
+    --frame-top: var(--mt-space-8);
+    --frame-top-detail: calc(var(--mt-space-8) - var(--mt-space-1));
+    --frame-full-inline: var(--mt-space-4);
+    --frame-full-top: calc(var(--mt-space-8) - var(--mt-space-1));
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --frame-start: var(--mt-layout-page-gutter-compact);
+    --frame-end: var(--mt-layout-page-gutter-compact);
+    --frame-top: var(--mt-space-5);
+    --frame-top-detail: var(--mt-space-5);
+    --frame-bottom: var(--mt-space-6);
+    --frame-full-top: var(--mt-space-5);
+    --page-title-size: var(--mt-type-display-compact-font-size);
+    --page-title-size-detail: var(--mt-type-display-compact-font-size);
+    --page-title-line-height: var(--mt-type-display-compact-line-height);
+    --page-title-tracking: var(--mt-type-display-compact-letter-spacing);
+    --page-title-tracking-detail: var(--mt-type-display-compact-letter-spacing);
+    --page-meta-size: var(--mt-font-size-label);
+    --section-title-size: var(--mt-type-section-title-compact-font-size);
+    --dock-bottom: calc(80px + env(safe-area-inset-bottom));
+  }
+}
+
 * {
   box-sizing: border-box;
 }

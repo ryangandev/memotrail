@@ -30,7 +30,7 @@ struct LibraryView: View {
     NavigationStack(path: $path) {
       MTPage(width: .standard) {
         MTPageHeader(
-          eyebrow: "Your trail", title: "Library",
+          title: "Library",
           description: "Every Entry you write or import, newest first by the date it happened.")
         searchSurface
         // The next-page trigger is its own page row, so the lazy page creates it only when the

@@ -10,6 +10,7 @@ import {
 import {
   parseTrashItemInput,
   type TrashItemInput,
+  type TrashItemKind,
 } from "@/lib/data/trash-input";
 
 export type TrashActionResult = {
@@ -29,7 +30,7 @@ export async function prepareEmptyTrash(): Promise<
       items: null,
       error:
         error?.message === "trash_snapshot_too_large"
-          ? "Trash contains more than 10,000 items. Remove some individually before reviewing Empty Trash."
+          ? "Trash holds more than 10,000 Entries and photos. Delete some one at a time before reviewing Empty Trash."
           : "Could not prepare the complete Trash list. Nothing was deleted. Refresh and try again.",
     };
   return { items, error: null };
@@ -61,18 +62,21 @@ export async function restoreTrashItem(
     return {
       message:
         error.message === "trash_media_unavailable"
-          ? "This item's original photos are missing, so it cannot be restored. You can still delete it forever."
-          : "MemoTrail could not restore this item. Try again.",
+          ? "This Entry's original photos are missing, so it cannot be restored. You can still delete it forever."
+          : `MemoTrail could not restore this ${trashKindNoun(parsed.data.itemKind)}. Try again.`,
       status: "error",
     };
   }
 
   if (!Array.isArray(data) || data.length === 0) {
-    return changedItem();
+    return changedItem(parsed.data.itemKind);
   }
 
   refreshTrashPaths();
-  return { message: "Item restored.", status: "restored" };
+  return {
+    message: `${trashKindName(parsed.data.itemKind)} restored.`,
+    status: "restored",
+  };
 }
 
 /**
@@ -108,23 +112,22 @@ export async function deleteTrashItemForever(
 
   if (error) {
     return {
-      message: "MemoTrail could not permanently delete this item. Try again.",
+      message: `MemoTrail could not delete this ${trashKindNoun(parsed.data.itemKind)} forever. Try again.`,
       status: "error",
     };
   }
 
   if (!Array.isArray(data) || data.length === 0) {
-    return changedItem();
+    return changedItem(parsed.data.itemKind);
   }
 
   refreshTrashPaths();
   const finished =
     options.finishCleanup === false ||
     (await finishMediaPurges(context.client, context.userId));
+  const deleted = `${trashKindName(parsed.data.itemKind)} deleted forever.`;
   return {
-    message: finished
-      ? "Item permanently deleted."
-      : `Item permanently deleted. ${PENDING_MEDIA_PURGE_MESSAGE}`,
+    message: finished ? deleted : `${deleted} ${PENDING_MEDIA_PURGE_MESSAGE}`,
     status: "deleted",
   };
 }
@@ -137,10 +140,18 @@ export async function finishTrashCleanup(): Promise<boolean> {
     : false;
 }
 
-function changedItem(): TrashActionResult {
+/** How a message names what is in Trash: an Entry (Chapters included) or a photo. */
+function trashKindNoun(kind: TrashItemKind) {
+  return kind === "attachment" ? "photo" : "Entry";
+}
+
+function trashKindName(kind: TrashItemKind) {
+  return kind === "attachment" ? "Photo" : "Entry";
+}
+
+function changedItem(kind: TrashItemKind): TrashActionResult {
   return {
-    message:
-      "This item changed on another device. Refresh before trying again.",
+    message: `This ${trashKindNoun(kind)} changed on another device. Refresh before trying again.`,
     status: "error",
   };
 }

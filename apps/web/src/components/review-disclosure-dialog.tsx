@@ -32,7 +32,6 @@ export function ReviewDisclosureDialog({
     <Dialog
       busy={busy}
       closeLabel="Close"
-      eyebrow="Your privacy"
       footer={
         confirmLabel && onConfirm ? (
           <>
@@ -61,11 +60,7 @@ export function ReviewDisclosureDialog({
       title={REVIEW_DISCLOSURE_TITLE}
     >
       <div className={styles.copy}>
-        <div className={styles.intro}>
-          {REVIEW_DISCLOSURE_INTRO.map((line) => (
-            <p key={line}>{line}</p>
-          ))}
-        </div>
+        <p className={styles.intro}>{REVIEW_DISCLOSURE_INTRO.join(" ")}</p>
         {REVIEW_DISCLOSURE_SECTIONS.map((section) => (
           <section key={section.heading}>
             <h3>{section.heading}</h3>

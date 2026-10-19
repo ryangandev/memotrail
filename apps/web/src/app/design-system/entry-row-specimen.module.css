@@ -1,0 +1,21 @@
+.cases {
+  display: grid;
+  min-width: 0;
+  gap: var(--mt-space-5);
+}
+
+.frames {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  gap: var(--mt-space-6);
+}
+
+.frame {
+  min-width: 0;
+  max-width: 720px;
+}
+
+.frame[data-frame="narrow"] {
+  max-width: 342px;
+}

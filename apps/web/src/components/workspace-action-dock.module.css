@@ -1,11 +1,16 @@
+/* Values follow packages/design-system/components/workspace-action-dock.yaml and the Quiet
+   ledger Dashboard mockup: slim glass pills, 44px high, centered over the workspace. */
+
 .dock {
+  --dock-control-size: 44px;
+
   position: fixed;
-  inset: auto 0 24px var(--capture-workspace-left, 0px);
+  inset: auto 0 var(--dock-edge, 28px) var(--capture-workspace-left, 0px);
   z-index: var(--mt-layout-layer-dock);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--mt-space-3);
+  gap: var(--mt-space-2-5);
   padding-inline: var(--mt-space-4);
   pointer-events: none;
   transition: left var(--sidebar-motion);
@@ -13,7 +18,7 @@
 
 .control {
   display: flex;
-  min-height: 56px;
+  min-height: var(--dock-control-size);
   align-items: center;
   border: var(--mt-size-stroke-thin) solid var(--mt-material-glass-border);
   border-radius: var(--mt-radius-pill);
@@ -28,6 +33,7 @@
   -webkit-backdrop-filter: var(--mt-material-glass-backdrop-filter);
   backdrop-filter: var(--mt-material-glass-backdrop-filter);
   font: inherit;
+  font-size: var(--mt-font-size-body-small);
   cursor: pointer;
   pointer-events: auto;
   transition:
@@ -49,22 +55,22 @@
 
 .control kbd {
   flex: none;
-  padding: var(--mt-space-0-5) var(--mt-space-1-25);
+  padding: var(--mt-space-0-25) var(--mt-space-1-5);
   border: var(--mt-size-stroke-thin) solid var(--mt-material-glass-key-border);
-  border-radius: var(--mt-radius-small);
+  border-radius: var(--mt-radius-xsmall);
   color: inherit;
   background: var(--mt-material-glass-key);
   font-family: var(--mt-font-family-sans);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-medium);
-  line-height: var(--mt-line-height-none);
+  line-height: var(--mt-line-height-tight);
 }
 
 .search {
   flex: none;
   justify-content: center;
-  gap: var(--mt-space-3);
-  padding-inline: var(--mt-space-4);
+  gap: var(--mt-space-2-5);
+  padding: 0 var(--mt-space-4) 0 var(--mt-space-3-5);
 }
 
 .search > svg {
@@ -77,14 +83,34 @@
 }
 
 @media (max-width: 720px) {
+  /* Seated a gap above the tab bar, whose height the shell sets. */
   .dock {
-    bottom: calc(80px + env(safe-area-inset-bottom));
+    --dock-edge: calc(
+      var(--mobile-navigation-height, 76px) + var(--mt-space-3)
+    );
+
     gap: var(--mt-space-2);
+    padding-inline: var(--mt-layout-page-gutter-compact);
+  }
+
+  /* With only Search to show, it rests at the trailing edge, where a thumb lands. */
+  .dock[data-search-only] {
+    justify-content: flex-end;
   }
 
   .search {
-    width: 56px;
+    width: var(--dock-control-size);
     padding: 0;
+  }
+
+  /* The label stays for assistive technology; the round button shows only its icon. */
+  .search [data-dock-label] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .control kbd {

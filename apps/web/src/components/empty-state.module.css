@@ -1,66 +1,100 @@
+/* Values follow packages/design-system/components/empty-state.yaml. The state sits inline at the
+   page's left edge, with no box: a quiet icon beside one sentence and at most one action. */
+
 .state {
+  display: grid;
   width: 100%;
-  font: inherit;
-  display: flex;
   min-width: 0;
-  flex-direction: column;
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  justify-items: start;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-10) var(--mt-space-5);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-  text-align: center;
+  padding: var(--mt-space-6) 0;
+  border: 0;
+  color: var(--mt-color-ink);
+  background: transparent;
+  font: inherit;
+  text-align: start;
 }
 
-.state:is(button) {
-  cursor: pointer;
-}
-.state:is(button):hover {
-  border-color: var(--mt-color-accent);
-}
-.state:is(button):focus-visible {
-  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
-  outline-offset: var(--mt-state-focus-ring-offset);
+.state[data-icon] {
+  grid-template-columns: auto minmax(0, 1fr);
 }
 
 .icon {
   display: grid;
-  width: var(--mt-size-empty-state-icon);
-  height: var(--mt-size-empty-state-icon);
+  height: calc(var(--mt-type-body-font-size) * var(--mt-type-body-line-height));
   place-items: center;
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
+  color: var(--mt-color-ink-faint);
+}
+
+.icon svg {
+  width: var(--mt-size-icon-20);
+  height: var(--mt-size-icon-20);
+}
+
+.copy {
+  display: grid;
+  min-width: 0;
+  gap: var(--mt-space-1);
 }
 
 .title {
   margin: 0;
   color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
+  font-family: var(--mt-type-body-font-family);
+  font-size: var(--mt-type-body-font-size);
   font-weight: var(--mt-font-weight-medium);
-  line-height: var(--mt-line-height-tight);
+  line-height: var(--mt-type-body-line-height);
   overflow-wrap: anywhere;
 }
 
 .description {
   max-width: var(--mt-size-empty-state-message-width);
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
+  font-family: var(--mt-type-body-small-font-family);
+  font-size: var(--mt-type-body-small-font-size);
+  font-weight: var(--mt-type-body-small-font-weight);
+  line-height: var(--mt-type-body-small-line-height);
 }
 
 .actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
   gap: var(--mt-space-2);
   margin-top: var(--mt-space-1);
 }
 
-@media (max-width: 560px) {
-  .state {
-    padding: var(--mt-space-6) var(--mt-space-4);
+.state[data-icon] .actions {
+  grid-column: 2;
+}
+
+/* The whole state as one button keeps the inline layout and gains a quiet hover surface. */
+.state:is(button) {
+  width: calc(100% + 2 * var(--mt-space-3));
+  margin-inline: calc(var(--mt-space-3) * -1);
+  padding-inline: var(--mt-space-3);
+  border-radius: var(--mt-radius-medium);
+  cursor: pointer;
+  transition: background-color var(--mt-motion-quick)
+    var(--mt-motion-easing-standard);
+}
+
+.state:is(button):hover {
+  background: var(--mt-state-hover-surface);
+}
+
+.state:is(button):focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-inset);
+}
+
+.state:is(button) .title {
+  color: var(--mt-color-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .state:is(button) {
+    transition: none;
   }
 }

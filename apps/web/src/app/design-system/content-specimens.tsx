@@ -13,12 +13,12 @@ import {
   RecordCardBody,
   RecordCardVisual,
 } from "@/components/record-card";
-import firstTimes from "@/components/first-times-workspace.module.css";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SectionHeader } from "@/components/section-header";
 import { SeparatedList } from "@/components/separated-list";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
+import recordCard from "./record-card-specimen.module.css";
 import { loadedImage, sampleRichText } from "./samples";
 import { Specimen, SpecimenCase } from "./specimen";
 
@@ -80,7 +80,7 @@ export function RecordCardSpecimen() {
   return (
     <Specimen
       api="ariaLabel · onClick · className; composable RecordCardVisual and RecordCardBody"
-      description="Each record view lays out its own body inside the shared shell. The visual prefers a photo, then a map of the Location, then the record's mark."
+      description="Each page lays out its own body inside the shared shell. The visual prefers a photo, then a map of the Location, then the Entry mark."
       id="record-card"
       title="RecordCard"
     >
@@ -89,13 +89,13 @@ export function RecordCardSpecimen() {
           <div className={styles.cardSpecimen}>
             <RecordCard
               ariaLabel="First solo hike, Jun 12, 2021"
-              className={firstTimes.firstCard}
+              className={recordCard.firstCard}
               onClick={() => setMessage("Opened the first solo hike.")}
             >
-              <RecordCardVisual className={firstTimes.coverPhoto}>
+              <RecordCardVisual className={recordCard.coverPhoto}>
                 <ProgressiveImage alt="" src={loadedImage} />
                 <Badge
-                  className={firstTimes.photoBadge}
+                  className={recordCard.photoBadge}
                   size="micro"
                   tone="inverse"
                   uppercase
@@ -117,11 +117,11 @@ export function RecordCardSpecimen() {
           <div className={styles.cardSpecimen}>
             <RecordCard
               ariaLabel="First bike ride, 2012"
-              className={firstTimes.firstCard}
+              className={recordCard.firstCard}
               onClick={() => setMessage("Opened the first bike ride.")}
             >
-              <RecordCardVisual className={firstTimes.coverPhoto}>
-                <span className={firstTimes.cardIndexFallback}>01</span>
+              <RecordCardVisual className={recordCard.coverPhoto}>
+                <span className={recordCard.cardIndexFallback}>01</span>
               </RecordCardVisual>
               <FirstTimeFields
                 date="2012"
@@ -155,11 +155,11 @@ function FirstTimeFields({
   title: string;
 }) {
   return (
-    <RecordCardBody className={firstTimes.cardBody}>
+    <RecordCardBody className={recordCard.cardBody}>
       <time>{date}</time>
       <h2>{title}</h2>
       {location ? (
-        <p className={firstTimes.locationLine}>
+        <p className={recordCard.locationLine}>
           <Icon name="map" size={14} />
           {location}
         </p>
@@ -291,9 +291,9 @@ export function SectionHeaderSpecimen() {
           <div className={styles.headerStack}>
             <div data-header="list">
               <SectionHeader
-                detail="12 items"
+                detail="12 Entries"
                 headingLevel={4}
-                title="All items"
+                title="All Entries"
                 variant="list"
               />
             </div>
@@ -304,10 +304,10 @@ export function SectionHeaderSpecimen() {
                     Show all
                   </a>
                 }
-                detail="12 items"
+                detail="12 Entries"
                 detailAlign="end"
                 headingLevel={4}
-                title="All items"
+                title="All Entries"
                 variant="list"
               />
             </div>

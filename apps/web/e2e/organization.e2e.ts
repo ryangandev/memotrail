@@ -126,27 +126,40 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     });
     expect(tagSurface.background).toBe("rgba(0, 0, 0, 0)");
     expect(tagSurface.borderWidth).toBe(0);
-    await expect(tagList.getByText("3 tags", { exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Tags", exact: true }),
+    ).toBeVisible();
+    await expect(page.getByText("3 tags", { exact: true })).toBeVisible();
     await expect(
       tagList.getByText("Select a tag to browse the Entries using it"),
     ).toHaveCount(0);
-    const tagBadges = tagList.getByRole("article");
-    await expect(tagBadges).toHaveCount(3);
-    await expect(tagBadges.first().getByRole("button")).toHaveAccessibleName(
+    // Tags are ledger rows: one button each, stacked and ruled, never chips.
+    const tagRows = tagList.getByRole("listitem");
+    await expect(tagRows).toHaveCount(3);
+    await expect(tagRows.first().getByRole("button")).toHaveAccessibleName(
       /Manage tag .+, used by 0 Entries/,
     );
-    await expect(tagBadges.first().getByRole("button")).toHaveCount(1);
-    const badgeBoxes = await tagBadges.evaluateAll((elements) =>
+    await expect(tagRows.first().getByRole("button")).toHaveCount(1);
+    await expect(tagRows.first()).toContainText("0 Entries");
+    const rowBoxes = await tagRows.evaluateAll((elements) =>
       elements.map((element) => {
         const box = element.getBoundingClientRect();
-        return { height: box.height, width: box.width, y: box.y };
+        return {
+          borderBottom: Number.parseFloat(
+            getComputedStyle(element).borderBottomWidth,
+          ),
+          height: box.height,
+          width: box.width,
+          y: box.y,
+        };
       }),
     );
-    expect(Math.abs(badgeBoxes[0].y - badgeBoxes[1].y)).toBeLessThanOrEqual(1);
-    expect(badgeBoxes.every((box) => box.height < 54)).toBe(true);
-    expect(badgeBoxes.every((box) => box.width < tagSurface.width / 2)).toBe(
-      true,
+    expect(rowBoxes[1].y).toBeGreaterThan(
+      rowBoxes[0].y + rowBoxes[0].height - 1,
     );
+    expect(rowBoxes.every((box) => box.height < 64)).toBe(true);
+    expect(rowBoxes.every((box) => box.borderBottom === 1)).toBe(true);
+    expect(rowBoxes.every((box) => box.width === tagSurface.width)).toBe(true);
     const searchControlHeights = await Promise.all(
       [
         tagSearch.locator("[data-search-control]"),
@@ -207,18 +220,16 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     ).toBe(1);
 
     await page.goto("/tags");
-    const travelRow = page.getByRole("article").filter({ hasText: "travel" });
-    await expect(travelRow.getByLabel("1 Entry", { exact: true })).toHaveText(
-      "1",
-    );
+    const travelRow = tagList
+      .getByRole("listitem")
+      .filter({ hasText: "travel" });
+    await expect(travelRow.getByText("1 Entry", { exact: true })).toBeVisible();
     await travelRow
       .getByRole("button", { name: "Manage tag travel, used by 1 Entry" })
       .click();
     const travelDialog = page.getByRole("dialog", { name: "travel" });
     expect(
-      await travelDialog.evaluate(
-        (element) => element.closest("article") === null,
-      ),
+      await travelDialog.evaluate((element) => element.closest("li") === null),
     ).toBe(true);
     expect(await travelDialog.locator("..").boundingBox()).toMatchObject({
       height: page.viewportSize()?.height,
@@ -285,12 +296,12 @@ test("Tags are first-class and organize generic Timeline moments", async ({
         name: "Manage tag travel, used by 1 Entry",
       }),
     ).toHaveCount(0);
-    const journeysRow = page
-      .getByRole("article")
+    const journeysRow = tagList
+      .getByRole("listitem")
       .filter({ hasText: "journeys" });
-    await expect(journeysRow.getByLabel("1 Entry", { exact: true })).toHaveText(
-      "1",
-    );
+    await expect(
+      journeysRow.getByText("1 Entry", { exact: true }),
+    ).toBeVisible();
     await journeysRow
       .getByRole("button", { name: "Manage tag journeys, used by 1 Entry" })
       .click();
@@ -299,18 +310,24 @@ test("Tags are first-class and organize generic Timeline moments", async ({
       .getByRole("link", { name: "View all Entries for this tag" })
       .click();
     await expect(page).toHaveURL(/\/library\?tag=journeys$/);
+    // Library opens with the tag already chosen in its Tags filter.
+    await page.getByRole("button", { name: "Tags · 1", exact: true }).click();
     await expect(
-      page.getByRole("combobox", { name: "Tag", exact: true }),
-    ).toHaveValue("journeys");
+      page
+        .getByRole("group", { name: "Tags", exact: true })
+        .getByRole("button", { name: "#journeys", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
     await expect(
-      page.getByRole("heading", { name: "Moved to Seattle", exact: true }),
+      page.getByRole("link", { name: /Moved to Seattle/ }),
     ).toBeVisible();
     await page.goto("/tags");
 
-    const unusedRow = page.getByRole("article").filter({ hasText: "unused" });
-    await expect(unusedRow.getByLabel("0 Entries", { exact: true })).toHaveText(
-      "0",
-    );
+    const unusedRow = tagList
+      .getByRole("listitem")
+      .filter({ hasText: "unused" });
+    await expect(
+      unusedRow.getByText("0 Entries", { exact: true }),
+    ).toBeVisible();
     await unusedRow
       .getByRole("button", { name: "Manage tag unused, used by 0 Entries" })
       .click();

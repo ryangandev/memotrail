@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { clickUnlessSynced } from "./helpers/capture-sync";
 import { hearOtherTabsLate } from "./helpers/tab-timing";
 import { test, expect } from "./helpers/workspace-test";
+import { openQuickCaptureByShortcut } from "./helpers/quick-capture";
 
 // Pending captures belong to the signed-in workspace, not to whichever composer
 // happens to be mounted: they sync from any page, once per tab, and once across tabs.
@@ -143,9 +144,10 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   await capture.getByRole("button", { name: "Close quick capture" }).click();
   await expect(capture).toBeHidden();
 
-  const indicator = page
-    .locator("main > header")
-    .getByRole("button", { name: "1 pending", exact: true });
+  const indicator = page.getByRole("button", {
+    name: "1 pending",
+    exact: true,
+  });
   await expect(indicator).toHaveAttribute("aria-haspopup", "dialog");
   const attemptsBeforeOpening = attempts.for("Waiting for MemoTrail");
   await indicator.click();
@@ -207,7 +209,7 @@ test("the Dashboard composer and Quick Capture send each queued capture once", a
     .fill("Once from the Dashboard");
   await composer.getByRole("button", { name: "Save", exact: true }).click();
   await expect(pendingIndicator(page)).toHaveText("1 pending");
-  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  await openQuickCaptureByShortcut(page);
   const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
   await dialog
     .getByRole("textbox", { name: "Entry text", exact: true })
@@ -283,12 +285,12 @@ for (const late of [false, true])
     // Both tabs show the synced capture, not only the one that sent it.
     await expect(
       page
-        .getByRole("list", { name: "Library items" })
+        .getByRole("region", { name: "Entries", exact: true })
         .getByText("Once across tabs", { exact: true }),
     ).toBeVisible();
     await expect(
       other
-        .getByRole("region", { name: "Recent Entries", exact: true })
+        .getByRole("region", { name: "Recent", exact: true })
         .getByText("Once across tabs", { exact: true }),
     ).toBeVisible();
     await page.waitForLoadState("networkidle");
@@ -300,7 +302,10 @@ for (const late of [false, true])
   });
 
 function pendingIndicator(page: Page) {
-  return page.locator("main > header").getByText(/^\d+ pending$/);
+  return page
+    .locator("[data-ui-sync-status]")
+    .filter({ visible: true })
+    .getByText(/^\d+ pending$/);
 }
 
 /** Counts server action requests that carry a queued capture's text. */

@@ -15,101 +15,25 @@ import { AuthGate } from "@/components/auth-gate";
 import { BrandMark } from "@/components/brand-mark";
 import { CaptureProvider } from "@/components/capture-provider";
 import { CommandPalette } from "@/components/command-palette";
-import { Icon, type IconName } from "@/components/icon";
+import { Icon } from "@/components/icon";
 import { QuickCaptureDialog } from "@/components/quick-capture-dialog";
 import { SyncStatus } from "@/components/sync-status";
 import { TimezoneSync } from "@/components/timezone-sync";
-import { WorkspaceHistoryControls } from "@/components/workspace-history-controls";
 import { WorkspaceActionDock } from "@/components/workspace-action-dock";
+import { DeclareDestinationContext } from "@/components/workspace-destination";
 import type { Viewer } from "@/lib/data/inbox";
 import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
+import {
+  destinationForPathname,
+  moreDestinations,
+  sidebarGroups,
+  tabBarDestinations,
+  type DestinationLink,
+  type WorkspaceDestination,
+} from "@/lib/workspace-destinations";
 
-export type WorkspaceDestination =
-  | "explore"
-  | "home"
-  | "library"
-  | "settings"
-  | "tags"
-  | "timeline"
-  | "trash"
-  | "first-times";
-
-type NavigationItem = {
-  destination: WorkspaceDestination;
-  href?: string;
-  icon: IconName;
-  label: string;
-};
-
-const primaryNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "dashboard", label: "Dashboard" },
-  {
-    destination: "timeline",
-    href: "/timeline",
-    icon: "timeline",
-    label: "Timeline",
-  },
-  {
-    destination: "library",
-    href: "/library",
-    icon: "archive",
-    label: "Library",
-  },
-];
-
-const recordNavigation: NavigationItem[] = [
-  {
-    destination: "first-times",
-    href: "/first-times",
-    icon: "star",
-    label: "First Times",
-  },
-];
-
-const organizationNavigation: NavigationItem[] = [
-  { destination: "tags", href: "/tags", icon: "tag", label: "Tags" },
-  { destination: "trash", href: "/trash", icon: "trash", label: "Trash" },
-];
-
-const mobileNavigation: NavigationItem[] = [
-  { destination: "home", href: "/", icon: "dashboard", label: "Dashboard" },
-  {
-    destination: "timeline",
-    href: "/timeline",
-    icon: "timeline",
-    label: "Timeline",
-  },
-  {
-    destination: "library",
-    href: "/library",
-    icon: "archive",
-    label: "Library",
-  },
-];
-
-const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
-  { label: "Focused views", items: recordNavigation },
-  { label: "Organize", items: organizationNavigation.slice(0, 1) },
-  {
-    label: "Trash and settings",
-    items: [
-      organizationNavigation[1],
-      {
-        destination: "settings",
-        href: "/settings",
-        icon: "settings",
-        label: "Settings",
-      },
-    ],
-  },
-];
-
-const settingsNavigation: NavigationItem = {
-  destination: "settings",
-  href: "/settings",
-  icon: "settings",
-  label: "Settings",
-};
+const [dailyDestinations, focusedDestinations, toolDestinations] =
+  sidebarGroups;
 
 export function WorkspaceBoundary({
   children,
@@ -158,7 +82,11 @@ export function WorkspaceShell({
   viewer: Viewer;
 }) {
   const pathname = usePathname();
-  const activeDestination = destinationForPathname(pathname);
+  // A page whose address cannot say where it belongs, such as an Item, declares it.
+  const [declaredDestination, setDeclaredDestination] =
+    useState<WorkspaceDestination | null>(null);
+  const activeDestination =
+    declaredDestination ?? destinationForPathname(pathname);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [quickCaptureOpen, setQuickCaptureOpen] = useState(false);
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
@@ -180,6 +108,7 @@ export function WorkspaceShell({
     setMobileMoreOpen(false);
     setQuickCaptureOpen(true);
   }, []);
+  const closeMobileMore = useCallback(() => setMobileMoreOpen(false), []);
 
   useEffect(() => {
     if (!mobileMoreOpen) return;
@@ -225,187 +154,156 @@ export function WorkspaceShell({
     return () => window.removeEventListener("keydown", handleSidebarShortcut);
   }, [toggleSidebar]);
 
-  return (
-    <div
-      className={workspaceShellStyles.appShell}
-      data-sidebar-collapsed={sidebarCollapsed}
-    >
-      <TimezoneSync />
-      <CommandPalette onClose={closeCommandPalette} open={commandPaletteOpen} />
-      <Sidebar
-        activeDestination={activeDestination}
-        collapsed={sidebarCollapsed}
-      />
+  const moreActive =
+    activeDestination !== null &&
+    !tabBarDestinations.some((item) => item.destination === activeDestination);
 
-      <main className={workspaceShellStyles.workspace}>
-        <header className={workspaceShellStyles.topBar}>
-          <div className={workspaceShellStyles.topLeading}>
+  return (
+    <DeclareDestinationContext.Provider value={setDeclaredDestination}>
+      <div
+        className={workspaceShellStyles.appShell}
+        data-sidebar-collapsed={sidebarCollapsed}
+      >
+        <TimezoneSync />
+        <CommandPalette
+          onClose={closeCommandPalette}
+          onNewEntry={openQuickCapture}
+          open={commandPaletteOpen}
+        />
+        <Sidebar
+          activeDestination={activeDestination}
+          collapsed={sidebarCollapsed}
+          onToggle={toggleSidebar}
+          viewer={viewer}
+        />
+
+        <main className={workspaceShellStyles.workspace}>
+          {/* The phone's top bar; on wider screens the sidebar holds all of this. */}
+          <header className={workspaceShellStyles.topBar}>
             <Link
+              aria-label="MemoTrail dashboard"
               className={workspaceShellStyles.mobileBrand}
               href="/"
-              aria-label="MemoTrail dashboard"
             >
               <BrandMark className={workspaceShellStyles.brandMark} />
               <span>MemoTrail</span>
             </Link>
-            <WorkspaceHistoryControls />
-            <button
-              aria-keyshortcuts="Meta+B Control+B"
-              aria-label={
-                sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"
-              }
-              className={workspaceShellStyles.sidebarToggle}
-              onClick={toggleSidebar}
-              title={`${sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} (⌘ B / Ctrl+B)`}
-              type="button"
-            >
-              <Icon
-                name={sidebarCollapsed ? "sidebarClosed" : "sidebarOpen"}
-                size={18}
-              />
-            </button>
-          </div>
-
-          <div className={workspaceShellStyles.topActions}>
-            <SyncStatus />
-            <Link
-              aria-current={
-                activeDestination === "settings" ? "page" : undefined
-              }
-              aria-label={`Open settings for ${viewer.name}`}
-              className={workspaceShellStyles.avatarButton}
-              href="/settings"
-            >
-              {viewer.initial}
-            </Link>
-          </div>
-        </header>
-
-        {children}
-      </main>
-
-      <WorkspaceActionDock onSearch={openCommandPalette}>
-        <QuickCaptureDialog
-          idPrefix="dock-capture"
-          onClose={closeQuickCapture}
-          onOpen={openQuickCapture}
-          open={quickCaptureOpen}
-        />
-      </WorkspaceActionDock>
-
-      <nav
-        className={workspaceShellStyles.mobileNavigation}
-        aria-label="Mobile navigation"
-      >
-        {mobileNavigation.map((item) => (
-          <NavigationControl
-            active={item.destination === activeDestination}
-            item={item}
-            key={item.destination}
-            mobile
-            onNavigate={() => setMobileMoreOpen(false)}
-          />
-        ))}
-        <button
-          aria-controls={mobileMoreOpen ? "mobile-more-menu" : undefined}
-          aria-expanded={mobileMoreOpen}
-          aria-label="More destinations"
-          className={
-            !mobileNavigation.some(
-              (item) => item.destination === activeDestination,
-            )
-              ? workspaceShellStyles.mobileActive
-              : undefined
-          }
-          onClick={() => setMobileMoreOpen((open) => !open)}
-          ref={mobileMoreButton}
-          type="button"
-        >
-          <Icon name="more" size={20} />
-          <span>More</span>
-        </button>
-      </nav>
-      {mobileMoreOpen ? (
-        <>
-          <button
-            aria-label="Close more destinations"
-            className={workspaceShellStyles.mobileMoreScrim}
-            onClick={() => setMobileMoreOpen(false)}
-            tabIndex={-1}
-            type="button"
-          />
-          <nav
-            aria-label="More destinations"
-            className={workspaceShellStyles.mobileMoreMenu}
-            id="mobile-more-menu"
-          >
-            <div className={workspaceShellStyles.mobileMoreHeader}>
-              <h2>More</h2>
-              <button
-                aria-label="Close more destinations"
-                onClick={() => setMobileMoreOpen(false)}
-                type="button"
+            <div className={workspaceShellStyles.topActions}>
+              <SyncStatus idleLabel="Synced" />
+              <Link
+                aria-current={
+                  activeDestination === "settings" ? "page" : undefined
+                }
+                aria-label={`Open settings for ${viewer.name}`}
+                className={workspaceShellStyles.avatar}
+                href="/settings"
               >
-                <Icon name="close" size={18} />
-              </button>
+                {viewer.initial}
+              </Link>
             </div>
-            {mobileMoreGroups.map((group) => (
-              <div
-                className={workspaceShellStyles.mobileMoreGroup}
-                key={group.label}
-              >
-                <h3>{group.label}</h3>
-                <div className={workspaceShellStyles.mobileMoreLinks}>
-                  {group.items.map((item) => (
+          </header>
+
+          {children}
+        </main>
+
+        <WorkspaceActionDock onSearch={openCommandPalette}>
+          <QuickCaptureDialog
+            idPrefix="dock-capture"
+            onClose={closeQuickCapture}
+            onOpen={openQuickCapture}
+            open={quickCaptureOpen}
+          />
+        </WorkspaceActionDock>
+
+        <nav
+          aria-label="Mobile navigation"
+          className={workspaceShellStyles.mobileNavigation}
+        >
+          {tabBarDestinations.map((item) => (
+            <NavigationControl
+              active={item.destination === activeDestination}
+              item={item}
+              key={item.destination}
+              mobile
+              onNavigate={closeMobileMore}
+            />
+          ))}
+          <button
+            aria-controls={mobileMoreOpen ? "mobile-more-menu" : undefined}
+            aria-expanded={mobileMoreOpen}
+            aria-label="More destinations"
+            className={
+              moreActive ? workspaceShellStyles.mobileActive : undefined
+            }
+            onClick={() => setMobileMoreOpen((open) => !open)}
+            ref={mobileMoreButton}
+            type="button"
+          >
+            <Icon name="more" size={22} />
+            <span>More</span>
+          </button>
+        </nav>
+        {mobileMoreOpen ? (
+          <>
+            <button
+              aria-label="Close more destinations"
+              className={workspaceShellStyles.mobileMoreScrim}
+              onClick={closeMobileMore}
+              tabIndex={-1}
+              type="button"
+            />
+            <nav
+              aria-label="More destinations"
+              className={workspaceShellStyles.mobileMoreMenu}
+              id="mobile-more-menu"
+            >
+              <ul className={workspaceShellStyles.mobileMoreList}>
+                {moreDestinations.map((item) => (
+                  <li key={item.destination}>
                     <Link
                       aria-current={
                         item.destination === activeDestination
                           ? "page"
                           : undefined
                       }
-                      href={item.href ?? "/"}
-                      key={item.href}
-                      onClick={() => setMobileMoreOpen(false)}
+                      href={item.href}
+                      onClick={closeMobileMore}
                     >
-                      <Icon name={item.icon} size={18} />
-                      <span>{item.label}</span>
+                      {item.label}
                     </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </nav>
-        </>
-      ) : null}
-    </div>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </>
+        ) : null}
+      </div>
+    </DeclareDestinationContext.Provider>
   );
-}
-
-function destinationForPathname(pathname: string): WorkspaceDestination {
-  if (pathname === "/") return "home";
-  if (pathname.startsWith("/explore")) return "explore";
-  if (pathname.startsWith("/settings")) return "settings";
-  if (pathname.startsWith("/timeline")) return "timeline";
-  if (pathname.startsWith("/first-times")) return "first-times";
-  if (pathname.startsWith("/tags")) return "tags";
-  if (pathname.startsWith("/trash")) return "trash";
-  return "library";
 }
 
 function Sidebar({
   activeDestination,
   collapsed,
+  onToggle,
+  viewer,
 }: {
-  activeDestination: WorkspaceDestination;
+  activeDestination: WorkspaceDestination | null;
   collapsed: boolean;
+  onToggle: () => void;
+  viewer: Viewer;
 }) {
+  const toggleLabel = collapsed ? "Expand sidebar" : "Collapse sidebar";
   return (
     <aside className={workspaceShellStyles.sidebar}>
       <div className={workspaceShellStyles.sidebarHeader}>
+        {/* Collapsed, the logo is the toggle's resting face, so only the toggle is reachable. */}
         <Link
+          aria-hidden={collapsed || undefined}
           aria-label="MemoTrail dashboard"
           className={workspaceShellStyles.brand}
           href="/"
+          tabIndex={collapsed ? -1 : undefined}
         >
           <BrandMark
             className={workspaceShellStyles.brandMark}
@@ -414,6 +312,16 @@ function Sidebar({
           />
           <span className={workspaceShellStyles.brandName}>MemoTrail</span>
         </Link>
+        <button
+          aria-keyshortcuts="Meta+B Control+B"
+          aria-label={toggleLabel}
+          className={workspaceShellStyles.sidebarToggle}
+          onClick={onToggle}
+          title={`${toggleLabel} (⌘ B / Ctrl+B)`}
+          type="button"
+        >
+          <Icon name={collapsed ? "sidebarClosed" : "sidebarOpen"} size={18} />
+        </button>
       </div>
 
       <div
@@ -425,40 +333,37 @@ function Sidebar({
           <NavGroup
             activeDestination={activeDestination}
             collapsed={collapsed}
-            items={primaryNavigation}
+            items={dailyDestinations}
           />
           <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
-            Focused views
-          </p>
           <NavGroup
             activeDestination={activeDestination}
             collapsed={collapsed}
-            items={recordNavigation}
-          />
-          <div className={workspaceShellStyles.navDivider} role="separator" />
-          <p aria-hidden={collapsed} className={workspaceShellStyles.navLabel}>
-            Organize
-          </p>
-          <NavGroup
-            activeDestination={activeDestination}
-            collapsed={collapsed}
-            items={organizationNavigation}
+            items={focusedDestinations}
           />
         </nav>
 
         <div className={workspaceShellStyles.sidebarFooter}>
-          <div className={workspaceShellStyles.navDivider} role="separator" />
-          <nav
-            className={workspaceShellStyles.navGroup}
-            aria-label="Settings navigation"
-          >
-            <NavigationControl
-              active={activeDestination === "settings"}
+          <nav aria-label="Workspace tools">
+            <NavGroup
+              activeDestination={activeDestination}
               collapsed={collapsed}
-              item={settingsNavigation}
+              items={toolDestinations}
             />
           </nav>
+          <div className={workspaceShellStyles.account}>
+            <span
+              aria-hidden="true"
+              className={workspaceShellStyles.avatar}
+              title={collapsed ? viewer.name : undefined}
+            >
+              {viewer.initial}
+            </span>
+            <span className={workspaceShellStyles.accountName}>
+              {viewer.name}
+            </span>
+            <SyncStatus idleLabel="Synced" />
+          </div>
         </div>
       </div>
     </aside>
@@ -470,9 +375,9 @@ function NavGroup({
   collapsed,
   items,
 }: {
-  activeDestination: WorkspaceDestination;
+  activeDestination: WorkspaceDestination | null;
   collapsed: boolean;
-  items: NavigationItem[];
+  items: readonly DestinationLink[];
 }) {
   return (
     <div className={workspaceShellStyles.navGroup}>
@@ -497,44 +402,29 @@ function NavigationControl({
 }: {
   active: boolean;
   collapsed?: boolean;
-  item: NavigationItem;
+  item: DestinationLink;
   mobile?: boolean;
   onNavigate?: () => void;
 }) {
-  const content = (
-    <>
-      <Icon name={item.icon} size={mobile ? 20 : 18} />
-      <span className={workspaceShellStyles.navItemLabel}>
-        {mobile && item.label === "First Times" ? "Firsts" : item.label}
-      </span>
-    </>
-  );
   const className = active
     ? mobile
       ? workspaceShellStyles.mobileActive
       : workspaceShellStyles.activeNavItem
     : undefined;
 
-  if (item.href) {
-    return (
-      <Link
-        aria-current={active ? "page" : undefined}
-        aria-label={collapsed ? item.label : undefined}
-        className={className}
-        href={item.href}
-        onClick={onNavigate}
-        title={collapsed ? item.label : undefined}
-      >
-        {content}
-        <NavigationPendingIndicator label={item.label} />
-      </Link>
-    );
-  }
-
   return (
-    <button aria-disabled="true" className={className} disabled type="button">
-      {content}
-    </button>
+    <Link
+      aria-current={active ? "page" : undefined}
+      aria-label={collapsed ? item.label : undefined}
+      className={className}
+      href={item.href}
+      onClick={onNavigate}
+      title={collapsed ? item.label : undefined}
+    >
+      <Icon name={item.icon} size={mobile ? 22 : 18} />
+      <span className={workspaceShellStyles.navItemLabel}>{item.label}</span>
+      <NavigationPendingIndicator label={item.label} />
+    </Link>
   );
 }
 

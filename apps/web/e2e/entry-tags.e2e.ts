@@ -139,7 +139,9 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
   await page.goto(`/items/${entryId}`);
   await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
   const editor = page.getByRole("dialog", { name: "Edit Entry" });
-  await expect(editor.getByText("Entry", { exact: true })).toBeVisible();
+  await expect(
+    editor.getByRole("heading", { name: "Edit Entry", exact: true }),
+  ).toBeVisible();
   await expect(editor.getByText("Life Wiki editor")).toHaveCount(0);
 
   // Title, Note, Tags, then Photos and the rest.
@@ -245,7 +247,7 @@ test("The Entry editor puts tags first and reuses existing tags", async ({
     ["Travel", "archived", "books", "family", "purged", "unused"].sort(),
   );
   await expect(
-    page.getByRole("article", { name: "Current item" }),
+    page.getByRole("article", { name: "Entry", exact: true }),
   ).toContainText("Travel");
   expect(uiErrors).toEqual([]);
 });

@@ -1,49 +1,6 @@
-.content section {
-  margin-top: var(--mt-space-10);
-}
-
-.sectionHeading {
-  margin-bottom: var(--mt-space-3);
-}
-
-.wikiEmpty {
-  padding: var(--mt-space-8);
-  border: var(--mt-size-stroke-thin) dashed var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-large);
-  color: var(--mt-color-ink-muted);
-  text-align: center;
-}
-
-.wikiEmpty strong {
-  display: block;
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.pagination {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: var(--mt-space-3);
-  margin-top: var(--mt-space-5);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-}
-
-.pagination > :last-child {
-  justify-self: end;
-}
-
-.pagination a {
-  color: var(--mt-color-accent);
-}
-
-@media (max-width: 390px) {
-  .sectionHeading span {
-    max-width: 150px;
-    text-align: right;
+/* Phones keep the meta to one short line. */
+@media (max-width: 720px) {
+  .metaDetail {
+    display: none;
   }
 }

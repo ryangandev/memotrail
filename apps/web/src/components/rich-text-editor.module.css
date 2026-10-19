@@ -208,7 +208,7 @@
   color: inherit;
   background: var(--mt-color-on-ink-key);
   font: inherit;
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   white-space: nowrap;
 }
 
@@ -316,7 +316,7 @@
 /* Every action stays visible on a phone: buttons tighten so more fit on a row,
    and a narrower toolbar wraps whole groups, where a separator would dangle at a
    line end, so group spacing replaces separators. */
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .toolbar {
     flex-wrap: wrap;
     column-gap: var(--mt-space-3);

@@ -14,7 +14,7 @@ purpose: An icon-only action, drawn as a square Button, that names itself with a
 use:
   - Close, more, and add actions in dialog and sheet headers, toolbars, and record rows.
   - Actions whose icon is unmistakable in context, such as close or more.
-  - Ghost by default, so the icon reads as quiet chrome beside the content it acts on.
+  - Quiet by default, so the icon reads as quiet chrome beside the content it acts on.
 
 avoid:
   - Actions an icon cannot name on its own. Use a Button with a label and a leading icon.
@@ -29,9 +29,9 @@ anatomy:
 
 props:
   variant:
-    description: The action's emphasis, with Button's variants. Ghost is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one.
-    values: [primary, secondary, ghost, danger]
-    default: ghost
+    description: The action's emphasis, with Button's variants. Quiet is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one.
+    values: [primary, secondary, quiet, danger]
+    default: quiet
   size:
     description: The square's side. Small fits dense rows and composer headers, and large stands alone.
     values: [small, medium, large]
@@ -84,9 +84,9 @@ tokens:
       background: "{state.hover.accentSurface}"
       border: "{color.accent}"
     icon: { color: "{color.accent}" }
-  - when: { variant: ghost }
+  - when: { variant: quiet }
     icon: { color: "{color.inkMuted}" }
-  - when: { variant: ghost, state: hover }
+  - when: { variant: quiet, state: hover }
     container: { background: "{state.hover.surface}" }
     icon: { color: "{state.hover.ink}" }
   - when: { variant: danger }
@@ -129,8 +129,8 @@ specimens:
     description: Every variant at the default medium size, with add, edit, more, and remove icons.
     covers: { variant: all }
   - id: icon-button-sizes
-    description: Every size in the ghost variant, with the close icon a dialog header uses.
+    description: Every size in the quiet variant, with the close icon a dialog header uses.
     covers: { size: all }
   - id: icon-button-states
-    description: A ghost action at rest, disabled, and loading, where the spinner replaces the icon.
-    covers: { variant: [ghost] }
+    description: A quiet action at rest, disabled, and loading, where the spinner replaces the icon.
+    covers: { variant: [quiet] }

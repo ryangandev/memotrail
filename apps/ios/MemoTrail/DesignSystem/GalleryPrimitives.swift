@@ -158,7 +158,7 @@
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             GalleryCase(.pageHeaderFull) {
               MTPageHeader(
-                eyebrow: "Your trail", title: "Library",
+                eyebrow: "Monday, October 19", title: "Library",
                 description: "Every Entry, Chapter, and First Time, newest first."
               ) {
                 Button("Filter") { message = "Header filter activated." }
@@ -182,7 +182,7 @@
             GalleryCase(.emptyStateWithAction) {
               MTEmptyState(
                 title: "Your Library is empty",
-                message: "Capture an Entry to begin your trail.", icon: .plus
+                message: "Capture an Entry and it appears here.", icon: .plus
               ) {
                 Button("Write your first Entry") { sheet = .form }.mtButtonStyle()
               }
@@ -258,7 +258,7 @@
       switch variant {
       case .primary: (icon, label) = (.plus, "Add entry")
       case .secondary: (icon, label) = (.edit, "Edit entry")
-      case .ghost: (icon, label) = (.more, "More actions for Travel")
+      case .quiet: (icon, label) = (.more, "More actions for Travel")
       case .danger: (icon, label) = (.trash, "Move entry to Trash")
       }
     }

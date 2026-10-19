@@ -1,312 +1,554 @@
 /*
- * A review is three kinds of text that must never be mistaken for one another: facts from the
- * person's records (plain), Claude's interpretation (a tinted surface with a warm edge and an
- * "Interpretation" badge), and the person's own words (set as quotes). The surface styles do the
- * distinguishing, so it does not depend on the badge alone. Selectors carry the panel class
- * twice over so the Item page's paragraph and link colors do not reach in.
+ * A review reads like the page it sits on: serif prose for how it felt, quiet rows for what kept
+ * coming up, the person's own words as serif quotes with a date link, and plain rows of facts,
+ * with no tinted panels or ruled cards. A Chapter and a year share every style; a year's sections
+ * sit under the page title, a Chapter's under "Looking back". The "Written by AI" badge and the
+ * closing line mark the whole review as Claude's. Selectors carry the panel class so the Item
+ * page's own paragraph, heading, and link colors do not reach in.
  */
 
 .panel {
-  display: grid;
-  gap: var(--mt-space-4);
+  --review-prose-size: var(--mt-type-prose-font-size);
+  --review-prose-line-height: var(--mt-type-prose-line-height);
+  --review-quote-size: var(--mt-type-quote-font-size);
+  --review-row-title-size: var(--mt-type-item-title-compact-font-size);
+  --review-section-gap: var(--mt-space-11);
+  --review-section-title-size: var(--section-title-size);
+
   min-width: 0;
 }
 
-.panel .muted,
-.panel .meta,
-.panel .previous,
-.panel .label {
-  margin: 0;
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
+.panel[data-scope="chapter"] {
+  --review-section-gap: var(--mt-space-8);
+  --review-section-title-size: var(--mt-font-size-body-large);
 }
 
-.panel .label {
-  color: var(--mt-color-ink-faint);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.panel .previous {
-  color: var(--mt-color-ink-faint);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.readyHeader {
-  display: grid;
-  gap: var(--mt-space-1);
-}
-
-.actions {
-  display: inline-flex;
+/* "Looking back", the AI badge, and the meta line on the Chapter page's section rule. */
+.head {
+  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-2) var(--mt-space-3);
+  padding-bottom: var(--mt-space-2-5);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
+.panel .headTitle {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--section-title-size);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-tight);
+}
+
+.headMeta {
+  min-width: 0;
+  margin-inline-start: auto;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+}
+
+.metaList {
+  --separated-list-row-gap: 0px;
+}
+
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Before a review is made: what it will show, what is sent, and the one action. */
 .start {
   display: grid;
   justify-items: start;
   gap: var(--mt-space-3);
+  max-width: 36rem;
+  margin-top: var(--mt-space-8);
+}
+
+.panel[data-scope="chapter"] .start {
+  margin-top: var(--mt-space-4-5);
+}
+
+.panel .lead {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-prose-size);
+  line-height: var(--review-prose-line-height);
+  text-wrap: pretty;
+}
+
+.panel .sends {
+  margin: 0 0 var(--mt-space-1);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
+  text-wrap: pretty;
 }
 
 .failure {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-3) var(--mt-space-4);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-danger-border);
-  border-radius: var(--mt-radius-medium);
-  background: var(--mt-color-danger-subtle);
+  gap: var(--mt-space-2) var(--mt-space-4);
+  margin-top: var(--mt-space-8);
+}
+
+.panel[data-scope="chapter"] .failure {
+  margin-top: var(--mt-space-4-5);
 }
 
 .panel .failure p {
   margin: 0;
   color: var(--mt-color-danger);
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
 }
 
 .progress {
   display: grid;
-  gap: var(--mt-space-2);
-  padding: var(--mt-space-4);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
+  gap: var(--mt-space-1-5);
+  max-width: 36rem;
+  margin-top: var(--mt-space-8);
+}
+
+.panel[data-scope="chapter"] .progress {
+  margin-top: var(--mt-space-4-5);
 }
 
 .panel .progress p {
   margin: 0;
   color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-prose-size);
+  line-height: var(--review-prose-line-height);
 }
 
-.panel .progress p.muted {
+.panel .progress p.part {
   color: var(--mt-color-ink-muted);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
 }
 
 .skeletons {
   display: grid;
+  gap: var(--mt-space-3);
+  margin-top: var(--mt-space-3);
+}
+
+.panel .previous {
+  margin: var(--mt-space-8) 0 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+}
+
+/* Notes about the review itself: what changed since, what is in Trash, and what it read. */
+.notices {
+  display: grid;
   gap: var(--mt-space-2);
+  margin-top: var(--mt-space-8);
+}
+
+.panel[data-scope="chapter"] .notices {
+  margin-top: var(--mt-space-4);
+}
+
+.panel .notice {
+  margin: 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
+  text-wrap: pretty;
+}
+
+.panel .inlineAction {
+  padding: 0;
+  border: 0;
+  border-radius: var(--mt-radius-xxsmall);
+  color: var(--mt-color-accent);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.panel .inlineAction:hover {
+  text-decoration: underline;
+}
+
+.panel .inlineAction:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset);
+}
+
+.section {
+  margin-top: var(--review-section-gap);
+}
+
+.panel[data-scope="chapter"] .body > .section:first-child,
+.panel[data-scope="chapter"]
+  .interpretation:first-child
+  > .section:first-child {
+  margin-top: var(--mt-space-5);
+}
+
+.panel .sectionTitle {
+  margin: 0;
+  padding-bottom: var(--mt-space-2-5);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-section-title-size);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-tight);
+}
+
+/* Under "Looking back" the section titles are subheads, without a second rule. */
+.panel[data-scope="chapter"] .sectionTitle {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* How it felt: serif prose, each stretch a short subhead over its paragraph. */
+.prose {
+  display: grid;
+  gap: var(--mt-space-4);
+  margin-top: var(--mt-space-4);
+}
+
+.panel[data-scope="chapter"] .prose {
   margin-top: var(--mt-space-2);
 }
 
-.body {
-  display: grid;
-  gap: var(--mt-space-5);
-}
-
-.body > div {
-  display: grid;
-  gap: var(--mt-space-5);
-}
-
-.notice {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-2) var(--mt-space-3);
-  margin: 0;
-  padding: var(--mt-space-3) var(--mt-space-4);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  background: var(--mt-color-surface-subtle);
-}
-
-.panel .notice span {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
-}
-
-.records {
-  display: grid;
-  gap: var(--mt-space-3);
-  padding-top: var(--mt-space-4);
-  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-}
-
-.panel .records p {
+.panel .prose p,
+.panel .prose .phaseTitle {
   margin: 0;
   color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-prose-size);
+  line-height: var(--review-prose-line-height);
+  overflow-wrap: anywhere;
 }
 
-.panel .records p.meta,
-.panel .records p.label {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+.panel .prose .phaseTitle {
+  font-weight: var(--mt-font-weight-semibold);
 }
 
-.tags,
-.plainList,
-.themes,
-.phases {
+.phase {
   display: grid;
+  gap: var(--mt-space-0-5);
+}
+
+.panel .prose p.phaseMeta {
+  margin-top: var(--mt-space-1);
+  color: var(--mt-color-ink-muted);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+}
+
+/* The toggle that lists the Entries a stretch or a theme came from. */
+.panel .cited {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mt-space-1);
+  padding: 0;
+  border: 0;
+  border-radius: var(--mt-radius-xxsmall);
+  color: var(--mt-color-ink-muted);
+  background: none;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.cited svg {
+  transition: transform var(--mt-motion-quick) var(--mt-motion-easing-standard);
+}
+
+.cited[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.panel .cited:hover {
+  color: var(--mt-color-ink);
+}
+
+.panel .cited:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset);
+}
+
+.citations {
+  min-width: 0;
+  margin-top: var(--mt-space-2);
+}
+
+/* What kept coming up: a row per theme with its count, the description under it. */
+.themes {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.theme {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--mt-space-1) var(--mt-space-4);
+  padding: var(--mt-space-3-5) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+.panel .themeName {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-row-title-size);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-title);
+  overflow-wrap: anywhere;
+}
+
+.panel .themeCount {
+  font-size: var(--mt-font-size-label);
+}
+
+.panel .themeText {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
+  overflow-wrap: anywhere;
+}
+
+.theme .citations {
+  grid-column: 1 / -1;
+}
+
+/* In your words: the person's own sentences, set as serif quotes with a link to their Entry. */
+.quote {
+  display: grid;
+  gap: var(--mt-space-1-5);
+  margin: var(--mt-space-5-5) 0 0;
+}
+
+.panel .quote blockquote {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-quote-size);
+  line-height: var(--mt-line-height-message);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.quote blockquote::before {
+  content: open-quote;
+}
+
+.quote blockquote::after {
+  content: close-quote;
+}
+
+.quote figcaption {
+  display: grid;
+  justify-items: start;
+  gap: var(--mt-space-1);
+}
+
+.panel .source {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mt-space-0-5) var(--mt-space-2);
+  border-radius: var(--mt-radius-xxsmall);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+  text-decoration: none;
+}
+
+.panel .sourceDate {
+  color: var(--mt-color-accent);
+}
+
+.panel .sourceTitle {
+  color: var(--mt-color-ink-muted);
+}
+
+.panel .source:hover .sourceDate {
+  text-decoration: underline;
+}
+
+.panel .source:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset);
+}
+
+.panel .why,
+.panel .hidden {
+  margin: 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+}
+
+.panel .hidden {
+  margin-top: var(--mt-space-5);
+}
+
+/* Rows of facts: a Chapter during the year, a First Time, or an Entry a theme came from. */
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel .row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: var(--mt-space-1) var(--mt-space-4);
+  padding: var(--mt-space-3) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink);
+  text-decoration: none;
+}
+
+.panel .rowTitle {
+  min-width: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-row-title-size);
+  line-height: var(--mt-line-height-title);
+  overflow-wrap: anywhere;
+  transition: color var(--mt-motion-quick) var(--mt-motion-easing-standard);
+}
+
+.panel .rowDate {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.panel .row:hover .rowTitle {
+  color: var(--mt-color-accent);
+}
+
+.panel .row:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
+}
+
+/* From your Entries. */
+.panel .facts {
+  margin: var(--mt-space-4) 0 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
+}
+
+.panel[data-scope="chapter"] .facts {
+  margin-top: var(--mt-space-2);
 }
 
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--mt-space-2);
-}
-
-.panel .tags a {
-  text-decoration: none;
-}
-
-.plainList {
-  gap: var(--mt-space-1-5);
-  margin-top: var(--mt-space-1);
-}
-
-.interpretationHeader {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--mt-space-2);
-}
-
-.interpretationHeader h3 {
-  margin: 0;
-  color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.interpretation {
-  display: grid;
-  gap: var(--mt-space-4);
-  padding: var(--mt-space-5);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-inline-start: var(--mt-size-stroke-thick) solid var(--mt-color-warm);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-warm-wash);
-}
-
-.panel .interpretation p,
-.panel .interpretation h4 {
-  margin: 0;
-  color: var(--mt-color-ink);
-  line-height: var(--mt-line-height-paragraph);
-  overflow-wrap: anywhere;
-}
-
-.panel .interpretation p {
-  font-size: var(--mt-font-size-body);
-}
-
-.panel .interpretation h4 {
-  font-size: var(--mt-font-size-body);
-  font-weight: var(--mt-font-weight-semibold);
-}
-
-.phases,
-.themes {
-  gap: var(--mt-space-5);
-}
-
-.phases > li,
-.themes > li {
-  display: grid;
-  gap: var(--mt-space-1-5);
-}
-
-.panel .interpretation p.range {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-}
-
-.citations {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-}
-
-.citations summary {
-  width: fit-content;
-  cursor: pointer;
-  color: var(--mt-color-ink-muted);
-}
-
-.citations summary:hover {
-  color: var(--mt-color-ink);
-}
-
-.citations ul {
-  display: grid;
-  gap: var(--mt-space-1-5);
+  gap: var(--mt-space-1) var(--mt-space-4);
   margin: var(--mt-space-2) 0 0;
   padding: 0;
   list-style: none;
 }
 
-.panel .entryLink {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--mt-space-1) var(--mt-space-2);
-  color: var(--mt-color-accent);
-  font-size: var(--mt-font-size-caption);
+.panel .tags a {
+  border-radius: var(--mt-radius-xxsmall);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
   text-decoration: none;
 }
 
-.panel .entryLink span:first-child {
+.panel .tags a span {
   color: var(--mt-color-ink-faint);
+  font-variant-numeric: tabular-nums;
 }
 
-.panel .entryLink:hover span:last-child {
-  text-decoration: underline;
+.panel .tags a:hover {
+  color: var(--mt-color-accent);
 }
 
-.words {
-  display: grid;
-  gap: var(--mt-space-4);
+.panel .tags a:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset);
 }
 
-.quote {
-  display: grid;
-  gap: var(--mt-space-2);
+.group {
+  margin-top: var(--mt-space-5);
+}
+
+.panel .groupLabel {
   margin: 0;
-  padding-inline-start: var(--mt-space-4);
-  border-inline-start: var(--mt-size-stroke-thick) solid
-    var(--mt-color-accent-stripe);
-}
-
-.quote blockquote {
-  margin: 0;
-  color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-body-large);
-  line-height: var(--mt-line-height-story);
-  overflow-wrap: anywhere;
-  white-space: pre-line;
-}
-
-.quote figcaption {
-  display: grid;
-  gap: var(--mt-space-1);
-}
-
-.panel .why {
+  padding-bottom: var(--mt-space-1-5);
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-message);
 }
 
+/* The closing line and the review's own actions. */
 .panel .footer {
-  margin: 0;
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  line-height: var(--mt-line-height-body);
+  max-width: 36rem;
+  margin: var(--mt-space-8) 0 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+  text-wrap: pretty;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mt-space-2);
+  margin-top: var(--mt-space-3);
+  /* The quiet buttons' text lines up with the column, not their hover surface. */
+  margin-inline: calc(var(--mt-space-3) * -1);
+}
+
+.delete {
+  margin-inline-start: auto;
+}
+
+@media (max-width: 720px) {
+  .panel {
+    --review-prose-size: var(--mt-font-size-callout);
+    --review-prose-line-height: var(--mt-line-height-paragraph);
+    --review-quote-size: var(--mt-type-prose-font-size);
+    --review-section-gap: var(--mt-space-8);
+  }
+
+  .panel[data-scope="chapter"] {
+    --review-section-gap: var(--mt-space-6);
+  }
+
+  .quote {
+    margin-top: var(--mt-space-4);
+  }
+
+  .panel .source {
+    font-size: var(--mt-font-size-caption);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cited svg,
+  .panel .rowTitle {
+    transition: none;
+  }
 }

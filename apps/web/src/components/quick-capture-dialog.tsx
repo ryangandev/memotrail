@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import {
   CaptureComposer,
@@ -22,6 +23,9 @@ export function QuickCaptureDialog({
   onOpen: () => void;
   open: boolean;
 }) {
+  // The Dashboard has its own composer, so its dock offers Search alone. Quick Capture still
+  // opens there with Command J and from the Command Palette.
+  const showTrigger = usePathname() !== "/";
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const nativePhotoPickerOpenRef = useRef(false);
@@ -65,6 +69,7 @@ export function QuickCaptureDialog({
     const finishClosing = () => {
       if (canceled) return;
       dialog.close();
+      // Without a trigger, the browser returns focus to where it was before the dialog opened.
       triggerRef.current?.focus({ preventScroll: true });
     };
     const animations = dialog.getAnimations();
@@ -181,24 +186,24 @@ export function QuickCaptureDialog({
 
   return (
     <>
-      <button
-        aria-keyshortcuts="Meta+J Control+J"
-        aria-label="New entry"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls={open ? `${idPrefix}-dialog` : undefined}
-        className={`${dockStyles.control} ${styles.trigger}`}
-        onClick={onOpen}
-        ref={triggerRef}
-        title="New entry (⌘ J / Ctrl+J)"
-        type="button"
-      >
-        <span className={styles.triggerMark}>
-          <Icon name="sparkle" size={19} />
-        </span>
-        <span className={styles.triggerPrompt}>What’s on your mind?</span>
-        <kbd aria-hidden="true">⌘ J</kbd>
-      </button>
+      {showTrigger ? (
+        <button
+          aria-keyshortcuts="Meta+J Control+J"
+          aria-label="New entry"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls={open ? `${idPrefix}-dialog` : undefined}
+          className={`${dockStyles.control} ${styles.trigger}`}
+          onClick={onOpen}
+          ref={triggerRef}
+          title="New entry (⌘ J / Ctrl+J)"
+          type="button"
+        >
+          <Icon name="sparkle" size={18} />
+          <span className={styles.triggerPrompt}>What’s on your mind?</span>
+          <kbd aria-hidden="true">⌘ J</kbd>
+        </button>
+      ) : null}
 
       <dialog
         aria-labelledby={`${idPrefix}-heading`}
@@ -250,16 +255,11 @@ export function QuickCaptureDialog({
         ref={dialogRef}
       >
         <header className={styles.dialogHeader}>
-          <div className={styles.dialogTitle}>
-            <span className={styles.dialogMark} aria-hidden="true">
-              <Icon name="sparkle" size={15} />
-            </span>
-            <h2 id={`${idPrefix}-heading`}>What’s on your mind?</h2>
-          </div>
+          <h2 id={`${idPrefix}-heading`}>What’s on your mind?</h2>
           <IconButton
             label="Close quick capture"
             size="small"
-            variant="ghost"
+            variant="quiet"
             onClick={close}
             title="Collapse composer (Esc)"
             type="button"

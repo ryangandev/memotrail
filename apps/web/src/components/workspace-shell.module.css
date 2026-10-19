@@ -1,10 +1,26 @@
+/* The workspace shell: the desktop sidebar, the phone top bar and tab bar, and the phone More
+   list, following the Quiet ledger mockups. On wider screens the sidebar holds the brand, the
+   toggle, every destination, and the account, so the workspace has no top bar. */
+
 .appShell {
   --sidebar-motion: var(--mt-motion-sidebar) var(--mt-motion-easing-emphasized);
   --sidebar-compact-width: 64px;
-  --sidebar-expanded-width: 224px;
-  --sidebar-brand-mark-size: 29px;
+  --sidebar-expanded-width: 240px;
+  --sidebar-brand-mark-size: var(--mt-size-icon-24);
+  --sidebar-toggle-size: 28px;
+  --sidebar-avatar-size: 28px;
   --sidebar-compact-item-size: var(--mt-size-control-medium);
-  --mobile-navigation-height: 60px;
+  --sidebar-compact-item-start: calc(
+    (
+        var(--sidebar-compact-width) - var(--mt-size-stroke-thin) - 2 *
+          var(--mt-space-2) - var(--sidebar-compact-item-size)
+      ) /
+      2
+  );
+  --mobile-top-bar-height: 48px;
+  --mobile-avatar-size: var(--mt-size-control-small);
+  --mobile-tab-bar-inset: max(var(--mt-space-5-5), env(safe-area-inset-bottom));
+  --mobile-navigation-height: calc(54px + var(--mobile-tab-bar-inset));
   --capture-workspace-left: var(--sidebar-expanded-width);
 
   min-height: 100dvh;
@@ -27,6 +43,16 @@
     padding-right var(--sidebar-motion);
 }
 
+/* The header: the brand, and the toggle at its far edge. */
+.sidebarHeader {
+  position: relative;
+  display: flex;
+  min-height: var(--sidebar-toggle-size);
+  align-items: center;
+  gap: var(--mt-space-1);
+  padding-top: var(--mt-space-1);
+}
+
 .brand,
 .mobileBrand {
   display: flex;
@@ -36,17 +62,22 @@
   font-family: var(--mt-type-wordmark-font-family);
   font-size: var(--mt-type-wordmark-font-size);
   font-weight: var(--mt-type-wordmark-font-weight);
+  line-height: var(--mt-type-wordmark-line-height);
   letter-spacing: var(--mt-type-wordmark-letter-spacing);
   text-decoration: none;
 }
 
 .brand {
-  width: 100%;
+  height: var(--sidebar-toggle-size);
   min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
   padding: 0 var(--mt-space-2);
   border-radius: var(--mt-radius-small);
   white-space: nowrap;
-  transition: padding-left var(--sidebar-motion);
+  transition:
+    padding-left var(--sidebar-motion),
+    opacity var(--mt-motion-quick) var(--mt-motion-easing-standard);
 }
 
 .brand:focus-visible {
@@ -64,47 +95,40 @@
     visibility 0s;
 }
 
-.sidebarHeader {
-  position: relative;
-  display: flex;
-  min-height: 36px;
-  align-items: center;
-  overflow: hidden;
+.brandMark {
+  width: var(--sidebar-brand-mark-size);
+  height: var(--sidebar-brand-mark-size);
+  flex: none;
 }
 
 .sidebarToggle {
   display: grid;
-  width: 36px;
-  height: 36px;
+  width: calc(var(--sidebar-toggle-size) + var(--mt-space-0-5));
+  height: var(--sidebar-toggle-size);
   flex: none;
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: var(--mt-radius-control);
+  border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-muted);
   background: transparent;
   cursor: pointer;
   transition:
     color var(--mt-motion-quick),
-    background var(--mt-motion-quick);
+    background-color var(--mt-motion-quick),
+    opacity var(--mt-motion-quick) var(--mt-motion-easing-standard);
 }
 
 .sidebarToggle:hover,
 .sidebarToggle:focus-visible {
   outline: none;
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
+  background: var(--mt-state-hover-surface);
 }
 
 .sidebarToggle:focus-visible {
   box-shadow: inset 0 0 0 var(--mt-state-focus-ring-width)
     var(--mt-state-focus-ring);
-}
-
-.brandMark {
-  width: var(--sidebar-brand-mark-size);
-  height: var(--sidebar-brand-mark-size);
-  flex: none;
 }
 
 .sidebarScrollRegion {
@@ -114,25 +138,24 @@
   flex: 1;
   flex-direction: column;
   margin-right: calc(var(--mt-space-2) * -1);
-  margin-top: var(--mt-space-4);
+  margin-top: var(--mt-space-5);
   overflow-y: auto;
   padding-right: var(--mt-space-2);
   scrollbar-color: var(--mt-color-scrollbar) transparent;
   scrollbar-width: thin;
   transition:
     margin-right var(--sidebar-motion),
-    margin-top var(--sidebar-motion),
     padding-right var(--sidebar-motion);
 }
 
-.sidebarScrollRegion > nav {
+.sidebarScrollRegion nav {
   min-width: 0;
 }
 
 .navGroup {
   display: grid;
   min-width: 0;
-  gap: var(--mt-space-0-75);
+  gap: var(--mt-space-0-5);
 }
 
 .navGroup a {
@@ -141,14 +164,14 @@
   min-width: 0;
   height: var(--mt-size-control-medium);
   align-items: center;
-  gap: var(--mt-space-3);
+  gap: var(--mt-space-2-5);
   margin-left: 0;
   overflow: hidden;
-  padding: 0 var(--mt-space-3);
-  border-radius: var(--mt-radius-control);
+  padding: 0 var(--mt-space-2-5);
+  border-radius: var(--mt-radius-small);
   color: var(--mt-color-ink-muted);
   background: transparent;
-  font-size: var(--mt-font-size-label);
+  font-size: var(--mt-font-size-body-small);
   text-align: left;
   cursor: pointer;
   text-decoration: none;
@@ -156,7 +179,6 @@
     color var(--mt-motion-quick),
     background var(--mt-motion-quick),
     width var(--sidebar-motion),
-    height var(--sidebar-motion),
     margin-left var(--sidebar-motion),
     padding-left var(--sidebar-motion),
     gap var(--sidebar-motion);
@@ -168,7 +190,7 @@
 
 .navGroup a:hover {
   color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
+  background: var(--mt-state-hover-surface);
 }
 
 .navGroup a:focus-visible {
@@ -186,49 +208,79 @@
     var(--mt-motion-easing-standard);
 }
 
-.navGroup .activeNavItem {
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
-  font-weight: var(--mt-font-weight-medium);
+/* The current destination is raised off the sidebar with a hairline ring. */
+.navGroup .activeNavItem,
+.navGroup .activeNavItem:hover {
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  box-shadow: 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-border);
+}
+
+.navGroup .activeNavItem:focus-visible {
+  box-shadow:
+    0 0 0 var(--mt-size-stroke-thin) var(--mt-color-border),
+    inset 0 0 0 var(--mt-state-focus-ring-width) var(--mt-state-focus-ring);
 }
 
 .navDivider {
   height: var(--mt-size-stroke-thin);
-  margin: var(--mt-space-5) var(--mt-space-3);
+  margin: var(--mt-space-2-5) var(--mt-space-2);
   background: var(--mt-color-border);
-  transition: margin-block var(--sidebar-motion);
+  transition: margin-inline var(--sidebar-motion);
 }
 
-.navLabel {
-  max-height: 16px;
-  margin: 0 var(--mt-space-3) var(--mt-space-2);
-  overflow: hidden;
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-type-navigation-label-font-size);
-  font-weight: var(--mt-type-navigation-label-font-weight);
-  letter-spacing: var(--mt-type-navigation-label-letter-spacing);
-  text-transform: var(--mt-type-navigation-label-text-transform);
-  transition:
-    max-height var(--sidebar-motion),
-    margin-bottom var(--sidebar-motion),
-    opacity var(--mt-motion-label-fade) var(--mt-motion-easing-standard);
-}
-
+/* Import, Trash, Settings, and the account stay at the foot of the sidebar. */
 .sidebarFooter {
   display: grid;
-  gap: 0;
+  min-width: 0;
+  margin-top: auto;
+  padding-top: var(--mt-space-5);
 }
 
-.avatarButton {
+.account {
+  display: flex;
+  min-width: 0;
+  min-height: calc(var(--sidebar-avatar-size) + 2 * var(--mt-space-2-5));
+  align-items: center;
+  gap: var(--mt-space-2-5);
+  margin-top: var(--mt-space-2);
+  padding: var(--mt-space-2-5) var(--mt-space-2-5) 0;
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  font-size: var(--mt-font-size-label);
+  transition: padding var(--sidebar-motion);
+}
+
+.avatar {
   display: grid;
-  width: 30px;
-  height: 30px;
+  width: var(--sidebar-avatar-size);
+  height: var(--sidebar-avatar-size);
+  flex: none;
   place-items: center;
   border-radius: 50%;
-  color: var(--mt-color-accent-ink);
-  background: var(--mt-color-accent);
+  color: var(--mt-color-accent);
+  background: var(--mt-color-accent-subtle);
+  font-family: var(--mt-font-family-sans);
   font-size: var(--mt-font-size-caption);
   font-weight: var(--mt-font-weight-semibold);
+  line-height: var(--mt-line-height-none);
+  text-decoration: none;
+}
+
+.accountName {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  color: var(--mt-color-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: opacity var(--mt-motion-label-fade)
+    var(--mt-motion-easing-standard);
+}
+
+/* The indicator's pill padding hangs past the row's edge, so its text lines up with Synced. */
+.account [data-ui-sync-status],
+.topActions [data-ui-sync-status] {
+  margin-right: calc(var(--mt-space-2) * -1);
 }
 
 .workspace {
@@ -240,7 +292,7 @@
 
 .navigationProgress {
   position: fixed;
-  inset: 64px 0 auto var(--sidebar-expanded-width);
+  inset: 0 0 auto var(--sidebar-expanded-width);
   z-index: var(--mt-layout-layer-progress);
   height: var(--mt-size-stroke-medium);
   overflow: hidden;
@@ -248,6 +300,17 @@
   transition: left var(--sidebar-motion);
 }
 
+.navigationProgress::after {
+  position: absolute;
+  inset: 0;
+  background: var(--mt-color-accent);
+  content: "";
+  transform: translateX(-72%);
+  animation: navigationProgress var(--mt-motion-progress-sweep)
+    var(--mt-motion-easing-in-out) infinite;
+}
+
+/* Collapsed, the sidebar is a rail of icons centered on its width. */
 .appShell[data-sidebar-collapsed="true"] {
   --capture-workspace-left: var(--sidebar-compact-width);
 }
@@ -273,32 +336,45 @@
   transition-delay: 0s, var(--mt-motion-label-fade);
 }
 
-.appShell[data-sidebar-collapsed="true"] .sidebar .navItemLabel,
-.appShell[data-sidebar-collapsed="true"] .sidebar .navLabel {
+/* The rail's toggle rests behind the logo and takes its place on hover or focus. */
+.appShell[data-sidebar-collapsed="true"] .sidebarToggle {
+  position: absolute;
+  top: var(--mt-space-1);
+  left: calc(
+    (
+        var(--sidebar-compact-width) - var(--mt-size-stroke-thin) - 2 *
+          var(--mt-space-2) - var(--sidebar-toggle-size) - var(--mt-space-0-5)
+      ) /
+      2
+  );
   opacity: 0;
 }
 
-.appShell[data-sidebar-collapsed="true"] .navLabel {
-  max-height: 0;
-  margin-bottom: 0;
+.appShell[data-sidebar-collapsed="true"] .sidebarHeader:hover .sidebarToggle,
+.appShell[data-sidebar-collapsed="true"] .sidebarToggle:focus-visible {
+  opacity: 1;
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebarHeader:hover .brand,
+.appShell[data-sidebar-collapsed="true"]
+  .sidebarHeader:has(.sidebarToggle:focus-visible)
+  .brand {
+  opacity: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .sidebar .navItemLabel,
+.appShell[data-sidebar-collapsed="true"] .sidebar .accountName {
+  opacity: 0;
 }
 
 .appShell[data-sidebar-collapsed="true"] .sidebarScrollRegion {
   margin-right: 0;
-  margin-top: var(--mt-space-4);
   padding-right: 0;
 }
 
 .appShell[data-sidebar-collapsed="true"] .navGroup a {
   width: var(--sidebar-compact-item-size);
-  height: var(--sidebar-compact-item-size);
-  margin-left: calc(
-    (
-        var(--sidebar-compact-width) - var(--mt-size-stroke-thin) - 2 *
-          var(--mt-space-2) - var(--sidebar-compact-item-size)
-      ) /
-      2
-  );
+  margin-left: var(--sidebar-compact-item-start);
   padding-left: var(--mt-space-2-25);
   padding-right: 0;
   gap: 0;
@@ -306,7 +382,31 @@
 
 .appShell[data-sidebar-collapsed="true"] .navDivider {
   margin-inline: var(--mt-space-3);
-  margin-block: var(--mt-space-3);
+}
+
+/* The collapsed account is the avatar with the sync dot under it. */
+.appShell[data-sidebar-collapsed="true"] .account {
+  flex-direction: column;
+  gap: var(--mt-space-1);
+  padding-inline: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .accountName,
+.appShell[data-sidebar-collapsed="true"] .account [data-sync-idle] {
+  display: none;
+}
+
+.appShell[data-sidebar-collapsed="true"] .account [data-ui-sync-status] {
+  margin-right: 0;
+}
+
+.appShell[data-sidebar-collapsed="true"] .account [data-sync-label] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .appShell[data-sidebar-collapsed="true"] .workspace {
@@ -317,88 +417,8 @@
   left: var(--sidebar-compact-width);
 }
 
-.navigationProgress::after {
-  position: absolute;
-  inset: 0;
-  background: var(--mt-color-accent);
-  content: "";
-  transform: translateX(-72%);
-  animation: navigationProgress var(--mt-motion-progress-sweep)
-    var(--mt-motion-easing-in-out) infinite;
-}
-
-.topBar {
-  position: sticky;
-  top: 0;
-  z-index: var(--mt-layout-layer-header);
-  display: flex;
-  height: 65px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--mt-space-8);
-  border-bottom: var(--mt-size-stroke-thin) solid
-    var(--mt-material-top-bar-border);
-  background: var(--mt-material-top-bar-tint);
-  backdrop-filter: var(--mt-material-top-bar-backdrop-filter);
-}
-
-.topLeading,
-.topActions {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-3);
-}
-
-.historyControls {
-  display: flex;
-  align-items: center;
-  gap: var(--mt-space-1);
-}
-
-.historyButton {
-  display: grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
-  padding: 0;
-  border: 0;
-  border-radius: var(--mt-radius-control);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    color var(--mt-motion-quick),
-    background-color var(--mt-motion-quick);
-}
-
-.historyButton:hover:not(:disabled) {
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-}
-
-.historyButton:focus-visible {
-  outline: none;
-  color: var(--mt-color-ink);
-  background: var(--mt-color-surface-subtle);
-  box-shadow: inset 0 0 0 var(--mt-state-focus-ring-width)
-    var(--mt-state-focus-ring);
-}
-
-.historyButton:disabled {
-  color: var(--mt-color-ink-faint);
-  opacity: var(--mt-state-disabled-opacity-navigation);
-  cursor: default;
-}
-
-.mobileBrand,
-.avatarButton {
-  display: none;
-}
-
-.mobileNavigation {
-  display: none;
-}
-
+.topBar,
+.mobileNavigation,
 .mobileMoreScrim,
 .mobileMoreMenu {
   display: none;
@@ -407,10 +427,6 @@
 @media (max-width: 900px) {
   .appShell {
     --sidebar-expanded-width: 212px;
-  }
-
-  .topBar {
-    padding-inline: var(--mt-space-5);
   }
 }
 
@@ -421,82 +437,85 @@
   }
 
   .appShell {
-    padding-bottom: calc(
-      var(--mobile-navigation-height) + var(--mt-space-2) +
-        env(safe-area-inset-bottom)
-    );
+    padding-bottom: calc(var(--mobile-navigation-height) + var(--mt-space-2));
   }
 
   .sidebar {
     display: none;
   }
 
-  .sidebarToggle {
-    display: none;
-  }
-
   /* Without the sidebar the workspace takes the full width at once; easing
      its margin here would push the page sideways as the window narrows. */
-  .workspace {
-    margin-left: 0;
-    transition: none;
-  }
-
+  .workspace,
   .appShell[data-sidebar-collapsed="true"] .workspace {
     margin-left: 0;
-  }
-
-  .navigationProgress {
-    top: 57px;
-    left: 0;
     transition: none;
   }
 
+  .navigationProgress,
   .appShell[data-sidebar-collapsed="true"] .navigationProgress {
+    top: var(--mobile-top-bar-height);
     left: 0;
+    transition: none;
   }
 
   .topBar {
-    height: 58px;
-    justify-content: space-between;
-    padding-inline: var(--mt-space-4);
-  }
-
-  .mobileBrand {
+    position: sticky;
+    top: 0;
+    z-index: var(--mt-layout-layer-header);
     display: flex;
-  }
-
-  .avatarButton {
-    display: grid;
-    width: 44px;
-    height: 44px;
-    text-decoration: none;
-  }
-
-  .avatarButton[aria-current="page"] {
-    box-shadow: 0 0 0 var(--mt-state-focus-halo-width)
-      var(--mt-state-focus-halo);
+    height: var(--mobile-top-bar-height);
+    align-items: center;
+    gap: var(--mt-space-2-5);
+    padding: 0 var(--mt-layout-page-gutter-compact);
+    border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+    background: var(--mt-color-canvas);
   }
 
   .mobileBrand {
+    min-width: 0;
+    flex: 1 1 auto;
+    gap: var(--mt-space-2-5);
     font-size: var(--mt-font-size-body-large);
   }
 
+  .mobileBrand > span {
+    border-radius: var(--mt-radius-xxsmall);
+  }
+
+  .mobileBrand:focus-visible {
+    outline: none;
+  }
+
+  .mobileBrand:focus-visible > span {
+    outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+    outline-offset: var(--mt-state-focus-ring-offset-snug);
+  }
+
   .mobileBrand .brandMark {
-    width: 27px;
-    height: 27px;
-    border-radius: var(--mt-radius-small) var(--mt-radius-small)
-      var(--mt-radius-small) var(--mt-radius-brand-mark-tail);
-    font-size: var(--mt-font-size-body-small);
+    width: var(--mt-size-icon-22);
+    height: var(--mt-size-icon-22);
   }
 
   .topActions {
-    position: static;
+    display: flex;
+    align-items: center;
+    gap: var(--mt-space-2-5);
   }
 
-  .topLeading {
-    min-width: 0;
-    gap: var(--mt-space-2);
+  .topBar .avatar {
+    width: var(--mobile-avatar-size);
+    height: var(--mobile-avatar-size);
+    font-size: var(--mt-font-size-label);
+  }
+
+  .topBar .avatar:focus-visible {
+    outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+    outline-offset: var(--mt-state-focus-ring-offset-snug);
+  }
+
+  .topBar .avatar[aria-current="page"] {
+    box-shadow: 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-accent);
   }
 
   .mobileNavigation {
@@ -505,11 +524,10 @@
     z-index: var(--mt-layout-layer-mobile-navigation);
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    height: calc(var(--mobile-navigation-height) + env(safe-area-inset-bottom));
-    padding: var(--mt-space-1-25) var(--mt-space-2) env(safe-area-inset-bottom);
+    height: var(--mobile-navigation-height);
+    padding: var(--mt-space-1-5) var(--mt-space-1) var(--mobile-tab-bar-inset);
     border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-    background: var(--mt-material-bottom-bar-tint);
-    backdrop-filter: var(--mt-material-bottom-bar-backdrop-filter);
+    background: var(--mt-color-surface);
   }
 
   .mobileNavigation a,
@@ -520,11 +538,11 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: var(--mt-space-0-5);
+    gap: var(--mt-space-0-75);
     padding: 0;
     border: 0;
     border-radius: var(--mt-radius-small);
-    color: var(--mt-color-ink-faint);
+    color: var(--mt-color-ink-muted);
     background: transparent;
     font: inherit;
     font-size: var(--mt-font-size-micro);
@@ -540,7 +558,11 @@
 
   .mobileNavigation .mobileActive {
     color: var(--mt-color-accent);
-    background: var(--mt-color-accent-subtle);
+  }
+
+  /* While its list is open, More reads as the pressed tab. */
+  .mobileNavigation button[aria-expanded="true"]:not(.mobileActive) {
+    color: var(--mt-color-ink);
   }
 
   .mobileMoreScrim {
@@ -554,135 +576,71 @@
     background: var(--mt-color-menu-scrim);
   }
 
+  /* More is a plain grouped list of the remaining destinations, in sidebar order. */
   .mobileMoreMenu {
     position: fixed;
-    right: var(--mt-space-3);
-    bottom: calc(
-      var(--mobile-navigation-height) + env(safe-area-inset-bottom) +
-        var(--mt-space-2)
-    );
-    left: var(--mt-space-3);
+    right: var(--mt-layout-page-gutter-compact);
+    bottom: calc(var(--mobile-navigation-height) + var(--mt-space-2));
+    left: var(--mt-layout-page-gutter-compact);
     z-index: var(--mt-layout-layer-menu);
     display: block;
     max-height: min(74dvh, 660px);
     overflow-y: auto;
-    padding: var(--mt-space-4);
     border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-    border-radius: var(--mt-radius-large);
-    background: var(--mt-color-surface);
+    border-radius: var(--mt-radius-medium);
+    background: var(--mt-color-surface-raised);
     box-shadow: var(--mt-shadow-menu);
   }
 
-  .mobileMoreHeader {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: var(--mt-space-4);
-  }
-
-  .mobileMoreHeader h2 {
+  .mobileMoreList {
     margin: 0;
-    font-family: var(--mt-font-family-serif);
-    font-size: var(--mt-font-size-title-small);
-    font-weight: var(--mt-font-weight-medium);
-  }
-
-  .mobileMoreHeader button {
-    display: grid;
-    width: 44px;
-    height: 44px;
-    place-items: center;
     padding: 0;
-    border: 0;
-    border-radius: var(--mt-radius-control);
-    color: var(--mt-color-ink-muted);
-    background: transparent;
+    list-style: none;
   }
 
-  .mobileMoreGroup + .mobileMoreGroup {
-    margin-top: var(--mt-space-4);
+  .mobileMoreList li + li {
+    border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   }
 
-  .mobileMoreGroup h3 {
-    margin: 0 0 var(--mt-space-2);
-    color: var(--mt-color-ink-faint);
-    font-size: var(--mt-type-menu-heading-font-size);
-    font-weight: var(--mt-type-menu-heading-font-weight);
-    letter-spacing: var(--mt-type-menu-heading-letter-spacing);
-    text-transform: var(--mt-type-menu-heading-text-transform);
-  }
-
-  .mobileMoreLinks {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--mt-space-2);
-  }
-
-  .mobileMoreLinks a {
+  .mobileMoreList a {
     display: flex;
-    min-height: 48px;
+    min-height: var(--mt-space-12);
     min-width: 0;
     align-items: center;
-    gap: var(--mt-space-2);
-    padding: var(--mt-space-2);
-    border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-    border-radius: var(--mt-radius-medium);
-    color: var(--mt-color-ink-muted);
+    padding: 0 var(--mt-space-3-5);
+    color: var(--mt-color-ink);
+    font-size: var(--mt-font-size-body);
     text-decoration: none;
   }
 
-  .mobileMoreLinks a[aria-current="page"] {
-    border-color: var(--mt-color-accent);
+  .mobileMoreList a:hover {
+    background: var(--mt-state-hover-surface);
+  }
+
+  .mobileMoreList a[aria-current="page"] {
     color: var(--mt-color-accent);
-    background: var(--mt-color-accent-subtle);
+    font-weight: var(--mt-font-weight-medium);
   }
 
-  .mobileMoreLinks a:focus-visible {
+  .mobileMoreList a:focus-visible {
     outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
-    outline-offset: var(--mt-state-focus-ring-offset-snug);
-  }
-
-  .mobileMoreLinks a svg {
-    flex: none;
-  }
-
-  .mobileMoreLinks a span {
-    min-width: 0;
-    font-size: var(--mt-font-size-caption);
-  }
-}
-
-@media (max-width: 390px) {
-  .topBar {
-    padding-inline: var(--mt-space-3);
-  }
-}
-
-@media (max-width: 480px) {
-  .mobileBrand span {
-    display: none;
+    outline-offset: var(--mt-state-focus-ring-offset-inset);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .historyButton {
-    transition-duration: 0s;
-  }
-
   .sidebar,
   .brand,
   .brandName,
   .sidebarToggle,
   .sidebarScrollRegion,
+  .navGroup a,
   .navGroup a .navItemLabel,
   .navDivider,
-  .navLabel,
+  .account,
+  .accountName,
   .workspace,
   .navigationProgress {
-    transition: none;
-  }
-
-  .navGroup a {
     transition: none;
   }
 

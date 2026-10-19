@@ -9,9 +9,12 @@ import {
   prepareEmptyTrash,
   type TrashActionResult,
 } from "@/app/trash/actions";
-import { emptyTrashResultMessage, runEmptyTrash } from "@/lib/data/empty-trash";
+import {
+  emptyTrashResultMessage,
+  runEmptyTrash,
+  trashContents,
+} from "@/lib/data/empty-trash";
 import type { TrashItemInput } from "@/lib/data/trash-input";
-import { countLabel } from "@/lib/count-label";
 
 export function EmptyTrashControl({
   disabled,
@@ -66,7 +69,7 @@ export function EmptyTrashControl({
       if (result.error || !result.items?.length) {
         onResult({
           status: result.error ? "error" : "restored",
-          message: result.error ?? "Nothing in Trash. No items were deleted.",
+          message: result.error ?? "Trash is already empty.",
         });
         close();
         onFinish();
@@ -132,19 +135,27 @@ export function EmptyTrashControl({
         <Dialog
           open
           size="compact"
-          title={<>Empty {countLabel(snapshot.length, "item")} from Trash?</>}
+          title={
+            <>
+              Delete{" "}
+              {trashContents(
+                snapshot.length,
+                snapshot.filter((item) => item.itemKind === "attachment")
+                  .length,
+              )}{" "}
+              forever?
+            </>
+          }
           titleId="empty-trash-title"
           description={
             <>
-              This includes all Trash pages, not just the visible items. Their
-              records and private photos will be permanently removed.
+              This includes every page of Trash, not just the visible rows.
               {reviewsExist
                 ? " Reviews that read these Entries are deleted too."
                 : ""}{" "}
               This cannot be undone.
             </>
           }
-          eyebrow={<>Permanent action</>}
           busy={running}
           onOpenChange={(open) => {
             if (!open) close();
@@ -167,18 +178,16 @@ export function EmptyTrashControl({
                 onClick={confirm}
                 type="button"
               >
-                {running
-                  ? "Emptying Trash…"
-                  : "Permanently delete confirmed items"}
+                {running ? "Emptying Trash…" : "Delete forever"}
               </Button>
             </>
           }
         >
           {" "}
           <p>
-            Only this prepared list is included. Items added to Trash later are
-            not deleted. If an item changes or a request cannot be confirmed,
-            deletion stops for a fresh review.
+            Only this prepared list is included. Anything added to Trash later
+            is not deleted. If an Entry or photo changes or a request cannot be
+            confirmed, deletion stops for a fresh review.
           </p>
           {running && (
             <p role="status">

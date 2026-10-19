@@ -127,27 +127,39 @@ test("Search filters Entries by record and descriptive tag", async ({
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     const visibleResult = (title: string) =>
-      page.locator("article:visible").filter({
+      page.locator("[data-ui-entry-row]:visible").filter({
         has: page.locator("a:visible", { hasText: title }),
       });
+    const show = page.getByRole("group", { name: "Show", exact: true });
     await page.goto("/search?type=entry&tag=Memory");
-    await expect(page.getByLabel("Record")).toHaveValue("entry");
-    await expect(page.getByLabel("Tag")).toHaveValue("Memory");
+    await expect(show.getByRole("radio", { name: "Entries" })).toBeChecked();
+    const tags = page.getByRole("button", { name: "Tags · 1", exact: true });
+    await tags.click();
+    await expect(
+      page.getByRole("button", { name: "#Memory", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true");
     await expect(visibleResult("Marina memory")).toBeVisible();
-    await expect(visibleResult("Marina memory")).toContainText("Entry");
+    await expect(visibleResult("Marina memory")).toContainText("#Memory");
+    await expect(
+      visibleResult("Marina memory").locator("[data-mark]"),
+    ).toHaveCount(0);
     await expect(visibleResult("Quiet reflection")).toHaveCount(0);
 
     // Links that filter by an older type still find the Chapter that replaced it.
     await page.goto("/search?q=marina&type=entity");
+    await expect(show.getByRole("radio", { name: "Chapters" })).toBeChecked();
     await expect(visibleResult("Marina flat")).toBeVisible();
+    await expect(
+      visibleResult("Marina flat").getByRole("img", { name: "Chapter" }),
+    ).toBeVisible();
     await expect(visibleResult("Marina memory")).toHaveCount(0);
-    await page.getByLabel("Record").selectOption("chapter");
-    await page.getByRole("button", { name: "Search", exact: true }).click();
-    await expect(page).toHaveURL(/type=chapter/);
-    await expect(visibleResult("Marina flat")).toBeVisible();
+    await show.getByRole("radio", { name: "Entries", exact: true }).click();
+    await expect(page).toHaveURL(/type=entry/);
+    await expect(visibleResult("Marina memory")).toBeVisible();
+    await expect(visibleResult("Marina flat")).toHaveCount(0);
 
     await page.waitForLoadState("networkidle");
-    await page.getByLabel("Record").press("Tab");
+    await show.getByRole("radio", { name: "Entries" }).press("Tab");
     await page.screenshot({
       caret: "initial",
       fullPage: true,

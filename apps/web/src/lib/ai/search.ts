@@ -350,12 +350,10 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
   rows(evidence.entries).forEach((r) => add(r));
   if (evidence.query_truncated || Number(evidence.candidate_count) > 36)
     notices.push(
-      "This answer uses a bounded selection of matches, not the complete archive. Narrow the question to improve coverage.",
+      "This answer uses a bounded selection of matches, not every Entry. Narrow the question to improve coverage.",
     );
   if (sources.some((s) => s.truncated))
-    notices.push(
-      "Long sources use excerpts. Open the original record for full context.",
-    );
+    notices.push("Long sources use excerpts. Open the Entry for full context.");
   return { sources, notices: [...new Set(notices)] };
 }
 export function parseSearchFindings(

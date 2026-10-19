@@ -10,7 +10,7 @@ test("dock feedback stays readable over light and dark content and places Search
   await page.goto("/library");
   const capture = page.getByRole("button", { name: "New entry", exact: true });
   const search = page.getByRole("button", {
-    name: "Search your trail",
+    name: "Search everything",
     exact: true,
   });
   await expect(capture).toBeVisible();
@@ -150,7 +150,7 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
     )
       .raw()
       .toBuffer({ resolveWithObject: true });
-    // Sample blank areas beside the controls on the same solid background.
+    // Sample blank areas between the controls on the same solid background.
     // Opaque header/footer overlays would make the panel look like three bands.
     const samples = [
       header.y + header.height / 2,
@@ -158,7 +158,7 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
       actions.y + actions.height / 2,
     ].map((y) => {
       const position =
-        (Math.round(y) * info.width + Math.round(box.x + box.width - 14)) *
+        (Math.round(y) * info.width + Math.round(box.x + box.width * 0.62)) *
         info.channels;
       return Array.from(data.subarray(position, position + 3));
     });
@@ -213,6 +213,58 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
     animations: "disabled",
     path: test.info().outputPath("memotrail-capture-save-tooltip-mobile.png"),
   });
+});
+
+test("toasts rise above the dock and the phone tab bar", async ({
+  page,
+  workspace,
+}) => {
+  expect(workspace.owner).toBeTruthy();
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/library");
+    await page.getByRole("button", { name: "New entry", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
+    await dialog
+      .getByRole("textbox", { name: "Entry text", exact: true })
+      .fill(`A note at ${viewport.width} px.`);
+    await dialog.getByRole("button", { name: "Save", exact: true }).click();
+    const toast = page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Saved to Library." });
+    await expect(toast).toBeVisible();
+    await dialog
+      .getByRole("button", { name: "Close quick capture", exact: true })
+      .click();
+    await expect(dialog).toBeHidden();
+    await toast.evaluate((element) =>
+      Promise.allSettled(
+        element.getAnimations().map((animation) => animation.finished),
+      ),
+    );
+
+    const toastBox = (await toast.boundingBox())!;
+    const dockBox = (await page
+      .getByRole("button", { name: "New entry", exact: true })
+      .boundingBox())!;
+    expect(
+      toastBox.y + toastBox.height,
+      `the toast clears the dock at ${viewport.width} px`,
+    ).toBeLessThanOrEqual(dockBox.y);
+    if (viewport.width <= 720) {
+      const tabBarBox = (await page
+        .getByRole("navigation", { name: "Mobile navigation" })
+        .boundingBox())!;
+      expect(toastBox.y + toastBox.height).toBeLessThanOrEqual(tabBarBox.y);
+    }
+    await page.screenshot({
+      animations: "disabled",
+      path: test.info().outputPath(`memotrail-toast-${viewport.width}.png`),
+    });
+  }
 });
 
 function contrast(first: number[], second: number[]) {

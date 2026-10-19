@@ -256,7 +256,7 @@ test("Delete forever on another device never brings back a pending capture", asy
       .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
-      trash.getByText("Item permanently deleted.", { exact: true }),
+      trash.getByText("Entry deleted forever.", { exact: true }),
     ).toBeVisible(firstCompile);
     expect(await entries(client, text)).toHaveLength(0);
 
@@ -411,7 +411,8 @@ function retryButton(page: Page) {
 
 function pendingIndicator(page: Page) {
   return page
-    .locator("main > header")
+    .locator("[data-ui-sync-status]")
+    .filter({ visible: true })
     .getByText(/^\d+ (pending|not accepted)( · \d+ not accepted)?$/);
 }
 

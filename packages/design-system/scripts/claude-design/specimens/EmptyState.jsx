@@ -6,10 +6,10 @@ export const specimens = {
     title: "With an icon and an action",
     render: () => (
       <EmptyState
-        actions={<Button>Add your first memory</Button>}
-        description="Capture a memory to begin building your trail."
-        icon={<Icon name="plus" size={24} />}
-        title="Your Life Wiki is empty"
+        actions={<Button>New Entry</Button>}
+        description="Write one from the dock, or bring notes in with Import."
+        icon={<Icon name="archive" size={20} />}
+        title="Entries you save appear here"
       />
     ),
   },
@@ -28,7 +28,7 @@ export const specimens = {
     render: () => (
       <EmptyState
         description="Add the first time you did something new."
-        icon={<Icon name="star" size={24} />}
+        icon={<Icon name="star" size={20} />}
         onClick={() => {}}
         title="Start with a first worth remembering"
       />

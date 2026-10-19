@@ -43,16 +43,16 @@ export const specimens = {
     title: "List headers with a count at the title and at the far edge",
     render: () => (
       <Stack>
-        <SectionHeader detail="12 items" title="All items" variant="list" />
+        <SectionHeader detail="12 Entries" title="All Entries" variant="list" />
         <SectionHeader
           action={
             <a href="#section-header" style={link}>
               Show all
             </a>
           }
-          detail="12 items"
+          detail="12 Entries"
           detailAlign="end"
-          title="All items"
+          title="All Entries"
           variant="list"
         />
       </Stack>

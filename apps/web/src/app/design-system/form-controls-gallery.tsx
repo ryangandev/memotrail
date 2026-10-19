@@ -5,6 +5,7 @@ import { Button } from "@/components/button";
 import { Checkbox } from "@/components/checkbox";
 import { DatePickerField } from "@/components/date-picker-field";
 import { SearchField } from "@/components/search-field";
+import { SegmentedControl } from "@/components/segmented-control";
 import { SelectField } from "@/components/select-field";
 import { TextField } from "@/components/text-field";
 import { TimezoneSelect } from "@/components/timezone-select";
@@ -14,7 +15,7 @@ import { Specimen, SpecimenCase } from "./specimen";
 
 /**
  * The form controls from packages/design-system/components: TextField, SearchField, SelectField,
- * Checkbox, DateField, and TimeZoneField, each with its spec's specimens. The iOS gallery draws the
+ * Checkbox, SegmentedControl, DateField, and TimeZoneField, each with its spec's specimens. The iOS gallery draws the
  * same specimens with the same content in GalleryForms.swift.
  */
 export function FormControlSpecimens() {
@@ -24,6 +25,7 @@ export function FormControlSpecimens() {
       <SearchFieldSpecimen />
       <SelectFieldSpecimen />
       <CheckboxSpecimen />
+      <SegmentedControlSpecimen />
       <DateFieldSpecimen />
       <TimeZoneFieldSpecimen />
     </>
@@ -94,7 +96,7 @@ function SearchFieldSpecimen() {
           <div className={controls.stack}>
             <SearchField
               label="Compact search"
-              placeholder="Search your trail"
+              placeholder="Search your Entries"
               size="small"
             />
             <form
@@ -119,7 +121,7 @@ function SearchFieldSpecimen() {
               </Button>
             </form>
             <SearchField
-              label="Search your Life Wiki"
+              label="Search Library"
               placeholder="A phrase, date, or question about your life..."
               size="large"
             />
@@ -129,8 +131,8 @@ function SearchFieldSpecimen() {
           <div className={controls.stack}>
             <SearchField
               hideLabel
-              label="Search your archive"
-              placeholder="Search your archive or jump somewhere..."
+              label="Search MemoTrail"
+              placeholder="Search Entries or go somewhere..."
               size="large"
               trailing={
                 <kbd aria-hidden="true" className={controls.key}>
@@ -171,8 +173,8 @@ function SelectFieldSpecimen() {
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
             </SelectField>
-            <SelectField defaultValue="all" label="Show records">
-              <option value="all">All records</option>
+            <SelectField defaultValue="all" label="Show">
+              <option value="all">All</option>
               <option value="entries">Entries</option>
               <option value="chapters">Chapters</option>
             </SelectField>
@@ -189,9 +191,9 @@ function SelectFieldSpecimen() {
         </SpecimenCase>
         <SpecimenCase id="select-field-groups">
           <div className={controls.fields}>
-            <SelectField defaultValue="all" label="Record" required>
-              <option value="all">All records</option>
-              <optgroup label="Records">
+            <SelectField defaultValue="all" label="Kind" required>
+              <option value="all">All</option>
+              <optgroup label="Entry kinds">
                 <option value="entries">Entries</option>
                 <option value="chapters">Chapters</option>
               </optgroup>
@@ -207,6 +209,56 @@ function SelectFieldSpecimen() {
             <SelectField disabled label="Unavailable filter" size="small">
               <option>Unavailable</option>
             </SelectField>
+          </div>
+        </SpecimenCase>
+      </div>
+    </Specimen>
+  );
+}
+
+const themeOptions = [
+  { label: "System", value: "system" },
+  { label: "Light", value: "light" },
+  { label: "Dark", value: "dark" },
+] as const;
+
+const scaleOptions = [
+  { label: "Years", value: "years" },
+  { label: "Months", value: "months" },
+] as const;
+
+function SegmentedControlSpecimen() {
+  const [theme, setTheme] = useState<string>("system");
+  const [scale, setScale] = useState<string>("years");
+  return (
+    <Specimen
+      api="label · options · value · onChange · name · disabled"
+      description="A fieldset of radio inputs, so the arrow keys move the selection. The legend is visually hidden; the setting's label sits beside it."
+      id="segmented-control"
+      title="SegmentedControl"
+    >
+      <div className={styles.specimenCases}>
+        <SpecimenCase id="segmented-control-states">
+          <div className={styles.checkboxColumn}>
+            <SegmentedControl
+              label="Theme"
+              onChange={setTheme}
+              options={themeOptions}
+              value={theme}
+            />
+            <SegmentedControl
+              label="Timeline scale"
+              onChange={setScale}
+              options={scaleOptions}
+              value={scale}
+            />
+            <SegmentedControl
+              disabled
+              label="Theme, disabled"
+              onChange={() => undefined}
+              options={themeOptions}
+              value="light"
+            />
           </div>
         </SpecimenCase>
       </div>

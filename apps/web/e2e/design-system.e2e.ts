@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
-import { componentSpecimens } from "../src/generated/design-system";
+import {
+  componentSpecimens,
+  pageFrameWidths,
+} from "../src/generated/design-system";
 import tokens from "../src/generated/design-tokens.json";
 import {
   expectSeparatorsBetweenWords,
@@ -42,8 +45,6 @@ function colorKey(value: string | number) {
   }
   throw new Error(`Unexpected color ${text}`);
 }
-
-const descriptions: Record<string, string | undefined> = tokens.descriptions;
 
 const colorMap = (group: object) =>
   Object.fromEntries(
@@ -132,11 +133,18 @@ test("Foundations draw every generated token in both themes", async ({
       .map(([name]) => name),
   );
 
-  // Layout reads page widths and layers from the tokens.
-  for (const [name, width] of Object.entries(tokens.layout.pageWidth)) {
+  // Layout draws every Web page frame width, and reads layers from the tokens.
+  await expect(page.locator("#layout [data-page-width]")).toHaveCount(
+    pageFrameWidths.length,
+  );
+  for (const [name, text] of [
+    ["reading", "720 px"],
+    ["list", "960 px"],
+    ["full", "The whole workspace"],
+  ] as const) {
     await expect(
       page.locator(`#layout [data-page-width="${name}"]`),
-    ).toContainText(`${width}px · ${descriptions[`layout.pageWidth.${name}`]}`);
+    ).toContainText(text);
   }
   await expect(page.locator("#layers code")).toHaveText(
     Object.keys(tokens.layout.layer),
@@ -689,7 +697,7 @@ test("TextField previews the shared form typography and focus surface", async ({
     .filter({
       has: page.getByRole("heading", { name: "SelectField", exact: true }),
     })
-    .getByLabel("Show records");
+    .getByLabel("Show", { exact: true });
 
   await expect(input).toHaveValue("Alex Morgan");
   await specimen.screenshot({
@@ -1061,16 +1069,20 @@ test("SectionHeader renders section and list headings at the level the caller pi
   ).toBeVisible();
   await expect(specimen.getByRole("heading", { level: 2 })).toHaveCount(0);
 
-  // Section is a serif title; list is a small uppercase heading.
+  // Section is a serif title over a hairline; list is a small sentence-case label.
   const sectionTitle = specimen.getByRole("heading", {
     name: "Recent Entries",
   });
   await expect(sectionTitle).toHaveCSS("text-transform", "none");
   await expect(sectionTitle).toHaveCSS("font-size", "20px");
+  await expect(sectionTitle).toHaveCSS("font-weight", "500");
+  await expect(
+    specimen.locator('[data-header="section"] [data-ui-section-header]'),
+  ).toHaveCSS("border-bottom-width", "1px");
   const listTitle = header("list").getByRole("heading");
-  await expect(listTitle).toHaveCSS("text-transform", "uppercase");
+  await expect(listTitle).toHaveCSS("text-transform", "none");
   await expect(listTitle).toHaveCSS("font-size", "13px");
-  await expect(listTitle).toHaveCSS("font-weight", "600");
+  await expect(listTitle).toHaveCSS("font-weight", "500");
   const family = (title: typeof sectionTitle) =>
     title.evaluate((element) => getComputedStyle(element).fontFamily);
   expect(await family(sectionTitle)).not.toBe(await family(listTitle));
@@ -1078,11 +1090,11 @@ test("SectionHeader renders section and list headings at the level the caller pi
   // Detail sits beside the title by default and at the trailing edge on request.
   const start = header("list");
   const startTitle = await start.getByRole("heading").boundingBox();
-  const startDetail = await start.getByText("12 items").boundingBox();
+  const startDetail = await start.getByText("12 Entries").boundingBox();
   expect(startDetail!.x).toBeGreaterThan(startTitle!.x + startTitle!.width);
   expect(startDetail!.x).toBeLessThan(startTitle!.x + startTitle!.width + 24);
   const end = header("list-end");
-  const endDetail = await end.getByText("12 items").boundingBox();
+  const endDetail = await end.getByText("12 Entries").boundingBox();
   const endAction = await end
     .getByRole("link", { name: "Show all" })
     .boundingBox();
@@ -1096,7 +1108,8 @@ test("SectionHeader renders section and list headings at the level the caller pi
     (await end.getByRole("heading").boundingBox())!.x + 200,
   );
 
-  // A description reads under the title and the action centers on the block.
+  // A description reads under the title and the action centers on the title and description,
+  // above the section's rule.
   const described = header("section-description");
   const describedTitle = await described.getByRole("heading").boundingBox();
   const describedText = await described
@@ -1108,9 +1121,8 @@ test("SectionHeader renders section and list headings at the level the caller pi
   const edit = await described
     .getByRole("button", { name: "Edit" })
     .boundingBox();
-  const block = await described.boundingBox();
   expect(edit!.y + edit!.height / 2).toBeCloseTo(
-    block!.y + block!.height / 2,
+    (describedTitle!.y + describedText!.y + describedText!.height) / 2,
     0,
   );
 

@@ -9,18 +9,18 @@ platforms:
     path: apps/ios/MemoTrail/DesignSystem/Components/MTSyncStatus.swift
     symbols: [MTSyncStatusButton]
 
-purpose: A quiet top-bar indicator of Entries captured on this device that have not reached MemoTrail yet, which syncs them and opens the list of what is waiting.
+purpose: A quiet indicator of Entries captured on this device that have not reached MemoTrail yet, which syncs them and opens the list of what is waiting.
 
 use:
-  - The workspace top bar, while captures wait to sync or MemoTrail refused one.
+  - The sidebar's account row on wider screens and the phone top bar, while captures wait to sync or MemoTrail refused one.
 
 avoid:
   - Progress for an action people just took. Show a busy Button.
   - Any other status. The indicator appears only while captures wait, and disappears once they sync or are discarded.
 
 anatomy:
-  indicator: The pill-shaped button in the top bar.
-  dot: The warm dot before the label, which pulses while a sync runs.
+  indicator: The pill-shaped button beside the account. In the collapsed sidebar it shows only the dot and keeps the counts as its accessible name.
+  dot: The dot before the label, faint while captures wait and in the danger color when one was refused, which pulses while a sync runs.
   label: The counts, such as 2 pending or 1 not accepted.
   dialog: The compact Pending sync Dialog that lists each waiting capture, with Retry now.
 
@@ -33,15 +33,15 @@ tokens:
       radius: "{radius.pill}"
       paddingInline: "{space.2}"
       gap: "{space.1-5}"
-      color: "{color.inkFaint}"
-      fontSize: "{font.size.micro}"
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.caption}"
       duration: "{motion.quick}"
     dot:
-      background: "{color.warm}"
+      background: "{color.inkFaint}"
   - when: { state: hover }
     indicator:
       color: "{color.ink}"
-      background: "{color.surfaceSubtle}"
+      background: "{state.hover.surface}"
   - when: { state: focus }
     indicator:
       color: "{color.ink}"
@@ -60,7 +60,7 @@ content:
   casing: sentence
   length: The label counts what waits, such as 3 pending, and adds refused captures after a middle dot, such as 3 pending · 1 not accepted, or saved captures this version cannot read, such as 1 unreadable.
   notes:
-    - When MemoTrail refused or could not read a capture, the label turns warm, because only the person can resolve it.
+    - When MemoTrail refused or could not read a capture, the label and dot take the danger color, because only the person can resolve it.
 
 accessibility:
   role: A button that syncs now and opens the Pending sync dialog. While a sync runs it carries aria-busy on Web and the value Syncing on iOS.

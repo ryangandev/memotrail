@@ -20,9 +20,18 @@ export function EntryPhotos({
   const [selected, setSelected] = useState<number | null>(null);
   const photo = selected === null ? null : viewable[selected];
 
+  // One photo fills the column, two sit side by side, three lead with a large first photo, and
+  // more fall into an even grid.
+  const layout = photos.length > 3 ? "many" : String(photos.length);
+  const caption = hasMore
+    ? `Showing the first ${photos.length} photos`
+    : photos.length > 1
+      ? `${photos.length} photos`
+      : null;
+
   return (
-    <section aria-label="Photos" className={styles.photos}>
-      <div className={styles.grid} data-count={Math.min(photos.length, 3)}>
+    <section aria-label="Photos" className={styles.photos} data-entry-photos>
+      <div className={styles.grid} data-count={layout}>
         {photos.map((item) => (
           <button
             aria-label={`Open ${item.name}`}
@@ -47,9 +56,9 @@ export function EntryPhotos({
           </button>
         ))}
       </div>
-      {hasMore ? (
-        <p className={styles.note} role="status">
-          Showing the first {photos.length} photos.
+      {caption ? (
+        <p className={styles.note} role={hasMore ? "status" : undefined}>
+          {caption}
         </p>
       ) : null}
       {photo?.imageUrl ? (

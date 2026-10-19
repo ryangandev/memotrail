@@ -31,12 +31,12 @@ enum MTColor {
   static let success = Color(lightHex: "#3F6A55", darkHex: "#8DB5A1")
   static let warning = Color(lightHex: "#9B6A2F", darkHex: "#D3A360")
   static let scrim = Color(lightHex: "#25241F", darkHex: "#000000")
-  static let danger = Color(lightHex: "#A76346", darkHex: "#D49373")
-  static let dangerSubtle = Color(lightHex: "#F1E2D8", darkHex: "#432E25")
+  static let danger = Color(lightHex: "#A3453A", darkHex: "#E0897C")
+  static let dangerSubtle = Color(lightHex: "#F5E1DC", darkHex: "#45261F")
   static let dangerBorder = Color(
-    lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.34, darkOpacity: 0.34)
+    lightHex: "#A3453A", darkHex: "#E0897C", lightOpacity: 0.34, darkOpacity: 0.34)
   static let dangerTint = Color(
-    lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.1, darkOpacity: 0.1)
+    lightHex: "#A3453A", darkHex: "#E0897C", lightOpacity: 0.1, darkOpacity: 0.1)
   static let info = Color(lightHex: "#2F5A4B", darkHex: "#8DB5A1")
   static let infoSubtle = Color(lightHex: "#DCE5DC", darkHex: "#24342C")
   static let successSubtle = Color(lightHex: "#DCE5DC", darkHex: "#24342C")
@@ -131,14 +131,14 @@ enum MTColor {
     MTColorToken(name: "success", lightHex: "#3F6A55", darkHex: "#8DB5A1", color: success),
     MTColorToken(name: "warning", lightHex: "#9B6A2F", darkHex: "#D3A360", color: warning),
     MTColorToken(name: "scrim", lightHex: "#25241F", darkHex: "#000000", color: scrim),
-    MTColorToken(name: "danger", lightHex: "#A76346", darkHex: "#D49373", color: danger),
+    MTColorToken(name: "danger", lightHex: "#A3453A", darkHex: "#E0897C", color: danger),
     MTColorToken(
-      name: "dangerSubtle", lightHex: "#F1E2D8", darkHex: "#432E25", color: dangerSubtle),
+      name: "dangerSubtle", lightHex: "#F5E1DC", darkHex: "#45261F", color: dangerSubtle),
     MTColorToken(
-      name: "dangerBorder", lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.34,
+      name: "dangerBorder", lightHex: "#A3453A", darkHex: "#E0897C", lightOpacity: 0.34,
       darkOpacity: 0.34, color: dangerBorder),
     MTColorToken(
-      name: "dangerTint", lightHex: "#A76346", darkHex: "#D49373", lightOpacity: 0.1,
+      name: "dangerTint", lightHex: "#A3453A", darkHex: "#E0897C", lightOpacity: 0.1,
       darkOpacity: 0.1, color: dangerTint),
     MTColorToken(name: "info", lightHex: "#2F5A4B", darkHex: "#8DB5A1", color: info),
     MTColorToken(name: "infoSubtle", lightHex: "#DCE5DC", darkHex: "#24342C", color: infoSubtle),
@@ -274,18 +274,12 @@ struct MTTextRole: Sendable {
   static let welcomeTitle = MTTextRole(
     name: "welcomeTitle", size: 28, weight: .medium, design: .serif, lineHeight: 1.15,
     tracking: -0.6, isUppercase: false, textStyle: .title, font: MTFont.welcomeTitle)
-  static let goalCardTitle = MTTextRole(
-    name: "goalCardTitle", size: 22, weight: .medium, design: .serif, lineHeight: 1.15,
-    tracking: -0.5, isUppercase: false, textStyle: .title2, font: MTFont.goalCardTitle)
   static let recordCardTitle = MTTextRole(
     name: "recordCardTitle", size: 22, weight: .medium, design: .serif, lineHeight: 1.15,
     tracking: -0.4, isUppercase: false, textStyle: .title2, font: MTFont.recordCardTitle)
   static let sheetTitle = MTTextRole(
     name: "sheetTitle", size: 22, weight: .medium, design: .serif, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: .title2, font: MTFont.sheetTitle)
-  static let recordTitle = MTTextRole(
-    name: "recordTitle", size: 26, weight: .medium, design: .serif, lineHeight: 1.15, tracking: 0,
-    isUppercase: false, textStyle: nil, font: MTFont.recordTitle)
   static let wordmarkLarge = MTTextRole(
     name: "wordmarkLarge", size: 32, weight: .medium, design: .serif, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: nil, font: MTFont.wordmarkLarge)
@@ -335,16 +329,16 @@ struct MTTextRole: Sendable {
     name: "code", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: nil, font: MTFont.code)
   static let eyebrow = MTTextRole(
-    name: "eyebrow", size: 10, weight: .semibold, design: .default, lineHeight: 1.15, tracking: 1,
+    name: "eyebrow", size: 11, weight: .semibold, design: .default, lineHeight: 1.15, tracking: 1,
     isUppercase: true, textStyle: nil, font: MTFont.eyebrow)
   static let factLabel = MTTextRole(
     name: "factLabel", size: 11, weight: .regular, design: .default, lineHeight: 1.15,
     tracking: 0.6, isUppercase: true, textStyle: .caption2, font: MTFont.factLabel)
   static let fine = MTTextRole(
-    name: "fine", size: 10, weight: .regular, design: .default, lineHeight: 1.55, tracking: 0,
+    name: "fine", size: 11, weight: .regular, design: .default, lineHeight: 1.55, tracking: 0,
     isUppercase: false, textStyle: nil, font: MTFont.fine)
   static let stamp = MTTextRole(
-    name: "stamp", size: 10, weight: .regular, design: .monospaced, lineHeight: 1.15, tracking: 0,
+    name: "stamp", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: nil, font: MTFont.stamp)
   static let dateStamp = MTTextRole(
     name: "dateStamp", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15,
@@ -394,27 +388,12 @@ struct MTTextRole: Sendable {
   static let identifier = MTTextRole(
     name: "identifier", size: 12, weight: .medium, design: .monospaced, lineHeight: 1.15,
     tracking: 0, isUppercase: false, textStyle: .caption, font: MTFont.identifier)
-  static let timestamp = MTTextRole(
-    name: "timestamp", size: 11, weight: .regular, design: .monospaced, lineHeight: 1.15,
-    tracking: 0, isUppercase: false, textStyle: .caption2, font: MTFont.timestamp)
-  static let cardEyebrow = MTTextRole(
-    name: "cardEyebrow", size: 11, weight: .semibold, design: .default, lineHeight: 1.15,
-    tracking: 0.8, isUppercase: true, textStyle: .caption2, font: MTFont.cardEyebrow)
-  static let archiveHeading = MTTextRole(
-    name: "archiveHeading", size: 13, weight: .semibold, design: .default, lineHeight: 1.15,
-    tracking: 0.8, isUppercase: true, textStyle: .footnote, font: MTFont.archiveHeading)
   static let settingsHeading = MTTextRole(
     name: "settingsHeading", size: 13, weight: .semibold, design: .default, lineHeight: 1.15,
     tracking: 0.6, isUppercase: true, textStyle: .footnote, font: MTFont.settingsHeading)
   static let recordCardTitleCompact = MTTextRole(
     name: "recordCardTitleCompact", size: 20, weight: .medium, design: .serif, lineHeight: 1.15,
     tracking: -0.4, isUppercase: false, textStyle: .title3, font: MTFont.recordCardTitleCompact)
-  static let goalCardTitleCompact = MTTextRole(
-    name: "goalCardTitleCompact", size: 20, weight: .medium, design: .serif, lineHeight: 1.15,
-    tracking: -0.5, isUppercase: false, textStyle: .title3, font: MTFont.goalCardTitleCompact)
-  static let avatarInitial = MTTextRole(
-    name: "avatarInitial", size: 22, weight: .regular, design: .serif, lineHeight: 1.15,
-    tracking: 0, isUppercase: false, textStyle: .title2, font: MTFont.avatarInitial)
   static let quietTitle = MTTextRole(
     name: "quietTitle", size: 20, weight: .regular, design: .serif, lineHeight: 1.15, tracking: 0,
     isUppercase: false, textStyle: .title3, font: MTFont.quietTitle)
@@ -433,19 +412,14 @@ struct MTTextRole: Sendable {
   static let panelTitleSmall = MTTextRole(
     name: "panelTitleSmall", size: 16, weight: .medium, design: .serif, lineHeight: 1.15,
     tracking: 0, isUppercase: false, textStyle: .callout, font: MTFont.panelTitleSmall)
-  static let collectionName = MTTextRole(
-    name: "collectionName", size: 13, weight: .regular, design: .serif, lineHeight: 1.15,
-    tracking: 0, isUppercase: false, textStyle: .footnote, font: MTFont.collectionName)
 
   static let catalog = [
     hero,
     display,
     title,
     welcomeTitle,
-    goalCardTitle,
     recordCardTitle,
     sheetTitle,
-    recordTitle,
     wordmarkLarge,
     titleSmall,
     cardTitle,
@@ -482,20 +456,14 @@ struct MTTextRole: Sendable {
     itemTitle,
     noteStrong,
     identifier,
-    timestamp,
-    cardEyebrow,
-    archiveHeading,
     settingsHeading,
     recordCardTitleCompact,
-    goalCardTitleCompact,
-    avatarInitial,
     quietTitle,
     listIndex,
     tagMark,
     quietTitleSmall,
     panelTitle,
     panelTitleSmall,
-    collectionName,
   ]
 }
 
@@ -504,20 +472,16 @@ enum MTFont {
   // Sign-in story headline.
   // hero scales a custom 50 pt size with largeTitle, so it has no
   // static font; apply it with mtTextRole(.hero).
-  /// Page titles.
+  /// Page titles. iOS draws them at its 34 pt large title size.
   static let display = Font.system(.largeTitle, design: .serif).weight(.medium)
   /// Section and onboarding titles.
   static let title = Font.system(.title, design: .serif).weight(.medium)
   /// The sign-in welcome title.
   static let welcomeTitle = Font.system(.title, design: .serif).weight(.medium)
-  /// Large serif titles on native cards. iOS draws them at its title2 size in regular width.
-  static let goalCardTitle = Font.system(.title2, design: .serif).weight(.medium)
   /// Large serif titles on First Time cards, and on native Home and Vehicle cards. iOS draws them at its title2 size in regular width.
   static let recordCardTitle = Font.system(.title2, design: .serif).weight(.medium)
   /// Sheet and dialog titles.
   static let sheetTitle = Font.system(.title2, design: .serif).weight(.medium)
-  /// Record detail titles.
-  static let recordTitle = Font.system(size: 26, weight: .medium, design: .serif)
   /// The splash screen wordmark.
   static let wordmarkLarge = Font.system(size: 32, weight: .medium, design: .serif)
   /// Card and panel titles.
@@ -551,20 +515,20 @@ enum MTFont {
   /// Inline values in history diffs.
   static let code = Font.system(size: 11, design: .monospaced)
   /// Uppercase eyebrows above titles.
-  static let eyebrow = Font.system(size: 10, weight: .semibold)
-  /// The uppercase label above a fact in record details. iOS draws it at its 11 pt caption2 minimum.
+  static let eyebrow = Font.system(size: 11, weight: .semibold)
+  /// The uppercase label above a fact in record details.
   static let factLabel = Font.caption2
   /// The smallest readable text, such as map attribution and inline actions.
-  static let fine = Font.system(size: 10)
+  static let fine = Font.system(size: 11)
   /// Monospaced counts and dates.
-  static let stamp = Font.system(size: 10, design: .monospaced)
-  /// Uppercase monospaced dates on record cards, archive rows, and Goal targets. iOS draws them at its 11 pt caption2 minimum.
+  static let stamp = Font.system(size: 11, design: .monospaced)
+  /// Uppercase monospaced dates on record cards, archive rows, and Goal targets.
   static let dateStamp = Font.system(.caption2, design: .monospaced)
-  /// The uppercase date above a First Time card title. iOS draws it at its 11 pt caption2 minimum.
+  /// The uppercase date above a First Time card title.
   static let firstTimeDate = Font.system(.caption2, design: .monospaced)
-  /// Micro badge labels, such as tags in record card footers. iOS draws them at its 11 pt caption2 minimum.
+  /// Micro badge labels, such as tags in record card footers.
   static let badgeMicro = Font.caption2
-  /// Small badge labels, the default size for statuses and tags. iOS draws them at its 11 pt caption2 minimum.
+  /// Small badge labels, the default size for statuses and tags.
   static let badgeSmall = Font.caption2
   /// Medium badge labels, such as Dashboard tags.
   static let badgeMedium = Font.caption
@@ -584,26 +548,16 @@ enum MTFont {
   static let bodyStrong = Font.subheadline.weight(.semibold)
   /// Interface text that stands out from the text beside it, such as large button labels.
   static let bodyEmphasis = Font.subheadline.weight(.medium)
-  /// Serif titles of Entries and items inside lists and cards.
+  /// Serif titles of Entries in lists, such as Library rows, First Times, Trash, and Tags. iOS draws them at 17 pt with the body text style.
   static let itemTitle = Font.system(.body, design: .serif).weight(.medium)
   /// Small notes that need slightly more weight, such as counts in a ribbon.
   static let noteStrong = Font.caption2.weight(.medium)
   /// Token names, symbol names, and other identifiers shown as code.
   static let identifier = Font.system(.caption, design: .monospaced).weight(.medium)
-  /// Monospaced dates and counts that scale with small text.
-  static let timestamp = Font.system(.caption2, design: .monospaced)
-  /// The uppercase kind above a Collection card title.
-  static let cardEyebrow = Font.caption2.weight(.semibold)
-  /// The uppercase heading above a record archive list.
-  static let archiveHeading = Font.footnote.weight(.semibold)
   /// The uppercase title of a Settings section.
   static let settingsHeading = Font.footnote.weight(.semibold)
   /// Serif titles on record archive, First Time, and Person cards on phones.
   static let recordCardTitleCompact = Font.system(.title3, design: .serif).weight(.medium)
-  /// Goal card titles on phones.
-  static let goalCardTitleCompact = Font.system(.title3, design: .serif).weight(.medium)
-  /// A Person's initial inside their avatar.
-  static let avatarInitial = Font.system(.title2, design: .serif)
   /// Regular-weight serif titles and counts, such as Dashboard ribbon counts.
   static let quietTitle = Font.system(.title3, design: .serif)
   /// The two-digit number beside a First Time in a list.
@@ -616,8 +570,6 @@ enum MTFont {
   static let panelTitle = Font.system(.headline, design: .serif).weight(.medium)
   /// Serif titles of nested panels on the Export page.
   static let panelTitleSmall = Font.system(.callout, design: .serif).weight(.medium)
-  /// A Collection's name on its ledger chip.
-  static let collectionName = Font.system(.footnote, design: .serif)
 }
 
 enum MTSpacing {
@@ -1336,6 +1288,7 @@ enum MTIcon: String, CaseIterable, Sendable {
   case bulletList = "list.bullet"
   case calendar = "calendar"
   case car = "car"
+  case chapter = "arrow.left.and.right"
   case check = "checkmark"
   case chevron = "chevron.right"
   case clock = "clock"
@@ -1347,6 +1300,7 @@ enum MTIcon: String, CaseIterable, Sendable {
   case dashboard = "square.grid.2x2"
   case edit = "square.and.pencil"
   case export = "square.and.arrow.up"
+  case firstTime = "sparkle"
   case history = "clock.arrow.circlepath"
   case home = "house"
   case inbox = "tray"

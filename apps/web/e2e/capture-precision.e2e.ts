@@ -333,7 +333,8 @@ async function openCapture(page: Page) {
   return {
     capture,
     date,
-    dateToggle: capture.getByRole("button", { name: "Date", exact: true }),
+    // The chip says Today or the chosen day, so it is found by its marker.
+    dateToggle: capture.locator("[data-capture-date-toggle]"),
     day: date.getByRole("textbox", { name: "Date", exact: true }),
     open,
     save: capture.getByRole("button", { name: "Save", exact: true }),
@@ -382,7 +383,7 @@ function queuedCaptures(page: Page, owner: string) {
   }, owner);
 }
 
-// Records whether any pending list or the header pending indicator appears,
+// Records whether any pending list or the pending sync indicator appears,
 // because an online save's first attempt must not surface either.
 async function watchPendingSyncSurfaces(page: Page) {
   await page.evaluate(() => {
@@ -392,7 +393,7 @@ async function watchPendingSyncSurfaces(page: Page) {
         (heading) => heading.textContent === "Pending sync",
       );
       const indicated = [
-        ...document.querySelectorAll("main > header button"),
+        ...document.querySelectorAll("[data-ui-sync-status]"),
       ].some((button) => /^\d+ pending$/.test(button.textContent ?? ""));
       if (listed || indicated) {
         sessionStorage.setItem("pending-sync-seen", "yes");

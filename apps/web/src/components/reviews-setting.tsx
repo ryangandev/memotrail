@@ -1,14 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { saveReviewPreferences } from "@/app/reviews/actions";
 import { notify } from "@/components/app-toast";
 import { Button } from "@/components/button";
-import { Checkbox } from "@/components/checkbox";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { ReviewDisclosureDialog } from "@/components/review-disclosure-dialog";
-import styles from "@/components/reviews-setting.module.css";
+import { SettingRow, settingRowIds } from "@/components/setting-row";
+import { SettingSwitch } from "@/components/setting-switch";
+import styles from "@/components/settings-fields.module.css";
 import { REVIEW_DISCLOSURE_VERSION } from "@/lib/ai/review-disclosure";
 import type { ReviewSettings } from "@/lib/data/review-input";
 
@@ -23,6 +24,9 @@ export function ReviewsSetting({ initial }: { initial: ReviewSettings }) {
   const requestConfirmation = useConfirmationDialog();
   const [settings, setSettings] = useState(initial);
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState<Switch | null>(null);
+  const reviewsId = useId();
+  const suggestionsId = useId();
   const [dialog, setDialog] = useState<
     { mode: "read" } | { mode: "accept"; turnOn: Switch } | null
   >(null);
@@ -32,9 +36,11 @@ export function ReviewsSetting({ initial }: { initial: ReviewSettings }) {
   async function save(
     next: { reviews: boolean; suggestions: boolean },
     acceptDisclosure: boolean,
+    which: Switch,
   ) {
     if (busy) return false;
     setBusy(true);
+    setSaved(null);
     try {
       const result = await saveReviewPreferences({
         ...next,
@@ -43,6 +49,7 @@ export function ReviewsSetting({ initial }: { initial: ReviewSettings }) {
       });
       if (result.status === "saved") {
         setSettings(result.settings);
+        setSaved(which);
         notify.success(
           next.reviews !== settings.reviewsEnabled
             ? result.message
@@ -94,42 +101,75 @@ export function ReviewsSetting({ initial }: { initial: ReviewSettings }) {
           which === "suggestions" ? next : settings.chapterSuggestionsEnabled,
       },
       false,
+      which,
     );
   }
 
   async function accept(turnOn: Switch) {
-    const saved = await save(
+    const done = await save(
       {
         reviews: turnOn === "reviews" ? true : settings.reviewsEnabled,
         suggestions:
           turnOn === "suggestions" ? true : settings.chapterSuggestionsEnabled,
       },
       true,
+      turnOn,
     );
-    if (saved) setDialog(null);
+    if (done) setDialog(null);
   }
 
+  const reviewsIds = settingRowIds(reviewsId);
+  const suggestionsIds = settingRowIds(suggestionsId);
+
   return (
-    <div className={styles.card} id="reviews">
-      <Checkbox
-        checked={settings.reviewsEnabled}
-        description="When you ask, Claude writes a review of a Chapter or a year from your Entries. Turning this off deletes your saved reviews."
-        disabled={busy}
+    <>
+      <SettingRow
+        help="Turning this off deletes your saved reviews."
+        id={reviewsId}
         label="Chapter and year reviews"
-        onChange={(event) => void change("reviews", event.target.checked)}
-      />
-      <Checkbox
-        checked={settings.chapterSuggestionsEnabled}
-        description="About once a month, Claude may suggest a Chapter from what you have been writing. Nothing becomes a Chapter until you add it."
-        disabled={busy}
+        saved={saved === "reviews"}
+      >
+        <div className={styles.switchControl}>
+          <span>
+            When you ask, Claude writes a review of a Chapter or a year from
+            your Entries.
+          </span>
+          <SettingSwitch
+            aria-describedby={reviewsIds.help}
+            aria-labelledby={reviewsIds.label}
+            checked={settings.reviewsEnabled}
+            disabled={busy}
+            onChange={(event) => void change("reviews", event.target.checked)}
+          />
+        </div>
+      </SettingRow>
+      <SettingRow
+        help="Nothing becomes a Chapter until you add it."
+        id={suggestionsId}
         label="Suggest Chapters"
-        onChange={(event) => void change("suggestions", event.target.checked)}
-      />
-      <div className={styles.footer}>
+        saved={saved === "suggestions"}
+      >
+        <div className={styles.switchControl}>
+          <span>
+            About once a month, Claude may suggest a Chapter from what you have
+            been writing.
+          </span>
+          <SettingSwitch
+            aria-describedby={suggestionsIds.help}
+            aria-labelledby={suggestionsIds.label}
+            checked={settings.chapterSuggestionsEnabled}
+            disabled={busy}
+            onChange={(event) =>
+              void change("suggestions", event.target.checked)
+            }
+          />
+        </div>
+      </SettingRow>
+      <div className={styles.sectionNote}>
         <Button
           onClick={() => setDialog({ mode: "read" })}
           size="small"
-          variant="ghost"
+          variant="quiet"
         >
           What is sent and to whom
         </Button>
@@ -145,6 +185,6 @@ export function ReviewsSetting({ initial }: { initial: ReviewSettings }) {
         }
         open={dialog !== null}
       />
-    </div>
+    </>
   );
 }

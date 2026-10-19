@@ -1,8 +1,9 @@
-import { pageFrameVariants, tokens } from "./generated.js";
+import { pageFrameWidths } from "./generated.js";
 
 const { PageFrame } = MemoTrail;
 
-// Each frame at its real maximum width, in a track that scrolls inside the card.
+// Each frame at its real maximum width from the same left edge, in a track that scrolls inside
+// the card.
 const track = { maxWidth: "100%", overflowX: "auto" };
 
 const rows = {
@@ -22,23 +23,28 @@ const sample = {
   background: "var(--mt-color-surface)",
 };
 
+const notes = {
+  reading: "720 px · an Entry page, a review, Settings, Import, and Export",
+  list: "960 px · Dashboard, Library, First Times, Tags, Trash, and Reviews",
+  full: "The whole workspace · Timeline",
+};
+
 export const specimens = {
   "page-frame-widths": {
-    title: "Every width variant at its maximum width",
+    title: "Every width at its maximum width",
     render: () => (
       <div style={track}>
         <div style={rows}>
-          {pageFrameVariants.map((variant) => (
-            <PageFrame key={variant} style={sample} variant={variant}>
-              <strong>{variant}</strong>
+          {pageFrameWidths.map((width) => (
+            <PageFrame key={width} style={sample} width={width}>
+              <strong>{width}</strong>
               <span
                 style={{
                   color: "var(--mt-color-ink-muted)",
                   fontSize: "var(--mt-font-size-caption)",
                 }}
               >
-                {tokens.layout.pageWidth[variant]}px ·{" "}
-                {tokens.descriptions[`layout.pageWidth.${variant}`]}
+                {notes[width]}
               </span>
             </PageFrame>
           ))}

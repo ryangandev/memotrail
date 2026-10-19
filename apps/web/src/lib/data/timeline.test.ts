@@ -97,5 +97,7 @@ describe("Timeline rows", () => {
     const [item] = timelineItems([row({ title: "" })]).firstTimes;
 
     expect(item?.title).not.toBe("");
+    expect(item?.untitled).toBe(true);
+    expect(timelineItems([row()]).firstTimes[0]?.untitled).toBe(false);
   });
 });

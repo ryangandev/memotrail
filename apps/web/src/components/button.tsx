@@ -50,7 +50,7 @@ export function Button({
 }
 
 /**
- * An icon-only action, drawn as a square Button and named by its required label. Ghost unless a
+ * An icon-only action, drawn as a square Button and named by its required label. Quiet unless a
  * variant is given. Specified in packages/design-system/components/icon-button.yaml.
  */
 export function IconButton({

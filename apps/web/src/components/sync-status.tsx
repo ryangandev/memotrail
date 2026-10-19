@@ -17,7 +17,12 @@ import {
  * The workspace's pending captures: syncs them and lists what is waiting.
  * Specified in packages/design-system/components/sync-status.yaml.
  */
-export function SyncStatus() {
+export function SyncStatus({
+  idleLabel,
+}: {
+  /** Quiet text shown while nothing waits, such as Synced; without it the indicator disappears. */
+  idleLabel?: string;
+} = {}) {
   const captureQueue = useCaptureQueue();
   const { isSyncing, items, lastError, synchronize, unreadable } = captureQueue;
   const [isOpen, setIsOpen] = useState(false);
@@ -28,7 +33,11 @@ export function SyncStatus() {
   if (isOpen && items.length === 0 && unreadable.length === 0) setIsOpen(false);
 
   if (!isVisible && !isOpen) {
-    return null;
+    return idleLabel ? (
+      <span className={syncStatusStyles.idle} data-sync-idle>
+        {idleLabel}
+      </span>
+    ) : null;
   }
 
   const description = [
@@ -86,8 +95,9 @@ export function SyncStatus() {
 }
 
 /**
- * The top-bar indicator itself: the counts of captures waiting on this device and refused by
- * MemoTrail, drawn warm when one was refused. SyncStatus wires it to the capture queue.
+ * The indicator itself, in the sidebar's account row and the phone top bar: the counts of
+ * captures waiting on this device and refused by MemoTrail, drawn in the danger color when one
+ * was refused. SyncStatus wires it to the capture queue.
  */
 export function SyncStatusButton({
   busy,
@@ -123,8 +133,8 @@ export function SyncStatusButton({
       }
       type="button"
     >
-      <span aria-hidden="true" />
-      {label}
+      <span aria-hidden="true" data-sync-dot />
+      <span data-sync-label>{label}</span>
     </button>
   );
 }

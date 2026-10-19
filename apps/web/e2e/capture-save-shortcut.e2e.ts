@@ -1,4 +1,5 @@
 import { test, expect } from "./helpers/workspace-test";
+import { openQuickCaptureByShortcut } from "./helpers/quick-capture";
 
 test("capture saves with Command Return while Enter still writes another line", async ({
   page,
@@ -33,17 +34,23 @@ test("capture saves with Command Return while Enter still writes another line", 
     name: "Save",
     exact: true,
   });
-  const saveHint = page.getByRole("tooltip", {
-    name: "Save ⌘ Return",
+  // The Dashboard card prints the shortcut beside Save, always visible and read with it.
+  const saveHint = page.locator("main form").getByText("⌘ Return", {
+    exact: true,
   });
+  await expect(saveHint).toBeVisible();
+  const hintId = await saveHint.evaluate(
+    (element) => element.closest("[id]")?.id ?? "",
+  );
+  expect(hintId).not.toBe("");
+  await expect(save).toHaveAttribute("aria-describedby", hintId);
   await save.hover();
   await expect(saveHint).toBeVisible();
   await page.mouse.move(10, 10);
-  await expect(saveHint).not.toBeVisible();
   await save.focus();
   await expect(saveHint).toBeVisible();
   await editor.focus();
-  await expect(saveHint).not.toBeVisible();
+  await expect(saveHint).toBeVisible();
   await editor.press("ControlOrMeta+Enter");
   await expect
     .poll(async () => {
@@ -63,7 +70,7 @@ test("capture saves with Command Return while Enter still writes another line", 
     ]);
   await expect(editor).toBeEmpty();
 
-  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  await openQuickCaptureByShortcut(page);
   const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
   const dockEditor = dialog.getByRole("textbox", {
     name: "Entry text",

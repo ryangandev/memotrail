@@ -30,7 +30,7 @@ anatomy:
 
 props:
   tone:
-    description: What happened. Success confirms a change, info reports a neutral outcome, and error reports a failure, in the warm color and for longer.
+    description: What happened. Success confirms a change, info reports a neutral outcome, and error reports a failure, in the danger color and for longer.
     values: [success, info, error]
     default: info
 
@@ -70,9 +70,9 @@ tokens:
     container:
       duration: "{motion.toastError}"
     stripe:
-      color: "{color.warm}"
+      color: "{color.danger}"
     icon:
-      color: "{color.warm}"
+      color: "{color.danger}"
 
 content:
   lines: unlimited
@@ -97,8 +97,8 @@ platformDifferences:
     reason: A pointer needs a smaller target, and the native target stays comfortable to tap without growing the toast.
   - difference: Web draws Sonner's tone icons at the icon column's size; iOS draws filled SF Symbols at 15 pt inside the same column.
     reason: Each uses its platform's own status glyphs, and the shared column keeps messages aligned.
-  - difference: iOS toasts also dismiss with a downward swipe and sit above the keyboard, the tab bar, and a sheet's footer; Web toasts sit above the page and pause while hovered.
-    reason: Swipes and the keyboard are touch interactions, and hover is a pointer one.
+  - difference: iOS toasts also dismiss with a downward swipe and sit above the keyboard, the tab bar, and a sheet's footer; Web toasts stack above the workspace dock and the phone tab bar and pause while hovered.
+    reason: Swipes and the keyboard are touch interactions, and hover is a pointer one. On Web the dock and tab bar are always on screen, so a toast that covered them would hide Search and navigation.
 
 specimens:
   - id: toast-tones

@@ -8,7 +8,7 @@ const { Button, ButtonLink, Icon } = MemoTrail;
 const labels = {
   primary: "Save changes",
   secondary: "Cancel",
-  ghost: "Edit",
+  quiet: "Edit",
   danger: "Move to Trash",
 };
 const variants = buttonVariants.map((variant) => [
@@ -77,7 +77,7 @@ export const specimens = {
         <ButtonLink href="#timeline" variant="primary">
           Open Timeline
         </ButtonLink>
-        <ButtonLink href="#settings" variant="ghost">
+        <ButtonLink href="#settings" variant="quiet">
           Settings
         </ButtonLink>
       </Row>

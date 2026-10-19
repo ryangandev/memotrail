@@ -25,7 +25,7 @@
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
   font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
 }
 
 /* Web TimezoneSelect is a bare select; its caller draws the label, as Settings does. */
@@ -44,7 +44,7 @@
 .timeZone small {
   margin-left: var(--mt-space-2);
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   font-weight: var(--mt-font-weight-regular);
 }
 
@@ -184,7 +184,7 @@
  * On phones Sonner sizes the toaster to the window and each toast to the window less its offsets.
  * Inside a stage, the toaster spans the stage between the same offsets and each toast fills it.
  */
-@media (max-width: 600px) {
+@media (max-width: 560px) {
   .stage [data-sonner-toaster][data-x-position] {
     right: var(--mobile-offset-right);
     left: var(--mobile-offset-left);

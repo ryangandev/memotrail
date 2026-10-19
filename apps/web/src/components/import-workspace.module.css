@@ -1,15 +1,9 @@
+/* Import is a reading page: sections under serif titles and rules, rows instead of cards. */
+
 .content {
   display: grid;
-  gap: var(--mt-space-6);
+  gap: var(--mt-space-8);
   color: var(--mt-color-ink);
-}
-
-.content h2:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
-  font-size: var(--mt-type-section-title-font-size);
-}
-
-.content h3:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
-  font-size: var(--mt-font-size-callout);
 }
 
 .content p:not(:where([data-ui-page-header] *, [data-ui-empty-state] *)) {
@@ -20,17 +14,26 @@
 
 .card {
   display: grid;
-  gap: var(--mt-space-3-5);
-  padding: var(--mt-space-6);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-panel);
-  background: var(--mt-color-surface);
+  gap: var(--mt-space-3);
 }
 
 .card > h2,
 .card > h3,
 .card > p {
   margin: 0;
+}
+
+/* The section title matches SectionHeader: a serif line over a hairline rule. */
+.card > h2:first-child {
+  margin-bottom: var(--mt-space-1);
+  padding-bottom: var(--mt-space-2);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--section-title-size);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-tight);
+  overflow-wrap: anywhere;
 }
 
 .actions {
@@ -44,7 +47,6 @@
   display: grid;
   gap: var(--mt-space-3);
   padding: var(--mt-space-4);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   border-radius: var(--mt-radius-notice);
   background: var(--mt-color-surface-subtle);
 }
@@ -69,34 +71,52 @@
 
 .sourceGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: var(--mt-space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+.sourceGrid li {
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+/* A source is a row you pick, with a radio-style mark at the far edge. */
 .source {
   display: grid;
-  gap: var(--mt-space-1);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--mt-space-0-75) var(--mt-space-4);
   width: 100%;
-  padding: var(--mt-space-4);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-notice);
-  background: var(--mt-color-surface);
+  padding: var(--mt-space-3-5) 0;
+  border: 0;
+  background: transparent;
   color: var(--mt-color-ink);
   font: inherit;
   text-align: start;
   cursor: pointer;
 }
 
-.source:hover {
-  border-color: var(--mt-color-accent-border);
+.source::after {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: 16px;
+  height: 16px;
+  border: var(--mt-size-stroke-medium) solid var(--mt-color-border-strong);
+  border-radius: 50%;
+  content: "";
 }
 
-.source[aria-pressed="true"] {
+.source:hover strong {
+  color: var(--mt-color-accent);
+}
+
+.source[aria-pressed="true"]::after {
   border-color: var(--mt-color-accent);
-  background: var(--mt-color-accent-wash);
+  background: radial-gradient(
+    circle,
+    var(--mt-color-accent) 0 38%,
+    transparent 42%
+  );
 }
 
 .source:focus-visible {
@@ -105,10 +125,11 @@
 }
 
 .source strong {
-  font-weight: var(--mt-font-weight-semibold);
+  font-weight: var(--mt-font-weight-medium);
 }
 
 .source span {
+  grid-column: 1;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-label);
   line-height: var(--mt-line-height-prose);
@@ -185,16 +206,15 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
-  gap: var(--mt-space-3);
+  gap: var(--mt-space-4);
   margin: 0;
+  padding: var(--mt-space-3-5) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .stat {
   display: grid;
   gap: var(--mt-space-0-5);
-  padding: var(--mt-space-3);
-  border-radius: var(--mt-radius-notice);
-  background: var(--mt-color-surface-subtle);
 }
 
 .stat dt {
@@ -204,9 +224,10 @@
 
 .stat dd {
   margin: 0;
-  font-size: var(--mt-font-size-callout);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
   font-variant-numeric: tabular-nums;
-  font-weight: var(--mt-font-weight-semibold);
+  font-weight: var(--mt-font-weight-medium);
 }
 
 .options {
@@ -268,16 +289,12 @@
   margin: 0;
   padding: 0;
   overflow-y: auto;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-notice);
   list-style: none;
 }
 
 .folderList li {
-  padding: var(--mt-space-2) var(--mt-space-3);
-  padding-inline-start: calc(
-    var(--mt-space-3) + var(--depth, 0) * var(--mt-space-4)
-  );
+  padding: var(--mt-space-2) 0;
+  padding-inline-start: calc(var(--depth, 0) * var(--mt-space-4));
   border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
@@ -287,7 +304,6 @@
 
 .samples {
   display: grid;
-  gap: var(--mt-space-3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -296,9 +312,8 @@
 .sample {
   display: grid;
   gap: var(--mt-space-1-5);
-  padding: var(--mt-space-4);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-notice);
+  padding: var(--mt-space-3-5) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .sample h4,
@@ -307,8 +322,11 @@
 }
 
 .sample h4 {
-  font-size: var(--mt-font-size-body);
-  font-weight: var(--mt-font-weight-semibold);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
+  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-tight);
 }
 
 .sampleMeta {
@@ -334,12 +352,8 @@
   font-size: var(--mt-font-size-label);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 560px) {
   .content {
-    gap: var(--mt-space-5);
-  }
-
-  .card {
-    padding: var(--mt-space-4-5);
+    gap: var(--mt-space-6);
   }
 }

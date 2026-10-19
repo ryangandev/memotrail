@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: SegmentedControl
+
+platforms:
+  web:
+    path: apps/web/src/components/segmented-control.tsx
+    symbols: [SegmentedControl]
+  ios:
+    unavailable: iOS uses the system segmented Picker, which already draws a track with a raised selected segment and follows Dynamic Type.
+
+purpose: One choice among two to four short options that stay visible, drawn as a track with the selected segment raised.
+
+use:
+  - A setting that applies the moment it changes, such as the theme in Settings.
+  - Switching between a few modes of one field, such as a date's precision.
+
+avoid:
+  - More than four options, or labels longer than a word or two. Use SelectField.
+  - Options that turn on or off on their own. Use a Checkbox.
+  - Navigation between pages. Use links.
+
+anatomy:
+  track: The subtle rounded track that holds the segments.
+  segment: One option, a radio input with its visible label, 30 px tall.
+  selected: The selected segment, raised above the track with a small shadow.
+  focusRing: The Web keyboard focus outline around the focused segment.
+
+props: {}
+
+states: [default, hover, focus, disabled]
+
+tokens:
+  - track:
+      background: "{color.surfaceSubtle}"
+      radius: "{radius.tile}"
+      paddingBlock: "{space.0-75}"
+      paddingInline: "{space.0-75}"
+      gap: "{space.0-5}"
+    segment:
+      paddingInline: "{space.3}"
+      radius: "{radius.xsmall}"
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.label}"
+      fontWeight: "{font.weight.medium}"
+      duration: "{motion.quick}"
+    selected:
+      background: "{color.surfaceRaised}"
+      color: "{color.ink}"
+      shadow: "{shadow.thumb}"
+    focusRing:
+      color: "{state.focus.ring}"
+      borderWidth: "{state.focus.ringWidth}"
+  - when: { state: hover }
+    segment:
+      color: "{color.ink}"
+  - when: { state: disabled }
+    segment:
+      color: "{color.inkFaint}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: sentence
+  length: One or two words per option, such as System, Light, and Dark.
+
+accessibility:
+  role: A fieldset of radio inputs. Its legend names the choice and is visually hidden, because the setting's label sits beside the control.
+  label: The legend, such as Appearance mode, and each option's visible label.
+  focus: Tab reaches the selected option, and the arrow keys move the selection, as radio inputs do. The focused segment draws the accent focus ring.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Web uses fixed pixel sizes that grow with browser zoom.
+
+platformDifferences:
+  - difference: Web only. iOS draws the system segmented Picker.
+    reason: The native control already has this shape, with platform haptics and Dynamic Type.
+
+specimens:
+  - id: segmented-control-states
+    description: Three options with the first selected, a two-option control, and a disabled control.

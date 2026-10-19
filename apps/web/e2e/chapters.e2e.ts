@@ -128,14 +128,13 @@ test("Chapters and First Times are marks on Entries that appear on Timeline, Das
   await bar.click();
   await expect(page).toHaveURL(`/items/${chapterId}`);
   await expect(
-    page.getByRole("heading", { name: "In this Chapter" }),
+    page.getByRole("heading", { name: "Entries in this Chapter" }),
   ).toBeVisible();
   const inside = page.getByRole("list", { name: "Entries in this Chapter" });
   await expect(inside.getByRole("listitem")).toHaveCount(2);
-  await expect(inside.getByRole("listitem").locator("strong")).toHaveText([
-    "June notes",
-    "Farmers market with Sam",
-  ]);
+  await expect(
+    inside.getByRole("listitem").locator("[data-entry-row-title]"),
+  ).toHaveText(["June notes", "Farmers market with Sam"]);
   for (const title of ["A year of change", "Winter walk", "Undated recipe"])
     await expect(inside.getByText(title)).toHaveCount(0);
 
@@ -145,6 +144,21 @@ test("Chapters and First Times are marks on Entries that appear on Timeline, Das
     fullPage: true,
     path: test.info().outputPath("memotrail-chapters-item.png"),
   });
+
+  // An Entry inside the Chapter links back to it; one outside does not.
+  await page.goto(`/items/${day.id}`);
+  await expect(
+    page
+      .getByRole("list", { name: "Chapters this Entry is in" })
+      .getByRole("link", { name: "Living in Portland", exact: true }),
+  ).toHaveAttribute("href", `/items/${chapterId}`);
+  await page.goto(`/items/${february.id}`);
+  await expect(
+    page.getByRole("heading", { name: "Winter walk", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("list", { name: "Chapters this Entry is in" }),
+  ).toHaveCount(0);
 
   // Dashboard Now shows the Chapter with its span and how long it has lasted.
   await page.goto("/");
@@ -200,7 +214,7 @@ test("Chapters and First Times are marks on Entries that appear on Timeline, Das
   // Checking Chapter on another Entry makes it a Chapter with a page of its Entries.
   await page.goto(`/items/${abroad.id}`);
   await expect(
-    page.getByRole("heading", { name: "In this Chapter" }),
+    page.getByRole("heading", { name: "Entries in this Chapter" }),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Edit Entry" }).click();
   const abroadEditor = page.getByRole("dialog", { name: "Edit Entry" });
@@ -210,13 +224,13 @@ test("Chapters and First Times are marks on Entries that appear on Timeline, Das
   await abroadEditor.getByRole("button", { name: "Save changes" }).click();
   await expect(abroadEditor).not.toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "In this Chapter" }),
+    page.getByRole("heading", { name: "Entries in this Chapter" }),
   ).toBeVisible();
   await expect(
     page
       .getByRole("list", { name: "Entries in this Chapter" })
       .getByRole("listitem")
-      .locator("strong"),
+      .locator("[data-entry-row-title]"),
   ).toHaveText(["Exam week"]);
 
   // Unchecking Chapter returns it to an ordinary Entry.
@@ -227,7 +241,7 @@ test("Chapters and First Times are marks on Entries that appear on Timeline, Das
   await expect(again).not.toBeVisible();
   await expect(page.getByRole("button", { name: "Edit Entry" })).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "In this Chapter" }),
+    page.getByRole("heading", { name: "Entries in this Chapter" }),
   ).toHaveCount(0);
   expect(
     (

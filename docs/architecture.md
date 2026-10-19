@@ -43,9 +43,12 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Tags, links, the Item page, or Trash                           | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                                                                                                         | matching directory under `Features`                                                                                                 | organization, relationship, Trash, and Empty Trash migrations and tests            |
 | Visual system                                                  | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                                                                                                  | `DesignSystem`, `DesignSystem/Generated`                                                                                            | `packages/design-system/tokens`, `components` specs, and generator                 |
 
+Web destinations, the sidebar's three groups, the phone tab bar and More list, and the mapping from a path to its destination live in `lib/workspace-destinations.ts`.
+A detail page names the destination it belongs to through PageHeader's `back`; `components/workspace-destination.tsx` draws that back link and reports the destination to `components/workspace-shell.tsx`, so an Entry page marks Library, Timeline, First Times, or Trash active.
 `App/RootTabView.swift` holds the four primary tabs, Dashboard, Timeline, Library, and More, like Web's phone navigation.
 It owns the `CaptureController` and the capture draft, and puts the controller in the environment for the Dashboard, Quick Capture, and the workspace header.
-The More tab lays out `WorkspaceRoute.groups` in `App/WorkspaceRoute.swift` like Web's mobile More menu: First Times, Tags, Trash, and Settings, with the same groups, order, and icons.
+The More tab lays out `WorkspaceRoute.groups` in `App/WorkspaceRoute.swift` as tiles: First Times, Tags, Trash, and Settings.
+Web's mobile More is a plain list that also has Reviews and Import, which have no native page; iOS follows the plain list when it takes up the Quiet ledger design.
 `App/AppNavigator.swift` carries cross-tab links that Web expresses as routes, such as `/library?tag=`, `/library?record=`, and `/first-times`; the destination consumes a request once its data has loaded.
 Its `entriesRevision` rises after any Entry is saved, moved to Trash, restored, or synced, so every tab reloads what it shows.
 `App/ItemLink.swift` opens every Entry, Chapters and First Times included, on the Item page in `Features/Item`, like Web `wikiEntryHref`.
@@ -481,7 +484,7 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
 - Specs pair these Web components with their native counterparts, and a spec named differently from the Web component says so.
   `badge.yaml` pairs Badge with `MTBadge`, and `button.yaml` pairs Button with `mtButtonStyle`.
   `empty-state.yaml`, `page-header.yaml`, and `page-frame.yaml` pair EmptyState, PageHeader, and PageFrame with `MTEmptyState`, `MTPageHeader`, and `MTPage`.
-  `section-header.yaml` pairs SectionHeader with `MTSectionHeader`, whose `list` variant is the uppercase list heading on both platforms.
+  `section-header.yaml` pairs SectionHeader with `MTSectionHeader`, whose `list` variant is the uppercase list heading on iOS and a sentence-case label on Web.
   `image.yaml` pairs ProgressiveImage with `MTRemoteImage`, `skeleton.yaml` pairs Skeleton with `MTLoadingSkeleton`, and `upload-progress.yaml` pairs PhotoUploadProgress with `MTUploadProgress`.
   `separated-list.yaml` pairs SeparatedList with `MTFlowLayout` and `MTFlowSeparator`.
   `record-card.yaml` pairs RecordCard with `MTRecordCard` and its visual and body parts.
@@ -514,7 +517,7 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   The native composer saves a calendar day with an optional time from `Features/Capture/CaptureDate.swift`, and Command-Return saves from a hardware keyboard.
   Both composers open the relevant date in place, keep only problems in the composer, and announce a synced capture with a toast.
   A capture saved without a connection gets an info toast instead: Web checks the browser's connection before syncing, while `CaptureController` confirms a capture once when its first sync cannot reach MemoTrail and keeps later offline retries quiet.
-  Web `SyncStatus` in the workspace header counts waiting and refused captures separately; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
+  Web `SyncStatus` in the sidebar's account row and the phone top bar counts waiting and refused captures separately, and reads Synced when nothing waits; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
   Native `MTSyncStatusButton` in `WorkspaceToolbar` does the same and opens Pending sync as a sheet.
   A refused capture is announced with an error toast, and `PendingCaptureList` and native `PendingCaptureRow` give it Copy text and a confirmed Discard; Retry now appears only while a capture is still waiting.
 - Web `components/entry-editor-dialog.tsx` is the Entry editor on the Item page, with Cancel and Save changes, and its `NewEntryDialog` adds a Chapter or First Time from Timeline and First Times.
@@ -540,6 +543,7 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   The browser shows that dialog in the top layer and makes everything outside it inert, so a Dialog opened over it, such as the photo preview or a confirmation, portals into it and shows its positioner as a manual popover with the scrim as its `::backdrop` (`components/top-layer.ts`).
   A Dialog's content is a `data-escape-layer`, so Quick Capture leaves its Escape, Tab, and Mod-Enter to it.
   `WorkspaceActionDock` owns the shared bottom position and glass control styling for global Search and Quick Capture.
+  The workspace toaster rises from `--toast-bottom` in `app/globals.css`, just above the dock and the phone tab bar.
   PhotoViewer keeps native top-layer media geometry, and Command Palette keeps its search and keyboard-result interaction model.
 - Reusable components do not import `app/**.module.css`; Web lint enforces this boundary along with valid token references.
   Feature modules own composition, and `editor-fields.module.css` shares native field spacing and states while excluding the reviewed composites' internals.
@@ -551,13 +555,14 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   CSS cannot read variables in media queries, so a media query width must be a `--mt-layout-breakpoint-*` value as `max-width` or one pixel above it as `min-width`, and a container query must be a `--mt-layout-container-*` value.
   That rule stands in for `@custom-media`, which Next.js leaves untranspiled and, with its Lightning CSS option, resolves only within one stylesheet, so a definition in the generated file cannot reach the modules.
   Scripts read colors from `themeColors` in the generated `design-system.ts`; the checker's allow list keeps only the Google sign-in mark's brand colors.
-- Noninteractive status, type, and tag labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
+- Noninteractive status labels use `components/badge.tsx` with tone and size variants, single-line truncation, and Design System specimens.
+  On Web a Badge is for status only: an Entry's kind is a small mark beside its title, and tags are quiet `#tag` text.
   `packages/design-system/components/badge.yaml` specifies it with native `MTBadge`.
 - Checkbox, SectionHeader, and Skeleton are the Web counterparts of `MTCheckbox`, `MTSectionHeader`, and `MTLoadingSkeleton`.
   `components/checkbox.tsx` is a native `input type="checkbox"` that submits like any other, named by its label and described by an optional explanation, with a `small` and a `medium` size.
-  `components/section-header.tsx` is one component whose `variant` is `section` (a serif title) or `list` (the small uppercase heading above a list), like `MTSectionHeader`; both take a detail, a description, an action, and a heading level chosen by the caller, because the two differ only in typography.
+  `components/section-header.tsx` is one component whose `variant` is `section` (a serif title over a hairline rule) or `list` (the small heading above a list, uppercase only on iOS), like `MTSectionHeader`; both take a detail, a description, an action, and a heading level chosen by the caller, because the two differ only in typography.
   `components/skeleton.tsx` is a decorative placeholder hidden from assistive technology that stops its shimmer for reduced motion; `ProgressiveImage` and the route loading fallback use it, and the surrounding region announces the loading state.
-  Feature code does not hand-roll checkbox markup, uppercase list headings, or shimmer placeholders; the `/design-system` specimens `checkbox`, `section-header`, and `skeleton` show every variant and state.
+  Feature code does not hand-roll checkbox markup, list headings, or shimmer placeholders; the `/design-system` specimens `checkbox`, `section-header`, and `skeleton` show every variant and state.
 - Dot-separated summary and metadata rows use Web `components/separated-list.tsx` and native `MTFlowLayout` with `MTFlowSeparator`, or `MTWordFlow` for facts that read like a sentence.
   Facts wrap whole, and a "·" shows only between two facts on the same line, hidden from assistive technology.
   Web clips the separator of a fact that starts a line one gap outside the list, so focus rings stay whole; native line breaking leaves that separator out.
@@ -598,12 +603,18 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   `scripts/local_supabase.py` owns disposable account creation and cleanup for both native local scripts.
 - Native app targets skip App Intents metadata extraction because they declare no App Intents.
   Enable extraction when native shortcuts are introduced.
-- Authenticated Web routes use `components/page-frame.tsx` for outer width, centering, responsive gutters, and vertical page rhythm.
-- Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
-- New route pages choose the narrowest variant that fits their content; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
+- Authenticated Web routes use `components/page-frame.tsx` for outer width, the fixed left edge, responsive gutters, and vertical page rhythm.
+- Web page frame widths are semantic: `reading` is 720px for an Entry page, a review, Settings, Import, and Export; `list` is 960px for Dashboard, Library, First Times, Tags, Trash, and Reviews; and `full` fills the workspace for Timeline.
+  Every frame starts at `--frame-start` from the sidebar, so a title never moves sideways between pages; the frame widths are Web layout variables in `app/globals.css`, and its page and section title variables read the shared `display`, `displayDetail`, `displayCompact`, and `sectionTitle` type roles.
+  iOS keeps the `compact`, `standard`, `wide`, and `canvas` `MTPageWidth` variants until its rewrite.
+- `components/page-header.tsx` is a title, one optional muted `meta` line, at most one `action`, and on a detail page a `back` link; it has no eyebrow or description.
+  `components/route-fallback.tsx` gives not found, route errors, and an unavailable Entry one reading-width layout with the same header.
+- New route pages choose the width by how they read; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
-- Chapter and First Time result layouts reuse `components/record-card.tsx`; mark modules own only their visual, metadata, and responsive content rules.
-  Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
+- Lists of Entries on the Dashboard, Library, a Chapter's page, reviews, and Chapter suggestions use `EntryRowList`, `EntryRowGroup`, and `EntryRow` from `components/entry-row.tsx`, with `entryRowLabels()` from `lib/data/entry-row.ts` for the title and date.
+  `ChapterMark` and `FirstTimeMark` there draw an Entry's kind beside its title from the `chapter` and `firstTime` icons, and First Times reuses `ChapterMark` in its own rows.
+  `components/record-card.tsx` has no Web page left; it stays as the counterpart of the native First Times grid's `MTRecordCard` and as a gallery specimen.
+  Noninteractive history and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
 - Entry editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture renders the shared draft from `CaptureProvider`, so its editor is ready before the dialog first opens and photo drafts load without moving it; its loading and editor geometries stay equal.

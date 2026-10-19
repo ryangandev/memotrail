@@ -4,30 +4,22 @@ import { PageHeader } from "./page-header";
 import styles from "./focused-view-layout.module.css";
 
 export function FocusedViewLayout({
-  actions,
+  action,
   children,
-  description,
-  eyebrow,
   summary,
   summaryLabel,
   title,
 }: {
-  actions: ReactNode;
+  /** The view's one primary action, beside the title. */
+  action: ReactNode;
   children: ReactNode;
-  description: ReactNode;
-  eyebrow: ReactNode;
   summary: ReactNode;
   summaryLabel: string;
   title: ReactNode;
 }) {
   return (
-    <PageFrame variant="wide">
-      <PageHeader
-        actions={actions}
-        description={description}
-        eyebrow={eyebrow}
-        title={title}
-      />
+    <PageFrame width="list">
+      <PageHeader action={action} title={title} />
       <div
         aria-label={summaryLabel}
         className={styles.summary}

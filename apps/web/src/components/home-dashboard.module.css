@@ -1,382 +1,260 @@
-.page a:focus-visible {
-  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
-  outline-offset: var(--mt-state-focus-ring-offset-loose);
-}
-
-.page a:hover {
-  color: var(--mt-color-accent);
-}
+/* The Dashboard follows the Quiet ledger Dashboard mockups: a greeting and one muted line of
+   counts, the composer, Now beside a memory from the past, then Recent as EntryRow rows. */
 
 .dashboard {
   display: flex;
-  container-type: inline-size;
   min-width: 0;
   flex-direction: column;
-  gap: var(--mt-space-8);
+}
+
+/* The line under the greeting: today's date and the counts that lead to their destinations. */
+.glance {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.dot {
+  margin-inline: var(--mt-space-2);
+}
+
+.glance a {
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink-muted);
+  text-decoration: none;
+  transition:
+    border-color var(--mt-motion-quick) var(--mt-motion-easing-standard),
+    color var(--mt-motion-quick) var(--mt-motion-easing-standard);
+}
+
+.glance a:hover {
+  border-bottom-color: currentColor;
+  color: var(--mt-color-ink);
+}
+
+.glance a:focus-visible,
+.sectionLink:focus-visible,
+.nowItem:focus-visible,
+.memory:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
+}
+
+.capture {
+  min-width: 0;
+  margin-top: calc(var(--mt-space-6) + var(--mt-space-1));
+}
+
+.notice {
+  min-width: 0;
+  margin-top: var(--mt-space-6);
+}
+
+.firstEntry {
+  margin-top: var(--mt-space-8);
+}
+
+.loadError {
+  margin-top: var(--mt-space-6);
+  color: var(--mt-color-danger);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-body);
+}
+
+.loadError p {
+  color: var(--mt-color-ink-muted);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--mt-space-10);
+  align-items: start;
+  margin-top: var(--mt-space-11);
+}
+
+.recent {
+  margin-top: var(--mt-space-11);
 }
 
 .section {
   min-width: 0;
 }
 
-.sectionHeading {
-  margin-bottom: var(--mt-space-4);
+/* A section's heading is its serif title over a rule; its link is a quiet note at the far end. */
+.section > [data-ui-section-header] {
+  margin-bottom: 0;
 }
 
 .sectionLink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--mt-space-1);
-  color: var(--mt-color-accent);
-  font-size: var(--mt-font-size-caption);
+  border-radius: var(--mt-radius-xsmall);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
   text-decoration: none;
   white-space: nowrap;
 }
 
-.nowItems {
-  display: grid;
-  gap: var(--mt-space-3);
+.sectionLink:hover {
+  color: var(--mt-color-ink);
+}
+
+/* Recent's list already draws the rule under its heading. */
+.section [data-ui-entry-row-list] {
+  border-top: 0;
+}
+
+.nowList {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .nowItem {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  min-width: 0;
   flex-wrap: wrap;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-4) var(--mt-space-5);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  background: var(--mt-color-surface);
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mt-space-1) var(--mt-space-4);
+  padding: var(--mt-space-3) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-xsmall);
   color: var(--mt-color-ink);
   text-decoration: none;
-  overflow-wrap: anywhere;
 }
 
-.nowItem h3 {
+.nowName {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  align-items: center;
+  gap: var(--mt-space-2);
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-body-large);
-  font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-title-relaxed);
 }
 
-.nowItem p {
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+.nowName svg {
+  width: var(--mt-size-icon-15);
+  height: var(--mt-size-icon-15);
+  flex: none;
 }
 
-.recent {
-  display: grid;
-  /* Rows share one height, even when an untitled Entry has no summary line. */
-  grid-auto-rows: 1fr;
+.nowName [data-mark="chapter"] {
+  color: var(--mt-color-accent);
 }
 
-.entryCard,
-.memoryCard {
-  display: block;
-  min-width: 0;
-  color: var(--mt-color-ink);
-  text-decoration: none;
-  overflow-wrap: anywhere;
-}
-
-.entryCard {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: center;
-  padding: var(--mt-space-3) 0;
-  overflow: hidden;
-  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-}
-
-.entryCard:last-child {
-  border-bottom-color: transparent;
-}
-
-.entryCard.withPhoto {
-  grid-template-columns: minmax(0, 1fr) 84px;
-  gap: var(--mt-space-4);
-}
-
-.entryPhoto {
-  grid-column: 2;
-  grid-row: 1;
-  width: 84px;
-  height: 84px;
-  border-radius: var(--mt-radius-medium);
-}
-
-.entryCard article {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  grid-row: 1;
-  gap: var(--mt-space-1-5);
-}
-
-.entryCard .entryMeta {
-  min-width: 0;
-  margin: 0;
-  flex-wrap: nowrap;
-  overflow: hidden;
-  white-space: nowrap;
-  align-items: center;
-}
-.entryDate {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.entryCard h3 {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.recent .entryCard p {
-  display: block;
-  margin: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.entryCard .tags {
-  margin: 0;
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
-
-.entryMeta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--mt-space-2);
-  margin-bottom: var(--mt-space-2);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-micro);
-}
-
-.entryMeta > span {
+.nowName [data-mark="first-time"] {
   color: var(--mt-color-warm);
 }
 
-.entryCard h3,
-.memoryCard h3 {
+.nowTitle {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.nowDuration {
+  flex: 0 1 auto;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  white-space: nowrap;
+}
+
+/* The memory is the one warm surface on the page. */
+.memory {
+  display: block;
+  margin-top: var(--mt-space-3);
+  min-width: 0;
+  overflow: hidden;
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-warm-subtle);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.memoryPhoto {
+  width: 100%;
+  height: 180px;
+}
+
+.memoryBody {
+  padding: var(--mt-space-4-5) var(--mt-space-5);
+}
+
+.memoryWhen {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-body);
+}
+
+.memoryTitle {
+  margin: var(--mt-space-1-5) 0;
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
   line-height: var(--mt-line-height-title);
 }
 
-.entryCard p,
-.memoryCard p {
+.memory:first-child .memoryTitle {
+  margin-top: 0;
+}
+
+.memoryExcerpt {
   display: -webkit-box;
-  margin-top: var(--mt-space-2);
   overflow: hidden;
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
-  white-space: pre-line;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-}
-
-.memoryCard {
-  overflow: hidden;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-}
-
-.memoryPhoto {
-  width: 100%;
-  height: 230px;
-}
-
-.memoryCard article {
-  padding: var(--mt-space-6);
-}
-
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--mt-space-1);
-  margin-top: var(--mt-space-3);
-}
-
-.empty {
-  display: flex;
-  min-width: 0;
-}
-
-.metrics {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  overflow: hidden;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-}
-
-.stat {
-  display: flex;
-  min-width: 0;
-  min-height: 56px;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  padding: var(--mt-space-3) var(--mt-space-4);
-  border-right: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink);
-  text-decoration: none;
-}
-
-.stat:nth-child(even) {
-  border-right: 0;
-}
-
-.stat:nth-last-child(-n + 2) {
-  border-bottom: 0;
-}
-
-.stat > svg {
-  flex: none;
-  align-self: center;
-  color: var(--mt-color-accent);
-}
-
-.stat strong {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-regular);
-  line-height: var(--mt-line-height-none);
-}
-
-.stat span {
-  font-size: var(--mt-font-size-caption);
-}
-
-@container (min-width: 620px) {
-  .metrics {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-  .stat {
-    border-bottom: 0;
-  }
-  .stat:not(:last-child) {
-    border-right: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  }
-}
-
-.columns {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  grid-template-areas: "capture capture" "memories now" "recent recent";
-  gap: var(--mt-space-8);
-  align-items: start;
-}
-
-.columns.withNotice {
-  grid-template-areas: "capture capture" "notice notice" "memories now" "recent recent";
-}
-
-.capturePanel {
-  grid-area: capture;
-  min-width: 0;
-}
-.noticeRow {
-  grid-area: notice;
-  min-width: 0;
-}
-.memoryColumn {
-  grid-area: memories;
-}
-.nowColumn {
-  grid-area: now;
-  min-width: 0;
-}
-
-.loadError {
-  padding: var(--mt-space-4);
-  border-radius: var(--mt-radius-medium);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-warm-subtle);
-}
-
-@media (max-width: 1100px) {
-  .columns {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    gap: var(--mt-space-5);
-  }
+  font-size: var(--mt-font-size-body);
+  line-height: var(--mt-line-height-body);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
 }
 
 @media (max-width: 900px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "capture" "memories" "now" "recent";
+    gap: var(--mt-space-6);
+    margin-top: var(--mt-space-8);
   }
-  .columns.withNotice {
-    grid-template-areas: "capture" "notice" "memories" "now" "recent";
+
+  .recent {
+    margin-top: var(--mt-space-8);
   }
 }
 
 @media (max-width: 720px) {
-  .stat {
-    padding: var(--mt-space-3);
+  .capture {
+    margin-top: var(--mt-space-4-5);
   }
-  .entryCard.withPhoto {
-    grid-template-columns: minmax(0, 1fr) 64px;
-    gap: var(--mt-space-3);
+
+  /* A phone keeps the counts and leaves the date to the Entries below. */
+  .today,
+  .nowSpan,
+  .memoryDate {
+    display: none;
   }
-  .entryPhoto {
-    width: 64px;
-    height: 72px;
+
+  .memoryBody {
+    padding: var(--mt-space-3-5);
   }
-  .entryCard h3 {
+
+  .memoryTitle {
     font-size: var(--mt-font-size-body-large);
   }
+
+  .memoryExcerpt {
+    color: var(--mt-color-ink-muted);
+    font-size: var(--mt-font-size-body-small);
+    line-height: var(--mt-line-height-message);
+    -webkit-line-clamp: 2;
+  }
 }
 
-.recentRow {
-  grid-area: recent;
-  min-width: 0;
-}
-
-@media (min-width: 901px) {
-  .memoryColumn,
-  .nowColumn {
-    display: flex;
-    min-width: 0;
-    align-self: stretch;
-  }
-  .memoryColumn > .section,
-  .nowColumn > .section {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-  }
-  .memoryColumn .sectionHeading,
-  .nowColumn .sectionHeading {
-    flex: none;
-  }
-  .nowColumn .nowItems {
-    flex: 1;
-    grid-auto-rows: minmax(min-content, 1fr);
-  }
-  .memoryColumn .empty,
-  .nowColumn .empty {
-    flex: 1;
-  }
-  .memoryColumn .memoryCard {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-  }
-  .memoryColumn .memoryPhoto {
-    flex: none;
-  }
-  .memoryColumn .memoryCard article {
-    flex: 1;
+@media (prefers-reduced-motion: reduce) {
+  .glance a {
+    transition: none;
   }
 }

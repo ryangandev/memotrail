@@ -29,15 +29,17 @@ describe("SectionHeader", () => {
     const html = renderToStaticMarkup(
       <SectionHeader
         action={<a href="/library">Show all</a>}
-        detail="12 items"
-        title="All items"
+        detail="12 Entries"
+        title="All Entries"
         variant="list"
       />,
     );
 
     expect(html).toContain('data-variant="list"');
-    expect(html.indexOf("All items")).toBeLessThan(html.indexOf("12 items"));
-    expect(html.indexOf("12 items")).toBeLessThan(html.indexOf("Show all"));
+    expect(html.indexOf("All Entries")).toBeLessThan(
+      html.indexOf("12 Entries"),
+    );
+    expect(html.indexOf("12 Entries")).toBeLessThan(html.indexOf("Show all"));
     expect(html).toContain('<a href="/library">Show all</a>');
   });
 
@@ -45,16 +47,16 @@ describe("SectionHeader", () => {
     const html = renderToStaticMarkup(
       <SectionHeader
         action={<a href="/library">Show all</a>}
-        detail="12 items"
+        detail="12 Entries"
         detailAlign="end"
-        title="All items"
+        title="All Entries"
         variant="list"
       />,
     );
     const trailing = html.slice(html.indexOf("</h2>"));
 
-    expect(trailing).toContain("12 items");
-    expect(trailing.indexOf("12 items")).toBeLessThan(
+    expect(trailing).toContain("12 Entries");
+    expect(trailing.indexOf("12 Entries")).toBeLessThan(
       trailing.indexOf("Show all"),
     );
   });

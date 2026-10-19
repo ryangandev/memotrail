@@ -130,7 +130,7 @@ const providerMessages: Record<string, [number, string]> = {
   ],
   invalid_provider_response: [
     502,
-    "The provider returned an incomplete usage record.",
+    "The provider returned an incomplete usage report.",
   ],
 };
 
@@ -328,7 +328,7 @@ export function aiErrorResponse(error: unknown) {
       : new AIError(
           "unavailable",
           503,
-          "AI is temporarily unavailable. Your records are unchanged.",
+          "AI is temporarily unavailable. Your Entries are unchanged.",
         );
   return Response.json(
     { error: safe.message, code: safe.code },

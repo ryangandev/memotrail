@@ -132,7 +132,7 @@ export function explorationPrompt(
         turn.source_snapshot.body_truncated === true,
     },
     conversationScope:
-      "Only this source excerpt and up to eight recent completed turns are supplied, not the whole archive. Earlier conversation may be omitted or excerpted.",
+      "Only this source excerpt and up to eight recent completed turns are supplied, not all your Entries. Earlier conversation may be omitted or excerpted.",
     olderTurnsOmitted: workspace.total_count > recent.length + 1,
     recentTurns: recent,
     question: turn.question,

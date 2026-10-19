@@ -6,8 +6,6 @@ import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
 import { useCaptureQueue } from "@/components/capture-provider";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
-import entryFormStyles from "@/components/entry-form.module.css";
-import entryListStyles from "@/components/entry-list.module.css";
 import { Icon } from "@/components/icon";
 import { countLabel } from "@/lib/count-label";
 import {
@@ -32,52 +30,55 @@ export function PendingCaptureList({
   unreadable?: readonly UnreadableCapture[];
 }) {
   return (
-    <div className={entryListStyles.entryList}>
+    <div className={styles.list}>
       {items.map(({ entry, rejection, status }) => (
-        <article
-          className={styles.pendingEntryCard}
-          data-status={status}
-          key={entry.id}
-        >
-          <div className={entryFormStyles.entryMeta}>
+        <article className={styles.entry} data-status={status} key={entry.id}>
+          <div className={styles.when}>
             {/* An untitled capture is already named by its date. */}
             {entry.title ? (
               <time dateTime={entry.occurredAt ?? undefined}>
                 {occurrenceLabel(queuedOccurrence(entry))}
               </time>
             ) : null}
-            {status === "rejected" ? (
-              <Badge tone="warm">Not accepted</Badge>
-            ) : status === "syncing" ? (
-              <Badge tone="neutral">Syncing…</Badge>
-            ) : (
-              <Badge>On this device</Badge>
-            )}
           </div>
-          <h3>{entryDisplayTitle(entry.title, queuedOccurrence(entry))}</h3>
-          {entry.body ? <p>{entry.body}</p> : null}
-          {entry.attachments.length > 0 ? (
-            <span className={styles.pendingPhotoCount}>
-              <Icon name="photo" size={14} />
-              {countLabel(entry.attachments.length, "photo")}
-            </span>
-          ) : null}
-          {rejection ? (
-            <RejectedCapture entry={entry} message={rejection.message} />
-          ) : null}
+          <div className={styles.body}>
+            <div className={styles.titleRow}>
+              <h3>{entryDisplayTitle(entry.title, queuedOccurrence(entry))}</h3>
+              {status === "rejected" ? (
+                <Badge tone="warm">Not accepted</Badge>
+              ) : status === "syncing" ? (
+                <Badge tone="neutral">Syncing…</Badge>
+              ) : (
+                <Badge>On this device</Badge>
+              )}
+            </div>
+            {entry.body ? <p className={styles.excerpt}>{entry.body}</p> : null}
+            {entry.attachments.length > 0 ? (
+              <span className={styles.photoCount}>
+                <Icon name="photo" size={14} />
+                {countLabel(entry.attachments.length, "photo")}
+              </span>
+            ) : null}
+            {rejection ? (
+              <RejectedCapture entry={entry} message={rejection.message} />
+            ) : null}
+          </div>
         </article>
       ))}
       {unreadable.map((capture) => (
         <article
-          className={styles.pendingEntryCard}
+          className={styles.entry}
           data-status="rejected"
           key={capture.key}
         >
-          <div className={entryFormStyles.entryMeta}>
-            <Badge tone="warm">Could not be read</Badge>
+          <div className={styles.when} />
+          <div className={styles.body}>
+            <div className={styles.titleRow}>
+              <Badge tone="warm">Could not be read</Badge>
+            </div>
+            <p className={styles.excerpt}>{capture.text}</p>
+            <UnreadableCaptureActions capture={capture} />
           </div>
-          <p>{capture.text}</p>
-          <UnreadableCaptureActions capture={capture} />
         </article>
       ))}
     </div>
@@ -132,9 +133,9 @@ function RejectedCapture({
   }
 
   return (
-    <div className={styles.pendingRejection}>
+    <div className={styles.rejection}>
       <p>{message}</p>
-      <div className={styles.pendingRejectionActions}>
+      <div className={styles.rejectionActions}>
         {text ? (
           <Button
             disabled={isDiscarding}
@@ -201,12 +202,12 @@ function UnreadableCaptureActions({ capture }: { capture: UnreadableCapture }) {
   }
 
   return (
-    <div className={styles.pendingRejection}>
+    <div className={styles.rejection}>
       <p>
         This Entry was saved on this device, but this version of MemoTrail
         cannot read it. It is kept until you discard it.
       </p>
-      <div className={styles.pendingRejectionActions}>
+      <div className={styles.rejectionActions}>
         <Button
           disabled={isDiscarding}
           onClick={() => void copyText()}

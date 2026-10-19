@@ -15,13 +15,13 @@
 
 /* The required mark, written as an aria-hidden asterisk after the label text. */
 .fields label:not(:where([data-ui-field] *)) > span > [aria-hidden="true"] {
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
 }
 
 .fields label:not(:where([data-ui-field] *)) > span small,
 .fields label:not(:where([data-ui-field] *)) > small {
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   font-weight: var(--mt-font-weight-regular);
 }
 

@@ -28,6 +28,7 @@ import { SharedPrimitivesGallery } from "./shared-primitives-gallery";
 import { ToastSpecimen, WorkspaceSpecimens } from "./controls-gallery";
 import { FormControlSpecimens } from "./form-controls-gallery";
 import { BrandMotionPreview } from "./brand-motion-preview";
+import { EntryRowSpecimen } from "./entry-row-specimen";
 import {
   FoundationTokens,
   IconTokens,
@@ -130,7 +131,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="TextField, SearchField, SelectField, Checkbox, and the current production date, rich-text, occurrence, and organization editors are reusable. TextField is a proposed replacement for route-level plain text inputs; other textareas, labels, and validation messages are still route-level patterns."
+        description="TextField, SearchField, SelectField, Checkbox, SegmentedControl, and the current production date, rich-text, occurrence, and organization editors are reusable. TextField is a proposed replacement for route-level plain text inputs; other textareas, labels, and validation messages are still route-level patterns."
         id="forms"
         index="04"
         title="Forms"
@@ -286,12 +287,13 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by First Times. SeparatedList and SectionHeader organize the rows and headings around them, and CaptureComposer writes new Entries."
+        description="EntryRow lists Entries, and RecordCard is the shared interactive card that the native First Times grid uses. SeparatedList and SectionHeader organize the rows and headings around them, and CaptureComposer writes new Entries."
         id="containers"
         index="05"
         title="Containers and data display"
       >
         <RecordCardSpecimen />
+        <EntryRowSpecimen />
         <SeparatedListSpecimen />
         <SectionHeaderSpecimen />
         <CaptureComposerSpecimen />

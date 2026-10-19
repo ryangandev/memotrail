@@ -9,14 +9,16 @@ platforms:
     path: apps/ios/MemoTrail/DesignSystem/Components/MTLabels.swift
     symbols: [MTBadge]
 
-purpose: A single-line, noninteractive label for a record's kind, a status, or a tag.
+purpose: A single-line, noninteractive label for a status, such as Written by AI or On this device.
 
 use:
-  - Record kinds, statuses, Collections, and tags on cards, rows, and page headers.
-  - Short labels laid over photos and maps, in a glass or inverse tone.
+  - A status on a row, card, or page header, such as Written by AI, On this device, or Not accepted.
+  - A short status laid over a photo or map, in a glass or inverse tone.
   - A quiet marker beside a setting or heading, such as Beta or Connected.
 
 avoid:
+  - An Entry's kind. A Chapter or First Time gets a small icon beside its title, and an ordinary Entry gets nothing.
+  - "Tags on a row or page. Write them as quiet #tag text."
   - Anything people press or select. Use Button for actions and a filter chip for filters.
   - Tags people add or remove. Use EntryOrganizationEditor on Web and MTOrganizationEditor on iOS.
   - Messages or sentences. Use inline text, an empty state, or a toast.
@@ -43,7 +45,7 @@ props:
       ]
     default: accent
   size:
-    description: The badge's text size. Micro fits dense cards, small is the default, and medium sits beside 22 px controls.
+    description: The badge's text size. Micro and small both draw at the 11 px text floor, so they look alike; small is the default, and medium sits beside 22 px controls.
     values: [micro, small, medium]
     default: small
   uppercase:
@@ -115,7 +117,7 @@ content:
   notes:
     - Statuses use sentence case, such as Not accepted; kinds, Collections, and tags keep their own names.
     - "Write tags with a leading #, such as #travel."
-    - Use uppercase for short kinds and statuses only; it is a visual treatment, so pass the text in its normal case.
+    - Web no longer uses the uppercase treatment; it stays for iOS until its next design pass. Pass the text in its normal case either way.
 
 accessibility:
   role: Static text. Web renders a span in the surrounding text flow and iOS a Text that VoiceOver reads in place.
@@ -125,8 +127,6 @@ accessibility:
   dynamicType: iOS scales micro and small with caption2 and medium with caption, and still truncates on one line at accessibility sizes. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
-  - difference: Micro and small labels are 9 and 10 px on Web but 11 pt on iOS, so micro and small look alike on iOS.
-    reason: 11 pt caption2 is the smallest Dynamic Type style iOS offers. Weight, tracking in em, and case still match.
   - difference: Glass tones blur with backdrop-filter on Web and with the ultraThin system material on iOS, so blur strength differs.
     reason: Each platform's native blur. The tint comes from the same material.chip tokens.
   - difference: The inverse tone blurs what is behind it on Web but not on iOS.

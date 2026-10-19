@@ -138,7 +138,7 @@ export function Dialog({
                       closeLabel ??
                       `Close ${typeof title === "string" ? title : "dialog"}`
                     }
-                    variant="ghost"
+                    variant="quiet"
                     disabled={busy}
                   >
                     <Icon name="close" size={18} />

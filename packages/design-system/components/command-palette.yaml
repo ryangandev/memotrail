@@ -6,24 +6,25 @@ platforms:
     path: apps/web/src/components/command-palette.tsx
     symbols: [CommandPalette]
   ios:
-    unavailable: iOS reaches search through the Search your trail action in each primary tab's header, which opens the Library's search, and moves between destinations with the tab bar, so a keyboard palette has nothing to add on a phone.
+    unavailable: iOS reaches search through the Search Library action in each primary tab's header, which opens the Library's search, and moves between destinations with the tab bar, so a keyboard palette has nothing to add on a phone.
 
-purpose: A keyboard-first search over the archive and the workspace's destinations, opened from anywhere with Command or Control K.
+purpose: A keyboard-first search over Entries and the workspace's destinations, with New Entry, opened from anywhere with Command or Control K.
 
 use:
-  - Jumping to a destination, such as Timeline or Settings, without the sidebar.
+  - Jumping to a destination, such as Timeline, Reviews, Import, Export, or Settings, without the sidebar.
+  - Starting a New Entry from the keyboard, which opens Quick Capture.
   - Finding an Entry by its title or text and opening it.
   - Handing a query to the Library's full search with its filters.
 
 avoid:
-  - Actions that change data. The palette only navigates.
+  - Actions that change data. The palette navigates, and New Entry only opens Quick Capture.
   - Filtering a list in place. Use SearchField beside the list.
 
 anatomy:
   scrim: The tinted, blurred layer behind the palette.
   container: The raised panel near the top of the window, or at the bottom on a phone.
   search: The large SearchField with its Escape hint.
-  sectionLabel: The small uppercase heading above each group of results.
+  sectionLabel: The small muted label above each group of results, such as Entries or Go to.
   row: A result or destination, with its icon tile, label, description, and chevron.
   iconTile: The square behind a row's icon.
   footer: The keyboard hints along the bottom edge.
@@ -48,8 +49,9 @@ tokens:
       paddingBlock: "{space.2}"
       border: "{color.border}"
     sectionLabel:
-      color: "{color.inkFaint}"
-      type: "{type.eyebrow}"
+      color: "{color.inkMuted}"
+      type: "{type.caption}"
+      fontWeight: "{font.weight.medium}"
     row:
       radius: "{radius.medium}"
       color: "{color.ink}"
@@ -76,22 +78,22 @@ content:
   lines: 1
   overflow: truncateTail
   casing: sentence
-  length: Destination labels are their page names, such as Timeline. Descriptions say what the page is for in a few words, such as Move through your story over time.
+  length: Destination labels are their page names, such as Timeline. Descriptions say what the page is for in a few words, such as Your Chapters and Entries across the years.
   notes:
     - The full-search row repeats the query, as Search all for followed by the quoted query.
-    - A failed search says so in the warm color and keeps the destinations below it.
+    - A failed search says so in the danger color and keeps the destinations below it.
 
 accessibility:
   role: A modal dialog labeled Search MemoTrail, with a search field and buttons for each row. The highlighted row carries aria-current.
-  label: Each row's label, followed by its description. The section label above archive results is a polite live region, so Searching your trail and Archive results are announced.
+  label: Each row's label, followed by its description. The section label above Entry results is a polite live region, so Searching and Entries are announced.
   focus: The search field takes focus when the palette opens. Up and Down move the highlighted row, Enter opens it, and Escape or a click outside closes the palette.
   minimumHitTarget: "{size.hitTarget}"
   dynamicType: Web uses fixed pixel sizes that grow with browser zoom. Below 720 px the palette moves to the bottom of the screen and hides its keyboard hints.
 
 platformDifferences:
   - difference: Web only. iOS has no command palette.
-    reason: Native screens reach search through the Search your trail action in each primary tab's header, and the tab bar already reaches every destination, so the palette's keyboard shortcut has no counterpart on a phone.
+    reason: Native screens reach search through the Search Library action in each primary tab's header, and the tab bar already reaches every destination, so the palette's keyboard shortcut has no counterpart on a phone.
 
 specimens:
   - id: command-palette-destinations
-    description: The palette as it opens, with the search field and every destination before a query is typed.
+    description: The palette as it opens, with the search field, New Entry, and every destination before a query is typed.
