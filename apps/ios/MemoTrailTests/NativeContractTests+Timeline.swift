@@ -49,9 +49,10 @@ extension NativeContractTests {
     XCTAssertNil(controller.loadErrorMessage)
     let rows = Dictionary(uniqueKeysWithValues: controller.items.map { ($0.id, $0) })
 
-    // An ordinary Entry is neither a Chapter nor a First Time, so it is not on the Timeline.
+    // An ordinary Entry is neither a Chapter nor a First Time, so it is not on the Timeline. The
+    // contract run shares one account, so other tests' Chapters and First Times may be there too.
     XCTAssertNil(rows[plain])
-    XCTAssertEqual(Set(rows.keys), [closed, open, swim, tokyo, remembered])
+    XCTAssertTrue(Set(rows.keys).isSuperset(of: [closed, open, swim, tokyo, remembered]))
 
     // A Chapter covers whole months from the first day to the day after the last.
     XCTAssertEqual(rows[closed]?.windowStart, "2021-03-01")
@@ -87,7 +88,9 @@ extension NativeContractTests {
         $0.layoutSource(titleWidth: estimateLabelWidth($0.displayTitle))
       }, referenceDate: controller.referenceDate)
     let placed = Set(layout.positions.map(\.id))
-    XCTAssertEqual(placed, Set([closed, open, swim, tokyo].map { $0.uuidString.lowercased() }))
+    XCTAssertTrue(
+      placed.isSuperset(of: [closed, open, swim, tokyo].map { $0.uuidString.lowercased() }))
+    XCTAssertFalse(placed.contains(remembered.uuidString.lowercased()))
     let openPosition = try XCTUnwrap(
       layout.positions.first { $0.id == open.uuidString.lowercased() })
     let today = layout.todayPercent / 100 * layout.canvasWidth
