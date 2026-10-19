@@ -269,7 +269,8 @@ Trashed Entries and Chapters do not appear as resurfaced memory cards.
 
 MemoTrail sends no daily notifications, reminders, streaks, or "one year ago" pushes.
 Retrieval on demand comes first.
-The only notice is an occasional one that a Chapter or year review is ready, and only while reviews are on.
+Reviews are made only when the user asks for one.
+The only notice is an occasional one on the Dashboard that a Chapter or year review can be made, and only while reviews are on.
 
 ## Experience and navigation
 
