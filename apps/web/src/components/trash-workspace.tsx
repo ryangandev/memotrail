@@ -16,17 +16,16 @@ import {
 } from "@/app/trash/actions";
 import styles from "@/components/trash-workspace.module.css";
 import { Icon } from "@/components/icon";
-import { Badge } from "@/components/badge";
 import { EmptyTrashControl } from "@/components/empty-trash-control";
 import { PageFrame } from "@/components/page-frame";
+import { SeparatedList } from "@/components/separated-list";
 import { ProgressiveImage } from "@/components/progressive-image";
 import type {
   TrashItem,
   TrashWorkspace as TrashWorkspaceData,
 } from "@/lib/data/trash";
 import { TRASH_PAGE_SIZE, trashPageHref } from "@/lib/data/trash-input";
-import { trashDate, trashRetention } from "@/lib/data/trash-dates";
-import { wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
+import { trashDate } from "@/lib/data/trash-dates";
 
 type PendingAction = {
   action: "delete" | "restore";
@@ -42,11 +41,6 @@ export function TrashWorkspace({
   const [confirmation, setConfirmation] = useState<TrashItem | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [batchBusy, setBatchBusy] = useState(false);
-  const firstItemNumber = (workspace.page - 1) * TRASH_PAGE_SIZE + 1;
-  const lastItemNumber = Math.min(
-    workspace.page * TRASH_PAGE_SIZE,
-    workspace.totalCount,
-  );
   const totalPages = Math.ceil(workspace.totalCount / TRASH_PAGE_SIZE);
 
   useEffect(() => {
@@ -89,128 +83,94 @@ export function TrashWorkspace({
     }
   }
 
+  const showEmptyTrash = !workspace.loadError && workspace.totalCount > 0;
+
   return (
     <PageFrame width="list">
       <PageHeader
-        title={<>Trash</>}
+        title="Trash"
+        meta="Removed Entries and photos stay restorable for 30 days."
         action={
-          <>
-            <div className={styles.retentionBadge}>
-              <Icon name="clock" size={18} />
-              <span>
-                <strong>30-day retention</strong>
-                <small>Dates are shown per item</small>
-              </span>
-            </div>
-          </>
+          showEmptyTrash ? (
+            <span className={styles.emptyTrash}>
+              <EmptyTrashControl
+                disabled={Boolean(pending) || Boolean(confirmation)}
+                reviewsExist={workspace.reviewsExist}
+                onBusy={setBatchBusy}
+                onResult={announceResult}
+                onFinish={() => {
+                  if (workspace.page > 1) router.push("/trash");
+                  else router.refresh();
+                }}
+              />
+            </span>
+          ) : null
         }
       />
 
-      <aside className={styles.retentionNote}>
-        <Icon name="archive" size={19} />
-        <p>
-          Items remain recoverable during their retention window. Reaching the
-          shown date makes an item eligible for cleanup, but this screen does
-          not claim it was automatically deleted.
-        </p>
-      </aside>
-
-      {!workspace.loadError && workspace.totalCount > 0 ? (
-        <div className={styles.actionRow}>
-          <EmptyTrashControl
-            disabled={Boolean(pending) || Boolean(confirmation)}
-            reviewsExist={workspace.reviewsExist}
-            onBusy={setBatchBusy}
-            onResult={announceResult}
-            onFinish={() => {
-              if (workspace.page > 1) router.push("/trash");
-              else router.refresh();
-            }}
-          />
-        </div>
-      ) : null}
-
       {workspace.loadError ? (
-        <div className={styles.emptyState}>
-          <EmptyState
-            title={<>Trash is unavailable</>}
-            description={<>{workspace.loadError}</>}
-            icon={
-              <>
-                <Icon name="refresh" size={25} />
-              </>
-            }
-          />
-        </div>
+        <EmptyState
+          title="Trash is unavailable"
+          description={workspace.loadError}
+          icon={<Icon name="refresh" size={20} />}
+        />
       ) : workspace.items.length === 0 ? (
-        <div className={styles.emptyState}>
-          <EmptyState
-            title={<>Nothing in Trash</>}
-            description={
-              <>
-                Removed Entries and individual photos will appear here. Legacy
-                records remain recoverable too.
-              </>
-            }
-            icon={
-              <>
-                <Icon name="trash" size={25} />
-              </>
-            }
-          />
-        </div>
+        <EmptyState
+          title="Nothing in Trash"
+          description="Removed Entries and individual photos will appear here."
+          icon={<Icon name="trash" size={20} />}
+        />
       ) : (
         <>
-          <div className={styles.listSummary}>
-            <span>
-              {firstItemNumber}-{lastItemNumber} of {workspace.totalCount}
-            </span>
-            <small>Newest removals first</small>
-          </div>
-          <div className={styles.trashList}>
+          <div className={styles.list}>
             {workspace.items.map((item) => {
               const isPending = pending?.itemId === item.id;
+              const expired =
+                new Date(item.expiresAt).getTime() <=
+                new Date(workspace.renderedAt).getTime();
 
               return (
-                <article
-                  className={styles.trashCard}
-                  key={`${item.kind}-${item.id}`}
-                >
-                  {item.imageUrl ? (
-                    <div className={styles.itemImage}>
-                      <ProgressiveImage
-                        alt=""
-                        sizes="(max-width: 720px) 88px, 124px"
-                        src={item.imageUrl}
-                      />
-                    </div>
-                  ) : (
-                    <div className={styles.itemGlyph}>
-                      <Icon name={iconForKind(item.kind)} size={23} />
-                    </div>
-                  )}
-
-                  <div className={styles.itemBody}>
-                    <div className={styles.itemMeta}>
-                      <Badge tone="warm">{labelForItem(item)}</Badge>
+                <article className={styles.row} key={`${item.kind}-${item.id}`}>
+                  <div className={styles.body}>
+                    <h2 className={styles.title}>
+                      {item.wikiItemSubtype === "chapter" ? (
+                        <span
+                          aria-label="Chapter"
+                          className={styles.kindIcon}
+                          role="img"
+                        >
+                          <Icon name="timeline" size={16} />
+                        </span>
+                      ) : null}
+                      <span className={styles.titleText}>{item.title}</span>
+                    </h2>
+                    {item.detail ? (
+                      <p className={styles.detail}>{item.detail}</p>
+                    ) : null}
+                    <SeparatedList className={styles.facts}>
                       <time dateTime={item.deletedAt}>
                         Removed {trashDate(item.deletedAt, workspace.timezone)}
                       </time>
-                    </div>
-                    <h2>{item.title}</h2>
-                    {item.detail ? <p>{item.detail}</p> : null}
-                    <div className={styles.retentionLine}>
-                      <Icon name="clock" size={14} />
-                      <span>
-                        {trashRetention(item.expiresAt, workspace.renderedAt)}
-                      </span>
                       <time dateTime={item.expiresAt}>
+                        {expired
+                          ? "Eligible for cleanup since "
+                          : "Restorable through "}
                         {trashDate(item.expiresAt, workspace.timezone)}
                       </time>
-                    </div>
+                    </SeparatedList>
                   </div>
 
-                  <div className={styles.itemActions}>
+                  {item.imageUrl ? (
+                    <div className={styles.thumb}>
+                      <ProgressiveImage
+                        alt=""
+                        sizes="48px"
+                        src={item.imageUrl}
+                      />
+                    </div>
+                  ) : null}
+
+                  <div className={styles.actions}>
                     <Button
                       variant="secondary"
                       disabled={Boolean(pending) || batchBusy}
@@ -242,15 +202,15 @@ export function TrashWorkspace({
               {workspace.page > 1 ? (
                 <Link href={trashPageHref(workspace.page - 1)}>Previous</Link>
               ) : (
-                <span>Previous</span>
+                <span />
               )}
-              <small>
+              <span>
                 Page {workspace.page} of {totalPages}
-              </small>
+              </span>
               {workspace.page < totalPages ? (
                 <Link href={trashPageHref(workspace.page + 1)}>Next</Link>
               ) : (
-                <span>Next</span>
+                <span />
               )}
             </nav>
           ) : null}
@@ -272,7 +232,6 @@ export function TrashWorkspace({
               This cannot be undone.
             </>
           }
-          eyebrow={<>Permanent action</>}
           busy={Boolean(pending)}
           onOpenChange={(open) => {
             if (!open) setConfirmation(null);
@@ -311,24 +270,10 @@ function announceResult(result: TrashActionResult) {
   else notify.success(result.message);
 }
 
-function iconForKind(kind: TrashItem["kind"]): "photo" | "timeline" {
-  return kind === "attachment" ? "photo" : "timeline";
-}
-
-function labelForItem(item: TrashItem) {
-  if (item.kind === "attachment") {
-    return "Photo";
-  }
-
-  return item.wikiItemSubtype
-    ? wikiItemSubtypeLabel(item.wikiItemSubtype)
-    : "Entry";
-}
-
 function deletionDescription(item: TrashItem) {
   if (item.kind === "attachment") {
-    return "The private photo file and its attachment record will be removed.";
+    return "The photo will be removed.";
   }
 
-  return "The Entry, private photos, relationships, and specialized details will be removed.";
+  return "The Entry and its photos will be removed.";
 }

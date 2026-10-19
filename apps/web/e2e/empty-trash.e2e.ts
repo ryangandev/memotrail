@@ -134,7 +134,9 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     const open = page.getByRole("button", { name: "Empty Trash", exact: true });
     const dialog = page.getByRole("dialog");
     await open.click();
-    await expect(dialog).toContainText("Empty 31 items from Trash?");
+    await expect(dialog).toContainText(
+      "Delete 30 Entries and 1 photo forever?",
+    );
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
@@ -155,7 +157,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       ).error,
     ).toBeNull();
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
       page.getByText(/0 of 31 items confirmed deleted/),
@@ -164,7 +166,9 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
     await open.click();
-    await expect(dialog).toContainText("Empty 30 items from Trash?");
+    await expect(dialog).toContainText(
+      "Delete 29 Entries and 1 photo forever?",
+    );
     await page.screenshot({
       caret: "initial",
       animations: "disabled",
@@ -187,7 +191,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       ).error,
     ).toBeNull();
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
@@ -224,9 +228,9 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     ).not.toBeNull();
     // The one item trashed after that list is counted as one item.
     await open.click();
-    await expect(dialog).toContainText("Empty 1 item from Trash?");
+    await expect(dialog).toContainText("Delete 1 Entry forever?");
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
@@ -299,9 +303,9 @@ workspaceTest(
       .getByRole("button", { name: "Empty Trash", exact: true })
       .click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog).toContainText("Empty 1 item from Trash?");
+    await expect(dialog).toContainText("Delete 1 Entry forever?");
     await dialog
-      .getByRole("button", { name: "Permanently delete confirmed items" })
+      .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await cleanupHeld;
     await page.goBack();

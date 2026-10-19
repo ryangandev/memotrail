@@ -38,9 +38,9 @@
   grid-template-columns: 1fr auto;
   align-items: end;
   gap: var(--mt-space-3);
-  padding: var(--mt-space-5);
+  margin-top: var(--mt-space-5);
+  padding-top: var(--mt-space-5);
   border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  background: var(--mt-color-surface-subtle);
 }
 
 .mergePanel > div:first-child {
@@ -59,7 +59,7 @@
 }
 
 .entryPanel {
-  padding: var(--mt-space-5);
+  padding-top: var(--mt-space-5);
   border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
@@ -95,29 +95,31 @@
 
 .entryList {
   display: grid;
-  gap: var(--mt-space-0-5);
-  margin-top: var(--mt-space-3);
+  margin: var(--mt-space-3) 0 0;
   padding: 0;
   list-style: none;
+}
+
+.entryList li + li {
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .entryList a {
   display: grid;
   gap: var(--mt-space-0-75);
-  padding: var(--mt-space-3);
-  border-radius: var(--mt-radius-small);
+  padding: var(--mt-space-3) 0;
   color: var(--mt-color-ink);
   text-decoration: none;
-  transition: background var(--mt-motion-quick);
 }
 
-.entryList a:hover,
-.entryList a:focus-visible {
-  background: var(--mt-color-surface-subtle);
+.entryList a:hover strong,
+.entryList a:focus-visible strong {
+  color: var(--mt-color-accent);
 }
 
 .entryList strong {
   overflow: hidden;
+  transition: color var(--mt-motion-quick);
   font-size: var(--mt-font-size-label);
   font-weight: var(--mt-font-weight-medium);
   text-overflow: ellipsis;
@@ -145,7 +147,7 @@
   justify-content: space-between;
   gap: var(--mt-space-3);
   margin-top: var(--mt-space-3);
-  padding: 0 var(--mt-space-3);
+  padding: 0;
   border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-accent);
   font-size: var(--mt-font-size-label);
@@ -170,7 +172,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .entryList a {
+  .entryList strong {
     transition: none;
   }
 }

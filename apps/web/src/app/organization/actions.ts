@@ -23,7 +23,7 @@ export async function saveTag(input: TagInput): Promise<string | null> {
     return `Use a tag name up to ${tagNameLengthLimit} characters.`;
   }
   const context = await getAuthenticatedContext();
-  if (!context) return "Sign in again to organize your archive.";
+  if (!context) return "Sign in again to manage your tags.";
   const result = await context.client.rpc("save_tag", {
     p_expected_revision: input.revision,
     p_id: input.id,
@@ -53,7 +53,7 @@ export async function mergeTags(input: {
     return "Choose a different destination tag.";
   }
   const context = await getAuthenticatedContext();
-  if (!context) return "Sign in again to organize your archive.";
+  if (!context) return "Sign in again to manage your tags.";
   const result = await context.client.rpc("merge_tags", {
     p_source_id: input.source.id,
     p_source_revision: input.source.revision,
@@ -73,7 +73,7 @@ export async function deleteUnusedTag(
 ): Promise<string | null> {
   if (!validTagIdentity(input)) return "Choose a valid tag.";
   const context = await getAuthenticatedContext();
-  if (!context) return "Sign in again to organize your archive.";
+  if (!context) return "Sign in again to manage your tags.";
   const result = await context.client.rpc("delete_unused_tag", {
     p_expected_revision: input.revision,
     p_id: input.id,
