@@ -222,7 +222,10 @@ test("a saved capture this version cannot read is kept, listed, and discarded on
     composer.getByRole("textbox", { name: "Entry text", exact: true }),
   ).toBeVisible({ timeout: 90_000 });
 
-  const indicator = page.locator("main > header").getByText("1 unreadable");
+  const indicator = page
+    .locator("[data-ui-sync-status]")
+    .filter({ visible: true })
+    .getByText("1 unreadable");
   await expect(indicator).toBeVisible();
   const pending = page.locator("main").getByRole("region", {
     name: "Pending sync",
@@ -302,7 +305,8 @@ async function saveCapture(page: Page, composer: Locator, text: string) {
 
 function pendingIndicator(page: Page) {
   return page
-    .locator("main > header")
+    .locator("[data-ui-sync-status]")
+    .filter({ visible: true })
     .getByText(/^\d+ (pending|not accepted)( · \d+ not accepted)?$/);
 }
 

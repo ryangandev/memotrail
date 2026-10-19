@@ -143,9 +143,10 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   await capture.getByRole("button", { name: "Close quick capture" }).click();
   await expect(capture).toBeHidden();
 
-  const indicator = page
-    .locator("main > header")
-    .getByRole("button", { name: "1 pending", exact: true });
+  const indicator = page.getByRole("button", {
+    name: "1 pending",
+    exact: true,
+  });
   await expect(indicator).toHaveAttribute("aria-haspopup", "dialog");
   const attemptsBeforeOpening = attempts.for("Waiting for MemoTrail");
   await indicator.click();
@@ -300,7 +301,10 @@ for (const late of [false, true])
   });
 
 function pendingIndicator(page: Page) {
-  return page.locator("main > header").getByText(/^\d+ pending$/);
+  return page
+    .locator("[data-ui-sync-status]")
+    .filter({ visible: true })
+    .getByText(/^\d+ pending$/);
 }
 
 /** Counts server action requests that carry a queued capture's text. */

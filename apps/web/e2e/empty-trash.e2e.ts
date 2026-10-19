@@ -270,7 +270,7 @@ workspaceTest(
     ).toBeNull();
     await page.goto("/library");
     await page
-      .getByRole("navigation", { name: "Primary navigation", exact: true })
+      .getByRole("navigation", { name: "Workspace tools", exact: true })
       .getByRole("link", { name: "Trash", exact: true })
       .click();
     await expect(page).toHaveURL("/trash");

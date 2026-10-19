@@ -30,15 +30,14 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
     name: "Entry text",
     exact: true,
   });
+  // The dock holds the only New entry and Search controls; no header repeats them.
   await expect(
-    page.locator("main > header").getByRole("button", { name: "New entry" }),
-  ).toHaveCount(0);
+    page.getByRole("button", { name: "New entry", exact: true }),
+  ).toHaveCount(1);
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(
-    page
-      .locator("main > header")
-      .getByRole("button", { name: "Search your trail" }),
-  ).toHaveCount(0);
+    page.getByRole("button", { name: "Search your trail", exact: true }),
+  ).toHaveCount(1);
   const triggerBox = (await trigger.boundingBox())!;
   const searchBox = (await search.boundingBox())!;
   expect(triggerBox.y + triggerBox.height).toBeCloseTo(936, 0);

@@ -215,6 +215,58 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
   });
 });
 
+test("toasts rise above the dock and the phone tab bar", async ({
+  page,
+  workspace,
+}) => {
+  expect(workspace.owner).toBeTruthy();
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await page.goto("/library");
+    await page.getByRole("button", { name: "New entry", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
+    await dialog
+      .getByRole("textbox", { name: "Entry text", exact: true })
+      .fill(`A note at ${viewport.width} px.`);
+    await dialog.getByRole("button", { name: "Save", exact: true }).click();
+    const toast = page
+      .locator("[data-sonner-toast]")
+      .filter({ hasText: "Saved to Library." });
+    await expect(toast).toBeVisible();
+    await dialog
+      .getByRole("button", { name: "Close quick capture", exact: true })
+      .click();
+    await expect(dialog).toBeHidden();
+    await toast.evaluate((element) =>
+      Promise.allSettled(
+        element.getAnimations().map((animation) => animation.finished),
+      ),
+    );
+
+    const toastBox = (await toast.boundingBox())!;
+    const dockBox = (await page
+      .getByRole("button", { name: "New entry", exact: true })
+      .boundingBox())!;
+    expect(
+      toastBox.y + toastBox.height,
+      `the toast clears the dock at ${viewport.width} px`,
+    ).toBeLessThanOrEqual(dockBox.y);
+    if (viewport.width <= 720) {
+      const tabBarBox = (await page
+        .getByRole("navigation", { name: "Mobile navigation" })
+        .boundingBox())!;
+      expect(toastBox.y + toastBox.height).toBeLessThanOrEqual(tabBarBox.y);
+    }
+    await page.screenshot({
+      animations: "disabled",
+      path: test.info().outputPath(`memotrail-toast-${viewport.width}.png`),
+    });
+  }
+});
+
 function contrast(first: number[], second: number[]) {
   const luminance = (rgb: number[]) =>
     rgb

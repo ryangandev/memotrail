@@ -60,7 +60,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
 
     await page.goto("/");
     await page
-      .getByRole("navigation", { name: "Settings navigation" })
+      .getByRole("navigation", { name: "Workspace tools" })
       .getByRole("link", { name: "Settings", exact: true })
       .click();
 

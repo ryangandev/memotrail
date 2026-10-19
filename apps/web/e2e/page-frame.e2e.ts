@@ -4,16 +4,21 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
+// Content widths at 1800 by 900, where the workspace beside the 240 px sidebar is 1560 px wide.
+// Reading and list frames start 64 px into it, and full keeps a 40 px edge on both sides.
+// A detail page, with a back link, has a larger title.
 const pageFamilies = [
-  { path: "/library", variant: "standard", width: 960 },
-  { path: "/settings", variant: "compact", width: 880 },
-  { path: "/settings/export", variant: "compact", width: 880 },
-  { path: "/search", variant: "standard", width: 960 },
-  { path: "/tags", variant: "standard", width: 960 },
-  { path: "/trash", variant: "standard", width: 960 },
-  { path: "/", variant: "wide", width: 1080 },
-  { path: "/first-times", variant: "wide", width: 1080 },
-  { path: "/timeline", variant: "canvas", width: 1180 },
+  { path: "/library", width: "list", content: 960 },
+  { path: "/settings", width: "reading", content: 720 },
+  { path: "/settings/export", width: "reading", content: 720, detail: true },
+  { path: "/settings/import", width: "reading", content: 720 },
+  { path: "/search", width: "list", content: 960 },
+  { path: "/tags", width: "list", content: 960 },
+  { path: "/trash", width: "list", content: 960 },
+  { path: "/reviews", width: "list", content: 960 },
+  { path: "/", width: "list", content: 960 },
+  { path: "/first-times", width: "list", content: 960 },
+  { path: "/timeline", width: "full", content: 1480 },
 ] as const;
 
 const focusedViewPaths = new Set(["/first-times"]);
@@ -73,32 +78,36 @@ test("authenticated pages use the shared responsive page frame", async ({
     await page.setViewportSize({ width: 1800, height: 900 });
     for (const family of pageFamilies) {
       await page.goto(family.path);
-      // The route loading fallback is a wide PageFrame too; measure the page, not the fallback.
+      // The route loading fallback is a PageFrame too; measure the page, not the fallback.
       await expect(
         page.getByRole("status", { name: "Loading page" }),
       ).toHaveCount(0);
       const frame = page
-        .locator(`[data-page-frame="${family.variant}"]`)
+        .locator(`[data-page-frame="${family.width}"]`)
         .filter({ visible: true });
       await expect(frame).toHaveCount(1);
       await expect(frame).toBeVisible();
-      for (const title of await frame
-        .locator("[data-ui-page-header] h1")
-        .all()) {
-        const canonicalSize = await title.evaluate((element) =>
-          getComputedStyle(element)
-            .getPropertyValue("--mt-font-size-display")
-            .trim(),
-        );
-        await expect(title).toHaveCSS("font-size", canonicalSize);
-        await expect(title).toHaveCSS("margin-top", "0px");
-      }
+      const title = frame.locator("[data-ui-page-header] h1");
+      await expect(title).toHaveCount(1);
+      await expect(title).toHaveCSS(
+        "font-size",
+        "detail" in family ? "34px" : "32px",
+      );
+      await expect(title).toHaveCSS("margin-top", "0px");
+      // Every page starts at the same left edge, so its title never moves sideways.
       // A route transition can measure the frame before layout settles.
       await expect
         .poll(() =>
-          frame.evaluate((element) => element.getBoundingClientRect().width),
+          frame.evaluate((element) => {
+            const content = element.querySelector("[data-ui-page-header]")!;
+            const box = content.getBoundingClientRect();
+            return [Math.round(box.left), Math.round(box.width)];
+          }),
         )
-        .toBeCloseTo(family.width, 0);
+        .toEqual([
+          family.width === "full" ? 240 + 40 : 240 + 64,
+          family.content,
+        ]);
       if (focusedViewPaths.has(family.path)) {
         await expectFocusedViewContentGap(frame, 32);
       }
@@ -113,26 +122,21 @@ test("authenticated pages use the shared responsive page frame", async ({
         page.getByRole("status", { name: "Loading page" }),
       ).toHaveCount(0);
       const frame = page
-        .locator(`[data-page-frame="${family.variant}"]`)
+        .locator(`[data-page-frame="${family.width}"]`)
         .filter({ visible: true });
       await expect(frame).toHaveCount(1);
       await expect(frame).toBeVisible();
-      for (const title of await frame
-        .locator("[data-ui-page-header] h1")
-        .all()) {
-        const canonicalSize = await title.evaluate((element) =>
-          getComputedStyle(element)
-            .getPropertyValue("--mt-font-size-title")
-            .trim(),
-        );
-        await expect(title).toHaveCSS("font-size", canonicalSize);
-        await expect(title).toHaveCSS("margin-top", "0px");
-      }
+      const title = frame.locator("[data-ui-page-header] h1");
+      await expect(title).toHaveCSS("font-size", "26px");
+      await expect(title).toHaveCSS("margin-top", "0px");
+      // On a phone every width runs the full screen inside the 16 px gutters.
       expect(
-        await frame.evaluate(
-          (element) => element.getBoundingClientRect().width,
-        ),
-      ).toBeCloseTo(366, 0);
+        await frame.evaluate((element) => {
+          const content = element.querySelector("[data-ui-page-header]")!;
+          const box = content.getBoundingClientRect();
+          return [Math.round(box.left), Math.round(box.width)];
+        }),
+      ).toEqual([16, 358]);
       if (focusedViewPaths.has(family.path)) {
         await expectFocusedViewContentGap(frame, 24);
       }

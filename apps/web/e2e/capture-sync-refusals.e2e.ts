@@ -411,7 +411,8 @@ function retryButton(page: Page) {
 
 function pendingIndicator(page: Page) {
   return page
-    .locator("main > header")
+    .locator("[data-ui-sync-status]")
+    .filter({ visible: true })
     .getByText(/^\d+ (pending|not accepted)( · \d+ not accepted)?$/);
 }
 

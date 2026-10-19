@@ -50,7 +50,7 @@ test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
     .getByRole("button", { name: "Search your trail", exact: true })
     .click();
   await page
-    .getByRole("searchbox", { name: "Search your archive" })
+    .getByRole("searchbox", { name: "Search MemoTrail" })
     .press("ControlOrMeta+b");
   await page.keyboard.press("Escape");
   await expect(toggle).toBeVisible();

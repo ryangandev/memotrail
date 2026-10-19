@@ -382,7 +382,7 @@ function queuedCaptures(page: Page, owner: string) {
   }, owner);
 }
 
-// Records whether any pending list or the header pending indicator appears,
+// Records whether any pending list or the pending sync indicator appears,
 // because an online save's first attempt must not surface either.
 async function watchPendingSyncSurfaces(page: Page) {
   await page.evaluate(() => {
@@ -392,7 +392,7 @@ async function watchPendingSyncSurfaces(page: Page) {
         (heading) => heading.textContent === "Pending sync",
       );
       const indicated = [
-        ...document.querySelectorAll("main > header button"),
+        ...document.querySelectorAll("[data-ui-sync-status]"),
       ].some((button) => /^\d+ pending$/.test(button.textContent ?? ""));
       if (listed || indicated) {
         sessionStorage.setItem("pending-sync-seen", "yes");

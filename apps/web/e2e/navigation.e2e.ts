@@ -237,70 +237,65 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const primaryNavigation = shell.getByRole("navigation", {
       name: "Primary navigation",
     });
-    await expect(
-      primaryNavigation.getByRole("link", { name: "Library", exact: true }),
-    ).toBeVisible();
-    const goBack = page.getByRole("button", { name: "Go back" });
-    const goForward = page.getByRole("button", { name: "Go forward" });
-    await expect(goBack).toBeDisabled();
-    await expect(goForward).toBeDisabled();
+    const workspaceTools = shell.getByRole("navigation", {
+      name: "Workspace tools",
+    });
+    // Three groups without labels: the daily places, the focused views after a rule, and the
+    // tools at the sidebar's foot.
+    await expect(primaryNavigation.getByRole("link")).toHaveText([
+      "Dashboard",
+      "Timeline",
+      "Library",
+      "First Times",
+      "Reviews",
+      "Tags",
+    ]);
+    await expect(workspaceTools.getByRole("link")).toHaveText([
+      "Import",
+      "Trash",
+      "Settings",
+    ]);
+    for (const label of ["Focused views", "Organize", "Navigation"])
+      await expect(shell.getByText(label, { exact: true })).toHaveCount(0);
+    // Homes and Vehicles are Chapters now, and captures land in Library, so none has a link.
+    for (const name of ["Homes", "Vehicles", "Inbox"])
+      await expect(shell.getByRole("link", { name, exact: true })).toHaveCount(
+        0,
+      );
+    // The current destination is the raised row with a hairline ring.
+    const dashboardLink = primaryNavigation.getByRole("link", {
+      name: "Dashboard",
+      exact: true,
+    });
+    await expect(dashboardLink).toHaveAttribute("aria-current", "page");
+    await expect(dashboardLink).toHaveCSS("box-shadow", /0px 0px 0px 1px/);
+    // Desktop has no top bar and so no history arrows; the panel control follows the logo.
+    await expect(page.locator("main > header")).toBeHidden();
+    await expect(page.getByRole("button", { name: "Go back" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Go forward" })).toHaveCount(
+      0,
+    );
+    const panelControl = shell.getByRole("button", {
+      name: "Collapse sidebar",
+    });
+    await page.keyboard.press("Tab");
+    await expect(panelControl).toBeFocused();
+    await expect(panelControl).toHaveCSS("outline-style", "none");
+    await expect(panelControl).toHaveCSS("box-shadow", /inset/);
     await primaryNavigation
       .getByRole("link", { name: "Library", exact: true })
       .click();
     await expect(page).toHaveURL(/\/library$/);
-    await expect(goBack).toBeEnabled();
-    await expect(goForward).toBeDisabled();
-    await goBack.hover();
-    await expect(goBack).toHaveCSS(
-      "transition-property",
-      "color, background-color",
-    );
-    await expect(goBack.locator("svg")).toHaveCSS("transform", "none");
-    await goBack.focus();
-    await page.keyboard.press("Tab");
-    const panelControl = page.getByRole("button", { name: "Collapse sidebar" });
-    await expect(panelControl).toBeFocused();
-    await expect(panelControl).toHaveCSS("border-radius", "6px");
-    const panelFocusShadow = await panelControl.evaluate(
-      (element) => getComputedStyle(element).boxShadow,
-    );
-    await page.keyboard.press("Shift+Tab");
-    await expect(goBack).toBeFocused();
-    await expect(goBack).toHaveCSS("outline-style", "none");
-    await expect(goBack).toHaveCSS("box-shadow", panelFocusShadow);
-    await goBack.screenshot({
-      path: test.info().outputPath("memotrail-history-focus.png"),
-    });
-    await goBack.click();
-    await expect(page).toHaveURL(/\/$/);
-    await expect(goForward).toBeEnabled();
-    await goBack.focus();
-    await page.keyboard.press("Tab");
-    await expect(goForward).toBeFocused();
-    await expect(goForward).toHaveCSS("outline-style", "none");
-    await expect(goForward).toHaveCSS("box-shadow", panelFocusShadow);
-    await goForward.click();
-    await expect(page).toHaveURL(/\/library$/);
-    await primaryNavigation
-      .getByRole("link", { name: "Dashboard", exact: true })
-      .click();
-    await expect(page).toHaveURL(/\/$/);
-    await expect(goForward).toBeDisabled();
     await expect(
-      primaryNavigation.getByRole("link", { name: "Inbox", exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      shell.getByText("Focused views", { exact: true }),
-    ).toBeVisible();
-    // Homes and Vehicles are Chapters now, so the sidebar has no section for them.
-    for (const name of ["Homes", "Vehicles"])
-      await expect(shell.getByRole("link", { name, exact: true })).toHaveCount(
-        0,
-      );
-    await expect(shell.getByText("Organize", { exact: true })).toBeVisible();
+      primaryNavigation.getByRole("link", { name: "Library", exact: true }),
+    ).toHaveAttribute("aria-current", "page");
+    await page.goBack();
+    await expect(page).toHaveURL(/\/$/);
     await expect(shell.getByRole("button", { name: "New entry" })).toHaveCount(
       0,
     );
+    // The account row at the sidebar's foot says the workspace is synced.
+    await expect(shell.getByText("Synced", { exact: true })).toBeVisible();
     await expect(page.getByText("Saved", { exact: true })).toHaveCount(0);
     const searchShortcut = page.getByRole("button", {
       name: "Search your trail",
@@ -314,7 +309,6 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(searchShortcut).not.toContainText("Search your trail");
     await expect(newEntryShortcut).toContainText("⌘ J");
     await expect(newEntryShortcut).toContainText("What’s on your mind?");
-    // Captures land in Library, so the top bar keeps no Inbox control.
     await expect(page.getByRole("link", { name: /Inbox/ })).toHaveCount(0);
     const [dockBox, searchBox] = await Promise.all([
       newEntryShortcut.boundingBox(),
@@ -322,22 +316,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ]);
     expect(dockBox!.x + dockBox!.width).toBeLessThan(searchBox!.x);
     expect(dockBox!.y).toBeCloseTo(searchBox!.y, 0);
-    await expect(
-      page
-        .locator("main > header")
-        .getByRole("button", { name: "New entry", exact: true }),
-    ).toHaveCount(0);
-    await expect(
-      page
-        .locator("main > header")
-        .getByRole("button", { name: "Search your trail", exact: true }),
-    ).toHaveCount(0);
     await expect(newEntryShortcut).toHaveCSS("backdrop-filter", /blur/);
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
     await expect(
-      shell
-        .getByRole("navigation", { name: "Settings navigation" })
-        .getByRole("link", { name: "Settings", exact: true }),
+      workspaceTools.getByRole("link", { name: "Settings", exact: true }),
     ).toHaveCount(1);
     await expect(
       shell.getByRole("note", { name: "Private cloud sync" }),
@@ -346,15 +328,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       shell.getByRole("note", { name: "Private cloud sync" }),
     ).toHaveCount(0);
-    const sidebarDividers = shell.getByRole("separator");
-    await expect(sidebarDividers).toHaveCount(3);
-    const dividerMargins = await sidebarDividers.evaluateAll((elements) =>
-      elements.map((element) => {
-        const style = getComputedStyle(element);
-        return [style.marginTop, style.marginBottom];
-      }),
-    );
-    expect(dividerMargins.at(-1)).toEqual(dividerMargins[0]);
+    // One rule separates the daily places from the focused views.
+    await expect(shell.getByRole("separator")).toHaveCount(1);
     await shell.evaluate((element) => {
       element.setAttribute("data-shell-instance", "kept");
     });
@@ -391,7 +366,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeIconLeft = await homeLink
       .locator("svg")
       .evaluate((element) => element.getBoundingClientRect().left);
-    expect(Math.round(homeIconLeft - brandMarkLeft)).toBe(4);
+    expect(Math.round(homeIconLeft - brandMarkLeft)).toBe(2);
     const brandTop = await brand.evaluate(
       (element) => element.getBoundingClientRect().top,
     );
@@ -402,9 +377,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       element.scrollTop = element.scrollHeight;
     });
     await expect(
-      page
-        .getByRole("navigation", { name: "Settings navigation" })
-        .getByRole("link", { name: "Settings", exact: true }),
+      workspaceTools.getByRole("link", { name: "Settings", exact: true }),
     ).toBeVisible();
     await expect(brand).toBeVisible();
     await expect(capture).toBeVisible();
@@ -455,21 +428,24 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0)),
     ).toBeGreaterThanOrEqual(7);
     await expect(homeCaptureHeading).toBeVisible();
-    const collapsedBrand = shell.getByRole("link", {
-      name: "MemoTrail dashboard",
+    // Collapsed, the logo is the toggle's resting face: only the toggle is reachable, and it
+    // shows itself over the logo on focus.
+    const expandSidebar = shell.getByRole("button", {
+      name: "Expand sidebar",
     });
-    await expect(collapsedBrand).toBeVisible();
+    await expect(
+      shell.getByRole("link", { name: "MemoTrail dashboard" }),
+    ).toHaveCount(0);
     await homeLink.focus();
     await page.keyboard.press("Shift+Tab");
-    await expect(collapsedBrand).toBeFocused();
-    await expect(collapsedBrand).toHaveCSS("outline-style", "none");
-    await expect(collapsedBrand).toHaveCSS("box-shadow", /inset/);
-    await expect(
-      collapsedBrand.getByText("MemoTrail", { exact: true }),
-    ).toBeHidden();
-    const logoBox = await collapsedBrand.locator("svg").boundingBox();
-    expect(logoBox?.width).toBe(29);
-    expect(logoBox?.height).toBe(29);
+    await expect(expandSidebar).toBeFocused();
+    await expect(expandSidebar).toHaveCSS("opacity", "1");
+    await expect(expandSidebar).toHaveCSS("box-shadow", /inset/);
+    const logoBox = await shell
+      .locator('a[aria-label="MemoTrail dashboard"] svg')
+      .boundingBox();
+    expect(logoBox?.width).toBe(24);
+    expect(logoBox?.height).toBe(24);
     await expect(homeLink.locator("svg")).toHaveCSS("width", "18px");
     await expect(homeLink.locator("svg")).toHaveCSS("height", "18px");
     expect(
@@ -479,24 +455,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
           ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0) / 2),
       ),
     ).toBeLessThanOrEqual(1);
-    const expandSidebar = page.getByRole("button", {
-      name: "Expand sidebar",
-    });
-    await expect(expandSidebar.locator("svg circle")).toHaveCount(3);
     await expect(expandSidebar.locator("svg")).toHaveAttribute("width", "18");
     await expect(expandSidebar.locator("svg")).toHaveAttribute("height", "18");
-    const [forwardBox, toggleBox] = await Promise.all([
-      goForward.boundingBox(),
-      expandSidebar.boundingBox(),
-    ]);
-    expect(toggleBox?.width).toBe(36);
-    expect(toggleBox?.height).toBe(36);
-    expect(toggleBox?.x).toBeGreaterThan(
-      (forwardBox?.x ?? 0) + (forwardBox?.width ?? 0),
-    );
-    await expect(
-      shell.getByRole("button", { name: "Expand sidebar" }),
-    ).toHaveCount(0);
     const collapsedLibrary = primaryNavigation.getByRole("link", {
       name: "Library",
       exact: true,
@@ -569,6 +529,21 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "Mobile navigation",
     });
     await expect(mobileNavigation.locator(":scope > *")).toHaveCount(4);
+    await expect(mobileNavigation.locator(":scope > *")).toHaveText([
+      "Dashboard",
+      "Timeline",
+      "Library",
+      "More",
+    ]);
+    // The phone top bar is 48 px with the logo, the sync status, and a 32 px avatar, and no
+    // history arrows.
+    const topBar = page.locator("main > header");
+    await expect(topBar).toHaveCSS("height", "48px");
+    await expect(topBar.getByText("Synced", { exact: true })).toBeVisible();
+    await expect(
+      topBar.getByRole("link", { name: /^Open settings for / }),
+    ).toHaveCSS("width", "32px");
+    await expect(page.getByRole("button", { name: "Go back" })).toHaveCount(0);
     const moreButton = mobileNavigation.getByRole("button", {
       name: "More destinations",
     });
@@ -577,10 +552,16 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "More destinations",
     });
     await expect(moreDestinations).toBeVisible();
-    for (const name of ["Homes", "Vehicles"])
-      await expect(
-        moreDestinations.getByRole("link", { name, exact: true }),
-      ).toHaveCount(0);
+    // More is a plain list of every other destination, in sidebar order.
+    await expect(moreDestinations.getByRole("link")).toHaveText([
+      "First Times",
+      "Reviews",
+      "Tags",
+      "Import",
+      "Trash",
+      "Settings",
+    ]);
+    await expect(moreDestinations.locator("svg")).toHaveCount(0);
     await moreDestinations.getByRole("link", { name: "Tags" }).click();
     await expect(page).toHaveURL(/\/tags$/);
     await expect(
@@ -601,8 +582,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await toggleSidebarAndMeasureMotion(
       page.getByRole("button", { name: "Expand sidebar" }),
     );
-    await expect(shell).toHaveCSS("width", "224px");
-    await expect(page.locator("main")).toHaveCSS("margin-left", "224px");
+    await expect(shell).toHaveCSS("width", "240px");
+    await expect(page.locator("main")).toHaveCSS("margin-left", "240px");
     // Reach the link by keyboard so it shows its keyboard focus ring.
     await homeLink.focus();
     await page.keyboard.press("Shift+Tab");
@@ -672,8 +653,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       page.getByRole("heading", { name: "Timeline", exact: true }),
     ).toBeVisible();
 
-    await shell
-      .getByRole("navigation", { name: "Settings navigation" })
+    await workspaceTools
       .getByRole("link", { name: "Settings", exact: true })
       .click();
     await expect(page).toHaveURL(/\/settings$/);
@@ -1035,24 +1015,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       .getByRole("link", { name: "Tags", exact: true })
       .click();
     await expect(page).toHaveURL(/\/tags$/);
-    await expect(goForward).toBeDisabled();
-    await goBack.click();
-    await expect(page).toHaveURL(/\/library$/);
-    await expect(goForward).toBeEnabled();
-    await goForward.click();
-    await expect(page).toHaveURL(/\/tags$/);
-    await goBack.click();
-    await expect(page).toHaveURL(/\/library$/);
-    await page.goto("/tags");
-    await expect(page).toHaveURL(/\/tags$/);
-    await expect(goBack).toBeEnabled();
-    await goBack.click();
-    await expect(page).toHaveURL(/\/library$/);
-    await expect(goForward).toBeEnabled();
-    await goForward.click();
-    await expect(page).toHaveURL(/\/tags$/);
     await page.goBack();
     await expect(page).toHaveURL(/\/library$/);
+    await page.goForward();
+    await expect(page).toHaveURL(/\/tags$/);
   } finally {
     releaseSlowNavigation();
     await page.close();
