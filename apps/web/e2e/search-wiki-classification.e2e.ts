@@ -153,7 +153,7 @@ test("Search filters Entries by record and descriptive tag", async ({
       visibleResult("Marina flat").getByRole("img", { name: "Chapter" }),
     ).toBeVisible();
     await expect(visibleResult("Marina memory")).toHaveCount(0);
-    await show.getByText("Entries", { exact: true }).click();
+    await show.getByRole("radio", { name: "Entries", exact: true }).click();
     await expect(page).toHaveURL(/type=entry/);
     await expect(visibleResult("Marina memory")).toBeVisible();
     await expect(visibleResult("Marina flat")).toHaveCount(0);

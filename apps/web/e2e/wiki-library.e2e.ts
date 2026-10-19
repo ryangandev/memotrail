@@ -179,7 +179,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await tagsButton.click();
     await expect(page.getByRole("group", { name: "Tags" })).toBeVisible();
     await tagsButton.click();
-    await show.getByText("Chapters", { exact: true }).click();
+    await show.getByRole("radio", { name: "Chapters", exact: true }).click();
     await expect(page).toHaveURL(/type=chapter/);
     await expect(show.getByRole("radio", { name: "Chapters" })).toBeChecked();
     await expect(
@@ -274,7 +274,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     expect(trashedReflection.error).toBeNull();
     expect(trashedReflection.data?.deleted_at).toBeTruthy();
 
-    await show.getByText("Chapters", { exact: true }).click();
+    await show.getByRole("radio", { name: "Chapters", exact: true }).click();
     await expect(page).toHaveURL(/type=chapter/);
     await expect(
       page.getByRole("link", { name: /Avery Street flat/ }),
@@ -289,7 +289,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(page).toHaveURL(/q=marina/);
     await expect(page).toHaveURL(/type=chapter/);
     await expect(search).toBeFocused();
-    await show.getByText("All", { exact: true }).click();
+    await show.getByRole("radio", { name: "All", exact: true }).click();
     await expect(page).not.toHaveURL(/type=/);
     await expect(search).toHaveValue("marina");
     await expect(
