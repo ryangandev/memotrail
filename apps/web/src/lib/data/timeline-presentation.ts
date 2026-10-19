@@ -87,13 +87,22 @@ export function timelineYearGroups(
 export function timelineRowDateLabel(item: TimelineItem, year: number) {
   if (item.isChapter) return `${timelineChapterSpanLabel(item)} · Chapter`;
   if (item.untitled) return null;
-  const label = occurrenceLabel(item.occurrence);
-  return item.occurrence.occurredLabel
+  const occurrence = item.occurrence;
+  // The list reads by day, so an exact moment leaves out its time.
+  const label = occurrenceLabel(
+    occurrence.datePrecision === "exact"
+      ? { ...occurrence, datePrecision: "day" }
+      : occurrence,
+  );
+  return occurrence.occurredLabel
     ? label
     : label.replace(new RegExp(`,? ${year}\\b`, "g"), "");
 }
 
-/** A Chapter's span, as "Sep 2026 to Oct 2026" or "Jan 2026 to now". */
+/**
+ * A Chapter's span by month, as "Sep 2026 to Oct 2026" or "Jan 2026 to now". A Chapter
+ * recorded only by year reads by year.
+ */
 export function timelineChapterSpanLabel(item: TimelineItem) {
   const occurrence = item.occurrence;
   if (occurrence.occurredLabel || !occurrence.occurredAt) {
@@ -102,9 +111,9 @@ export function timelineChapterSpanLabel(item: TimelineItem) {
   const point = {
     ...occurrence,
     datePrecision:
-      occurrence.datePrecision === "range"
-        ? ("day" as const)
-        : occurrence.datePrecision,
+      occurrence.datePrecision === "year"
+        ? ("year" as const)
+        : ("month" as const),
     occurredEnd: null,
   };
   const start = occurrenceLabel(point);

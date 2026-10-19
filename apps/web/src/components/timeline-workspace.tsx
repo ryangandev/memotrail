@@ -331,9 +331,16 @@ export function TimelineWorkspace({
                 options={zoomOptions}
                 value={zoom}
               />
-              <Button onClick={scrollToToday} type="button" variant="secondary">
-                Today
-              </Button>
+              {/* With nothing dated, the board already rests on today. */}
+              {layout.positions.length > 0 ? (
+                <Button
+                  onClick={scrollToToday}
+                  type="button"
+                  variant="secondary"
+                >
+                  Today
+                </Button>
+              ) : null}
               <Button
                 onClick={() => setSelection({ type: "chooser" })}
                 type="button"
@@ -398,15 +405,18 @@ export function TimelineWorkspace({
                     </span>
                   ))}
                 </div>
-                <div aria-hidden="true" className={styles.gridLines}>
-                  {ticks.map((tick) => (
-                    <span
-                      data-tick={tick.kind}
-                      key={tick.key}
-                      style={{ left: `${tick.leftPercent}%` }}
-                    />
-                  ))}
-                </div>
+                {/* An empty board keeps its sentence clear of the grid. */}
+                {items.length > 0 ? (
+                  <div aria-hidden="true" className={styles.gridLines}>
+                    {ticks.map((tick) => (
+                      <span
+                        data-tick={tick.kind}
+                        key={tick.key}
+                        style={{ left: `${tick.leftPercent}%` }}
+                      />
+                    ))}
+                  </div>
+                ) : null}
 
                 {items.length === 0 ? (
                   <div className={styles.emptyBand}>

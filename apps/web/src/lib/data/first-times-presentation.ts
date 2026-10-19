@@ -28,9 +28,14 @@ type FirstTimeRowSource = Pick<
  */
 export function firstTimeRowDateLabel(entry: FirstTimeRowSource) {
   if (entry.untitled) return null;
+  // The column reads by day, and a Chapter's span by month, so neither crowds the column.
+  const precision =
+    entry.datePrecision === "exact" ? "day" : entry.datePrecision;
   const occurrence = storedOccurrence({
     datePrecision:
-      entry.datePrecision === "exact" ? "day" : entry.datePrecision,
+      entry.isChapter && (precision === "day" || precision === "range")
+        ? "month"
+        : precision,
     occurredEnd: entry.occurredEnd,
     occurredLabel: entry.occurredLabel,
     occurredStart: entry.occurredStart,

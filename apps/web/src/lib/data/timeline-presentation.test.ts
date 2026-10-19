@@ -222,6 +222,21 @@ describe("the vertical Timeline", () => {
         2025,
       ),
     ).toBe("2025");
+    expect(
+      timelineRowDateLabel(
+        item({
+          occurrence: {
+            datePrecision: "exact",
+            occurredAt: "2025-11-14T19:30:00Z",
+            occurredEnd: null,
+            occurredLabel: null,
+            occurredTimezone: "UTC",
+          },
+          windowStart: "2025-11-14",
+        }),
+        2025,
+      ),
+    ).toBe("Nov 14");
   });
 
   it("gives an untitled First Time no date line, since its title is the date", () => {
@@ -252,6 +267,34 @@ describe("the vertical Timeline", () => {
       "Sep 2026 to Oct 2026 · Chapter",
     );
     expect(timelineChapterSpanLabel(chapter(null))).toBe("Sep 2026 to now");
+    expect(
+      timelineChapterSpanLabel(
+        item({
+          isChapter: true,
+          occurrence: {
+            datePrecision: "day",
+            occurredAt: "2026-09-02T16:00:00Z",
+            occurredEnd: "2026-10-17T16:00:00Z",
+            occurredLabel: null,
+            occurredTimezone: "UTC",
+          },
+        }),
+      ),
+    ).toBe("Sep 2026 to Oct 2026");
+    expect(
+      timelineChapterSpanLabel(
+        item({
+          isChapter: true,
+          occurrence: {
+            datePrecision: "year",
+            occurredAt: "2017-01-01T12:00:00Z",
+            occurredEnd: "2021-01-01T12:00:00Z",
+            occurredLabel: null,
+            occurredTimezone: "UTC",
+          },
+        }),
+      ),
+    ).toBe("2017 to 2021");
   });
 
   it("finds today's date in the owner's time zone", () => {

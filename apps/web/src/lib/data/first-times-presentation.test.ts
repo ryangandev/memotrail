@@ -88,6 +88,20 @@ describe("firstTimeRowDateLabel", () => {
         }),
       ),
     ).toBe("Sep 2021 - Jun 2023");
+    expect(
+      firstTimeRowDateLabel(
+        entry({
+          isChapter: true,
+          occurredEnd: "2023-06-30T16:00:00Z",
+          occurredStart: "2021-09-01T16:00:00Z",
+        }),
+      ),
+    ).toBe("Sep 2021 - Jun 2023");
+    expect(
+      firstTimeRowDateLabel(
+        entry({ isChapter: true, occurredStart: "2021-09-01T16:00:00Z" }),
+      ),
+    ).toBe("Since Sep 2021");
   });
 
   it("says Undated when there is no date to show", () => {
