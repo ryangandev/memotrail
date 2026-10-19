@@ -427,5 +427,327 @@ select ok(
   'Export never includes the search index'
 );
 
+-- Hybrid search: keyword and meaning matches fused by rank in search_wiki_items.
+insert into auth.users(id, email, raw_user_meta_data) values
+  ('10000000-0000-0000-0000-000000000803', 'hybrid-owner@memotrail.local', '{}'),
+  ('10000000-0000-0000-0000-000000000804', 'hybrid-other@memotrail.local', '{}');
+
+insert into public.entries(id, owner_id, title, body, occurred_start, date_precision, updated_at) values
+  ('81000000-0000-4000-8000-000000000001', '10000000-0000-0000-0000-000000000803', 'Bike repair', 'Fixed the commuter bike.', '2026-06-01T12:00:00Z', 'day', '2026-10-01T12:00:00Z'),
+  ('81000000-0000-4000-8000-000000000002', '10000000-0000-0000-0000-000000000803', 'The mechanic', 'The quiet man who tunes rims.', '2020-05-01T12:00:00Z', 'day', '2026-10-02T12:00:00Z'),
+  ('81000000-0000-4000-8000-000000000003', '10000000-0000-0000-0000-000000000803', 'Beach', 'Ran by the sea.', '2026-07-01T12:00:00Z', 'day', '2026-10-03T12:00:00Z'),
+  ('81000000-0000-4000-8000-000000000004', '10000000-0000-0000-0000-000000000803', 'In the bin', 'Thrown away note.', '2026-06-02T12:00:00Z', 'day', '2026-10-04T12:00:00Z'),
+  ('81000000-0000-4000-8000-000000000006', '10000000-0000-0000-0000-000000000803', 'Formatted note', 'Plain words only.', '2026-06-03T12:00:00Z', 'day', '2026-10-05T12:00:00Z'),
+  ('81000000-0000-4000-8000-000000000007', '10000000-0000-0000-0000-000000000803', 'Changed later', 'Spokes before the edit.', '2026-06-04T12:00:00Z', 'day', '2026-10-06T12:00:00Z'),
+  ('81000000-0000-4000-8000-000000000008', '10000000-0000-0000-0000-000000000804', 'Not yours', 'Somebody else''s spokes.', '2026-06-05T12:00:00Z', 'day', '2026-10-07T12:00:00Z');
+insert into public.entries(id, owner_id, title, body, item_subtype, date_precision, updated_at) values
+  ('81000000-0000-4000-8000-000000000005', '10000000-0000-0000-0000-000000000803', 'Riding years', 'A stretch of getting around by wheel.', 'chapter', 'unknown', '2026-10-08T12:00:00Z');
+update public.entries set deleted_at = '2026-10-10T00:00:00Z'
+where id = '81000000-0000-4000-8000-000000000004';
+update public.entries
+set metadata = jsonb_build_object('body_rich', jsonb_build_object(
+  'version', 1,
+  'text', 'Plain words only.',
+  'doc', jsonb_build_object('type', 'doc', 'content', jsonb_build_array(
+    jsonb_build_object('type', 'paragraph', 'content', jsonb_build_array(
+      jsonb_build_object('type', 'text', 'text', 'Plain words only.',
+        'marks', jsonb_build_array(jsonb_build_object('type', 'bold'))))))
+)))
+where id = '81000000-0000-4000-8000-000000000006';
+
+insert into public.tags(id, owner_id, name) values
+  ('82000000-0000-4000-8000-000000000001', '10000000-0000-0000-0000-000000000803', 'Neighbors'),
+  ('82000000-0000-4000-8000-000000000002', '10000000-0000-0000-0000-000000000803', 'Repairs');
+insert into public.entry_tags(entry_id, tag_id, owner_id) values
+  ('81000000-0000-4000-8000-000000000001', '82000000-0000-4000-8000-000000000002', '10000000-0000-0000-0000-000000000803'),
+  ('81000000-0000-4000-8000-000000000002', '82000000-0000-4000-8000-000000000001', '10000000-0000-0000-0000-000000000803');
+
+-- A unit vector of 1024 numbers with weight on up to two positions; the query is position 1.
+create function pg_temp.axis(p_first integer, p_second integer default null, p_first_weight real default 1)
+returns real[] language sql as $$
+  select array_agg(
+    case
+      when position = p_first then p_first_weight
+      when position = p_second then sqrt(1 - p_first_weight * p_first_weight)
+      else 0
+    end::real order by position)
+  from generate_series(1, 1024) as position;
+$$;
+create function pg_temp.index_entry(p_entry uuid, p_embedding real[], p_end integer default 10, p_chunk integer default 0)
+returns void language sql as $$
+  insert into public.entry_search_index_state as state (entry_id, owner_id, source_hash)
+  select id, owner_id, public.entry_search_source_hash(title, body) from public.entries where id = p_entry
+  on conflict (entry_id) do nothing;
+  update public.entry_search_index_state
+  set status = 'indexed', indexed_model = 'model-h', indexed_hash = source_hash
+  where entry_id = p_entry;
+  insert into public.entry_search_chunks(entry_id, owner_id, chunk_index, source_hash, model, char_start, char_end, embedding)
+  select p_entry, state.owner_id, p_chunk, state.source_hash, 'model-h', 0, p_end,
+    (p_embedding::extensions.vector(1024))::extensions.halfvec(1024)
+  from public.entry_search_index_state as state where state.entry_id = p_entry;
+$$;
+
+-- Similarity to the query: 1.0 for the Bike Entry, 0.8 for the mechanic and the Chapter,
+-- 0.9 for the formatted note, and 0.0 for the beach.
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000001', pg_temp.axis(1));
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000002', pg_temp.axis(1, 2, 0.8));
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000002', pg_temp.axis(3), 18, 1);
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000003', pg_temp.axis(3));
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000003', pg_temp.axis(6), 14, 1);
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000004', pg_temp.axis(1));
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000005', pg_temp.axis(1, 4, 0.8));
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000006', pg_temp.axis(1, 5, 0.9));
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000007', pg_temp.axis(1));
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000008', pg_temp.axis(1));
+-- A perfect chunk labelled with another model does not count for the formatted note.
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000006', pg_temp.axis(1), 10, 1);
+update public.entry_search_chunks set model = 'model-z'
+where entry_id = '81000000-0000-4000-8000-000000000006' and chunk_index = 1;
+-- The edited Entry keeps its old chunk, but its text moved on.
+update public.entries set body = 'Spokes after the edit.'
+where id = '81000000-0000-4000-8000-000000000007';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000803', true);
+
+select is(
+  (select array_agg(entry_id order by entry_id) from public.search_wiki_items('spokes')),
+  array['81000000-0000-4000-8000-000000000007']::uuid[],
+  'Without a query vector the search is keyword-only'
+);
+select is(
+  (select array_agg(entry_id order by entry_id) from public.search_wiki_items('spokes', p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000007']::uuid[],
+  'A model label without a vector is still keyword-only'
+);
+select is(
+  (select array_agg(entry_id order by entry_id) from public.search_wiki_items('spokes', p_query_embedding => pg_temp.axis(1))),
+  array['81000000-0000-4000-8000-000000000007']::uuid[],
+  'A vector without a model label is still keyword-only'
+);
+select is(
+  (select array_agg(match_reasons[1] || ':' || coalesce(semantic_similarity::text, 'none')) from public.search_wiki_items('spokes')),
+  array['Body:none'],
+  'Keyword-only rows carry no meaning columns'
+);
+select is(
+  (select array_agg(entry_id order by match_rank desc, entry_id)
+   from public.search_wiki_items('bike', '{}', '{}', null, null, 50, 0, 'relevance', null, null, 0.5)),
+  (select array_agg(entry_id order by match_rank desc, entry_id) from public.search_wiki_items('bike')),
+  'A null vector returns the same rows in the same order as before'
+);
+select cmp_ok(
+  (select match_rank from public.search_wiki_items('bike')), '>=', 4::double precision,
+  'Keyword-only relevance keeps its original scale'
+);
+select is(
+  (select count(*) from public.search_wiki_items('', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h', p_tag_names => array['Repairs'])),
+  1::bigint,
+  'A filter-only search ignores the vector'
+);
+select is(
+  (select match_reasons from public.search_wiki_items('', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h', p_tag_names => array['Repairs'])),
+  array['Filters'],
+  'A filter-only search still reports Filters'
+);
+
+select is(
+  (select array_agg(entry_id order by match_rank desc, entry_id)
+   from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array[
+    '81000000-0000-4000-8000-000000000001',
+    '81000000-0000-4000-8000-000000000006',
+    '81000000-0000-4000-8000-000000000002',
+    '81000000-0000-4000-8000-000000000005'
+  ]::uuid[],
+  'An Entry matching by words and meaning ranks first, then the closest meanings'
+);
+select is(
+  (select match_reasons from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')
+   where entry_id = '81000000-0000-4000-8000-000000000002'),
+  array['Meaning'],
+  'A semantic-only Entry appears with the Meaning reason alone'
+);
+select is(
+  (select match_reasons from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')
+   where entry_id = '81000000-0000-4000-8000-000000000001'),
+  array['Title', 'Body', 'Meaning'],
+  'Meaning is appended last to the keyword reasons'
+);
+select is(
+  (select semantic_char_start || '-' || semantic_char_end || ':' || semantic_chunk_count || ':' || round(semantic_similarity::numeric, 2)
+   from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')
+   where entry_id = '81000000-0000-4000-8000-000000000002'),
+  '0-10:2:0.80',
+  'The best chunk, its range, and the chunk count come with the result'
+);
+select is(
+  (select total_count from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h') limit 1),
+  4::bigint,
+  'The total counts the union of keyword and meaning matches'
+);
+select is(
+  (select array_agg(entry_id order by entry_id)
+   from public.search_wiki_items('bike', p_limit => 2, p_offset => 2, p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000002', '81000000-0000-4000-8000-000000000005']::uuid[],
+  'Pagination slices the fused order'
+);
+select is(
+  (select array_agg(entry_id order by entry_id)
+   from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h', p_semantic_min_similarity => 0.85)),
+  array['81000000-0000-4000-8000-000000000001', '81000000-0000-4000-8000-000000000006']::uuid[],
+  'A higher floor drops weaker meaning matches'
+);
+select is(
+  (select count(*) from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')
+   where entry_id = '81000000-0000-4000-8000-000000000003'),
+  0::bigint,
+  'An Entry whose best chunk is below the floor never appears'
+);
+select is(
+  (select array_agg(entry_id) from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(7), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000001']::uuid[],
+  'A far vector adds no meaning matches and keeps the keyword match'
+);
+
+select is(
+  (select array_agg(entry_id) from public.search_wiki_items('bike', p_tag_names => array['Neighbors'], p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000002']::uuid[],
+  'A tag filter keeps a meaning match with that tag and drops the rest'
+);
+select is(
+  (select count(*) from public.search_wiki_items('bike', p_tag_names => array['Nobody'], p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  0::bigint,
+  'A tag filter with no members excludes every semantic candidate'
+);
+select is(
+  (select array_agg(entry_id) from public.search_wiki_items('bike', p_item_classifications => array['chapter'], p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000005']::uuid[],
+  'The Chapter filter keeps only a Chapter among the meaning matches'
+);
+select is(
+  (select array_agg(entry_id order by entry_id) from public.search_wiki_items('bike', p_item_classifications => array['entry'], p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000001', '81000000-0000-4000-8000-000000000002', '81000000-0000-4000-8000-000000000006']::uuid[],
+  'The Entry filter leaves the Chapter out of the meaning matches'
+);
+select is(
+  (select array_agg(entry_id order by entry_id) from public.search_wiki_items('bike', p_date_from => '2026-01-01', p_date_to => '2026-12-31', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000001', '81000000-0000-4000-8000-000000000006']::uuid[],
+  'A date filter excludes a meaning match from another year'
+);
+select is(
+  (select array_agg(entry_id) from public.search_wiki_items('bike', p_date_from => '2020-01-01', p_date_to => '2020-12-31', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000002']::uuid[],
+  'A date filter keeps a meaning match inside the range'
+);
+
+select is(
+  (select count(*) from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')
+   where entry_id = '81000000-0000-4000-8000-000000000004'),
+  0::bigint,
+  'An Entry in Trash never appears, whatever its vector'
+);
+select is(
+  (select count(*) from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')
+   where entry_id = '81000000-0000-4000-8000-000000000008'),
+  0::bigint,
+  'Another owner''s vectors never produce a match'
+);
+select is(
+  (select count(*) from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')
+   where entry_id = '81000000-0000-4000-8000-000000000007'),
+  0::bigint,
+  'A chunk indexed from older text does not match an edited Entry'
+);
+select is(
+  (select array_agg(entry_id) from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-other')),
+  array['81000000-0000-4000-8000-000000000001']::uuid[],
+  'Vectors of another model never match'
+);
+select is(
+  (select round(similarity::numeric, 2) from public.semantic_entry_matches(pg_temp.axis(1), 'model-h', 0.5)
+   where entry_id = '81000000-0000-4000-8000-000000000006'),
+  0.90,
+  'A chunk labelled with another model does not count toward an Entry'
+);
+
+select is(
+  (select count(*) from public.search_wiki_items('paragraph')), 0::bigint,
+  'Rich text node names are not searchable (issue 42)'
+);
+select is(
+  (select count(*) from public.search_wiki_items('bold')), 0::bigint,
+  'Rich text mark names are not searchable (issue 42)'
+);
+select is(
+  (select count(*) from public.search_wiki_items('doc')), 0::bigint,
+  'Rich text structure words are not searchable (issue 42)'
+);
+select is(
+  (select match_reasons from public.search_wiki_items('plain words')),
+  array['Body'],
+  'A formatted Entry is still found by its writing'
+);
+
+select throws_ok(
+  $$select * from public.semantic_entry_matches(array[1, 2, 3]::real[], 'model-h', 0.5)$$,
+  '22023', 'invalid_query_embedding', 'A query vector of the wrong size is refused'
+);
+select throws_ok(
+  format($$select * from public.semantic_entry_matches(%L::real[], 'model-h', 0.5)$$, (select array_agg(0::real) from generate_series(1, 1024))),
+  '22023', 'invalid_query_embedding', 'A zero query vector is refused'
+);
+select throws_ok(
+  $$select * from public.search_wiki_items('bike', p_query_embedding => array[1]::real[], p_embedding_model => 'model-h')$$,
+  '22023', 'invalid_query_embedding', 'Search refuses a malformed query vector'
+);
+select throws_ok(
+  $$select * from public.semantic_entry_matches(pg_temp.axis(1), 'bad model', 0.5)$$,
+  '22023', 'invalid_search_model', 'The model label is validated'
+);
+
+select ok(
+  has_function_privilege('authenticated', 'public.semantic_entry_matches(real[], text, real)', 'execute')
+    and not has_function_privilege('anon', 'public.semantic_entry_matches(real[], text, real)', 'execute'),
+  'Only signed-in users can run the meaning match'
+);
+select ok(
+  has_function_privilege('authenticated', 'public.search_wiki_items(text, text[], text[], date, date, integer, integer, text, real[], text, real)', 'execute')
+    and not has_function_privilege('anon', 'public.search_wiki_items(text, text[], text[], date, date, integer, integer, text, real[], text, real)', 'execute'),
+  'Only signed-in users can run the merged search'
+);
+select is(
+  (select jsonb_array_length(public.archive_wiki_search_evidence(array['bike'])->'entries')),
+  1,
+  'Archive evidence keeps resolving the search'
+);
+
+-- Another owner sees none of these vectors.
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000804', true);
+select is(
+  (select array_agg(entry_id) from public.semantic_entry_matches(pg_temp.axis(1), 'model-h', 0.5)),
+  array['81000000-0000-4000-8000-000000000008']::uuid[],
+  'Each owner matches only their own vectors'
+);
+
+-- With the setting off, vectors are ignored even if some remain.
+reset role;
+update public.profiles set semantic_search_enabled = false
+where user_id = '10000000-0000-0000-0000-000000000803';
+select pg_temp.index_entry('81000000-0000-4000-8000-000000000002', pg_temp.axis(1), 10, 2);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000803', true);
+select is(
+  (select count(*) from public.semantic_entry_matches(pg_temp.axis(1), 'model-h', 0.5)),
+  0::bigint,
+  'The meaning match is empty while the setting is off'
+);
+select is(
+  (select array_agg(entry_id) from public.search_wiki_items('bike', p_query_embedding => pg_temp.axis(1), p_embedding_model => 'model-h')),
+  array['81000000-0000-4000-8000-000000000001']::uuid[],
+  'Search falls back to keywords while the setting is off'
+);
+reset role;
+
 select * from finish();
 rollback;

@@ -30,7 +30,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.search_wiki_items(text,text[],text[],date,date,integer,integer,text)',
+    'public.search_wiki_items(text,text[],text[],date,date,integer,integer,text,real[],text,real)',
     'execute'
   ),
   'Anonymous canonical search is denied'

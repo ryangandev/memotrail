@@ -48,6 +48,6 @@ select throws_ok($$select * from public.search_wiki_items('Precision','{}','{}',
 update public.entries set deleted_at=now() where id='96000000-0000-4000-8000-000000000001';
 select is((select count(*) from public.search_wiki_items('Precision year')),0::bigint,'Trash is excluded by new projection');
 reset role;
-select ok(not has_function_privilege('anon','public.search_wiki_items(text,text[],text[],date,date,integer,integer,text)','execute'),'Anonymous canonical search is denied');
+select ok(not has_function_privilege('anon','public.search_wiki_items(text,text[],text[],date,date,integer,integer,text,real[],text,real)','execute'),'Anonymous canonical search is denied');
 select * from finish();
 rollback;
