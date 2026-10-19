@@ -133,21 +133,29 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeVisible();
+    // The search spans the column, and the filters scroll sideways inside it, not the page.
     await expect
       .poll(() =>
         page.evaluate(() => {
-          const field = document.querySelector("#trail-search")?.parentElement;
-          const button = document.querySelector(
-            'form[action="/library"] button[type="submit"]',
-          );
-          if (!field || !button) return Number.POSITIVE_INFINITY;
+          const shown = (selector: string) =>
+            [...document.querySelectorAll(selector)].find(
+              (element) => element.getClientRects().length > 0,
+            );
+          const control = shown('[role="search"] [data-search-control]');
+          const header = shown("[data-ui-page-header]");
+          if (!control || !header) return Number.POSITIVE_INFINITY;
           return Math.abs(
-            field.getBoundingClientRect().width -
-              button.getBoundingClientRect().width,
+            control.getBoundingClientRect().width -
+              header.getBoundingClientRect().width,
           );
         }),
       )
       .toBeLessThanOrEqual(1);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    ).toBe(true);
     await page.screenshot({
       animations: "disabled",
       caret: "initial",
@@ -157,23 +165,26 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       page.getByRole("navigation", { name: "Library categories" }),
     ).toHaveCount(0);
-    await page.getByText("Filters", { exact: true }).click();
-    const showFilter = page.getByRole("combobox", { name: "Record" });
-    await expect(showFilter).toHaveValue("");
-    await expect(
-      showFilter.getByRole("option", { name: "People" }),
-    ).toHaveCount(0);
+    const show = page.getByRole("group", { name: "Show", exact: true });
+    await expect(show.getByRole("radio", { name: "All" })).toBeChecked();
+    await expect(show.getByRole("radio", { name: "People" })).toHaveCount(0);
     for (const name of ["Entries", "Chapters", "First Times"]) {
-      await expect(showFilter.getByRole("option", { name })).toHaveCount(1);
+      await expect(show.getByRole("radio", { name })).toHaveCount(1);
     }
     await expect(
       page.getByRole("combobox", { name: "Collection" }),
     ).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Tag" })).toBeVisible();
-    await showFilter.selectOption("chapter");
-    await page.getByRole("button", { name: "Search", exact: true }).click();
+    const tagsButton = page.getByRole("button", { name: "Tags", exact: true });
+    await expect(tagsButton).toHaveAttribute("aria-expanded", "false");
+    await tagsButton.click();
+    await expect(page.getByRole("group", { name: "Tags" })).toBeVisible();
+    await tagsButton.click();
+    await show.getByRole("radio", { name: "Chapters", exact: true }).click();
     await expect(page).toHaveURL(/type=chapter/);
-    await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
+    await expect(show.getByRole("radio", { name: "Chapters" })).toBeChecked();
+    await expect(
+      page.getByRole("main").getByText("1 Entry matches, newest first"),
+    ).toBeVisible();
     for (const path of ["/people", `/people/${randomUUID()}`]) {
       await page.goto(path);
       await expect(page).toHaveURL(/\/library$/);
@@ -200,12 +211,12 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("link", { name: /Chapter.*Avery Street flat/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("main").getByText("4 items", { exact: true }),
+      page.getByRole("main").getByText("4 Entries, newest first"),
     ).toBeVisible();
 
     await page.goto("/library?q=Fresh");
     await expect(
-      page.getByRole("main").getByText("1 item", { exact: true }),
+      page.getByRole("main").getByText("1 Entry matches, best match first"),
     ).toBeVisible();
     await expect(
       page.getByRole("link", { name: "Fresh thought", exact: true }),
@@ -263,26 +274,29 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     expect(trashedReflection.error).toBeNull();
     expect(trashedReflection.data?.deleted_at).toBeTruthy();
 
-    await page.getByText("Filters", { exact: true }).click();
-    const filters = page.locator('form:visible:has(select[name="type"])');
-    await filters.locator('select[name="type"]').selectOption("chapter");
-    await filters.getByRole("button", { name: "Search", exact: true }).click();
+    await show.getByRole("radio", { name: "Chapters", exact: true }).click();
     await expect(page).toHaveURL(/type=chapter/);
     await expect(
-      page.getByRole("link", { name: "Avery Street flat", exact: true }),
+      page.getByRole("link", { name: /Avery Street flat/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Writing Reflection Morning reflection/ }),
+      page.getByRole("link", { name: /Morning reflection/ }),
     ).toHaveCount(0);
 
-    await filters.locator('select[name="type"]').selectOption("");
-    await filters.locator('input[name="q"]').fill("marina");
-    await filters.getByRole("button", { name: "Search", exact: true }).click();
+    // Typing searches on its own, keeps the filters, and keeps the field focused.
+    const search = page.getByRole("searchbox", { name: "Search Library" });
+    await search.fill("marina");
+    await expect(page).toHaveURL(/q=marina/);
+    await expect(page).toHaveURL(/type=chapter/);
+    await expect(search).toBeFocused();
+    await show.getByRole("radio", { name: "All", exact: true }).click();
+    await expect(page).not.toHaveURL(/type=/);
+    await expect(search).toHaveValue("marina");
     await expect(
-      page.getByRole("link", { name: "Avery Street flat", exact: true }),
+      page.getByRole("link", { name: /Avery Street flat/ }),
     ).toBeVisible();
     await page.waitForLoadState("networkidle");
-    await filters.locator('input[name="q"]').press("Tab");
+    await search.press("Tab");
 
     await page.screenshot({
       caret: "initial",
@@ -312,14 +326,18 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     expect((await client.from("entries").insert(pageRows)).error).toBeNull();
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.goto("/library");
-    const list = page.getByRole("list", { name: "Library items" });
-    const pages = page.getByRole("navigation", { name: "Life Wiki pages" });
+    const list = page.getByRole("region", { name: "Entries", exact: true });
+    const pages = page.getByRole("navigation", { name: "Library pages" });
     await expect(list.getByRole("listitem")).toHaveCount(12);
     await expect(pages).toContainText("Page 1 of 2");
+    await expect(
+      pages.getByRole("button", { name: "Previous" }),
+    ).toBeDisabled();
     await pages.getByRole("link", { name: "Next" }).click();
     await expect(page).toHaveURL(/\/library\?page=2$/);
     await expect(list.getByRole("listitem")).toHaveCount(4);
     await expect(pages).toContainText("Page 2 of 2");
+    await expect(pages.getByRole("button", { name: "Next" })).toBeDisabled();
     await pages.getByRole("link", { name: "Previous" }).click();
     await expect(page).toHaveURL(/\/library$/);
     await expect(list.getByRole("listitem")).toHaveCount(12);

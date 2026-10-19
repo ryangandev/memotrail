@@ -96,7 +96,6 @@ These open design decisions feed it:
 - Six contrast exceptions remain until a palette change: inkFaint metadata in each theme, muted text on subtle panels, and warm, danger, and warning text in light.
 - The brand mark's outer ring and arc use themed colors on iOS and fixed colors on Web, so the platforms differ in dark mode.
 - Web `textSpace` is relative to the text size, so the paragraph gap is shared with iOS only once the Swift generator supports relative units.
-- Library filters mix two field styles: Record and Tag are hand-styled selects with uppercase labels, while From and To use the shared date field with sentence-case labels.
 
 ## Watch list
 

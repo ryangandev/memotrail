@@ -83,14 +83,17 @@ async function waitUntilIndexed(page: Page, client: SupabaseClient) {
     .toBe(0);
 }
 
+// A Chapter's row is named with its mark, such as "Chapter Riding years", so names match in part.
 function resultCard(page: Page, title: string) {
-  return page.locator("article").filter({
-    has: page.getByRole("link", { exact: true, name: title }),
+  return page.locator("[data-ui-entry-row]").filter({
+    has: page.getByRole("link", { name: title }),
   });
 }
 
 function resultTitles(page: Page) {
-  return page.locator("article h3 a").allTextContents();
+  return page
+    .locator("[data-ui-entry-row] [data-entry-row-title]")
+    .allTextContents();
 }
 
 const friend: Seed = {
@@ -227,7 +230,9 @@ test("Filters constrain meaning matches too", async ({ page, workspace }) => {
   expect(await resultTitles(page)).toEqual(["Saturday afternoon"]);
 
   await page.goto(`/search?q=${description}&tag=Nobody`);
-  await expect(page.getByText("No matching items")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "No Entries match", exact: true }),
+  ).toBeVisible();
   expect(await resultTitles(page)).toEqual([]);
 });
 
@@ -250,7 +255,7 @@ test("Search keeps working with words alone when the service is down", async ({
   // notice, so a page-wide match is ambiguous. The search region only matches the shown one.
   await expect(
     page
-      .getByRole("region", { name: "Entry search" })
+      .getByRole("search", { name: "Library search" })
       .getByText("Search by meaning is unavailable right now"),
   ).toBeVisible();
   expect(await resultTitles(page)).toEqual(["River ride"]);

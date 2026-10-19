@@ -1,7 +1,4 @@
-import Link from "next/link";
-import { Badge } from "@/components/badge";
-import { ProgressiveImage } from "@/components/progressive-image";
-import styles from "./entry-list.module.css";
+import { EntryRow, EntryRowList } from "@/components/entry-row";
 
 export type EntryListItem = {
   /** A thumbnail, such as an Entry's first photo. */
@@ -18,8 +15,11 @@ export type EntryListItem = {
 };
 
 /**
- * Library's row for an Entry: a Chapter and First Time badge where they apply, the date, the
- * title, a short excerpt, and an optional photo. Library and a Chapter's page draw the same row.
+ * A list of Entries drawn with EntryRow.
+ *
+ * @deprecated Render EntryRowList and EntryRow from `@/components/entry-row` directly, with
+ * entryRowLabels() from `@/lib/data/entry-row` for the title and date. This wrapper keeps a
+ * Chapter's page working until it moves to EntryRow.
  */
 export function EntryList({
   items,
@@ -29,42 +29,19 @@ export function EntryList({
   label: string;
 }) {
   return (
-    <ul aria-label={label} className={styles.list} data-entry-list>
+    <EntryRowList label={label}>
       {items.map((item) => (
-        <li data-cover={item.cover ? "" : undefined} key={item.id}>
-          <Link href={item.href}>
-            {item.isChapter || item.isFirstTime || item.date ? (
-              <div className={styles.meta}>
-                {item.isChapter || item.isFirstTime ? (
-                  <div className={styles.badges}>
-                    {item.isChapter ? (
-                      <Badge size="micro" uppercase>
-                        Chapter
-                      </Badge>
-                    ) : null}
-                    {item.isFirstTime ? (
-                      <Badge size="micro" tone="neutral" uppercase>
-                        First Time
-                      </Badge>
-                    ) : null}
-                  </div>
-                ) : null}
-                {item.date ? <small>{item.date}</small> : null}
-              </div>
-            ) : null}
-            <strong>{item.title}</strong>
-            {item.excerpt ? <p>{item.excerpt}</p> : null}
-            {item.cover ? (
-              <ProgressiveImage
-                alt={item.cover.alt}
-                className={styles.cover}
-                loading="lazy"
-                src={item.cover.src ?? undefined}
-              />
-            ) : null}
-          </Link>
-        </li>
+        <EntryRow
+          date={item.date}
+          excerpt={item.excerpt || null}
+          href={item.href}
+          isChapter={item.isChapter}
+          isFirstTime={item.isFirstTime}
+          key={item.id}
+          thumbnail={item.cover ?? null}
+          title={item.title}
+        />
       ))}
-    </ul>
+    </EntryRowList>
   );
 }

@@ -12,7 +12,7 @@ platforms:
 purpose: A wrapping row of short facts with a quiet dot between neighbors on the same line, so no line starts or ends with a separator.
 
 use:
-  - Short facts about a record, such as a date, a place, and a count, on a card or a row.
+  - Short facts about an Entry, such as a date, a place, and a count, on a card or a row.
   - A row of small links or actions that wraps on narrow screens, such as search result filters or attribution links.
 
 avoid:

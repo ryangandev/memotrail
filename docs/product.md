@@ -168,9 +168,13 @@ Importing from Apple Journal, Apple Notes, and Notion gives a new user a past to
 
 - Timeline, Dashboard, and Library are views, not organization labels.
 - Library is the primary place to browse every Entry.
-  Its default browser presents every Entry as paginated rows, with Chapters and First Times marked.
-  A new capture appears there, and in its Entry count, as soon as it is saved.
-  Library search supports date, tag, and mark filters, such as Chapters only or First Times only, with match context.
+  It lists every Entry by the date it happened, newest first, grouped by month, with undated Entries last under Undated.
+  Each row shows the date, the title, an icon for a Chapter or a First Time, one line of writing, the Entry's tags, and its first photo when it has one.
+  An untitled Entry is titled by its date, and a Chapter's row says how many Entries it holds.
+  Rows are paginated, and a new capture appears there, and in the Entry count, as soon as it is saved.
+- Library search runs as you type, ranks the best match first, and highlights the matching words in each row with the fields they matched.
+  One row of filters sits under the search field: All, Entries, Chapters, or First Times, plus Tags and Dates panels that apply as soon as a choice is complete.
+  Clear all removes the search and every filter at once.
   Library avoids duplicating the sidebar's destinations.
 - Opening an Entry shows its Entry page with its current content and primary actions.
   An Entry page shows its photos below its writing as soon as it opens; selecting one opens a preview that pages through them with Previous, Next, and the arrow keys.

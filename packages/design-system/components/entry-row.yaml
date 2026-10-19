@@ -1,0 +1,123 @@
+# yaml-language-server: $schema=../schema/component-spec.schema.json
+name: EntryRow
+
+platforms:
+  web:
+    path: apps/web/src/components/entry-row.tsx
+    symbols: [EntryRow, EntryRowList, EntryRowGroup, ChapterMark, FirstTimeMark]
+  ios:
+    unavailable: iOS lists Entries with its own SwiftUI rows, which the native Library and Timeline packages own.
+
+purpose: One Entry in a ruled list, with the date it happened in a muted column, a one-line serif title marked as a Chapter or a First Time, a line of its writing, its tags, and an optional photo.
+
+use:
+  - Lists of Entries ordered by the date they happened, such as Library, Recent on the Dashboard, and the Entries in a Chapter.
+  - Search results, with a highlighted excerpt and the parts of the Entry that matched.
+  - Entries waiting for a decision, such as Trash, with actions beside the row.
+
+avoid:
+  - A single Entry shown on its own with its full writing. Use the Entry page.
+  - Tags, Reviews, or other things that are not Entries. Use a list of links or a SectionHeader list.
+
+anatomy:
+  list: The ruled list, with a line above the first row and below every row, that measures its own width.
+  groupHeading: A quiet month or year heading above a run of rows, such as October 2026 or Undated.
+  row: The link to the Entry, a grid of the date column, the body, and the optional photo.
+  date: The 112 px muted date column, empty for an untitled Entry whose title is its date.
+  title: The serif title on one line, after the Chapter or First Time mark.
+  mark: The Chapter mark in the accent color or the First Time mark in the warm color, each named for assistive technology.
+  excerpt: One muted line of the Entry's writing, or a search snippet with the matched words highlighted.
+  tags: The Entry's tags as quiet hash-prefixed text.
+  match: The parts of the Entry a search matched, such as Title or Meaning.
+  thumbnail: A 48 px square of the Entry's first photo.
+  actions: Controls beside the row and outside its link.
+
+props:
+  variant:
+    description: Default fits a page's main list; compact tightens the padding and the title for a short list beside other content.
+    values: [default, compact]
+    default: default
+
+states: [default, hover, focus]
+
+tokens:
+  - list:
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+    groupHeading:
+      color: "{color.inkMuted}"
+      fontFamily: "{font.family.sans}"
+      fontSize: "{font.size.label}"
+      paddingBlock: "{space.2}"
+    row:
+      paddingBlock: "{space.3-5}"
+      gap: "{space.4}"
+      color: "{color.ink}"
+      radius: "{radius.xsmall}"
+      border: "{color.border}"
+      borderWidth: "{size.stroke.thin}"
+    date:
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.label}"
+      lineHeight: "{lineHeight.titleRelaxed}"
+    title:
+      fontFamily: "{font.family.serif}"
+      fontWeight: "{font.weight.regular}"
+      lineHeight: "{lineHeight.title}"
+      gap: "{space.2}"
+      duration: "{motion.quick}"
+    mark:
+      size: "{size.icon.15}"
+    excerpt:
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.bodySmall}"
+      lineHeight: "{lineHeight.message}"
+    tags:
+      color: "{color.inkMuted}"
+      fontSize: "{font.size.label}"
+    thumbnail:
+      radius: "{radius.xsmall}"
+  - when: { state: hover }
+    title:
+      color: "{color.accent}"
+  - when: { state: focus }
+    row:
+      border: "{state.focus.ring}"
+      borderWidth: "{state.focus.ringWidth}"
+      offset: "{state.focus.ringOffsetSnug}"
+  - when: { variant: compact }
+    row:
+      paddingBlock: "{space.2-5}"
+    title:
+      fontSize: "{font.size.callout}"
+
+content:
+  lines: 1
+  overflow: truncateTail
+  casing: asWritten
+  length: A title of a few words; longer titles, excerpts, and tag lists end with an ellipsis on one line.
+  notes:
+    - The title is 18 px on a wide list and 17 px on a narrow one, until a matching type role exists.
+    - Below 620 px of list width the date moves above the title, an untitled Entry shows no date line, and tags are left out.
+    - An untitled Entry is titled by its date, such as Monday, October 19, 2026, and leaves the date column empty; entryRowLabels() in apps/web/src/lib/data/entry-row.ts writes both.
+    - Dates keep the precision they were recorded at, such as Oct 17, Oct 2024, 2019, or Fall 2025, and a Chapter shows its span, such as Jan 2026 - now.
+    - Rows under a month heading leave out the year the heading already names.
+
+accessibility:
+  role: A list item holding one link, named by the title and described by the date, the excerpt, the tags, and the match.
+  label: The title, with the Chapter or First Time mark spoken before it.
+  focus: The whole row is one link in reading order and draws the snug accent focus ring; actions follow it in the focus order.
+  minimumHitTarget: "{size.hitTarget}"
+  dynamicType: Web uses fixed pixel sizes that grow with browser zoom, and the row stacks when zoom narrows the list below 620 px.
+
+platformDifferences:
+  - difference: Web only. iOS draws Entries with native SwiftUI rows.
+    reason: The native Library and Timeline packages own their rows and follow Dynamic Type and platform list behavior.
+
+specimens:
+  - id: entry-row-default
+    description: Rows grouped by month with a Chapter, a First Time, tags, a photo, a remembered period, and an untitled Entry titled by its date, in a wide and a narrow frame.
+    covers: { variant: [default] }
+  - id: entry-row-compact
+    description: A short compact list, as on the side of a Chapter's page, and a search result with a highlighted excerpt and its match.
+    covers: { variant: [compact] }

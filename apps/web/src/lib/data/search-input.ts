@@ -98,7 +98,7 @@ export function parseSearchRequest(
   if (query.length > SEARCH_QUERY_LIMIT) {
     error = `Search phrases can be up to ${SEARCH_QUERY_LIMIT} characters.`;
   } else if (!validNames(itemClassifications, 20, 80)) {
-    error = "Choose up to 20 valid Kinds or types.";
+    error = "Choose up to 20 valid filters.";
   } else if (!validNames(tagNames, tagNameCountLimit, tagNameLengthLimit)) {
     error = `Choose up to ${tagNameCountLimit} valid tags.`;
   } else if (dateFrom && !isISODate(dateFrom)) {
@@ -230,7 +230,8 @@ function validNames(
   );
 }
 
-function isISODate(value: string) {
+/** Whether a value is a real calendar day written YYYY-MM-DD. */
+export function isISODate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     return false;
   }
