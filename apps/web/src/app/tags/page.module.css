@@ -10,6 +10,7 @@
 }
 
 .search > div > :global([data-search-field]) {
+  min-width: 0;
   flex: 1;
 }
 
@@ -92,13 +93,6 @@
 
 .pagination a:hover {
   color: var(--mt-color-accent);
-}
-
-@media (max-width: 560px) {
-  .search > div {
-    align-items: stretch;
-    flex-direction: column;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
