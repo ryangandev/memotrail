@@ -22,12 +22,11 @@ export const DOCUMENT_TIMEOUT_MS = 30_000;
 
 /**
  * Whether the deployed database has the merged keyword-and-meaning
- * `search_wiki_items` (migration 202610190023). While false, search sends no query
- * vector, because the current function has no such arguments, and results stay
- * keyword-only. Indexing still runs once the embedding service is configured, so the
- * index is ready when this turns true.
+ * `search_wiki_items` (migration 202610190023). Set it to false to send no query vector,
+ * which keeps results keyword-only against a database that predates that migration.
+ * Indexing runs either way once the embedding service is configured.
  */
-export const MERGED_SEARCH_AVAILABLE = false;
+export const MERGED_SEARCH_AVAILABLE = true;
 
 export function formatQueryForModel(query: string) {
   return model.queryTemplate

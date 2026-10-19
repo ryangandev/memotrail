@@ -43,10 +43,12 @@ describe("the model configuration", () => {
     expect(dockerfile).toContain(`"--served-model-name", "${SEMANTIC_MODEL}"`);
   });
 
-  it("only turns the merged search on once its migration is deployed", () => {
-    // Flip this expectation together with the flag, in the commit that adds the
-    // merged search migration (202610190023).
-    expect(MERGED_SEARCH_AVAILABLE).toBe(false);
+  it("sends query vectors now that the merged search migration exists", () => {
+    const migration = read(
+      "../../../../../supabase/migrations/202610190023_hybrid_search.sql",
+    );
+    expect(migration).toContain("p_query_embedding real[]");
+    expect(MERGED_SEARCH_AVAILABLE).toBe(true);
   });
 });
 

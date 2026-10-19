@@ -16,7 +16,8 @@
     "test:e2e": "playwright test",
     "typecheck": "next typegen && tsc --noEmit",
     "test:contracts": "playwright test --config playwright.contracts.config.ts",
-    "test:e2e:design": "playwright test --config playwright.design.config.ts"
+    "test:e2e:design": "playwright test --config playwright.design.config.ts",
+    "test:e2e:semantic": "playwright test --config playwright.semantic.config.ts"
   },
   "dependencies": {
     "@ark-ui/react": "5.39.2",

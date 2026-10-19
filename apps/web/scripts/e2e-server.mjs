@@ -42,6 +42,10 @@ const env = {
     process.env.MEMOTRAIL_E2E_LIVE_GEOAPIFY === "1"
       ? process.env.GEOAPIFY_API_KEY
       : "",
+  // Search by meaning is off unless the semantic suite names its fake embedding service,
+  // so a developer's own SEMANTIC_SEARCH_* settings never reach browser tests.
+  SEMANTIC_SEARCH_URL: process.env.MEMOTRAIL_E2E_SEMANTIC_URL ?? "",
+  SEMANTIC_SEARCH_API_KEY: process.env.MEMOTRAIL_E2E_SEMANTIC_KEY ?? "",
   // Real provider testing is explicit, bounded, and still uses synthetic local records.
   AI_PROVIDER:
     process.env.MEMOTRAIL_E2E_LIVE_AI === "1" ? "anthropic" : "disabled",
