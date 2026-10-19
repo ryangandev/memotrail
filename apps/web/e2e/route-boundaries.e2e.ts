@@ -50,6 +50,7 @@ test("An Entry page belongs to the destination its Entry does", async ({
     occurred_start: "2026-05-01T12:00:00+00:00",
     occurred_timezone: "UTC",
     date_precision: "day",
+    is_first_time: false,
     ...fields,
   });
   const ordinary = entry({ title: "Quiet morning walk" });

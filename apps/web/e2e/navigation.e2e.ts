@@ -82,9 +82,10 @@ async function toggleSidebarAndMeasureMotion(toggle: Locator) {
       ).toBeLessThanOrEqual(upperBound);
     }
   }
-  const brand = toggle.page().locator("aside").getByRole("link", {
-    name: "MemoTrail dashboard",
-  });
+  // Collapsed, the brand link leaves the accessibility tree, so find it by its label.
+  const brand = toggle
+    .page()
+    .locator('aside a[aria-label="MemoTrail dashboard"]');
   for (const part of ["outer-ring", "accent", "inner-ring"]) {
     await expect(brand.locator(`[data-brand-part="${part}"]`)).toHaveCSS(
       "transform",
@@ -338,10 +339,8 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const scrollRegion = page.getByRole("region", {
       name: "Sidebar navigation",
     });
-    const brand = shell.getByRole("link", {
-      name: "MemoTrail dashboard",
-      exact: true,
-    });
+    // Collapsed, the brand link leaves the accessibility tree, so find it by its label.
+    const brand = shell.locator('a[aria-label="MemoTrail dashboard"]');
     const homeLink = shell
       .getByRole("navigation", { name: "Primary navigation" })
       .getByRole("link", { name: "Dashboard", exact: true });

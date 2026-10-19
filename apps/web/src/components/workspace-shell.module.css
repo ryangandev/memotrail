@@ -560,6 +560,11 @@
     color: var(--mt-color-accent);
   }
 
+  /* While its list is open, More reads as the pressed tab. */
+  .mobileNavigation button[aria-expanded="true"]:not(.mobileActive) {
+    color: var(--mt-color-ink);
+  }
+
   .mobileMoreScrim {
     position: fixed;
     inset: 0;

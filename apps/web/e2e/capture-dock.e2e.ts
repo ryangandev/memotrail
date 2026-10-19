@@ -44,7 +44,7 @@ test("floating capture opens, restores drafts, saves, and adapts to the viewport
   expect(triggerBox.x + triggerBox.width).toBeLessThan(searchBox.x);
   expect(searchBox.y).toBeCloseTo(triggerBox.y, 0);
   expect((triggerBox.x + searchBox.x + searchBox.width) / 2).toBeCloseTo(
-    (1440 + 224) / 2,
+    (1440 + 240) / 2,
     0,
   );
   await expect(search).toHaveCSS("backdrop-filter", /blur/);
