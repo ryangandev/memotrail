@@ -372,5 +372,69 @@ extension NativeContractTests {
       let remaining = try await storedNames(in: folder, client: client)
       XCTAssertEqual(remaining, [])
     }
+
+    func testCaptureLandsInLibraryAndSearchWithTheSameIdentity() async throws {
+      let (client, ownerID) = try await client(session: NativeReviewNetwork.session())
+      let (controller, _) = try await isolatedCapture(client: client, ownerID: ownerID)
+      // A word of letters only, so keyword search reads it as one term.
+      let marker =
+        "lantern" + String(UUID().uuidString.lowercased().unicodeScalars.map {
+          Character(UnicodeScalar(($0.value % 26) + 97)!)
+        }.prefix(10))
+      let title = "Pier walk \(marker)"
+      let note = NSMutableAttributedString(string: "Walked the pier at dusk \(marker)")
+      note.addAttribute(
+        .font, value: UIFont.boldSystemFont(ofSize: 17), range: NSRange(location: 0, length: 6))
+      let day = CaptureDate.draft(value: "2024-06-15", timezone: "Europe/Lisbon")
+
+      let shown = Set(MTToastCenter.shared.toasts.map(\.id))
+      let didSave = await controller.save(
+        title: title, note: note, occurrenceDraft: day, photos: [])
+      XCTAssertTrue(didSave)
+      let announced = try await toasts(after: shown, from: controller)
+      XCTAssertEqual(announced.map(\.message), ["Saved to Library."])
+      XCTAssertTrue(controller.pendingEntries.isEmpty)
+
+      struct StoredCapture: Decodable {
+        let id: UUID
+        let itemKind: String
+        enum CodingKeys: String, CodingKey {
+          case id
+          case itemKind = "item_kind"
+        }
+      }
+      let stored: [StoredCapture] =
+        try await client.from("entries").select("id,item_kind").eq("title", value: title)
+        .execute().value
+      XCTAssertEqual(stored.map(\.itemKind), ["entry"])
+      let captureID = try XCTUnwrap(stored.first?.id)
+
+      // The Library lists the capture as the same Entry, on the day it is about.
+      let library: [LibraryRow] =
+        try await client.rpc(
+          "wiki_items_workspace",
+          params: LibraryPageParameters(query: marker, limit: LibraryController.pageSize, offset: 0)
+        )
+        .execute().value
+      XCTAssertEqual(library.map(\.id), [captureID])
+      let row = try XCTUnwrap(library.first)
+      XCTAssertEqual(row.title, title)
+      XCTAssertEqual(row.datePrecision, .day)
+      XCTAssertEqual(row.occurredTimezone, "Europe/Lisbon")
+      XCTAssertEqual(
+        row.occurredStart,
+        OccurrenceDraft.wallTimeToDate("2024-06-15T12:00:00", timezone: "Europe/Lisbon"))
+
+      // Search finds the same Entry, with the formatting the composer saved.
+      let request = try EntrySearchRequest.validate(query: marker)
+      let results: [SearchEntry] =
+        try await client.rpc("search_wiki_items", params: request.parameters).execute().value
+      XCTAssertEqual(results.map(\.id), [captureID])
+      XCTAssertEqual(results.first?.title, title)
+      XCTAssertEqual(results.first?.body, note.string)
+      let richTexts = await EntryRichTextMap.load(
+        results.map { ($0.id, $0.body) }, client: client, ownerID: ownerID)
+      XCTAssertNotNil(richTexts[captureID])
+    }
   #endif
 }
