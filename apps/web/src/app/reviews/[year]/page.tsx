@@ -41,10 +41,12 @@ export default async function YearReviewPage({ params }: YearReviewPageProps) {
     loadReviewYears(context.client, localDate),
   ]);
 
-  // Every year with a review to read or make, and this one, oldest first.
-  const switcher = [...new Set([...years.map((row) => row.year), year])].sort(
-    (a, b) => a - b,
-  );
+  // Every year with a review to read or make, this one, and the current year
+  // (which can be reviewed once it ends), oldest first.
+  const currentYear = Number(localDate.slice(0, 4));
+  const switcher = [
+    ...new Set([...years.map((row) => row.year), year, currentYear]),
+  ].sort((a, b) => a - b);
   const review = data?.review?.content ? data.review : null;
   const meta = review ? (
     <ReviewMeta
@@ -67,7 +69,7 @@ export default async function YearReviewPage({ params }: YearReviewPageProps) {
               href={`/reviews/${option}`}
               key={option}
             >
-              {option}
+              {option === currentYear ? `${option} so far` : option}
             </Link>
           ))}
         </nav>

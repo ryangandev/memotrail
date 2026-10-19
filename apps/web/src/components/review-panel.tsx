@@ -389,6 +389,7 @@ export function ReviewPanel({
             {eligible ? (
               <Button
                 disabled={actionBusy}
+                loading={starting}
                 onClick={begin}
                 size="small"
                 variant="ghost"
