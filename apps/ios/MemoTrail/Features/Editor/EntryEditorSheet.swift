@@ -79,7 +79,7 @@ struct EntryEditorSheet: View {
     ) {
       MTTextField(
         label: "Title", text: $title, prompt: "Add a title",
-        maxLength: InboxCapture.titleLimit
+        maxLength: CaptureInput.titleLimit
       )
       .accessibilityIdentifier("review-title")
       noteField

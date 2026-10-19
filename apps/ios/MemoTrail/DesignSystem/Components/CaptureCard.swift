@@ -9,14 +9,14 @@ import UIKit
 struct CaptureCard: View {
   @Binding var note: NSAttributedString
   @Binding var occurrence: OccurrenceDraft?
-  @Binding var photos: [FirstTimePhotoDraft]
+  @Binding var photos: [PhotoDraft]
 
   var style = MTCaptureComposerDefaults.style
   let isSaving: Bool
   let hasLocalDraft: Bool
   let error: String?
   var focusRequest = 0
-  let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
+  let addPhoto: @MainActor (PhotoDraft) async throws -> Void
   let removePhoto: @MainActor (UUID) async throws -> Void
   let save: @MainActor () async -> Void
 
@@ -228,7 +228,7 @@ struct CaptureCard: View {
     .accessibilityIdentifier(identifier)
   }
 
-  private func photoThumbnail(_ photo: FirstTimePhotoDraft, index: Int) -> some View {
+  private func photoThumbnail(_ photo: PhotoDraft, index: Int) -> some View {
     ZStack(alignment: .topTrailing) {
       Group {
         if let image = UIImage(data: photo.data) {
@@ -309,13 +309,13 @@ struct CaptureCard: View {
     let hasPhotos = !photos.isEmpty
     return PhotosPicker(
       selection: $pickerItems,
-      maxSelectionCount: max(1, FirstTimePhotoDraft.maximumCount - photos.count),
+      maxSelectionCount: max(1, PhotoDraft.maximumCount - photos.count),
       matching: .images
     ) {
       CaptureQuietIcon(icon: .photo, isActive: hasPhotos)
     }
     .buttonStyle(.plain)
-    .disabled(isBusy || photos.count >= FirstTimePhotoDraft.maximumCount)
+    .disabled(isBusy || photos.count >= PhotoDraft.maximumCount)
     .accessibilityLabel("Add photos")
     .accessibilityValue("\(photos.count) selected")
     .accessibilityIdentifier("capture-add-photos")
@@ -332,24 +332,24 @@ struct CaptureCard: View {
       isLoadingPhotos = false
     }
 
-    let availableCount = max(0, FirstTimePhotoDraft.maximumCount - photos.count)
+    let availableCount = max(0, PhotoDraft.maximumCount - photos.count)
 
     for item in items.prefix(availableCount) {
       do {
         guard let data = try await item.loadTransferable(type: Data.self) else {
-          throw InboxCaptureError.photoUnavailable
+          throw CaptureError.photoUnavailable
         }
         guard
-          let mimeType = FirstTimeImageType.detect(
+          let mimeType = PhotoImageType.detect(
             data: data,
             typeIdentifiers: item.supportedContentTypes.map(\.identifier)
           )
         else {
-          throw FirstTimeEntryError.unsupportedPhotoType
+          throw PhotoDraftError.unsupportedType
         }
 
         let image = UIImage(data: data)
-        let draft = try FirstTimePhotoDraft.validate(
+        let draft = try PhotoDraft.validate(
           data: data,
           mimeType: mimeType,
           originalFilename: nil,

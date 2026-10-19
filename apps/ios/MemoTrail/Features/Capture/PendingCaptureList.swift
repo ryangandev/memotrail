@@ -4,7 +4,7 @@ import UIKit
 /// A capture saved on this iPhone that has not reached MemoTrail yet. One MemoTrail refused
 /// says why, with Copy text and Discard, like Web's Pending sync card.
 struct PendingCaptureRow: View {
-  let entry: QueuedInboxEntry
+  let entry: QueuedCapture
   /// Removes a refused capture after the person confirms, returning whether it was removed.
   var discard: () async -> Bool = { false }
   @State private var isConfirmingDiscard = false
@@ -51,7 +51,7 @@ struct PendingCaptureRow: View {
     .accessibilityElement(children: entry.rejection == nil ? .combine : .contain)
   }
 
-  private func rejectionDetails(_ rejection: QueuedInboxRejection, title: String) -> some View {
+  private func rejectionDetails(_ rejection: QueuedCaptureRejection, title: String) -> some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       Text(rejection.message)
         .font(MTFont.caption)

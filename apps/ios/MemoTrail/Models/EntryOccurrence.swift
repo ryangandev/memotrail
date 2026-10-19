@@ -1,7 +1,38 @@
 import Foundation
 
-struct EntryOccurrence: Codable, Equatable, Sendable {
-  var precision: TimelineDatePrecision
+/// How precisely an Entry's date is known, like Web `occurrencePrecisions`.
+enum DatePrecision: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
+  case exact
+  case day
+  case month
+  case year
+  case approximate
+  case age
+  case range
+  case unknown
+
+  /// A stored value; anything unrecognized reads as unknown, like Web `storedOccurrence`.
+  init(stored value: String?) {
+    self = value.flatMap(Self.init(rawValue:)) ?? .unknown
+  }
+
+  /// The Date type label shared with the Web occurrence editor.
+  var displayName: String {
+    switch self {
+    case .exact: "Exact date & time"
+    case .day: "Day"
+    case .month: "Month"
+    case .year: "Year"
+    case .approximate: "Approximate"
+    case .age: "Age"
+    case .range: "Date range"
+    case .unknown: "Unknown"
+    }
+  }
+}
+
+struct EntryOccurrence: Codable, Equatable, Hashable, Sendable {
+  var precision: DatePrecision
   var start: Date?
   var end: Date?
   var label: String?
@@ -96,7 +127,7 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
     case date, present
   }
 
-  var precision: TimelineDatePrecision
+  var precision: DatePrecision
   var start: String
   var end: String
   var endMode: EndMode
@@ -126,7 +157,7 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
 
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    precision = try container.decode(TimelineDatePrecision.self, forKey: .precision)
+    precision = try container.decode(DatePrecision.self, forKey: .precision)
     start = try container.decode(String.self, forKey: .start)
     end = try container.decode(String.self, forKey: .end)
     // Capture drafts saved before the Present control have no end mode.
@@ -144,7 +175,7 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
   }
 
   /// Replaces the calendar interpretation when the Date type changes.
-  mutating func changePrecision(to precision: TimelineDatePrecision) {
+  mutating func changePrecision(to precision: DatePrecision) {
     guard precision != self.precision else { return }
     self.precision = precision
     start = ""

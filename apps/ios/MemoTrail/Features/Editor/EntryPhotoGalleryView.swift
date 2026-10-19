@@ -19,7 +19,7 @@ struct EntryPhotoGalleryView: View {
   @State private var isBusy = false
   @State private var message: String?
   @State private var pickerItems: [PhotosPickerItem] = []
-  @State private var pending: [FirstTimePhotoDraft] = []
+  @State private var pending: [PhotoDraft] = []
   @State private var uploadProgress: (completed: Int, total: Int)?
   @State private var removing: EntryPhotoInfo?
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -57,7 +57,7 @@ struct EntryPhotoGalleryView: View {
             MTPhotoField.NewPhoto(
               id: $0.id, image: UIImage(data: $0.data), name: $0.originalFilename)
           },
-          limit: FirstTimePhotoDraft.maximumCount, selection: $pickerItems,
+          limit: PhotoDraft.maximumCount, selection: $pickerItems,
           progress: uploadProgress,
           removeSaved: { saved in removing = photos.first { $0.id == saved.id } },
           removeNew: { photo in pending.removeAll { $0.id == photo.id } }
@@ -110,17 +110,17 @@ struct EntryPhotoGalleryView: View {
   private func selectPhotos(_ items: [PhotosPickerItem]) async {
     defer { pickerItems = [] }
     guard let photos else { return }
-    let available = max(0, FirstTimePhotoDraft.maximumCount - photos.count - pending.count)
+    let available = max(0, PhotoDraft.maximumCount - photos.count - pending.count)
     var failure: String?
     for item in items.prefix(available) {
       do {
         guard let data = try await item.loadTransferable(type: Data.self),
-          let mime = FirstTimeImageType.detect(
+          let mime = PhotoImageType.detect(
             data: data, typeIdentifiers: item.supportedContentTypes.map(\.identifier))
-        else { throw FirstTimeEntryError.unsupportedPhotoType }
+        else { throw PhotoDraftError.unsupportedType }
         let image = UIImage(data: data)
         pending.append(
-          try FirstTimePhotoDraft.validate(
+          try PhotoDraft.validate(
             data: data, mimeType: mime, originalFilename: nil,
             pixelWidth: image.map { Int($0.size.width * $0.scale) },
             pixelHeight: image.map { Int($0.size.height * $0.scale) }))
@@ -129,7 +129,7 @@ struct EntryPhotoGalleryView: View {
       }
     }
     if items.count > available {
-      failure = "Keep up to \(FirstTimePhotoDraft.maximumCount) photos with one Entry."
+      failure = "Keep up to \(PhotoDraft.maximumCount) photos with one Entry."
     }
     message = failure
   }
@@ -138,7 +138,7 @@ struct EntryPhotoGalleryView: View {
     guard !isBusy, !pending.isEmpty else { return }
     isBusy = true
     message = nil
-    var failed: [FirstTimePhotoDraft] = []
+    var failed: [PhotoDraft] = []
     let drafts = pending
     for (index, draft) in drafts.enumerated() {
       uploadProgress = (completed: index, total: drafts.count)
@@ -198,7 +198,7 @@ struct EntryPhotoGalleryView: View {
 
   private func fetch() async {
     do {
-      let result: EntryPhotosResponse = try await MediaDelivery.metadataRequest(
+      let result: EntryPhotosResponse = try await MediaDelivery.apiRequest(
         path: "api/media/photos", query: URLQueryItem(name: "entryId", value: entryID.uuidString),
         client: client, ownerID: ownerID)
       try Task.checkCancellation()

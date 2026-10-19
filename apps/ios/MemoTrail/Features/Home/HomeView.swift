@@ -12,8 +12,8 @@ struct HomeView: View {
   @Binding private var captureTitle: String
   @Binding private var captureNote: NSAttributedString
   @Binding private var captureOccurrence: OccurrenceDraft?
-  @Binding private var capturePhotos: [FirstTimePhotoDraft]
-  private let addCapturePhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
+  @Binding private var capturePhotos: [PhotoDraft]
+  private let addCapturePhoto: @MainActor (PhotoDraft) async throws -> Void
   private let removeCapturePhoto: @MainActor (UUID) async throws -> Void
   @Binding private var hasLocalDraft: Bool
   @Environment(AppNavigator.self) private var navigator
@@ -29,8 +29,8 @@ struct HomeView: View {
     captureTitle: Binding<String>,
     captureNote: Binding<NSAttributedString>,
     captureOccurrence: Binding<OccurrenceDraft?>,
-    capturePhotos: Binding<[FirstTimePhotoDraft]>,
-    addCapturePhoto: @escaping @MainActor (FirstTimePhotoDraft) async throws -> Void,
+    capturePhotos: Binding<[PhotoDraft]>,
+    addCapturePhoto: @escaping @MainActor (PhotoDraft) async throws -> Void,
     removeCapturePhoto: @escaping @MainActor (UUID) async throws -> Void,
     hasLocalDraft: Binding<Bool>
   ) {

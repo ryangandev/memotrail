@@ -187,7 +187,7 @@ final class FirstTimesController {
     }
   }
 
-  func upload(_ draft: FirstTimePhotoDraft, entryID: UUID) async -> MutationResult {
+  func upload(_ draft: PhotoDraft, entryID: UUID) async -> MutationResult {
     guard !isSaving else {
       return MutationResult(
         identity: nil,

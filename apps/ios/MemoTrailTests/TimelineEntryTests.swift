@@ -10,7 +10,7 @@ final class TimelineEntryTests: XCTestCase {
     XCTAssertEqual(TimelineWorkspace.tracks(from: [row]).first?.entries.first?.id, id)
     XCTAssertNil(row.entry?.occurredStart)
     XCTAssertEqual(row.entry?.displayDate, "Ages 1 to 12")
-    for precision in [TimelineDatePrecision.age, .approximate, .unknown] {
+    for precision in [DatePrecision.age, .approximate, .unknown] {
       let input = try TimelineEntryInput.validate(
         entryID: nil, expectedRevision: nil, trackID: UUID(), kind: .stage, title: "Childhood",
         body: "", occurredStart: nil, occurredEnd: nil, datePrecision: precision,
@@ -380,7 +380,7 @@ final class TimelineEntryTests: XCTestCase {
     body: String = "Notes",
     occurredStart: Date = Date(timeIntervalSince1970: 100),
     occurredEnd: Date? = Date(timeIntervalSince1970: 200),
-    datePrecision: TimelineDatePrecision = .range,
+    datePrecision: DatePrecision = .range,
     occurredLabel: String = "",
     occurredTimezone: String = "America/Los_Angeles"
   ) throws -> TimelineEntryInput {

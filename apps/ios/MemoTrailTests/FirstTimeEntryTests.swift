@@ -216,7 +216,7 @@ final class FirstTimeEntryTests: XCTestCase {
   func testRangeAndExactDatesSurviveDedicatedEditorAndEncoding() throws {
     let start = Date(timeIntervalSince1970: 1793525400.123)
     let end = start.addingTimeInterval(86400)
-    for precision in [TimelineDatePrecision.exact, .range] {
+    for precision in [DatePrecision.exact, .range] {
       let original = EntryOccurrence(
         precision: precision, start: start, end: precision == .range ? end : nil, label: nil,
         timezone: "America/Los_Angeles")
@@ -475,7 +475,7 @@ final class FirstTimeEntryTests: XCTestCase {
     let photoID = UUID(uuidString: "20000000-0000-4000-8000-000000000001")!
     let ownerID = UUID(uuidString: "30000000-0000-4000-8000-000000000001")!
     let entryID = UUID(uuidString: "10000000-0000-4000-8000-000000000001")!
-    let draft = try FirstTimePhotoDraft.validate(
+    let draft = try PhotoDraft.validate(
       id: photoID,
       data: Data([1, 2, 3]),
       mimeType: .heic,
@@ -490,7 +490,7 @@ final class FirstTimeEntryTests: XCTestCase {
       "30000000-0000-4000-8000-000000000001/10000000-0000-4000-8000-000000000001/20000000-0000-4000-8000-000000000001.heic"
     )
     XCTAssertThrowsError(
-      try FirstTimePhotoDraft.validate(
+      try PhotoDraft.validate(
         data: Data(),
         mimeType: .jpeg,
         originalFilename: nil,
@@ -508,21 +508,21 @@ final class FirstTimeEntryTests: XCTestCase {
     let heic = Data([0, 0, 0, 0] + Array("ftypheic".utf8))
 
     XCTAssertEqual(
-      FirstTimeImageType.detect(data: png, typeIdentifiers: ["public.jpeg"]),
+      PhotoImageType.detect(data: png, typeIdentifiers: ["public.jpeg"]),
       .png
     )
-    XCTAssertEqual(FirstTimeImageType.detect(data: webP, typeIdentifiers: []), .webp)
-    XCTAssertEqual(FirstTimeImageType.detect(data: heic, typeIdentifiers: []), .heic)
+    XCTAssertEqual(PhotoImageType.detect(data: webP, typeIdentifiers: []), .webp)
+    XCTAssertEqual(PhotoImageType.detect(data: heic, typeIdentifiers: []), .heic)
     XCTAssertEqual(
-      FirstTimeImageType.detect(data: Data([1]), typeIdentifiers: ["public.jpeg"]),
+      PhotoImageType.detect(data: Data([1]), typeIdentifiers: ["public.jpeg"]),
       .jpeg
     )
-    XCTAssertNil(FirstTimeImageType.detect(data: Data([1]), typeIdentifiers: ["public.image"]))
+    XCTAssertNil(PhotoImageType.detect(data: Data([1]), typeIdentifiers: ["public.image"]))
   }
 
   func testAttachmentParametersEncodeMetadataAndNullFilename() throws {
     let entryID = UUID(uuidString: "10000000-0000-4000-8000-000000000001")!
-    let draft = try FirstTimePhotoDraft.validate(
+    let draft = try PhotoDraft.validate(
       id: UUID(uuidString: "20000000-0000-4000-8000-000000000001")!,
       data: Data([1, 2, 3]),
       mimeType: .png,

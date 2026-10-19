@@ -210,14 +210,14 @@ struct EntryPhotoDatesView: View {
     defer { busy = false }
     do {
       if let photo {
-        let result: PhotoCameraMetadata = try await MediaDelivery.metadataRequest(
+        let result: PhotoCameraMetadata = try await MediaDelivery.apiRequest(
           path: "api/media/metadata",
           query: URLQueryItem(name: "attachmentId", value: photo.id.uuidString), client: client,
           ownerID: ownerID)
         guard result.attachmentId == photo.id else { throw OccurrenceError.invalidDate }
         metadata[photo.id] = result
       } else {
-        let result: EntryPhotosResponse = try await MediaDelivery.metadataRequest(
+        let result: EntryPhotosResponse = try await MediaDelivery.apiRequest(
           path: "api/media/photos", query: URLQueryItem(name: "entryId", value: entryID.uuidString),
           client: client, ownerID: ownerID)
         photos = result.photos
@@ -268,7 +268,7 @@ private struct PhotoPlaceDraftEditor: View {
 }
 
 extension MediaDelivery {
-  static func metadataRequest<T: Decodable>(
+  static func apiRequest<T: Decodable>(
     path: String, query: URLQueryItem, client: SupabaseClient, ownerID: UUID
   ) async throws -> T {
     guard let base = AppConfiguration.apiURL,

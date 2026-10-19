@@ -1,47 +1,43 @@
 import Foundation
 
+/// What Trash holds, like Web `TrashItemKind`: Entries and single photos.
 enum TrashItemKind: String, Codable, Equatable, Hashable, Sendable {
   case attachment
   case entry
-  case person
-  case collection
 
   var displayName: String {
     switch self {
-    case .collection:
-      "Collection"
-    case .attachment:
-      "Photo"
-    case .entry:
-      "Entry"
-    case .person:
-      "Person"
+    case .attachment: "Photo"
+    case .entry: "Entry"
     }
   }
 
   var systemImage: String {
     switch self {
-    case .collection:
-      "archivebox"
-    case .attachment:
-      "photo"
-    case .entry:
-      "text.line.first.and.arrowtriangle.forward"
-    case .person:
-      "person.2"
+    case .attachment: "photo"
+    case .entry: "text.line.first.and.arrowtriangle.forward"
     }
   }
 }
 
+/// One `trash_workspace` row, like Web `TrashItem` in `apps/web/src/lib/data/trash.ts`. Each row
+/// carries its Entry's stored title and date, an Entry's own or the Entry a photo belongs to,
+/// so an untitled Entry is named by its date.
 struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
   let kind: TrashItemKind
   let itemID: UUID
-  let title: String
-  let detail: String?
+  /// The stored row title: a photo's file name, or the Entry's title.
+  let storedTitle: String
+  let storedDetail: String?
+  let entryTitle: String
+  let occurredStart: Date?
+  let occurredEnd: Date?
+  let occurredLabel: String?
+  let occurredTimezone: String?
+  let datePrecision: DatePrecision
   let deletedAt: String
   let expiresAt: String
   let revision: Int?
-  let wikiItemKind: WikiItemKind?
   let wikiItemSubtype: String?
   let parentEntryID: UUID?
   let storagePaths: [String]
@@ -51,97 +47,121 @@ struct TrashItem: Decodable, Equatable, Identifiable, Sendable {
   enum CodingKeys: String, CodingKey {
     case kind = "item_kind"
     case itemID = "item_id"
-    case title
-    case detail
+    case storedTitle = "title"
+    case storedDetail = "detail"
+    case entryTitle = "entry_title"
+    case occurredStart = "occurred_start"
+    case occurredEnd = "occurred_end"
+    case occurredLabel = "occurred_label"
+    case occurredTimezone = "occurred_timezone"
+    case datePrecision = "date_precision"
     case deletedAt = "deleted_at"
     case expiresAt = "expires_at"
     case revision
-    case wikiItemKind = "wiki_item_kind"
     case wikiItemSubtype = "wiki_item_subtype"
     case parentEntryID = "parent_entry_id"
     case storagePaths = "storage_paths"
     case totalCount = "total_count"
   }
 
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    kind = try values.decode(TrashItemKind.self, forKey: .kind)
+    itemID = try values.decode(UUID.self, forKey: .itemID)
+    storedTitle = try values.decodeIfPresent(String.self, forKey: .storedTitle) ?? ""
+    storedDetail = try values.decodeIfPresent(String.self, forKey: .storedDetail)
+    entryTitle = try values.decodeIfPresent(String.self, forKey: .entryTitle) ?? ""
+    occurredStart = try values.decodeTimestamp(forKey: .occurredStart)
+    occurredEnd = try values.decodeTimestamp(forKey: .occurredEnd)
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
+    occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
+    datePrecision = DatePrecision(
+      stored: try values.decodeIfPresent(String.self, forKey: .datePrecision))
+    deletedAt = try values.decode(String.self, forKey: .deletedAt)
+    expiresAt = try values.decode(String.self, forKey: .expiresAt)
+    revision = try values.decodeIfPresent(Int.self, forKey: .revision)
+    wikiItemSubtype = try values.decodeIfPresent(String.self, forKey: .wikiItemSubtype)
+    parentEntryID = try values.decodeIfPresent(UUID.self, forKey: .parentEntryID)
+    storagePaths = try values.decodeIfPresent([String].self, forKey: .storagePaths) ?? []
+    if let count = try? values.decode(Int.self, forKey: .totalCount) {
+      totalCount = count
+    } else {
+      totalCount = Int(try values.decode(String.self, forKey: .totalCount)) ?? 0
+    }
+  }
+
   var id: String {
     "\(kind.rawValue)-\(itemID.uuidString.lowercased())"
   }
 
+  /// The Entry's name: its title, or its date in its recorded zone.
+  var entryDisplayName: String {
+    entryDisplayTitle(
+      entryTitle,
+      EntryOccurrence(
+        storedPrecision: datePrecision.rawValue, start: occurredStart, end: occurredEnd,
+        label: occurredLabel, timezone: occurredTimezone))
+  }
+
+  /// Web `itemFromRow`: a photo keeps its file name, an Entry is named like everywhere else.
+  var title: String { kind == .attachment ? storedTitle : entryDisplayName }
+
+  /// Web `itemFromRow`: a photo says which Entry it came from.
+  var detail: String? {
+    kind == .attachment ? "Photo from \(entryDisplayName)" : storedDetail
+  }
+
   var displayKind: String {
-    if kind == .entry, wikiItemKind == .entry, wikiItemSubtype == "first_time" {
-      return "First Time"
-    }
-
-    if kind == .entry, let wikiItemKind, let wikiItemSubtype {
-      return wikiItemKind.displayName(subtype: wikiItemSubtype)
-    }
-
-    return kind.displayName
+    kind == .entry && wikiItemSubtype == EntrySubtype.chapter.rawValue
+      ? "Chapter" : kind.displayName
   }
 
   var displayDetail: String? {
     detail?.trimmed.nonEmpty.flatMap { $0 == title ? nil : $0 }
   }
 
-  var deletionDateLabel: String {
-    Self.displayDate(deletedAt)
+  /// Web `trashDate`: when the item was moved to Trash, in the profile time zone.
+  func deletionDateLabel(timezone: String = TimeZone.current.identifier) -> String {
+    Self.displayDate(deletedAt, timezone: timezone)
   }
 
-  var expirationDateLabel: String {
-    Self.displayDate(expiresAt)
+  func expirationDateLabel(timezone: String = TimeZone.current.identifier) -> String {
+    Self.displayDate(expiresAt, timezone: timezone)
   }
 
-  /// Web `retentionLabel`: how long the item stays restorable, and the date it runs through.
-  func retention(referenceDate: Date = Date()) -> (status: String, date: String?) {
-    guard let expirationDate = TrashTimestamp.date(from: expiresAt) else {
+  /// Web `trashRetention`: how long the item stays restorable, and the date it runs through.
+  func retention(referenceDate: Date = Date(), timezone: String = TimeZone.current.identifier)
+    -> (status: String, date: String?)
+  {
+    guard let expirationDate = EntryTimestamp.date(from: expiresAt) else {
       return ("Retention date unavailable", nil)
     }
-
+    let label = expirationDateLabel(timezone: timezone)
     let remainingDays = Int(ceil(expirationDate.timeIntervalSince(referenceDate) / 86_400))
-    guard remainingDays > 0 else {
-      return ("Eligible for cleanup since", expirationDateLabel)
-    }
-    return ("\(countLabel(remainingDays, "day")) to restore · through", expirationDateLabel)
+    guard remainingDays > 0 else { return ("Eligible for cleanup since", label) }
+    return ("\(countLabel(remainingDays, "day")) to restore · through", label)
   }
 
   /// Web `deletionDescription`: what Delete forever removes.
   var deletionDescription: String {
     switch kind {
-    case .collection:
-      "Only the Collection and its grouping links will be removed. Your Entries and photos stay in the archive."
     case .attachment:
       "The private photo file and its attachment record will be removed."
-    case .person:
-      "The Person and their version history will be removed."
     case .entry:
-      "The Entry, private photos, relationships, specialized details, and version history will be removed."
+      "The Entry, private photos, relationships, and specialized details will be removed."
     }
   }
 
-  private static func displayDate(_ timestamp: String) -> String {
-    guard let date = TrashTimestamp.date(from: timestamp) else {
-      return "Date unavailable"
-    }
-
+  /// Web `trashDate`: en-US "MMM d, yyyy" in the given zone, UTC when it is not valid.
+  static func displayDate(_ timestamp: String, timezone: String) -> String {
+    guard let date = EntryTimestamp.date(from: timestamp) else { return "Date unavailable" }
     let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)
     formatter.locale = Locale(identifier: "en_US")
-    formatter.timeZone = .current
-    formatter.setLocalizedDateFormatFromTemplate("MMM d, yyyy")
+    formatter.timeZone =
+      EntryOccurrence.validTimezone(timezone).flatMap(TimeZone.init(identifier:)) ?? .gmt
+    formatter.dateFormat = "MMM d, yyyy"
     return formatter.string(from: date)
-  }
-}
-
-enum TrashTimestamp {
-  static func date(from value: String) -> Date? {
-    let formatter = ISO8601DateFormatter()
-    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-
-    if let date = formatter.date(from: value) {
-      return date
-    }
-
-    formatter.formatOptions = [.withInternetDateTime]
-    return formatter.date(from: value)
   }
 }
 
@@ -278,7 +298,7 @@ struct EmptyTrashTarget: Decodable, Equatable, Sendable {
     guard items.count <= 10000 else { return false }
     var seen = Set<String>()
     return items.allSatisfy {
-      TrashTimestamp.date(from: $0.deletedAt) != nil
+      EntryTimestamp.date(from: $0.deletedAt) != nil
         && ($0.kind == .attachment ? $0.revision == nil : ($0.revision ?? 0) > 0)
         && seen.insert("\($0.kind.rawValue):\($0.itemID)").inserted
     }

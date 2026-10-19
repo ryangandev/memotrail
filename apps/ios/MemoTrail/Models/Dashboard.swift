@@ -1,85 +1,170 @@
 import Foundation
 
+// The Dashboard's data, like Web `apps/web/src/lib/data/home.ts`, `home-entry.ts`, and
+// `home-resurfacing.ts`.
+
+/// The single `home_workspace` row.
 struct HomeSnapshot: Decodable, Equatable, Sendable {
   let snapshotDate: String
   let profileDisplayName: String?
-  let inboxCount: Int
   let entryCount: Int
   let firstTimeCount: Int
-  let collectionCount: Int
-  let currentStageCount: Int
+  let tagCount: Int
+  /// How many Chapters have started and not ended.
+  let nowCount: Int
   var recentEntries: [HomeEntry]
-  let currentStages: [HomeStage]
+  /// The Chapters happening now, at most a few.
+  let nowItems: [HomeNowItem]
 
   enum CodingKeys: String, CodingKey {
     case snapshotDate = "snapshot_date"
     case profileDisplayName = "profile_display_name"
-    case inboxCount = "inbox_count"
     case entryCount = "entry_count"
     case firstTimeCount = "first_time_count"
-    case collectionCount = "collection_count"
-    case currentStageCount = "current_stage_count"
+    case tagCount = "tag_count"
+    case nowCount = "now_count"
     case recentEntries = "recent_entries"
-    case currentStages = "current_stages"
+    case nowItems = "now_items"
   }
 
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    snapshotDate = try values.decode(String.self, forKey: .snapshotDate)
+    profileDisplayName = try values.decodeIfPresent(String.self, forKey: .profileDisplayName)
+    entryCount = try Self.count(values, .entryCount)
+    firstTimeCount = try Self.count(values, .firstTimeCount)
+    tagCount = try Self.count(values, .tagCount)
+    nowCount = try Self.count(values, .nowCount)
+    recentEntries = try values.decode([HomeEntry].self, forKey: .recentEntries)
+    nowItems = try values.decode([HomeNowItem].self, forKey: .nowItems)
+  }
+
+  /// Web `safeCount`: a non-negative whole number, written as a number or a string.
+  private static func count(_ values: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys)
+    throws -> Int
+  {
+    let count =
+      (try? values.decode(Int.self, forKey: key))
+      ?? Int(try values.decode(String.self, forKey: key))
+    guard let count, count >= 0 else {
+      throw DecodingError.dataCorruptedError(
+        forKey: key, in: values, debugDescription: "A count must be a whole number.")
+    }
+    return count
+  }
 }
 
-struct HomeEntry: Decodable, Equatable, Identifiable, Sendable {
-  var attachments: [HomeAttachment]
-  let body: String
-  let collectionNames: [String]
-  let createdAt: Date
-  let datePrecision: String
-  let itemKind: WikiItemKind
-  let itemSubtype: String
+/// A Chapter that has started and has no end yet, like Web `HomeNowItem`.
+struct HomeNowItem: Decodable, Equatable, Identifiable, Sendable {
   let id: UUID
-  let inboxStatus: String
-  let occurredEnd: Date?
-  let occurredLabel: String?
-  let occurredStart: Date?
-  let occurredTimezone: String?
-  let revision: Int
-  let tagNames: [String]
+  /// The stored title, blank when the Chapter has none.
   let title: String
-  let updatedAt: Date
+  let isFirstTime: Bool
+  let occurredStart: Date
+  let occurredEnd: Date?
+  let datePrecision: DatePrecision
+  let occurredLabel: String?
+  let occurredTimezone: String?
 
   enum CodingKeys: String, CodingKey {
-    case attachments
-    case body
-    case collectionNames = "collection_names"
-    case createdAt = "created_at"
-    case datePrecision = "date_precision"
-    case itemKind = "item_kind"
-    case itemSubtype = "item_subtype"
     case id = "entry_id"
-    case inboxStatus = "inbox_status"
-    case occurredEnd = "occurred_end"
-    case occurredLabel = "occurred_label"
-    case occurredStart = "occurred_start"
-    case occurredTimezone = "occurred_timezone"
-    case revision
-    case tagNames = "tag_names"
     case title
-    case updatedAt = "updated_at"
+    case isFirstTime = "is_first_time"
+    case occurredStart = "occurred_start"
+    case occurredEnd = "occurred_end"
+    case datePrecision = "date_precision"
+    case occurredLabel = "occurred_label"
+    case occurredTimezone = "occurred_timezone"
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    id = try values.decode(UUID.self, forKey: .id)
+    title = try values.decodeIfPresent(String.self, forKey: .title) ?? ""
+    isFirstTime = try values.decode(Bool.self, forKey: .isFirstTime)
+    occurredStart = try values.decodeRequiredTimestamp(forKey: .occurredStart)
+    occurredEnd = try values.decodeTimestamp(forKey: .occurredEnd)
+    datePrecision = DatePrecision(
+      stored: try values.decodeIfPresent(String.self, forKey: .datePrecision))
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
+    occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
   }
 
   var occurrence: EntryOccurrence {
     EntryOccurrence(
-      precision: TimelineDatePrecision(rawValue: datePrecision) ?? .unknown,
-      start: occurredStart, end: occurredEnd, label: occurredLabel?.trimmed.nonEmpty,
-      timezone: occurredTimezone.flatMap { TimeZone(identifier: $0)?.identifier } ?? "UTC")
+      storedPrecision: datePrecision.rawValue, start: occurredStart, end: occurredEnd,
+      label: occurredLabel, timezone: occurredTimezone)
   }
 
-  /// The Web card title: the title, else the start of the note, else a neutral fallback.
-  var cardTitle: String {
-    title.trimmed.nonEmpty ?? body.trimmed.nonEmpty?.truncated(to: 72) ?? "Untitled Entry"
+  /// Web `entryDisplayTitle`.
+  var displayTitle: String { entryDisplayTitle(title, occurrence) }
+}
+
+/// A recent Entry or resurfaced memory on the Dashboard, like Web `HomeEntry`. The RPC does not
+/// say whether it is a First Time.
+struct HomeEntry: Decodable, Equatable, Identifiable, Sendable {
+  let id: UUID
+  /// The stored title, blank when the Entry has none.
+  let title: String
+  let body: String
+  let subtype: EntrySubtype
+  let occurredStart: Date?
+  let occurredEnd: Date?
+  let datePrecision: DatePrecision
+  let occurredLabel: String?
+  let occurredTimezone: String?
+  let revision: Int
+  let createdAt: Date?
+  let updatedAt: Date?
+  let tagNames: [String]
+  var attachments: [HomeAttachment]
+
+  enum CodingKeys: String, CodingKey {
+    case id = "entry_id"
+    case title, body, revision, attachments
+    case subtype = "item_subtype"
+    case occurredStart = "occurred_start"
+    case occurredEnd = "occurred_end"
+    case datePrecision = "date_precision"
+    case occurredLabel = "occurred_label"
+    case occurredTimezone = "occurred_timezone"
+    case createdAt = "created_at"
+    case updatedAt = "updated_at"
+    case tagNames = "tag_names"
   }
 
-  var displayType: String {
-    itemKind.displayName(subtype: itemSubtype)
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    id = try values.decode(UUID.self, forKey: .id)
+    title = try values.decodeIfPresent(String.self, forKey: .title) ?? ""
+    body = try values.decodeIfPresent(String.self, forKey: .body) ?? ""
+    subtype = EntrySubtype(stored: try values.decodeIfPresent(String.self, forKey: .subtype))
+    occurredStart = try values.decodeTimestamp(forKey: .occurredStart)
+    occurredEnd = try values.decodeTimestamp(forKey: .occurredEnd)
+    datePrecision = DatePrecision(
+      stored: try values.decodeIfPresent(String.self, forKey: .datePrecision))
+    occurredLabel = try values.decodeIfPresent(String.self, forKey: .occurredLabel)
+    occurredTimezone = try values.decodeIfPresent(String.self, forKey: .occurredTimezone)
+    revision = try values.decode(Int.self, forKey: .revision)
+    createdAt = try values.decodeTimestamp(forKey: .createdAt)
+    updatedAt = try values.decodeTimestamp(forKey: .updatedAt)
+    tagNames = try values.decodeIfPresent([String].self, forKey: .tagNames) ?? []
+    attachments = try values.decodeIfPresent([HomeAttachment].self, forKey: .attachments) ?? []
   }
 
+  var occurrence: EntryOccurrence {
+    EntryOccurrence(
+      storedPrecision: datePrecision.rawValue, start: occurredStart, end: occurredEnd,
+      label: occurredLabel, timezone: occurredTimezone)
+  }
+
+  /// Web `entryDisplayTitle`: the title, or the date when there is none.
+  var displayTitle: String { entryDisplayTitle(title, occurrence) }
+
+  /// "Chapter" or "Entry"; the row does not carry the First Time mark.
+  var identityLabel: String { EntryMarks(subtype: subtype, isFirstTime: false).identityLabel }
+
+  /// The first photo that has a display URL, else the first photo.
   var coverAttachment: HomeAttachment? {
     attachments.first(where: { $0.signedURL != nil }) ?? attachments.first
   }
@@ -90,6 +175,8 @@ enum HomeResurfacingKind: String, Decodable, Equatable, Sendable {
   case onThisDay = "on_this_day"
 }
 
+/// The `home_resurfaced_memory` row: always a dated ordinary Entry, like Web
+/// `parseHomeResurfacedMemory`.
 struct HomeResurfacedMemory: Decodable, Equatable, Sendable {
   var entry: HomeEntry
   let kind: HomeResurfacingKind
@@ -106,35 +193,28 @@ struct HomeResurfacedMemory: Decodable, Equatable, Sendable {
     kind = try values.decode(HomeResurfacingKind.self, forKey: .kind)
     yearsAgo = try values.decodeIfPresent(Int.self, forKey: .yearsAgo)
 
-    guard entry.inboxStatus == "organized", entry.occurredStart != nil else {
+    guard entry.occurredStart != nil else {
       throw DecodingError.dataCorruptedError(
-        forKey: .kind,
-        in: values,
-        debugDescription: "A resurfaced memory must be organized and dated."
-      )
+        forKey: .kind, in: values, debugDescription: "A resurfaced memory must be dated.")
     }
-
     switch kind {
     case .onThisDay:
       guard let yearsAgo, yearsAgo > 0 else {
         throw DecodingError.dataCorruptedError(
-          forKey: .yearsAgo,
-          in: values,
-          debugDescription: "An On This Day memory requires a positive anniversary count."
-        )
+          forKey: .yearsAgo, in: values,
+          debugDescription: "An On This Day memory requires a positive anniversary count.")
       }
     case .fromArchive:
       guard yearsAgo == nil else {
         throw DecodingError.dataCorruptedError(
-          forKey: .yearsAgo,
-          in: values,
-          debugDescription: "An archive memory cannot include an anniversary count."
-        )
+          forKey: .yearsAgo, in: values,
+          debugDescription: "An archive memory cannot include an anniversary count.")
       }
     }
   }
 }
 
+/// A saved original photo as the Dashboard and Chapter RPCs list it.
 struct HomeAttachment: Decodable, Equatable, Identifiable, Sendable {
   let id: UUID
   let bucketID: String
@@ -158,63 +238,6 @@ struct HomeAttachment: Decodable, Equatable, Identifiable, Sendable {
   }
 }
 
-struct HomeInboxPreview: Decodable, Equatable, Identifiable, Sendable {
-  let id: UUID
-  let title: String?
-  let body: String
-  let createdAt: Date
-
-  enum CodingKeys: String, CodingKey {
-    case id, title, body
-    case createdAt = "created_at"
-  }
-
-  /// The title, else the note's first line, like Web's Ready to organize rows.
-  var displayTitle: String {
-    title?.trimmed.nonEmpty
-      ?? body.trimmed.split(whereSeparator: \.isNewline).first.map(String.init)
-      ?? "Untitled capture"
-  }
-
-  /// The note is shown under a title only when both exist.
-  var excerpt: String? {
-    title?.trimmed.nonEmpty == nil ? nil : body.trimmed.nonEmpty
-  }
-}
-
-struct HomeStage: Decodable, Equatable, Identifiable, Sendable {
-  let body: String
-  let datePrecision: String
-  let id: UUID
-  let occurredEnd: Date?
-  let occurredLabel: String?
-  let occurredStart: Date
-  let occurredTimezone: String?
-  let title: String
-  let trackID: UUID
-  let trackName: String
-
-  enum CodingKeys: String, CodingKey {
-    case body
-    case datePrecision = "date_precision"
-    case id = "entry_id"
-    case occurredEnd = "occurred_end"
-    case occurredLabel = "occurred_label"
-    case occurredStart = "occurred_start"
-    case occurredTimezone = "occurred_timezone"
-    case title
-    case trackID = "track_id"
-    case trackName = "track_name"
-  }
-
-  var occurrence: EntryOccurrence {
-    EntryOccurrence(
-      precision: TimelineDatePrecision(rawValue: datePrecision) ?? .unknown,
-      start: occurredStart, end: occurredEnd, label: occurredLabel?.trimmed.nonEmpty,
-      timezone: occurredTimezone.flatMap { TimeZone(identifier: $0)?.identifier } ?? "UTC")
-  }
-}
-
 struct HomeWorkspaceRequest: Equatable, Sendable {
   static let defaultRecentLimit = 5
 
@@ -222,33 +245,15 @@ struct HomeWorkspaceRequest: Equatable, Sendable {
   let timezone: String
   let recentLimit: Int
 
-  init(
-    date: Date,
-    timezone: TimeZone,
-    recentLimit: Int = defaultRecentLimit
-  ) throws {
-    try self.init(
-      date: date,
-      timezoneIdentifier: timezone.identifier,
-      recentLimit: recentLimit
-    )
+  init(date: Date, timezone: TimeZone, recentLimit: Int = defaultRecentLimit) throws {
+    try self.init(date: date, timezoneIdentifier: timezone.identifier, recentLimit: recentLimit)
   }
 
-  init(
-    date: Date,
-    timezoneIdentifier: String,
-    recentLimit: Int = defaultRecentLimit
-  ) throws {
-    guard
-      !timezoneIdentifier.isEmpty,
-      timezoneIdentifier.count <= 100,
+  init(date: Date, timezoneIdentifier: String, recentLimit: Int = defaultRecentLimit) throws {
+    guard !timezoneIdentifier.isEmpty, timezoneIdentifier.count <= 100,
       let timezone = TimeZone(identifier: timezoneIdentifier)
-    else {
-      throw HomeWorkspaceError.invalidTimezone
-    }
-    guard (1...10).contains(recentLimit) else {
-      throw HomeWorkspaceError.invalidRecentLimit
-    }
+    else { throw HomeWorkspaceError.invalidTimezone }
+    guard (1...10).contains(recentLimit) else { throw HomeWorkspaceError.invalidRecentLimit }
 
     let formatter = DateFormatter()
     formatter.calendar = Calendar(identifier: .gregorian)
@@ -262,11 +267,7 @@ struct HomeWorkspaceRequest: Equatable, Sendable {
   }
 
   var parameters: HomeWorkspaceParameters {
-    HomeWorkspaceParameters(
-      localDate: localDate,
-      timezone: timezone,
-      recentLimit: recentLimit
-    )
+    HomeWorkspaceParameters(localDate: localDate, timezone: timezone, recentLimit: recentLimit)
   }
 
   var resurfacingParameters: HomeResurfacingParameters {

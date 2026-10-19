@@ -6,8 +6,8 @@ struct QuickCaptureView: View {
   @Binding var title: String
   @Binding var note: NSAttributedString
   @Binding var occurrence: OccurrenceDraft?
-  @Binding var photos: [FirstTimePhotoDraft]
-  let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
+  @Binding var photos: [PhotoDraft]
+  let addPhoto: @MainActor (PhotoDraft) async throws -> Void
   let removePhoto: @MainActor (UUID) async throws -> Void
   @Binding var hasLocalDraft: Bool
 

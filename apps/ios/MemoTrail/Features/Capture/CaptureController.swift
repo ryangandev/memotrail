@@ -8,7 +8,7 @@ import Observation
 final class CaptureController {
   private(set) var entries: [InboxEntry] = []
   private(set) var collectionOptions: [String] = []
-  private(set) var pendingEntries: [QueuedInboxEntry]
+  private(set) var pendingEntries: [QueuedCapture]
   private(set) var tagOptions: [String] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
@@ -33,8 +33,8 @@ final class CaptureController {
       body: EntryAISuggestionInput(entryID: entryID, revision: revision, retry: retry),
       client: client, ownerID: ownerID)
   }
-  private let queueStore: InboxQueueStore
-  private let photoStore: InboxPhotoStore
+  private let queueStore: CaptureQueueStore
+  private let photoStore: CapturePhotoStore
   private let networkMonitor: NWPathMonitor
   private let networkMonitorQueue = DispatchQueue(
     label: "com.rystudio.memotrail.inbox-connectivity"
@@ -43,8 +43,8 @@ final class CaptureController {
   init(
     client: SupabaseClient,
     ownerID: UUID,
-    queueStore: InboxQueueStore = InboxQueueStore(),
-    photoStore: InboxPhotoStore = InboxPhotoStore(),
+    queueStore: CaptureQueueStore = CaptureQueueStore(),
+    photoStore: CapturePhotoStore = CapturePhotoStore(),
     networkMonitor: NWPathMonitor = NWPathMonitor()
   ) {
     self.client = client
@@ -129,11 +129,11 @@ final class CaptureController {
     bodyRich: EntryEmphasisContent? = nil,
     occurredAt: Date? = nil,
     occurrenceDraft: OccurrenceDraft? = nil,
-    photos: [FirstTimePhotoDraft] = []
+    photos: [PhotoDraft] = []
   ) async -> Bool {
     guard !isSaving, !isSyncing else { return false }
 
-    let capture: InboxCapture
+    let capture: CaptureInput
     let occurrence: EntryOccurrence
     let now = Date()
     do {
@@ -143,7 +143,7 @@ final class CaptureController {
           precision: .exact, start: occurredAt ?? now, end: nil, label: nil,
           timezone: TimeZone.current.identifier)
       try occurrence.validate()
-      capture = try InboxCapture.validate(
+      capture = try CaptureInput.validate(
         title: title,
         body: body,
         hasAttachments: !photos.isEmpty
@@ -157,14 +157,14 @@ final class CaptureController {
     captureError = nil
     defer { isSaving = false }
 
-    var pendingEntry = QueuedInboxEntry(
+    var pendingEntry = QueuedCapture(
       id: UUID(),
       title: capture.title,
       body: capture.body,
       occurredAt: occurrence.start,
       occurredTimezone: occurrence.timezone,
       queuedAt: now,
-      attachments: photos.map(QueuedInboxAttachment.init)
+      attachments: photos.map(QueuedCaptureAttachment.init)
     )
     pendingEntry.occurrence = occurrence
     // Like Web, keep formatting only when it describes exactly the saved note.
@@ -193,7 +193,7 @@ final class CaptureController {
   /// Saves the composer's note, keeping its Web-compatible formatting.
   func save(
     title: String, note: NSAttributedString, occurrenceDraft: OccurrenceDraft?,
-    photos: [FirstTimePhotoDraft]
+    photos: [PhotoDraft]
   ) async -> Bool {
     let captured = EntryEmphasisContent.capture(note)
     return await save(
@@ -580,8 +580,8 @@ final class CaptureController {
   }
 
   /// Keeps a refused capture on this iPhone, marked so no later sync sends it again.
-  private func reject(_ entry: QueuedInboxEntry, message: String) -> Bool {
-    let rejection = QueuedInboxRejection(message: message, rejectedAt: Date())
+  private func reject(_ entry: QueuedCapture, message: String) -> Bool {
+    let rejection = QueuedCaptureRejection(message: message, rejectedAt: Date())
     guard
       let nextQueue = queueStore.markRejected(
         entryID: entry.id, rejection: rejection, ownerID: ownerID)
@@ -596,7 +596,7 @@ final class CaptureController {
   }
 
   /// Like Web `syncInboxEntry`, decides what a failed insert means for the capture.
-  private func insertFailure(_ error: Error, for entry: QueuedInboxEntry) async -> InsertFailure {
+  private func insertFailure(_ error: Error, for entry: QueuedCapture) async -> InsertFailure {
     if Self.isDeletedForever(error) { return .rejected(Self.deletedForeverMessage) }
 
     // A lost response may hide an insert that succeeded, so an existing Entry counts as synced
@@ -714,7 +714,7 @@ final class CaptureController {
       ? nil : "Saved on this iPhone. MemoTrail will retry when you are online."
   }
 
-  private func insert(_ entry: QueuedInboxEntry) async throws {
+  private func insert(_ entry: QueuedCapture) async throws {
     let payload = InboxEntryInsert(
       id: entry.id,
       ownerID: ownerID,
@@ -758,7 +758,7 @@ final class CaptureController {
     }
   }
 
-  private func synchronizeAttachments(_ entry: QueuedInboxEntry) async throws {
+  private func synchronizeAttachments(_ entry: QueuedCapture) async throws {
     guard !entry.attachments.isEmpty else { return }
 
     let photoStore = photoStore
@@ -994,7 +994,7 @@ struct ReviewEntryParameters: Encodable, Sendable {
   let collectionNames: [String]
   let tagNames: [String]
   let markDone: Bool
-  var datePrecision: TimelineDatePrecision = .exact
+  var datePrecision: DatePrecision = .exact
   var occurredEnd: Date? = nil
   var occurredLabel: String? = nil
   var photoPlace: PhotoPlaceDraft? = nil

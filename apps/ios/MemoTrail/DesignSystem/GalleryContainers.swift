@@ -7,7 +7,7 @@
     @State private var hasLocation = true
     @State private var captureNote = NSAttributedString(string: "")
     @State private var captureOccurrence: OccurrenceDraft?
-    @State private var capturePhotos: [FirstTimePhotoDraft] = []
+    @State private var capturePhotos: [PhotoDraft] = []
     @State private var captureMessage = "Nothing captured yet."
 
     var body: some View {

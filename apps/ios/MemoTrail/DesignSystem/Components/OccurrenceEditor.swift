@@ -21,7 +21,7 @@ struct OccurrenceEditor: View {
     _showsDescription = State(initialValue: !value.wrappedValue.label.isEmpty)
   }
 
-  private var precision: TimelineDatePrecision { value.precision }
+  private var precision: DatePrecision { value.precision }
   private var bounded: Bool {
     !point && (span || [.range, .approximate, .age].contains(precision))
   }
@@ -99,9 +99,9 @@ struct OccurrenceEditor: View {
     }
   }
 
-  private var precisionOptions: [TimelineDatePrecision] {
+  private var precisionOptions: [DatePrecision] {
     point && precision != .range
-      ? TimelineDatePrecision.allCases.filter { $0 != .range } : TimelineDatePrecision.allCases
+      ? DatePrecision.allCases.filter { $0 != .range } : DatePrecision.allCases
   }
 
   private var granularity: MTDateFieldGranularity {

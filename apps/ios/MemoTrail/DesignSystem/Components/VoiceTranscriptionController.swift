@@ -6,7 +6,7 @@ enum VoiceTranscriptText {
   static func merging(
     existingText: String,
     transcript: String,
-    limit: Int = InboxCapture.bodyLimit
+    limit: Int = CaptureInput.bodyLimit
   ) -> String {
     guard limit > 0 else { return "" }
 
@@ -50,7 +50,7 @@ final class VoiceTranscriptionController {
   func start(currentText: String) async {
     guard !isActive else { return }
 
-    guard currentText.count < InboxCapture.bodyLimit else {
+    guard currentText.count < CaptureInput.bodyLimit else {
       fail("This note has reached the 50,000 character limit.")
       return
     }

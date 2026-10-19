@@ -7,7 +7,7 @@ import XCTest
 final class InboxEntryTests: XCTestCase {
   func testCaptureDraftRetainsUnfinishedDateAndLegacyExactDate() throws {
     let defaults = makeDefaults()
-    let store = InboxDraftStore(defaults: defaults)
+    let store = CaptureDraftStore(defaults: defaults)
     let owner = UUID()
     var draft = OccurrenceDraft(
       EntryOccurrence(
@@ -24,9 +24,9 @@ final class InboxEntryTests: XCTestCase {
 
   func testCaptureQueueAndServerPayloadRetainEveryPrecision() throws {
     let defaults = makeDefaults()
-    let store = InboxQueueStore(defaults: defaults)
+    let store = CaptureQueueStore(defaults: defaults)
     let owner = UUID()
-    for precision in TimelineDatePrecision.allCases {
+    for precision in DatePrecision.allCases {
       var draft = OccurrenceDraft(
         EntryOccurrence(
           precision: precision, start: nil, end: nil, label: nil, timezone: "Asia/Kathmandu"))
@@ -40,7 +40,7 @@ final class InboxEntryTests: XCTestCase {
       }
       if precision == .range { draft.end = "2018-08-09" }
       let occurrence = try draft.resolve()
-      var queued = QueuedInboxEntry(
+      var queued = QueuedCapture(
         id: UUID(), title: nil, body: "Memory", occurredAt: Date(), occurredTimezone: "UTC",
         queuedAt: Date())
       queued.occurrence = occurrence
@@ -88,7 +88,7 @@ final class InboxEntryTests: XCTestCase {
   @MainActor
   func testDraftAndQueueKeepFormattingOnlyForTheirExactNote() throws {
     let owner = UUID()
-    let drafts = InboxDraftStore(defaults: makeDefaults())
+    let drafts = CaptureDraftStore(defaults: makeDefaults())
     let note = NSAttributedString(
       string: "Kept", attributes: [.font: UIFont.italicSystemFont(ofSize: 17)])
     let rich = EntryEmphasisContent(attributedText: note)
@@ -101,8 +101,8 @@ final class InboxEntryTests: XCTestCase {
     XCTAssertNil(drafts.load(ownerID: owner)?.bodyRich)
     XCTAssertEqual(drafts.load(ownerID: owner)?.note.string, "Changed")
 
-    let queue = InboxQueueStore(defaults: makeDefaults())
-    var entry = QueuedInboxEntry(
+    let queue = CaptureQueueStore(defaults: makeDefaults())
+    var entry = QueuedCapture(
       id: UUID(), title: nil, body: "Kept", occurredAt: Date(), occurredTimezone: "UTC",
       queuedAt: Date())
     entry.bodyRich = rich
@@ -116,7 +116,7 @@ final class InboxEntryTests: XCTestCase {
     let legacy = Data(
       #"{"id":"95000000-0000-4000-8000-000000000009","title":null,"body":"Old","occurredAt":null,"occurredTimezone":"UTC","queuedAt":0}"#
         .utf8)
-    XCTAssertNil(try JSONDecoder().decode(QueuedInboxEntry.self, from: legacy).bodyRich)
+    XCTAssertNil(try JSONDecoder().decode(QueuedCapture.self, from: legacy).bodyRich)
   }
 
   func testCaptureInsertCarriesBodyRichMetadataLikeWeb() throws {
@@ -244,7 +244,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testOccurrencePartialDatesUnknownAgeAndAIAdoption() throws {
     for (precision, input, expected) in [
-      (TimelineDatePrecision.year, "2017", "2017"), (.month, "2017-07", "Jul 2017"),
+      (DatePrecision.year, "2017", "2017"), (.month, "2017-07", "Jul 2017"),
       (.day, "2017-07-08", "Jul 8, 2017"),
     ] {
       var draft = OccurrenceDraft(
@@ -283,7 +283,7 @@ final class InboxEntryTests: XCTestCase {
   }
 
   func testBodyOnlyCaptureIsTrimmedAndAccepted() throws {
-    let capture = try InboxCapture.validate(
+    let capture = try CaptureInput.validate(
       title: "  ",
       body: "  A thought worth keeping.  "
     )
@@ -293,7 +293,7 @@ final class InboxEntryTests: XCTestCase {
   }
 
   func testTitleOnlyCaptureIsAccepted() throws {
-    let capture = try InboxCapture.validate(
+    let capture = try CaptureInput.validate(
       title: " First time skiing ",
       body: "  "
     )
@@ -304,14 +304,14 @@ final class InboxEntryTests: XCTestCase {
 
   func testEmptyCaptureIsRejected() {
     XCTAssertThrowsError(
-      try InboxCapture.validate(title: " \n ", body: "  ")
+      try CaptureInput.validate(title: " \n ", body: "  ")
     ) { error in
-      XCTAssertEqual(error as? InboxCaptureError, .empty)
+      XCTAssertEqual(error as? CaptureError, .empty)
     }
   }
 
   func testPhotoOnlyCaptureIsAccepted() throws {
-    let capture = try InboxCapture.validate(
+    let capture = try CaptureInput.validate(
       title: "",
       body: "",
       hasAttachments: true
@@ -323,21 +323,21 @@ final class InboxEntryTests: XCTestCase {
 
   func testOversizedTitleAndBodyAreRejected() {
     XCTAssertThrowsError(
-      try InboxCapture.validate(
-        title: String(repeating: "a", count: InboxCapture.titleLimit + 1),
+      try CaptureInput.validate(
+        title: String(repeating: "a", count: CaptureInput.titleLimit + 1),
         body: ""
       )
     ) { error in
-      XCTAssertEqual(error as? InboxCaptureError, .titleTooLong)
+      XCTAssertEqual(error as? CaptureError, .titleTooLong)
     }
 
     XCTAssertThrowsError(
-      try InboxCapture.validate(
+      try CaptureInput.validate(
         title: "",
-        body: String(repeating: "a", count: InboxCapture.bodyLimit + 1)
+        body: String(repeating: "a", count: CaptureInput.bodyLimit + 1)
       )
     ) { error in
-      XCTAssertEqual(error as? InboxCaptureError, .bodyTooLong)
+      XCTAssertEqual(error as? CaptureError, .bodyTooLong)
     }
   }
 
@@ -531,7 +531,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testDraftStoreRestoresContentForOnlyItsOwner() {
     let defaults = makeDefaults()
-    let store = InboxDraftStore(defaults: defaults)
+    let store = CaptureDraftStore(defaults: defaults)
     let firstOwner = UUID()
     let secondOwner = UUID()
     let occurredAt = Date(timeIntervalSince1970: 1_783_088_200)
@@ -552,7 +552,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testDraftStoreLoadsLegacyTextDraftWithoutInventingADate() throws {
     let defaults = makeDefaults()
-    let store = InboxDraftStore(defaults: defaults)
+    let store = CaptureDraftStore(defaults: defaults)
     let ownerID = UUID()
     let legacyDraft = LegacyInboxDraft(
       title: "",
@@ -561,7 +561,7 @@ final class InboxEntryTests: XCTestCase {
     )
     defaults.set(
       try JSONEncoder().encode(legacyDraft),
-      forKey: InboxDraftStore.storageKey(ownerID: ownerID)
+      forKey: CaptureDraftStore.storageKey(ownerID: ownerID)
     )
 
     let loadedDraft = try XCTUnwrap(store.load(ownerID: ownerID))
@@ -571,7 +571,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testDraftStoreClearsEmptyAndAcceptedDrafts() {
     let defaults = makeDefaults()
-    let store = InboxDraftStore(defaults: defaults)
+    let store = CaptureDraftStore(defaults: defaults)
     let ownerID = UUID()
 
     store.save(title: "", body: "Keep me", ownerID: ownerID)
@@ -584,15 +584,15 @@ final class InboxEntryTests: XCTestCase {
 
   func testDraftStoreDiscardsCorruptedOrOversizedData() throws {
     let defaults = makeDefaults()
-    let store = InboxDraftStore(defaults: defaults)
+    let store = CaptureDraftStore(defaults: defaults)
     let ownerID = UUID()
-    let key = InboxDraftStore.storageKey(ownerID: ownerID)
+    let key = CaptureDraftStore.storageKey(ownerID: ownerID)
 
     defaults.set(Data("not json".utf8), forKey: key)
     XCTAssertNil(store.load(ownerID: ownerID))
 
-    let oversizedDraft = InboxDraft(
-      title: String(repeating: "t", count: InboxCapture.titleLimit + 1),
+    let oversizedDraft = CaptureDraft(
+      title: String(repeating: "t", count: CaptureInput.titleLimit + 1),
       body: "",
       updatedAt: Date()
     )
@@ -602,7 +602,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testQueueStoreKeepsPendingEntriesIsolatedByOwner() {
     let defaults = makeDefaults()
-    let store = InboxQueueStore(defaults: defaults)
+    let store = CaptureQueueStore(defaults: defaults)
     let firstOwner = UUID()
     let secondOwner = UUID()
     let entry = makeQueuedEntry()
@@ -613,7 +613,7 @@ final class InboxEntryTests: XCTestCase {
   }
 
   func testQueueStoreDoesNotDuplicateAStableEntryID() {
-    let store = InboxQueueStore(defaults: makeDefaults())
+    let store = CaptureQueueStore(defaults: makeDefaults())
     let ownerID = UUID()
     let entry = makeQueuedEntry()
 
@@ -622,7 +622,7 @@ final class InboxEntryTests: XCTestCase {
   }
 
   func testQueueStoreRemovesOnlyTheConfirmedEntry() {
-    let store = InboxQueueStore(defaults: makeDefaults())
+    let store = CaptureQueueStore(defaults: makeDefaults())
     let ownerID = UUID()
     let first = makeQueuedEntry()
     let second = makeQueuedEntry(
@@ -638,9 +638,9 @@ final class InboxEntryTests: XCTestCase {
 
   func testQueueStoreDiscardsCorruptedObsoleteAndDuplicateData() throws {
     let defaults = makeDefaults()
-    let store = InboxQueueStore(defaults: defaults)
+    let store = CaptureQueueStore(defaults: defaults)
     let ownerID = UUID()
-    let key = InboxQueueStore.storageKey(ownerID: ownerID)
+    let key = CaptureQueueStore.storageKey(ownerID: ownerID)
 
     defaults.set(Data("not json".utf8), forKey: key)
     XCTAssertTrue(store.load(ownerID: ownerID).isEmpty)
@@ -657,7 +657,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testQueueStoreLoadsVersionOneEntriesWithoutInventingAttachments() throws {
     let defaults = makeDefaults()
-    let store = InboxQueueStore(defaults: defaults)
+    let store = CaptureQueueStore(defaults: defaults)
     let ownerID = UUID()
     let legacyEntry = LegacyQueuedInboxEntry(
       id: UUID(),
@@ -670,7 +670,7 @@ final class InboxEntryTests: XCTestCase {
     let queue = LegacyStoredInboxQueue(version: 1, entries: [legacyEntry])
     defaults.set(
       try JSONEncoder().encode(queue),
-      forKey: InboxQueueStore.storageKey(ownerID: ownerID)
+      forKey: CaptureQueueStore.storageKey(ownerID: ownerID)
     )
 
     let loaded = try XCTUnwrap(store.load(ownerID: ownerID).first)
@@ -692,13 +692,13 @@ final class InboxEntryTests: XCTestCase {
   }
 
   func testQueueStoreRejectsInvalidAndOverCapacityEntries() {
-    let store = InboxQueueStore(defaults: makeDefaults())
+    let store = CaptureQueueStore(defaults: makeDefaults())
     let ownerID = UUID()
     let invalidEntry = makeQueuedEntry(body: "  not normalized  ")
 
     XCTAssertNil(store.enqueue(invalidEntry, ownerID: ownerID))
 
-    for index in 0..<InboxQueueStore.maximumEntryCount {
+    for index in 0..<CaptureQueueStore.maximumEntryCount {
       XCTAssertNotNil(
         store.enqueue(
           makeQueuedEntry(id: UUID(), title: "Entry \(index)"),
@@ -714,11 +714,11 @@ final class InboxEntryTests: XCTestCase {
 
   func testQueueStoreMarksARefusedCaptureInPlaceAcrossLaunches() throws {
     let defaults = makeDefaults()
-    let store = InboxQueueStore(defaults: defaults)
+    let store = CaptureQueueStore(defaults: defaults)
     let ownerID = UUID()
     let first = makeQueuedEntry(title: "Pasted log")
     let second = makeQueuedEntry(id: UUID(), title: "Second thought")
-    let rejection = QueuedInboxRejection(
+    let rejection = QueuedCaptureRejection(
       message: "MemoTrail cannot accept this Entry, so it will not sync.",
       rejectedAt: Date(timeIntervalSince1970: 1_790_000_000))
     _ = store.enqueue(first, ownerID: ownerID)
@@ -732,25 +732,25 @@ final class InboxEntryTests: XCTestCase {
 
     // The marker survives a relaunch with the capture's content and order, so a later sync
     // never sends it again.
-    let reloaded = InboxQueueStore(defaults: defaults).load(ownerID: ownerID)
+    let reloaded = CaptureQueueStore(defaults: defaults).load(ownerID: ownerID)
     XCTAssertEqual(reloaded, [refused, second])
     XCTAssertEqual(reloaded.map(\.rejection), [rejection, nil])
   }
 
   func testQueueStoreDoesNotBringBackARemovedCaptureWhenRefusingIt() {
     let defaults = makeDefaults()
-    let store = InboxQueueStore(defaults: defaults)
+    let store = CaptureQueueStore(defaults: defaults)
     let ownerID = UUID()
-    let rejection = QueuedInboxRejection(message: "Refused.", rejectedAt: Date())
+    let rejection = QueuedCaptureRejection(message: "Refused.", rejectedAt: Date())
 
     XCTAssertEqual(
       store.markRejected(entryID: UUID(), rejection: rejection, ownerID: ownerID), [])
-    XCTAssertNil(defaults.data(forKey: InboxQueueStore.storageKey(ownerID: ownerID)))
+    XCTAssertNil(defaults.data(forKey: CaptureQueueStore.storageKey(ownerID: ownerID)))
   }
 
   func testQueueKeepsACaptureWhoseRefusalMarkerIsMalformed() throws {
     let defaults = makeDefaults()
-    let store = InboxQueueStore(defaults: defaults)
+    let store = CaptureQueueStore(defaults: defaults)
     let ownerID = UUID()
     let entry = makeQueuedEntry()
     let encoded = try JSONEncoder().encode(TestStoredInboxQueue(version: 3, entries: [entry]))
@@ -771,7 +771,7 @@ final class InboxEntryTests: XCTestCase {
       queue["entries"] = entries
       defaults.set(
         try JSONSerialization.data(withJSONObject: queue),
-        forKey: InboxQueueStore.storageKey(ownerID: ownerID))
+        forKey: CaptureQueueStore.storageKey(ownerID: ownerID))
 
       // The capture stays, sendable again, rather than costing the whole queue.
       let loaded = store.load(ownerID: ownerID)
@@ -865,7 +865,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testPhotoStorePersistsPrivateDraftsByOwnerAndRemovesThem() throws {
     let rootURL = makePhotoRoot()
-    let store = InboxPhotoStore(rootURL: rootURL)
+    let store = CapturePhotoStore(rootURL: rootURL)
     let ownerID = UUID()
     let otherOwnerID = UUID()
     let draft = try makePhotoDraft()
@@ -881,7 +881,7 @@ final class InboxEntryTests: XCTestCase {
 
   func testPhotoStoreIgnoresMalformedMetadata() throws {
     let rootURL = makePhotoRoot()
-    let store = InboxPhotoStore(rootURL: rootURL)
+    let store = CapturePhotoStore(rootURL: rootURL)
     let ownerID = UUID()
     let ownerURL = rootURL.appending(path: ownerID.uuidString.lowercased())
     try FileManager.default.createDirectory(
@@ -916,9 +916,9 @@ final class InboxEntryTests: XCTestCase {
     id: UUID = UUID(uuidString: "F4D2DF16-A506-4BE6-A63E-B7B18AFE3468")!,
     title: String? = nil,
     body: String = "A thought worth keeping.",
-    attachments: [QueuedInboxAttachment] = []
-  ) -> QueuedInboxEntry {
-    QueuedInboxEntry(
+    attachments: [QueuedCaptureAttachment] = []
+  ) -> QueuedCapture {
+    QueuedCapture(
       id: id,
       title: title,
       body: body,
@@ -929,8 +929,8 @@ final class InboxEntryTests: XCTestCase {
     )
   }
 
-  private func makeQueuedAttachment() -> QueuedInboxAttachment {
-    QueuedInboxAttachment(
+  private func makeQueuedAttachment() -> QueuedCaptureAttachment {
+    QueuedCaptureAttachment(
       id: UUID(uuidString: "20000000-0000-4000-8000-000000000001")!,
       mimeType: .png,
       originalFilename: nil,
@@ -940,8 +940,8 @@ final class InboxEntryTests: XCTestCase {
     )
   }
 
-  private func makePhotoDraft() throws -> FirstTimePhotoDraft {
-    try FirstTimePhotoDraft.validate(
+  private func makePhotoDraft() throws -> PhotoDraft {
+    try PhotoDraft.validate(
       id: UUID(uuidString: "20000000-0000-4000-8000-000000000001")!,
       data: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]),
       mimeType: .png,
@@ -1069,7 +1069,7 @@ final class InboxEntryTests: XCTestCase {
 
 private struct TestStoredInboxQueue: Encodable {
   let version: Int
-  let entries: [QueuedInboxEntry]
+  let entries: [QueuedCapture]
 }
 
 private struct LegacyStoredInboxQueue: Encodable {

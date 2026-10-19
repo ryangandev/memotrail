@@ -7,14 +7,14 @@ struct RootTabView: View {
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
 
-  private let draftStore: InboxDraftStore
-  private let photoStore: InboxPhotoStore
+  private let draftStore: CaptureDraftStore
+  private let photoStore: CapturePhotoStore
   @State private var homeController: HomeController
   @State private var inboxController: CaptureController
   @State private var captureTitle: String
   @State private var captureNote: NSAttributedString
   @State private var captureOccurrence: OccurrenceDraft?
-  @State private var capturePhotos: [FirstTimePhotoDraft]
+  @State private var capturePhotos: [PhotoDraft]
   @State private var hasLocalDraft: Bool
   @State private var hasLoadedCapturePhotos = false
   @State private var navigator = AppNavigator()
@@ -24,9 +24,9 @@ struct RootTabView: View {
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
-    draftStore: InboxDraftStore = InboxDraftStore(),
-    queueStore: InboxQueueStore = InboxQueueStore(),
-    photoStore: InboxPhotoStore = InboxPhotoStore()
+    draftStore: CaptureDraftStore = CaptureDraftStore(),
+    queueStore: CaptureQueueStore = CaptureQueueStore(),
+    photoStore: CapturePhotoStore = CapturePhotoStore()
   ) {
     let draft = draftStore.load(ownerID: user.id)
 
@@ -152,14 +152,14 @@ struct RootTabView: View {
   }
 
   private func persistDraft() {
-    if captureTitle.count > InboxCapture.titleLimit {
-      captureTitle = String(captureTitle.prefix(InboxCapture.titleLimit))
+    if captureTitle.count > CaptureInput.titleLimit {
+      captureTitle = String(captureTitle.prefix(CaptureInput.titleLimit))
     }
 
     // Web counts the note limit in UTF-16 code units, like NSAttributedString.
-    if captureNote.length > InboxCapture.bodyLimit {
+    if captureNote.length > CaptureInput.bodyLimit {
       captureNote = captureNote.attributedSubstring(
-        from: NSRange(location: 0, length: InboxCapture.bodyLimit))
+        from: NSRange(location: 0, length: CaptureInput.bodyLimit))
     }
 
     hasLocalDraft =
@@ -192,7 +192,7 @@ struct RootTabView: View {
   }
 
   @MainActor
-  private func addCapturePhoto(_ draft: FirstTimePhotoDraft) async throws {
+  private func addCapturePhoto(_ draft: PhotoDraft) async throws {
     let photoStore = photoStore
     let ownerID = user.id
     try await Task.detached {

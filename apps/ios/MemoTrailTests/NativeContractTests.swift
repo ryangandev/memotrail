@@ -187,7 +187,7 @@ final class NativeContractTests: XCTestCase {
       }
       let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
       let inbox = CaptureController(
-        client: client, ownerID: ownerID, queueStore: InboxQueueStore(defaults: defaults))
+        client: client, ownerID: ownerID, queueStore: CaptureQueueStore(defaults: defaults))
       // Let the connectivity monitor's first update pass, so each save starts its own sync.
       try await Task.sleep(for: .milliseconds(500))
       let center = MTToastCenter.shared
@@ -247,8 +247,8 @@ final class NativeContractTests: XCTestCase {
         UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
         try? FileManager.default.removeItem(at: photoRoot)
       }
-      let queueStore = InboxQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
-      let photoStore = InboxPhotoStore(rootURL: photoRoot)
+      let queueStore = CaptureQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
+      let photoStore = CapturePhotoStore(rootURL: photoRoot)
       let inbox = CaptureController(
         client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
       // Let the connectivity monitor's first update pass, so each save starts its own sync.
@@ -265,7 +265,7 @@ final class NativeContractTests: XCTestCase {
       for (title, body, photos) in [
         ("", refusedNote, []), ("Harbor photo \(marker)", "", [photo]),
         ("", "A later capture \(marker)", []),
-      ] as [(String, String, [FirstTimePhotoDraft])] {
+      ] as [(String, String, [PhotoDraft])] {
         let shown = Set(center.toasts.map(\.id))
         let didSave = await inbox.save(title: title, body: body, photos: photos)
         XCTAssertTrue(didSave)
@@ -286,7 +286,7 @@ final class NativeContractTests: XCTestCase {
           context.fill(CGRect(x: 0, y: 0, width: 6, height: 6))
         }
       try photoStore.save(
-        try FirstTimePhotoDraft.validate(
+        try PhotoDraft.validate(
           id: photo.id, data: changedData, mimeType: .png, originalFilename: "kept.png",
           pixelWidth: 6, pixelHeight: 6),
         ownerID: ownerID)
@@ -362,7 +362,7 @@ final class NativeContractTests: XCTestCase {
       for (body, photos) in [
         ("Trashed note \(marker)", []), ("Trashed photo \(marker)", [photo]),
         ("Deleted forever \(marker)", []),
-      ] as [(String, [FirstTimePhotoDraft])] {
+      ] as [(String, [PhotoDraft])] {
         let shown = Set(center.toasts.map(\.id))
         let didSave = await inbox.save(title: "", body: body, photos: photos)
         XCTAssertTrue(didSave)
@@ -548,7 +548,7 @@ final class NativeContractTests: XCTestCase {
     /// An Inbox with its own queue and photo files, past its first connectivity update so each
     /// save starts its own sync.
     private func isolatedInbox(client: SupabaseClient, ownerID: UUID) async throws
-      -> (CaptureController, InboxPhotoStore)
+      -> (CaptureController, CapturePhotoStore)
     {
       let suiteName = "NativeContractTests.\(UUID().uuidString)"
       let photoRoot = FileManager.default.temporaryDirectory.appending(
@@ -557,8 +557,8 @@ final class NativeContractTests: XCTestCase {
         UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
         try? FileManager.default.removeItem(at: photoRoot)
       }
-      let queueStore = InboxQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
-      let photoStore = InboxPhotoStore(rootURL: photoRoot)
+      let queueStore = CaptureQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
+      let photoStore = CapturePhotoStore(rootURL: photoRoot)
       let inbox = CaptureController(
         client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
       try await Task.sleep(for: .milliseconds(500))
@@ -978,7 +978,7 @@ final class NativeContractTests: XCTestCase {
     XCTAssertTrue(saved.attachments.isEmpty)
   }
 
-  private func photoDraft() throws -> FirstTimePhotoDraft {
+  private func photoDraft() throws -> PhotoDraft {
     let format = UIGraphicsImageRendererFormat()
     format.scale = 1
     let data = UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4), format: format)
@@ -986,7 +986,7 @@ final class NativeContractTests: XCTestCase {
         UIColor.systemGreen.setFill()
         context.fill(CGRect(x: 0, y: 0, width: 4, height: 4))
       }
-    return try FirstTimePhotoDraft.validate(
+    return try PhotoDraft.validate(
       data: data, mimeType: .png, originalFilename: "kept.png", pixelWidth: 4, pixelHeight: 4)
   }
 

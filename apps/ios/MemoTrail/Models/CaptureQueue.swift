@@ -1,0 +1,694 @@
+import Foundation
+@preconcurrency import Supabase
+
+// Captures saved on this iPhone before they reach MemoTrail, like Web
+// `inbox-queue.ts`, `inbox-draft.ts`, and `inbox-photo-store.ts`. The storage keys and JSON
+// field names keep their Inbox-era names so queues written by earlier builds still load.
+
+struct CaptureInput: Equatable, Sendable {
+  static let titleLimit = 200
+  static let bodyLimit = 50_000
+
+  let title: String?
+  let body: String
+
+  static func validate(
+    title: String,
+    body: String,
+    hasAttachments: Bool = false
+  ) throws -> CaptureInput {
+    let title = title.trimmed
+    let body = body.trimmed
+
+    guard !title.isEmpty || !body.isEmpty || hasAttachments else {
+      throw CaptureError.empty
+    }
+
+    guard title.count <= titleLimit else {
+      throw CaptureError.titleTooLong
+    }
+
+    guard body.count <= bodyLimit else {
+      throw CaptureError.bodyTooLong
+    }
+
+    return CaptureInput(title: title.nonEmpty, body: body)
+  }
+}
+
+struct CaptureDraft: Codable, Equatable, Sendable {
+  let title: String
+  let body: String
+  let occurredAt: Date?
+  let updatedAt: Date
+  var occurrenceDraft: OccurrenceDraft? = nil
+  /// The formatted note, stored like Web's `bodyRich` draft field.
+  var bodyRich: EntryEmphasisContent? = nil
+
+  var captureOccurrence: OccurrenceDraft? {
+    occurrenceDraft
+      ?? occurredAt.map {
+        OccurrenceDraft(
+          EntryOccurrence(
+            precision: .exact, start: $0, end: nil, label: nil,
+            timezone: TimeZone.current.identifier))
+      }
+  }
+
+  init(title: String, body: String, occurredAt: Date? = nil, updatedAt: Date) {
+    self.title = title
+    self.body = body
+    self.occurredAt = occurredAt
+    self.updatedAt = updatedAt
+  }
+
+  var hasContent: Bool {
+    !title.isEmpty || !body.isEmpty || occurrenceDraft != nil
+  }
+
+  /// The note to reopen in the editor; formatting returns only when it still matches the text.
+  @MainActor
+  var note: NSAttributedString {
+    if let bodyRich, bodyRich.text == body, let text = bodyRich.attributedText() { return text }
+    return NSAttributedString(string: body)
+  }
+}
+
+struct CaptureDraftStore {
+  private let defaults: UserDefaults
+
+  init(defaults: UserDefaults = .standard) {
+    self.defaults = defaults
+  }
+
+  func load(ownerID: UUID) -> CaptureDraft? {
+    let key = Self.storageKey(ownerID: ownerID)
+
+    guard let data = defaults.data(forKey: key),
+      let draft = try? JSONDecoder().decode(CaptureDraft.self, from: data),
+      draft.hasContent,
+      draft.title.count <= CaptureInput.titleLimit,
+      draft.body.count <= CaptureInput.bodyLimit
+    else {
+      defaults.removeObject(forKey: key)
+      return nil
+    }
+
+    return draft
+  }
+
+  @discardableResult
+  func save(
+    title: String, body: String, bodyRich: EntryEmphasisContent? = nil,
+    occurredAt: Date? = nil, occurrenceDraft: OccurrenceDraft? = nil, ownerID: UUID
+  ) -> Bool {
+    let key = Self.storageKey(ownerID: ownerID)
+    var draft = CaptureDraft(title: title, body: body, occurredAt: occurredAt, updatedAt: Date())
+    draft.occurrenceDraft = occurrenceDraft
+    draft.bodyRich = bodyRich?.text == body ? bodyRich : nil
+
+    guard draft.hasContent else {
+      defaults.removeObject(forKey: key)
+      return false
+    }
+
+    guard let data = try? JSONEncoder().encode(draft) else {
+      return false
+    }
+
+    defaults.set(data, forKey: key)
+    return true
+  }
+
+  func clear(ownerID: UUID) {
+    defaults.removeObject(forKey: Self.storageKey(ownerID: ownerID))
+  }
+
+  static func storageKey(ownerID: UUID) -> String {
+    "memotrail.inboxDraft.\(ownerID.uuidString.lowercased())"
+  }
+}
+
+struct QueuedCapture: Codable, Equatable, Identifiable, Sendable {
+  let id: UUID
+  let title: String?
+  let body: String
+  let occurredAt: Date?
+  let occurredTimezone: String
+  let queuedAt: Date
+  let attachments: [QueuedCaptureAttachment]
+  var occurrence: EntryOccurrence? = nil
+  /// Web's `metadata.body_rich` for the note, when it was written with formatting.
+  var bodyRich: EntryEmphasisContent? = nil
+  /// Set when MemoTrail permanently refused this capture, which then never syncs again and
+  /// waits on this iPhone until the person copies what they need and discards it.
+  var rejection: QueuedCaptureRejection? = nil
+
+  var effectiveOccurrence: EntryOccurrence {
+    occurrence
+      ?? EntryOccurrence(
+        precision: .exact, start: occurredAt, end: nil, label: nil, timezone: occurredTimezone)
+  }
+
+  init(
+    id: UUID,
+    title: String?,
+    body: String,
+    occurredAt: Date?,
+    occurredTimezone: String,
+    queuedAt: Date,
+    attachments: [QueuedCaptureAttachment] = []
+  ) {
+    self.id = id
+    self.title = title
+    self.body = body
+    self.occurredAt = occurredAt
+    self.occurredTimezone = occurredTimezone
+    self.queuedAt = queuedAt
+    self.attachments = attachments
+  }
+
+  private enum CodingKeys: String, CodingKey {
+    case id, title, body, occurredAt, occurredTimezone, queuedAt, attachments, occurrence
+    case bodyRich, rejection
+  }
+
+  init(from decoder: Decoder) throws {
+    let values = try decoder.container(keyedBy: CodingKeys.self)
+    id = try values.decode(UUID.self, forKey: .id)
+    title = try values.decodeIfPresent(String.self, forKey: .title)
+    body = try values.decode(String.self, forKey: .body)
+    occurredAt = try values.decodeIfPresent(Date.self, forKey: .occurredAt)
+    occurredTimezone = try values.decode(String.self, forKey: .occurredTimezone)
+    queuedAt = try values.decode(Date.self, forKey: .queuedAt)
+    attachments =
+      try values.decodeIfPresent([QueuedCaptureAttachment].self, forKey: .attachments) ?? []
+    occurrence = try values.decodeIfPresent(EntryOccurrence.self, forKey: .occurrence)
+    bodyRich = try values.decodeIfPresent(EntryEmphasisContent.self, forKey: .bodyRich)
+    // Like Web, a malformed marker never costs the capture: it only becomes sendable again.
+    rejection = (try? values.decodeIfPresent(QueuedCaptureRejection.self, forKey: .rejection))
+      .flatMap { $0 }
+      .flatMap { $0.isValid ? $0 : nil }
+  }
+
+  /// The note text to keep before discarding: the title and note, like Web's Copy text.
+  var copyableText: String {
+    [title, body.nonEmpty].compactMap { $0 }.joined(separator: "\n\n")
+  }
+
+
+  var isValid: Bool {
+    let normalizedTitle = title?.trimmed.nonEmpty
+
+    return normalizedTitle == title
+      && (try? effectiveOccurrence.validate()) != nil
+      && body.trimmed == body
+      && (title?.count ?? 0) <= CaptureInput.titleLimit
+      && body.count <= CaptureInput.bodyLimit
+      && !occurredTimezone.isEmpty
+      && occurredTimezone.count <= 100
+      && attachments.count <= PhotoDraft.maximumCount
+      && attachments.allSatisfy(\.isValid)
+      && Set(attachments.map(\.id)).count == attachments.count
+      && (normalizedTitle != nil || !body.isEmpty || !attachments.isEmpty)
+      && (bodyRich.map { $0.isValid(expectedText: body) } ?? true)
+  }
+}
+
+struct QueuedCaptureAttachment: Codable, Equatable, Identifiable, Sendable {
+  let id: UUID
+  let mimeType: PhotoImageType
+  let originalFilename: String?
+  let byteSize: Int64
+  let pixelWidth: Int?
+  let pixelHeight: Int?
+
+  init(draft: PhotoDraft) {
+    id = draft.id
+    mimeType = draft.mimeType
+    originalFilename = draft.originalFilename
+    byteSize = Int64(draft.data.count)
+    pixelWidth = draft.pixelWidth
+    pixelHeight = draft.pixelHeight
+  }
+
+  init(
+    id: UUID,
+    mimeType: PhotoImageType,
+    originalFilename: String?,
+    byteSize: Int64,
+    pixelWidth: Int?,
+    pixelHeight: Int?
+  ) {
+    self.id = id
+    self.mimeType = mimeType
+    self.originalFilename = originalFilename
+    self.byteSize = byteSize
+    self.pixelWidth = pixelWidth
+    self.pixelHeight = pixelHeight
+  }
+
+  var isValid: Bool {
+    let filename = originalFilename?.trimmed.nonEmpty
+    return filename == originalFilename
+      && byteSize > 0
+      && byteSize <= Int64(PhotoDraft.maximumByteSize)
+      && (filename?.count ?? 0) <= 255
+      && (pixelWidth.map { $0 > 0 } ?? true)
+      && (pixelHeight.map { $0 > 0 } ?? true)
+  }
+
+  func objectPath(ownerID: UUID, entryID: UUID) -> String {
+    "\(ownerID.uuidString.lowercased())/\(entryID.uuidString.lowercased())/\(id.uuidString.lowercased()).\(mimeType.fileExtension)"
+  }
+
+  func matches(_ draft: PhotoDraft) -> Bool {
+    self == QueuedCaptureAttachment(draft: draft)
+  }
+}
+
+/// Why MemoTrail refused a queued capture, kept with it like Web's queue `rejection`.
+struct QueuedCaptureRejection: Codable, Equatable, Sendable {
+  static let maximumMessageLength = 500
+
+  let message: String
+  let rejectedAt: Date
+
+  var isValid: Bool {
+    !message.trimmed.isEmpty && message.count <= Self.maximumMessageLength
+  }
+}
+
+/// How a capture sync failed, classified from PostgREST and Postgres error codes like Web
+/// `classifySyncFailure`, never from message text.
+enum CaptureSyncFailure: Equatable, Sendable {
+  /// MemoTrail refused this capture, and sending it again cannot change the answer.
+  case rejected
+  /// The session can no longer write, so the person needs to sign in again.
+  case session
+  /// MemoTrail could not be reached or answer now; a later attempt can succeed.
+  case unavailable
+
+  private static let sessionCodes: Set<String> = ["PGRST301", "PGRST302", "PGRST303"]
+  // Invalid data, integrity constraints, and program limits are the capture's own content.
+  private static let rejectedSQLStateClasses: Set<Substring> = ["22", "23", "54"]
+
+  init(_ error: Error) {
+    // Network failures, gateway pages, and undecodable responses carry no PostgREST code.
+    guard let error = error as? PostgrestError, let code = error.code, !code.isEmpty else {
+      self = .unavailable
+      return
+    }
+    self.init(code: code)
+  }
+
+  init(code: String) {
+    if Self.sessionCodes.contains(code) {
+      self = .session
+    } else if code.count == 8, code.hasPrefix("PGRST1"),
+      code.dropFirst(6).allSatisfy({ $0.isASCII && $0.isNumber })
+    {
+      // PostgREST could not read the request itself.
+      self = .rejected
+    } else if code == "42501" {
+      // Row-level security refused the signed-in person's own write. The session is checked
+      // before each sync, and an expired token answers with PGRST303 instead.
+      self = .rejected
+    } else if code.count == 5, code.allSatisfy({ $0.isASCII && ($0.isNumber || $0.isUppercase) }),
+      Self.rejectedSQLStateClasses.contains(code.prefix(2))
+    {
+      self = .rejected
+    } else {
+      self = .unavailable
+    }
+  }
+}
+
+/// How a capture photo's Storage upload failed, classified by status like Web
+/// `classifyUploadFailure`, never from message text.
+enum CaptureUploadFailure: Equatable, Sendable {
+  /// MemoTrail refused this file, and uploading it again cannot change the answer.
+  case rejected
+  /// The session can no longer write, so the person needs to sign in again.
+  case session
+  /// MemoTrail could not be reached or answer now; a later attempt can succeed.
+  case unavailable
+  /// Storage refused the signed-in request. It reports an expired session exactly like a policy
+  /// denial, so the caller checks the session before calling it a refusal.
+  case denied
+  /// An earlier attempt already stored this original, perhaps before its response was lost.
+  case exists
+  case tooLarge
+  case unsupportedType
+
+  init(_ error: Error) {
+    switch error {
+    case let error as StorageError:
+      // Storage reports the real status in its error body, beside an HTTP 400.
+      self.init(status: error.statusCode.flatMap { Int($0) })
+    case let error as HTTPError:
+      // A body Storage did not write, such as a gateway page, keeps only the HTTP status.
+      self.init(status: error.response.statusCode)
+    default:
+      // Network failures never reached Storage.
+      self = .unavailable
+    }
+  }
+
+  init(status: Int?) {
+    switch status {
+    case 409: self = .exists
+    case 401: self = .session
+    case 403: self = .denied
+    case 413: self = .tooLarge
+    case 415: self = .unsupportedType
+    // Timeouts, locks, early data, rate limits, and server errors can pass.
+    case 408, 423, 425, 429: self = .unavailable
+    case let status? where (400..<500).contains(status): self = .rejected
+    default: self = .unavailable
+    }
+  }
+}
+
+struct CaptureQueueStore {
+  static let maximumEntryCount = 100
+
+  private let defaults: UserDefaults
+
+  init(defaults: UserDefaults = .standard) {
+    self.defaults = defaults
+  }
+
+  func load(ownerID: UUID) -> [QueuedCapture] {
+    let key = Self.storageKey(ownerID: ownerID)
+
+    guard let data = defaults.data(forKey: key),
+      let queue = try? JSONDecoder().decode(StoredCaptureQueue.self, from: data),
+      [1, 2, 3].contains(queue.version),
+      queue.entries.count <= Self.maximumEntryCount,
+      queue.entries.allSatisfy(\.isValid),
+      Set(queue.entries.map(\.id)).count == queue.entries.count
+    else {
+      defaults.removeObject(forKey: key)
+      return []
+    }
+
+    return queue.entries
+  }
+
+  func enqueue(_ entry: QueuedCapture, ownerID: UUID) -> [QueuedCapture]? {
+    let currentQueue = load(ownerID: ownerID)
+
+    if currentQueue.contains(where: { $0.id == entry.id }) {
+      return currentQueue
+    }
+
+    guard entry.isValid, currentQueue.count < Self.maximumEntryCount else {
+      return nil
+    }
+
+    let nextQueue = currentQueue + [entry]
+    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+  }
+
+  func remove(entryID: UUID, ownerID: UUID) -> [QueuedCapture]? {
+    let nextQueue = load(ownerID: ownerID).filter { $0.id != entryID }
+
+    if nextQueue.isEmpty {
+      defaults.removeObject(forKey: Self.storageKey(ownerID: ownerID))
+      return []
+    }
+
+    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+  }
+
+  /// Marks one capture as refused in place, keeping its content and position, like Web
+  /// `rejectInboxQueueEntry`. A capture that is no longer queued is not brought back.
+  func markRejected(
+    entryID: UUID, rejection: QueuedCaptureRejection, ownerID: UUID
+  ) -> [QueuedCapture]? {
+    let currentQueue = load(ownerID: ownerID)
+    guard currentQueue.contains(where: { $0.id == entryID }) else { return currentQueue }
+
+    let nextQueue = currentQueue.map { entry in
+      guard entry.id == entryID else { return entry }
+      var rejected = entry
+      rejected.rejection = rejection
+      return rejected
+    }
+    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+  }
+
+  static func storageKey(ownerID: UUID) -> String {
+    "memotrail.inboxQueue.\(ownerID.uuidString.lowercased())"
+  }
+
+  private func save(_ entries: [QueuedCapture], ownerID: UUID) -> Bool {
+    let queue = StoredCaptureQueue(version: 3, entries: entries)
+
+    guard let data = try? JSONEncoder().encode(queue) else {
+      return false
+    }
+
+    defaults.set(data, forKey: Self.storageKey(ownerID: ownerID))
+    return true
+  }
+}
+
+private struct StoredCaptureQueue: Codable {
+  let version: Int
+  let entries: [QueuedCapture]
+}
+
+struct CapturePhotoStore: Sendable {
+  private let rootURL: URL
+
+  init(rootURL: URL? = nil) {
+    self.rootURL =
+      rootURL
+      ?? FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+      .appending(path: "MemoTrail/Capture Photos", directoryHint: .isDirectory)
+  }
+
+  func load(ownerID: UUID) throws -> [PhotoDraft] {
+    let directory = ownerDirectory(ownerID)
+    guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
+
+    let metadataURLs = try FileManager.default.contentsOfDirectory(
+      at: directory,
+      includingPropertiesForKeys: nil
+    )
+    .filter { $0.pathExtension == "json" }
+
+    return metadataURLs.compactMap { metadataURL -> (Date, PhotoDraft)? in
+      guard
+        let metadata = try? JSONDecoder().decode(
+          StoredCapturePhoto.self,
+          from: Data(contentsOf: metadataURL)
+        ),
+        metadata.isValid,
+        metadataURL.deletingPathExtension().lastPathComponent
+          == metadata.id.uuidString.lowercased(),
+        let data = try? Data(contentsOf: dataURL(metadata, ownerID: ownerID)),
+        data.count == metadata.byteSize,
+        PhotoImageType.detect(data: data, typeIdentifiers: []) == metadata.mimeType,
+        let draft = try? PhotoDraft.validate(
+          id: metadata.id,
+          data: data,
+          mimeType: metadata.mimeType,
+          originalFilename: metadata.originalFilename,
+          pixelWidth: metadata.pixelWidth,
+          pixelHeight: metadata.pixelHeight
+        )
+      else {
+        return nil
+      }
+
+      return (metadata.createdAt, draft)
+    }
+    .sorted {
+      if $0.0 == $1.0 {
+        return $0.1.id.uuidString < $1.1.id.uuidString
+      }
+      return $0.0 < $1.0
+    }
+    .map { $0.1 }
+  }
+
+  func save(_ draft: PhotoDraft, ownerID: UUID) throws {
+    let directory = ownerDirectory(ownerID)
+    try FileManager.default.createDirectory(
+      at: directory,
+      withIntermediateDirectories: true,
+      attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
+    )
+
+    let metadata = StoredCapturePhoto(draft: draft)
+    let photoURL = dataURL(metadata, ownerID: ownerID)
+    let metadataURL = metadataURL(draft.id, ownerID: ownerID)
+
+    do {
+      try draft.data.write(to: photoURL, options: .atomic)
+      try FileManager.default.setAttributes(
+        [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+        ofItemAtPath: photoURL.path
+      )
+      try JSONEncoder().encode(metadata).write(to: metadataURL, options: .atomic)
+      try FileManager.default.setAttributes(
+        [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication],
+        ofItemAtPath: metadataURL.path
+      )
+    } catch {
+      try? FileManager.default.removeItem(at: photoURL)
+      try? FileManager.default.removeItem(at: metadataURL)
+      throw error
+    }
+  }
+
+  func remove(photoID: UUID, ownerID: UUID) throws {
+    let directory = ownerDirectory(ownerID)
+    guard FileManager.default.fileExists(atPath: directory.path) else { return }
+
+    let metadataURL = metadataURL(photoID, ownerID: ownerID)
+    let prefix = photoID.uuidString.lowercased()
+    let urls = try FileManager.default.contentsOfDirectory(
+      at: directory,
+      includingPropertiesForKeys: nil
+    )
+    .filter {
+      $0 == metadataURL
+        || ($0.deletingPathExtension().lastPathComponent == prefix
+          && $0.pathExtension != "json")
+    }
+
+    for url in urls {
+      try FileManager.default.removeItem(at: url)
+    }
+  }
+
+  private func ownerDirectory(_ ownerID: UUID) -> URL {
+    rootURL.appending(
+      path: ownerID.uuidString.lowercased(),
+      directoryHint: .isDirectory
+    )
+  }
+
+  private func metadataURL(_ photoID: UUID, ownerID: UUID) -> URL {
+    ownerDirectory(ownerID).appending(
+      path: "\(photoID.uuidString.lowercased()).json",
+      directoryHint: .notDirectory
+    )
+  }
+
+  private func dataURL(_ metadata: StoredCapturePhoto, ownerID: UUID) -> URL {
+    ownerDirectory(ownerID).appending(
+      path: "\(metadata.id.uuidString.lowercased()).\(metadata.mimeType.fileExtension)",
+      directoryHint: .notDirectory
+    )
+  }
+}
+
+private struct StoredCapturePhoto: Codable {
+  let id: UUID
+  let mimeType: PhotoImageType
+  let originalFilename: String?
+  let byteSize: Int
+  let pixelWidth: Int?
+  let pixelHeight: Int?
+  let createdAt: Date
+
+  init(draft: PhotoDraft) {
+    id = draft.id
+    mimeType = draft.mimeType
+    originalFilename = draft.originalFilename
+    byteSize = draft.data.count
+    pixelWidth = draft.pixelWidth
+    pixelHeight = draft.pixelHeight
+    createdAt = Date()
+  }
+
+  var isValid: Bool {
+    QueuedCaptureAttachment(
+      id: id,
+      mimeType: mimeType,
+      originalFilename: originalFilename,
+      byteSize: Int64(byteSize),
+      pixelWidth: pixelWidth,
+      pixelHeight: pixelHeight
+    ).isValid
+  }
+}
+
+enum CaptureError: LocalizedError, Equatable {
+  case empty
+  case titleTooLong
+  case bodyTooLong
+  case photoUnavailable
+
+  var errorDescription: String? {
+    switch self {
+    case .empty:
+      "Write a title, a note, or add a photo before saving."
+    case .titleTooLong:
+      "Keep the title under \(CaptureInput.titleLimit) characters."
+    case .bodyTooLong:
+      "Keep the note under 50,000 characters."
+    case .photoUnavailable:
+      "MemoTrail could not read that photo. Select it again."
+    }
+  }
+}
+
+/// The `entries` row a queued capture becomes, exactly the columns Web `syncInboxEntry` inserts.
+/// Every capture is a plain Entry; the id is the capture's own, so a repeated insert finds it.
+struct CaptureInsert: Encodable, Equatable, Sendable {
+  let id: UUID
+  let ownerID: UUID
+  let title: String?
+  let body: String
+  let occurrence: EntryOccurrence
+  /// Web's `metadataWithEntryRichText`: `body_rich` when present, otherwise empty.
+  let bodyRich: EntryEmphasisContent?
+
+  init(_ capture: QueuedCapture, ownerID: UUID) {
+    id = capture.id
+    self.ownerID = ownerID
+    title = capture.title
+    body = capture.body
+    occurrence = capture.effectiveOccurrence
+    bodyRich = capture.bodyRich
+  }
+
+  var clientID: String { "ios:\(id.uuidString.lowercased())" }
+
+  enum CodingKeys: String, CodingKey {
+    case id, title, body, metadata
+    case ownerID = "owner_id"
+    case itemKind = "item_kind"
+    case itemSubtype = "item_subtype"
+    case occurredStart = "occurred_start"
+    case occurredTimezone = "occurred_timezone"
+    case datePrecision = "date_precision"
+    case occurredEnd = "occurred_end"
+    case occurredLabel = "occurred_label"
+    case clientID = "client_id"
+  }
+
+  func encode(to encoder: Encoder) throws {
+    var values = encoder.container(keyedBy: CodingKeys.self)
+    try values.encode(id.uuidString.lowercased(), forKey: .id)
+    try values.encode(ownerID.uuidString.lowercased(), forKey: .ownerID)
+    try values.encode(title, forKey: .title)
+    try values.encode(body, forKey: .body)
+    try values.encode("entry", forKey: .itemKind)
+    try values.encode("entry", forKey: .itemSubtype)
+    try values.encode(occurrence.start.map(EntryTimestamp.string(from:)), forKey: .occurredStart)
+    try values.encode(occurrence.timezone, forKey: .occurredTimezone)
+    try values.encode(occurrence.precision, forKey: .datePrecision)
+    try values.encode(occurrence.end.map(EntryTimestamp.string(from:)), forKey: .occurredEnd)
+    try values.encode(occurrence.label, forKey: .occurredLabel)
+    try values.encode(clientID, forKey: .clientID)
+    try values.encode(
+      bodyRich.map { [EntryRichText.metadataKey: $0] } ?? [:], forKey: .metadata)
+  }
+}
