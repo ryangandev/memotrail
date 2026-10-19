@@ -25,7 +25,7 @@ import { type SearchEntry, type SearchWorkspace } from "@/lib/data/search";
 import {
   wikiEntryHref,
   wikiItemIdentityLabel,
-  wikiItemSearchGroups,
+  wikiItemRecordFilters,
 } from "@/lib/data/wiki-item";
 import styles from "./library-search.module.css";
 
@@ -115,14 +115,10 @@ export function LibrarySearch({
                 size="small"
               >
                 <option value="">All records</option>
-                {wikiItemSearchGroups.map((group) => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.options.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </optgroup>
+                {wikiItemRecordFilters.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </SelectField>
 
@@ -275,16 +271,7 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
       <header>
         <div className={styles.resultMeta}>
           <Badge tone="neutral">
-            {wikiItemIdentityLabel(
-              entry.itemKind,
-              entry.itemSubtype,
-              entry.milestoneShape
-                ? {
-                    isFirstTime: entry.isFirstTime,
-                    shape: entry.milestoneShape,
-                  }
-                : null,
-            )}
+            {wikiItemIdentityLabel(entry.itemSubtype, entry.isFirstTime)}
           </Badge>
           {/* An untitled Entry is already named by its date. */}
           {entry.title ? (
@@ -394,10 +381,9 @@ function resultOccurrence(entry: SearchEntry): Occurrence {
   };
 }
 
+// A Chapter spans the time it covers.
 function resultDateLabel(entry: SearchEntry, occurrence: Occurrence) {
-  return (entry.itemKind === "entity" &&
-    ["home", "vehicle"].includes(entry.itemSubtype)) ||
-    entry.milestoneShape === "period"
+  return entry.itemSubtype === "chapter"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
 }

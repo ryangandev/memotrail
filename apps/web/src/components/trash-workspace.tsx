@@ -26,7 +26,7 @@ import type {
 } from "@/lib/data/trash";
 import { TRASH_PAGE_SIZE, trashPageHref } from "@/lib/data/trash-input";
 import { trashDate, trashRetention } from "@/lib/data/trash-dates";
-import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
+import { wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 
 type PendingAction = {
   action: "delete" | "restore";
@@ -320,8 +320,8 @@ function labelForItem(item: TrashItem) {
     return "Photo";
   }
 
-  return item.wikiItemKind && item.wikiItemSubtype
-    ? wikiItemIdentityLabel(item.wikiItemKind, item.wikiItemSubtype)
+  return item.wikiItemSubtype
+    ? wikiItemSubtypeLabel(item.wikiItemSubtype)
     : "Entry";
 }
 

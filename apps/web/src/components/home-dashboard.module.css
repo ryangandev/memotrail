@@ -7,14 +7,6 @@
   color: var(--mt-color-accent);
 }
 
-.eyebrow {
-  color: var(--mt-color-warm);
-  font-size: var(--mt-type-eyebrow-font-size);
-  font-weight: var(--mt-type-eyebrow-font-weight);
-  letter-spacing: var(--mt-type-eyebrow-letter-spacing);
-  text-transform: var(--mt-type-eyebrow-text-transform);
-}
-
 .dashboard {
   display: flex;
   container-type: inline-size;
@@ -62,7 +54,6 @@
 }
 
 .nowItem h3 {
-  margin-top: var(--mt-space-1);
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-body-large);
   font-weight: var(--mt-font-weight-medium);

@@ -1,0 +1,8 @@
+.marks {
+  display: grid;
+  min-width: 0;
+  gap: var(--mt-space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}

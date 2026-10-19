@@ -18,11 +18,12 @@ import type {
 import { greetingInTimezone } from "@/lib/data/home-input";
 import {
   entryDisplayTitle,
+  occurrenceDurationLabel,
   occurrenceLabel,
   occurrenceSpanLabel,
   storedOccurrence,
 } from "@/lib/data/occurrence";
-import { timelineLaneLabels } from "@/lib/data/milestone";
+import { SeparatedList } from "@/components/separated-list";
 import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./home-dashboard.module.css";
 
@@ -50,7 +51,7 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
   );
   const capture = <CaptureComposer embedded idPrefix="capture" />;
   const nowItems = snapshot ? (
-    <Now items={snapshot.nowItems} timezone={timezone} />
+    <Now items={snapshot.nowItems} snapshotDate={snapshot.snapshotDate} />
   ) : null;
   const memory = snapshot ? (
     <Memory memory={workspace.resurfacedMemory} timezone={timezone} />
@@ -156,39 +157,40 @@ function Stats({ snapshot }: { snapshot: HomeSnapshot }) {
   );
 }
 
-function Now({ items, timezone }: { items: HomeNowItem[]; timezone: string }) {
+function Now({
+  items,
+  snapshotDate,
+}: {
+  items: HomeNowItem[];
+  snapshotDate: string;
+}) {
+  // Durations are measured to the day this snapshot describes.
+  const asOf = new Date(`${snapshotDate}T12:00:00Z`);
   return (
     <Section title="Now" href="/timeline" action="Timeline">
       {items.length ? (
         <div className={styles.nowItems}>
-          {items.map((item) => {
-            const occurrence = storedOccurrence(item, timezone);
-            return (
-              <Link
-                className={styles.nowItem}
-                key={item.entryId}
-                href={wikiEntryHref({
-                  id: item.entryId,
-                  itemKind: item.itemKind,
-                  itemSubtype: item.itemSubtype,
-                })}
-              >
-                <div>
-                  <span className={styles.eyebrow}>
-                    {timelineLaneLabels[item.lane]}
-                  </span>
-                  <h3>{entryDisplayTitle(item.title, occurrence)}</h3>
-                </div>
-                <p>{occurrenceSpanLabel(occurrence)}</p>
-              </Link>
-            );
-          })}
+          {items.map((item) => (
+            <Link
+              className={styles.nowItem}
+              key={item.id}
+              href={wikiEntryHref(item)}
+            >
+              <h3>{item.title}</h3>
+              <p>
+                <SeparatedList>
+                  <span>{occurrenceSpanLabel(item.occurrence)}</span>
+                  <span>{occurrenceDurationLabel(item.occurrence, asOf)}</span>
+                </SeparatedList>
+              </p>
+            </Link>
+          ))}
         </div>
       ) : (
         <Empty
           icon="timeline"
           title="Life is still unfolding"
-          text="The home you live in, the vehicle you drive, and the Periods still going on will appear here."
+          text="Chapters you are in right now appear here."
         />
       )}
     </Section>
@@ -257,7 +259,7 @@ function EntryCard({
   const title = entryDisplayTitle(entry.title, occurrence);
   // An untitled Entry is already named by its date, so the date is not repeated.
   const date = entry.title.trim() ? occurrenceLabel(occurrence) : null;
-  const identity = wikiItemIdentityLabel(entry.itemKind, entry.itemSubtype);
+  const identity = wikiItemIdentityLabel(entry.itemSubtype);
   const summary = entry.body.trim();
   return (
     <Link
