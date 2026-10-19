@@ -2,7 +2,7 @@
 """Run native UI tests signed in as a seeded, disposable local Supabase account.
 
 The script creates a synthetic account on the local stack, seeds a small archive through
-the same database functions the apps use, runs the requested UI tests with the Debug
+the same database functions and inserts the apps use, runs the requested UI tests with the Debug
 `--review-local-session` mode, exports their screenshots, and always removes the account,
 its rows, and its media. With --web it also serves the Web media API on 127.0.0.1.
 """
@@ -14,14 +14,18 @@ import os
 from pathlib import Path
 import secrets
 import socket
+import struct
 import subprocess
 import tempfile
 import time
-from urllib.request import urlopen
+from urllib.parse import quote
+from urllib.request import Request, urlopen
+import uuid
 from zoneinfo import ZoneInfo
+import zlib
 
 from local_supabase import (
-    ROOT, LocalStack, default_derived_data, exclusive_build_directory, summarize,
+    MEDIA_BUCKET, ROOT, LocalStack, default_derived_data, exclusive_build_directory, summarize,
 )
 
 TIMEZONE = "America/Los_Angeles"
@@ -47,11 +51,37 @@ def occurrence(precision="unknown", start=None, end=None, label=None):
     }
 
 
+def png(width, height, top, bottom):
+    """A small synthetic gradient PNG, so a seeded photo needs no file on disk."""
+    rows = []
+    for y in range(height):
+        mix = y / max(height - 1, 1)
+        color = bytes(round(a + (b - a) * mix) for a, b in zip(top, bottom))
+        rows.append(b"\x00" + color * width)
+
+    def chunk(kind, data):
+        return (struct.pack(">I", len(data)) + kind + data
+                + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF))
+
+    return (b"\x89PNG\r\n\x1a\n"
+            + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(b"".join(rows)))
+            + chunk(b"IEND", b""))
+
+
 def seed(stack, user):
-    """A small synthetic archive covering the native screens. Nothing here is personal data."""
+    """A small synthetic archive covering every native screen. Nothing here is personal data.
+
+    Entries are saved through `save_entry` like the editor, and quick captures are inserted
+    like the composer's sync. It holds ordinary Entries across days and months (one with a
+    photo, one with rich text, one with a Location), a closed Chapter with six Entries inside
+    it and a nested Chapter, an open Chapter for Now, a First Time, a Chapter that is also a
+    First Time, an undated and an approximate Entry, tags used different numbers of times, an
+    Entry and a photo in Trash, and a profile name and birth date.
+    """
     owner = user["owner_id"]
 
-    def rest(path, body, method="POST", prefer=None):
+    def rest(path, body=None, method="POST", prefer=None):
         return stack.request(path, body, method=method, key=stack.anon_key,
                              token=user["access_token"], prefer=prefer)
 
@@ -59,33 +89,108 @@ def seed(stack, user):
         return rest("/rest/v1/rpc/" + name, params)
 
     rest(f"/rest/v1/profiles?user_id=eq.{owner}",
-         {"display_name": "Review Tester", "timezone": TIMEZONE}, method="PATCH")
+         {"display_name": "Review Tester", "timezone": TIMEZONE, "birth_date": "1990-05-14"},
+         method="PATCH")
 
-    def capture(title, body, metadata=None):
-        return rest("/rest/v1/entries", {
-            "owner_id": owner, "title": title, "body": body, "inbox_status": "unreviewed",
-            "item_kind": "entry", "item_subtype": "entry", "date_precision": "unknown",
-            "occurred_timezone": TIMEZONE, "client_id": "review:" + secrets.token_hex(8),
+    def save(title, body, tags=(), chapter=False, first_time=False, rich=None, location=None,
+             **when):
+        """Saves a new Entry like the Entry editor."""
+        entry_id = str(uuid.uuid4())
+        rpc("save_entry", p_entry_id=entry_id, p_expected_revision=None, p_title=title,
+            p_body=body, p_body_rich=rich, p_tag_names=list(tags), p_primary_location=location,
+            p_photo_location=None, p_is_chapter=chapter, p_is_first_time=first_time,
+            **occurrence(**when))
+        return entry_id
+
+    def capture(title, body, day=None, metadata=None):
+        """Inserts a quick capture the way the composer's sync does, with the capture's id."""
+        entry_id = str(uuid.uuid4())
+        rest("/rest/v1/entries", {
+            "id": entry_id, "owner_id": owner, "title": title, "body": body,
+            "item_kind": "entry", "item_subtype": "entry",
+            "occurred_start": wall_time(day) if day else None, "occurred_end": None,
+            "occurred_label": None, "date_precision": "day" if day else "unknown",
+            "occurred_timezone": TIMEZONE, "client_id": "ios:" + entry_id,
             "metadata": metadata or {},
-        }, prefer="return=representation")[0]
+        })
+        return entry_id
 
-    def organize(title, body, collections=(), tags=(), rich=None, **when):
-        """Saves a capture to the Library like Inbox review's Save to Library."""
-        row = capture(title, body)
-        return rpc("review_wiki_item_with_location_rich",
-            p_entry_id=row["id"], p_expected_revision=row["revision"], p_title=title,
-            p_body=body, p_item_kind="entry", p_item_subtype="entry",
-            p_collection_names=list(collections), p_tag_names=list(tags), p_mark_done=True,
-            p_photo_place=None, p_primary_location=None, p_body_rich=rich, **occurrence(**when))
+    def attach_photo(entry_id, name, top, bottom):
+        """Uploads a synthetic original and registers it, like the photo field."""
+        data = png(96, 64, top, bottom)
+        attachment_id = str(uuid.uuid4())
+        path = f"{owner}/{entry_id}/{attachment_id}.png"
+        upload = Request(
+            f"{stack.base}/storage/v1/object/{MEDIA_BUCKET}/{quote(path)}", data=data,
+            method="POST", headers={
+                "apikey": stack.anon_key, "Authorization": "Bearer " + user["access_token"],
+                "Content-Type": "image/png", "x-upsert": "false",
+            })
+        with urlopen(upload, timeout=30):
+            pass
+        rpc("register_entry_attachment", p_entry_id=entry_id, p_attachment_id=attachment_id,
+            p_object_path=path, p_original_filename=name, p_mime_type="image/png",
+            p_byte_size=len(data), p_pixel_width=96, p_pixel_height=64)
+        return attachment_id
+
+    def move_to_trash(entry_id):
+        """Moves an Entry to Trash at its current revision, like Move to Trash."""
+        row = rest(f"/rest/v1/entries?id=eq.{entry_id}&select=revision", method="GET")[0]
+        rest(f"/rest/v1/entries?id=eq.{entry_id}&revision=eq.{row['revision']}",
+             {"deleted_at": datetime.now(ZoneInfo("UTC")).isoformat()}, method="PATCH")
 
     def span(value, *marks):
         return {"type": "text", "text": value, **({"marks": [{"type": m} for m in marks]}
                                                  if marks else {})}
 
-    organize("A quiet afternoon by the coast",
-             "Low tide, warm light, and a thermos of tea on the sea wall.",
-             collections=["Summer 2025"], tags=["coast", "family"],
-             precision="day", start="2025-08-14")
+    def place(key, address, city, latitude, longitude):
+        """A synthetic provider Location, submitted the way Web address search saves one."""
+        return {"kind": "provider", "provider": "geoapify", "providerLocationId": key,
+                "formattedAddress": f"{address}, {city}, OR, United States",
+                "address": address, "city": city, "region": "Oregon",
+                "country": "United States", "countryCode": "us",
+                "latitude": latitude, "longitude": longitude}
+
+    # A closed Chapter with six Entries dated inside it, and a Chapter nested inside it.
+    save("Living in Lisbon", "Tiled streets, late dinners, and the tram up the hill.",
+         tags=["travel"], chapter=True, precision="day", start="2022-02-01", end="2022-11-30")
+    save("Portuguese lessons", "Tuesday and Thursday evenings above the bakery.",
+         tags=["travel"], chapter=True, precision="day", start="2022-03-01", end="2022-06-30")
+    for title, body, day, tags in (
+        ("First morning in Alfama", "Church bells, laundry lines, and very strong coffee.",
+         "2022-02-03", ["travel"]),
+        ("Tram 28 to the castle", "Standing room only, every single time.", "2022-03-12",
+         ["travel"]),
+        ("Ranking the custard tarts", "Twelve bakeries in, the corner one still wins.",
+         "2022-04-20", ["travel"]),
+        ("A night of fado", "A tiny room, candles, and a song nobody wanted to end.",
+         "2022-06-11", ["travel", "music"]),
+        ("Beach day in Cascais", "Cold water, warm sand, and a slow train home.", "2022-07-23",
+         ["travel", "coast"]),
+        ("Packing the last boxes", "The flat looks bigger empty than it ever did full.",
+         "2022-11-28", ["travel"]),
+    ):
+        save(title, body, tags=tags, precision="day", start=day)
+
+    # An open Chapter, which Home shows under Now.
+    save("Living on Maple Street", "Sunny kitchen and a creaky staircase.", tags=["home"],
+         chapter=True, precision="day", start="2024-06-01")
+    # A Chapter that is also a First Time.
+    save("First job at the bookshop", "Shelving, recommending, and the smell of new paper.",
+         chapter=True, first_time=True, precision="month", start="2015-09-01",
+         end="2018-08-31")
+    # First Times, one with a Location.
+    save("First sourdough loaf", "Dense, a little sour, and completely ours.", tags=["baking"],
+         first_time=True, precision="day", start="2024-03-02",
+         location=place("review-seed-alberta", "Alberta Street", "Portland", 45.5590,
+                        -122.6450))
+    save("Finished the first marathon", "Slow, happy, and soaked by the last mile.",
+         tags=["running"], first_time=True, precision="day", start="2023-10-08")
+
+    # Ordinary Entries across days and months.
+    save("A quiet afternoon by the coast",
+         "Low tide, warm light, and a thermos of tea on the sea wall.",
+         tags=["coast", "family"], precision="day", start="2025-08-14")
     # A long Web-formatted note, so search results clamp it and offer "Read full note".
     opening = ("Low tide at six.", " We walked the whole sea wall before breakfast, counted the "
                "fishing boats coming back in, and found the cafe by the lighthouse finally open.")
@@ -93,100 +198,44 @@ def seed(stack, user):
     closing = ("By noon the fog had lifted and the whole bay turned silver. We stayed until the "
                "last ferry and promised to come back before the summer ended.")
     letter = "\n".join(["".join(opening), *packed, closing])
-    organize("Letters from the coast house", letter, collections=["Summer 2025"],
-             tags=["coast"], precision="day", start="2025-08-16", rich={
-                 "version": 1, "text": letter, "document": {"type": "doc", "content": [
-                     {"type": "paragraph",
-                      "content": [span(opening[0], "bold"), span(opening[1])]},
-                     {"type": "bulletList", "content": [
-                         {"type": "listItem", "content": [
-                             {"type": "paragraph", "content": [span(item)]}]}
-                         for item in packed]},
-                     {"type": "paragraph", "content": [span(closing, "italic")]}]}})
-    first_time = occurrence("day", "2024-03-02")
-    rpc("save_first_time_with_location",
-        p_input={"title": "First sourdough loaf",
-                 "body": "Dense, a little sour, and completely ours.",
-                 "collectionNames": ["Kitchen"], "tagNames": ["baking"], "id": None,
-                 "revision": None, "datePrecision": first_time["p_date_precision"],
-                 "occurredStart": first_time["p_occurred_start"], "occurredEnd": None,
-                 "occurredLabel": None, "occurredTimezone": TIMEZONE},
-        p_location={"kind": "provider", "provider": "geoapify",
-                    "providerLocationId": "review-seed-alberta",
-                    "formattedAddress": "Alberta Street, Portland, OR, United States",
-                    "address": "Alberta Street", "city": "Portland", "region": "Oregon",
-                    "country": "United States", "countryCode": "us",
-                    "latitude": 45.5590, "longitude": -122.6450})
-    organize("Evening walks along the river",
-             "Most evenings that spring ended with the same loop past the boathouse.",
-             collections=["Summer 2025"], tags=["walks"],
-             precision="range", start="2025-04-01", end="2025-06-30")
-    recipes = organize("Grandmother's recipe cards",
-                       "A shoebox of index cards, most of them stained with butter.",
-                       tags=["family"], precision="approximate", start="1998-01-01",
-                       label="Late 1990s")[0]["entry_id"]
-    # A version archived in an older history format, which can be reviewed but not restored.
-    versions = f"/rest/v1/entry_versions?entry_id=eq.{recipes}&version=eq.1"
-    legacy = stack.request(versions + "&select=snapshot", method="GET")[0]["snapshot"]
-    stack.request(versions, {"snapshot": {**legacy, "history_schema": 2}}, method="PATCH")
+    save("Letters from the coast house", letter, tags=["coast"], precision="day",
+         start="2025-08-16", rich={
+             "version": 1, "text": letter, "document": {"type": "doc", "content": [
+                 {"type": "paragraph",
+                  "content": [span(opening[0], "bold"), span(opening[1])]},
+                 {"type": "bulletList", "content": [
+                     {"type": "listItem", "content": [
+                         {"type": "paragraph", "content": [span(item)]}]}
+                     for item in packed]},
+                 {"type": "paragraph", "content": [span(closing, "italic")]}]}})
+    save("Evening walk by the river", "The same loop past the boathouse, a little later each week.",
+         tags=["walks"], precision="month", start="2026-04-01",
+         location=place("review-seed-waterfront", "Waterfront Park", "Portland", 45.5150,
+                        -122.6720))
+    ferry = save("Sunset from the ferry", "Orange sky, cold wind, and the whole crew on deck.",
+                 tags=["family"], precision="day", start="2026-09-02")
+    attach_photo(ferry, "ferry-sunset.png", (247, 160, 94), (92, 70, 140))
+    removed_photo = attach_photo(ferry, "ferry-blurry.png", (120, 120, 130), (60, 60, 70))
+    # An undated Entry and an approximate one.
     capture(None, "Waiting for a little context")
-    capture("Notes from the farmers market", "Peaches, basil, and a jar of local honey.")
-    # A Web-formatted list that the native editor cannot author, so review must keep it.
+    save("Grandmother's recipe cards",
+         "A shoebox of index cards, most of them stained with butter.", tags=["family"],
+         precision="approximate", start="1998-01-01", label="Late 1990s")
+    # Quick captures, the newest saved this week.
+    capture("Notes from the farmers market", "Peaches, basil, and a jar of local honey.",
+            day="2026-10-12")
+    capture("Rainy Sunday pancakes", "Blueberries in half of them, chocolate in the rest.",
+            day="2026-10-18")
+    # A Web-formatted list, which the native editor keeps untouched.
     items = [{"type": "listItem", "content": [{"type": "paragraph", "content": [
         {"type": "text", "text": item}]}]} for item in ("Tent", "Stove")]
-    capture("Weekend packing list", "Tent\nStove", {"body_rich": {
+    capture("Weekend packing list", "Tent\nStove", day="2026-10-16", metadata={"body_rich": {
         "version": 1, "text": "Tent\nStove",
         "document": {"type": "doc", "content": [{"type": "bulletList", "content": items}]}}})
 
-    tracks = stack.request(f"/rest/v1/timeline_tracks?select=id,system_key&order=sort_order",
-                           method="GET", key=stack.anon_key, token=user["access_token"])
-    track = next((t for t in tracks if t["system_key"] == "general"), tracks[0])["id"]
-    marathon = rpc(
-        "save_timeline_entry_with_organization",
-        p_track_id=track, p_timeline_kind="event", p_title="Finished the first marathon",
-        p_body="Slow, happy, and soaked by the last mile.", p_collection_names=[],
-        p_tag_names=["running"], p_entry_id=None, p_expected_revision=None,
-        **occurrence("day", "2023-10-08"))[0]["entry_id"]
-    rpc("save_timeline_entry_with_organization",
-        p_track_id=track, p_timeline_kind="stage", p_title="Living in Lisbon",
-        p_body="Tiled streets, late dinners, and the tram up the hill.",
-        p_collection_names=[], p_tag_names=[], p_entry_id=None, p_expected_revision=None,
-        **occurrence("range", "2022-02-01", "2022-11-30"))
-
-    flat = rpc(
-        "save_home_entry_with_occurrence",
-        p_title="Maple Street flat", p_body="Sunny kitchen and a creaky staircase.",
-        p_place_id=None, p_place_name="Maple Street flat", p_address="120 Maple Street",
-        p_city="Portland", p_region="Oregon", p_country="United States",
-        p_latitude=45.5231, p_longitude=-122.6765, p_place_notes=None,
-        p_move_in_reason="Closer to work", p_move_out_reason=None,
-        p_collection_names=[], p_tag_names=["home"], p_entry_id=None,
-        p_expected_revision=None, **occurrence("range", "2021-06-01"))[0]["entry_id"]
-    # A synthetic provider Location, submitted the way Web address search saves one.
-    hatchback = occurrence("range", "2019-09-15")
-    rpc("save_vehicle_with_location",
-        p_input={"title": "Blue hatchback", "body": "Road trips, groceries, and one flat tire.",
-                 "make": "Honda", "model": "Fit", "modelYear": 2015, "color": "Blue",
-                 "collectionNames": [], "tagNames": ["car"], "id": None, "revision": None,
-                 "datePrecision": hatchback["p_date_precision"],
-                 "occurredStart": hatchback["p_occurred_start"], "occurredEnd": None,
-                 "occurredLabel": None, "occurredTimezone": TIMEZONE},
-        p_source=None,
-        p_location={"kind": "provider", "provider": "geoapify",
-                    "providerLocationId": "review-seed-hawthorne",
-                    "formattedAddress": "Hawthorne Boulevard, Portland, OR, United States",
-                    "address": "Hawthorne Boulevard", "city": "Portland", "region": "Oregon",
-                    "country": "United States", "countryCode": "us",
-                    "latitude": 45.5120, "longitude": -122.6250})
-    rpc("save_goal_entry",
-        p_title="Hike the coast trail", p_body="All of it, in sections, before next autumn.",
-        p_horizon="short_term", p_status="active", p_target_date="2026-10-31",
-        p_collection_names=[], p_tag_names=["walks"], p_related_entry_ids=[flat, marathon],
-        p_entry_id=None, p_expected_revision=None)
-    rpc("save_person",
-        p_name="Avery Lane", p_relationship_label="Running partner",
-        p_notes="Paced the last ten miles of the marathon, then insisted on pancakes.",
-        p_related_entry_ids=[marathon], p_person_id=None, p_expected_revision=None)
+    # An Entry and a photo in Trash.
+    move_to_trash(capture("Duplicate grocery note", "Milk, eggs, bread.", day="2026-10-10"))
+    rpc("trash_entry_attachment", p_attachment_id=removed_photo)
 
 
 def port_open(port):
@@ -260,8 +309,9 @@ def main():
             summary = summarize(result_bundle)
             if args.dump_entries:
                 rows = stack.request(
-                    "/rest/v1/entries?select=title,body,inbox_status,item_kind,item_subtype,"
-                    "date_precision,metadata&deleted_at=is.null&order=created_at",
+                    "/rest/v1/entries?select=title,body,item_subtype,is_first_time,"
+                    "date_precision,occurred_start,occurred_end,metadata"
+                    "&deleted_at=is.null&order=created_at",
                     method="GET", key=stack.anon_key, token=user["access_token"])
                 print(json.dumps(rows, indent=2, ensure_ascii=False), flush=True)
             if args.attachments:
