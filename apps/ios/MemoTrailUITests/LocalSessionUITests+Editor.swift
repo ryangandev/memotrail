@@ -9,18 +9,18 @@ extension LocalSessionUITests {
     openEditor(for: "Notes from the farmers market", in: app)
     attach(app, "Editor opened")
 
-    reveal(app.buttons["editor-chapter"], in: app).tap()
-    reveal(app.buttons["editor-first-time"], in: app).tap()
-    XCTAssertEqual(app.buttons["editor-chapter"].value as? String, "Checked")
-    XCTAssertEqual(app.buttons["editor-first-time"].value as? String, "Checked")
+    reveal(checkbox("Chapter", in: app), in: app, above: footer(app)).tap()
+    reveal(checkbox("First Time", in: app), in: app, above: footer(app)).tap()
+    XCTAssertEqual(checkbox("Chapter", in: app).value as? String, "On")
+    XCTAssertEqual(checkbox("First Time", in: app).value as? String, "On")
     // A Chapter whose date has no end opens as still going on; ending it today closes it.
     let present = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Present"))
       .firstMatch
-    reveal(present, in: app)
-    XCTAssertEqual(present.value as? String, "Checked")
+    reveal(present, in: app, above: footer(app))
+    XCTAssertEqual(present.value as? String, "On")
     attach(app, "Editor as a Chapter")
     present.tap()
-    let end = reveal(app.buttons["End date"], in: app)
+    let end = reveal(app.buttons["End date"], in: app, above: footer(app))
     XCTAssertEqual(end.value as? String, "Not set")
     end.tap()
     let done = app.buttons["date-picker-done"]
@@ -41,12 +41,12 @@ extension LocalSessionUITests {
     openEditor(for: "Undated entry", in: app)
     XCTAssertEqual(app.textFields["editor-title"].value as? String, "Add a title")
 
-    reveal(app.buttons["editor-chapter"], in: app).tap()
+    reveal(checkbox("Chapter", in: app), in: app, above: footer(app)).tap()
     app.buttons["editor-save"].tap()
     XCTAssertTrue(text("Give this Chapter a title.", in: app).waitForExistence(timeout: 5))
     // Nothing was saved, so the editor stays open on the same draft.
     XCTAssertTrue(app.buttons["editor-save"].exists)
-    XCTAssertEqual(app.buttons["editor-chapter"].value as? String, "Checked")
+    XCTAssertEqual(checkbox("Chapter", in: app).value as? String, "On")
     attach(app, "Chapter without a title")
 
     app.buttons["Cancel"].tap()
@@ -64,14 +64,15 @@ extension LocalSessionUITests {
 
     app.buttons["editor-edit-web-note"].tap()
     let confirm = app.buttons.matching(
-      NSPredicate(format: "label == %@ AND identifier != %@", "Edit note here", "editor-edit-web-note")
+      NSPredicate(
+        format: "label == %@ AND identifier != %@", "Edit note here", "editor-edit-web-note")
     ).firstMatch
     XCTAssertTrue(confirm.waitForExistence(timeout: 5))
     attach(app, "Edit Web note confirmation, dark")
     confirm.tap()
     XCTAssertTrue(app.textViews["editor-body"].waitForExistence(timeout: 5))
     attach(app, "Editing a Web note, dark")
-    reveal(app.buttons["editor-chapter"], in: app)
+    reveal(checkbox("Chapter", in: app), in: app)
     attach(app, "Editor tags, photos, and marks, dark")
     reveal(element("occurrence-precision", in: app), in: app)
     app.swipeUp()
@@ -84,11 +85,22 @@ extension LocalSessionUITests {
   private func openEditor(for title: String, in app: XCUIApplication) {
     XCTAssertTrue(app.tabBars.buttons["Library"].waitForExistence(timeout: 20))
     app.tabBars.buttons["Library"].tap()
-    let row = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
+    // Scoped to the list, since the Dashboard behind the tab keeps its recent captures.
+    let list = element("library-items", in: app)
+    XCTAssertTrue(list.waitForExistence(timeout: 15))
+    let row = list.buttons.matching(NSPredicate(format: "label CONTAINS %@", title)).firstMatch
     XCTAssertTrue(row.waitForExistence(timeout: 15), title)
-    reveal(row, in: app).tap()
+    reveal(row, in: app, above: app.tabBars.firstMatch).tap()
     XCTAssertTrue(app.buttons["item-edit"].waitForExistence(timeout: 15))
     app.buttons["item-edit"].tap()
     XCTAssertTrue(app.buttons["editor-save"].waitForExistence(timeout: 10))
+  }
+
+  /// The editor footer, which the form scrolls under.
+  private func footer(_ app: XCUIApplication) -> XCUIElement { app.buttons["editor-save"] }
+
+  /// A checkbox, which reads as one button named by its title and detail.
+  private func checkbox(_ title: String, in app: XCUIApplication) -> XCUIElement {
+    app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(title), ")).firstMatch
   }
 }

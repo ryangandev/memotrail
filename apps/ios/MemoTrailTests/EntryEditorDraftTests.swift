@@ -57,7 +57,9 @@ final class EntryEditorDraftTests: XCTestCase {
   }
 
   func testCalendarPrecisionsKeepTheirTextInTheRecordedZone() throws {
-    for (precision, start) in [(DatePrecision.year, "2017"), (.month, "2017-07"), (.day, "2017-07-08")] {
+    for (precision, start) in [
+      (DatePrecision.year, "2017"), (.month, "2017-07"), (.day, "2017-07-08"),
+    ] {
       let value = try draft(precision, start: start, timezone: "Pacific/Auckland")
         .resolvedForSave()
       XCTAssertEqual(value.precision, precision)
@@ -72,7 +74,8 @@ final class EntryEditorDraftTests: XCTestCase {
       XCTAssertEqual(
         value,
         EntryOccurrence(
-          precision: precision, start: nil, end: nil, label: "17岁，第一次去日本", timezone: "UTC"))
+          precision: precision, start: nil, end: nil, label: "17岁，第一次去日本",
+          timezone: "UTC"))
     }
   }
 
@@ -119,7 +122,9 @@ final class EntryEditorDraftTests: XCTestCase {
         OccurrenceRules.problem(value),
         "Only ranges, ages, or approximate periods can have an end date.")
       XCTAssertNotNil(
-        message { _ = try self.draft(precision, start: end, end: start).resolvedForSave(span: true) })
+        message {
+          _ = try self.draft(precision, start: end, end: start).resolvedForSave(span: true)
+        })
     }
   }
 
@@ -149,7 +154,9 @@ final class EntryEditorDraftTests: XCTestCase {
   }
 
   func testInvalidPartialDatesAreRefusedRatherThanConverted() {
-    for (precision, start) in [(DatePrecision.year, "20"), (.month, "2017-13"), (.day, "2017-02-30")] {
+    for (precision, start) in [
+      (DatePrecision.year, "20"), (.month, "2017-13"), (.day, "2017-02-30"),
+    ] {
       XCTAssertEqual(
         message { _ = try draft(precision, start: start).resolvedForSave() },
         "Choose a valid calendar date and time. This time may not exist during a daylight-saving change."

@@ -116,7 +116,9 @@ enum EntryEditorNote {
   /// The note as the native editor opens it, and whether it holds Web-only formatting that
   /// editing here would turn into plain paragraphs.
   @MainActor
-  static func opening(_ entry: EditableEntry?) -> (note: NSAttributedString, hasWebOnlyFormatting: Bool) {
+  static func opening(_ entry: EditableEntry?)
+    -> (note: NSAttributedString, hasWebOnlyFormatting: Bool)
+  {
     guard let entry else { return (NSAttributedString(), false) }
     let editable = entry.richText.flatMap(EntryEmphasisContent.init)
     return (

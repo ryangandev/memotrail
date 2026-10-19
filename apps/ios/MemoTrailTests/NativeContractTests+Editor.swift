@@ -11,7 +11,8 @@ extension NativeContractTests {
     let (client, ownerID) = try await client()
     let api = EntryAPI(client: client, ownerID: ownerID)
     let marker = String(UUID().uuidString.prefix(8)).lowercased()
-    let created = try await savedEntry("Moved into the flat \(marker)", client: client, ownerID: ownerID)
+    let created = try await savedEntry(
+      "Moved into the flat \(marker)", client: client, ownerID: ownerID)
     let opened = try await XCTUnwrapAsync(try await api.editable(created.entryID))
 
     // Checking Chapter and First Time with a Month span, as the editor's controls would.

@@ -113,7 +113,9 @@ struct MTOrganizationEditor: View {
   /// A most used name that one tap adds, written the way it already is.
   private func suggestion(_ name: String) -> some View {
     Button {
-      if names.count < kind.countLimit, !names.contains(where: { $0.lowercased() == name.lowercased() }) {
+      if names.count < kind.countLimit,
+        !names.contains(where: { $0.lowercased() == name.lowercased() })
+      {
         names.append(name)
       }
     } label: {

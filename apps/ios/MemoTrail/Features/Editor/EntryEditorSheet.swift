@@ -217,8 +217,6 @@ struct EntryEditorSheet: View {
       )
       .accessibilityIdentifier("editor-first-time")
     }
-    .accessibilityElement(children: .contain)
-    .accessibilityLabel("Marks")
   }
 
   // MARK: Location

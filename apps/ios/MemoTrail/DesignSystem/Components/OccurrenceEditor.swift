@@ -91,33 +91,39 @@ struct OccurrenceEditor: View {
     }
   }
 
+  /// Web wraps the date toggles in one row where they fit.
   @ViewBuilder private var toggles: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      if timeToggleShown {
-        MTCheckbox(
-          title: "Add time",
-          isOn: Binding(get: { exact }, set: { value.toggleTime($0, span: span) }), size: .small)
+    MTFlowLayout(spacing: MTSpacing.s5, lineSpacing: MTSpacing.s1) {
+      Group {
+        if timeToggleShown {
+          MTCheckbox(
+            title: "Add time",
+            isOn: Binding(get: { exact }, set: { value.toggleTime($0, span: span) }), size: .small)
+        }
+        if endToggleShown {
+          MTCheckbox(
+            title: "Add end date",
+            isOn: Binding(get: { endAdded }, set: { value.toggleEnd($0) }), size: .small)
+        }
+        if presentShown {
+          MTCheckbox(
+            title: "Present", detail: "Still going on",
+            isOn: Binding(get: { endMode == .present }, set: { value.setPresent($0) }),
+            size: .small)
+        }
+        if !unsure {
+          MTCheckbox(
+            title: "Add date description",
+            isOn: Binding(
+              get: { showsDescription || !value.label.isEmpty },
+              set: { isOn in
+                showsDescription = isOn
+                if !isOn { value.edit { $0.label = "" } }
+              }), size: .small)
+        }
       }
-      if endToggleShown {
-        MTCheckbox(
-          title: "Add end date",
-          isOn: Binding(get: { endAdded }, set: { value.toggleEnd($0) }), size: .small)
-      }
-      if presentShown {
-        MTCheckbox(
-          title: "Present", detail: "Still going on",
-          isOn: Binding(get: { endMode == .present }, set: { value.setPresent($0) }), size: .small)
-      }
-      if !unsure {
-        MTCheckbox(
-          title: "Add date description",
-          isOn: Binding(
-            get: { showsDescription || !value.label.isEmpty },
-            set: { isOn in
-              showsDescription = isOn
-              if !isOn { value.edit { $0.label = "" } }
-            }), size: .small)
-      }
+      // Each toggle takes its own width, so short ones share a row.
+      .fixedSize(horizontal: true, vertical: false)
     }
   }
 
