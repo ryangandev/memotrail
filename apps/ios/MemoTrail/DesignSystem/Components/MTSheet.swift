@@ -6,6 +6,8 @@ import SwiftUI
 /// A `.form` sheet opens at full height with its close action in the navigation bar, so it can
 /// push detail such as Version history. A `.fitted` sheet sizes itself to short content, like a
 /// compact Web dialog, and scrolls only when the content outgrows the screen.
+/// At accessibility text sizes the footer scrolls after the content instead of staying pinned,
+/// so its stacked actions never crowd the content off a small screen.
 /// Specified, with Web Dialog, in packages/design-system/components/dialog.yaml, which generates
 /// `MTDialogSize` and `MTDialogDefaults`.
 struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
@@ -23,6 +25,7 @@ struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
   private let footer: Footer
 
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var contentHeight: CGFloat = 0
   @State private var footerHeight: CGFloat = 0
 
@@ -63,10 +66,13 @@ struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
         .padding(.horizontal, MTSpacing.s5)
         .padding(.bottom, MTSpacing.s6)
         .disabled(isBusy)
+        if scrollsFooter { footerBar }
       }
       .scrollDismissesKeyboard(.interactively)
       .background(MTColor.surfaceRaised)
-      .safeAreaInset(edge: .bottom, spacing: 0) { footerBar }
+      .safeAreaInset(edge: .bottom, spacing: 0) {
+        if !scrollsFooter { footerBar }
+      }
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
@@ -82,19 +88,10 @@ struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
 
   private var fitted: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: MTSpacing.s5) {
-        HStack(alignment: .top, spacing: MTSpacing.s3) {
-          header
-          Spacer(minLength: 0)
-          MTIconButton(label: closeLabel, icon: .close) { dismiss() }
-            .disabled(isBusy)
-            .accessibilityIdentifier(closeIdentifier)
-            .padding(.trailing, -MTSpacing.s2)
-        }
-        content
-          .disabled(isBusy)
+      VStack(spacing: 0) {
+        fittedContent
+        if scrollsFooter { footerBar }
       }
-      .padding(MTSpacing.s5)
       .onGeometryChange(for: CGFloat.self) {
         $0.size.height
       } action: {
@@ -105,17 +102,39 @@ struct MTSheet<Content: View, Accessory: View, Footer: View>: View {
     .scrollDismissesKeyboard(.interactively)
     .background(MTColor.surfaceRaised)
     .safeAreaInset(edge: .bottom, spacing: 0) {
-      footerBar
-        .onGeometryChange(for: CGFloat.self) {
-          $0.size.height
-        } action: {
-          footerHeight = $0
-        }
+      if !scrollsFooter {
+        footerBar
+          .onGeometryChange(for: CGFloat.self) {
+            $0.size.height
+          } action: {
+            footerHeight = $0
+          }
+      }
     }
     .presentationDetents(
-      contentHeight > 0 ? [.height((contentHeight + footerHeight).rounded(.up))] : [.medium]
+      contentHeight > 0
+        ? [.height((contentHeight + (scrollsFooter ? 0 : footerHeight)).rounded(.up))]
+        : [.medium]
     )
     .interactiveDismissDisabled(isBusy)
+  }
+
+  private var scrollsFooter: Bool { typeSize.isAccessibilitySize }
+
+  private var fittedContent: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s5) {
+      HStack(alignment: .top, spacing: MTSpacing.s3) {
+        header
+        Spacer(minLength: 0)
+        MTIconButton(label: closeLabel, icon: .close) { dismiss() }
+          .disabled(isBusy)
+          .accessibilityIdentifier(closeIdentifier)
+          .padding(.trailing, -MTSpacing.s2)
+      }
+      content
+        .disabled(isBusy)
+    }
+    .padding(MTSpacing.s5)
   }
 
   private var header: some View {
@@ -195,11 +214,12 @@ extension MTSheet where Accessory == EmptyView, Footer == EmptyView {
 
 /// Web's editor dialog footer: a destructive action at the leading edge, then Cancel and the
 /// primary action. When one row is too narrow, Cancel and the primary action share the width
-/// above the destructive action.
+/// above the destructive action. At accessibility text sizes the actions stack, primary first.
 struct MTSheetFooter<Destructive: View, Cancel: View, Primary: View>: View {
   private let destructive: Destructive
   private let cancel: Cancel
   private let primary: Primary
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   init(
     @ViewBuilder destructive: () -> Destructive, @ViewBuilder cancel: () -> Cancel,
@@ -211,6 +231,18 @@ struct MTSheetFooter<Destructive: View, Cancel: View, Primary: View>: View {
   }
 
   var body: some View {
+    if typeSize.isAccessibilitySize {
+      VStack(spacing: MTSpacing.s2) {
+        primary.frame(maxWidth: .infinity)
+        cancel.frame(maxWidth: .infinity)
+        destructive
+      }
+    } else {
+      rows
+    }
+  }
+
+  private var rows: some View {
     ViewThatFits(in: .horizontal) {
       HStack(spacing: MTSpacing.s2) {
         destructive
@@ -223,12 +255,6 @@ struct MTSheetFooter<Destructive: View, Cancel: View, Primary: View>: View {
           cancel.frame(maxWidth: .infinity)
           primary.frame(maxWidth: .infinity)
         }
-        destructive
-      }
-      // At accessibility text sizes even two buttons do not fit side by side.
-      VStack(spacing: MTSpacing.s2) {
-        primary.frame(maxWidth: .infinity)
-        cancel.frame(maxWidth: .infinity)
         destructive
       }
     }

@@ -120,7 +120,9 @@ final class LocalSessionUITests: XCTestCase {
       reveal(app.buttons["item-edit"], in: app).tap()
       XCTAssertTrue(app.buttons["editor-save"].waitForExistence(timeout: 10))
       tourScreen(app, "Entry editor, \(pass)")
-      app.buttons["Cancel"].tap()
+      // The close action stays in the navigation bar; at accessibility text sizes the footer
+      // with Cancel scrolls after the form.
+      app.buttons["editor-close"].tap()
       XCTAssertTrue(app.buttons["item-edit"].waitForExistence(timeout: 10))
 
       app.tabBars.buttons["More"].tap()
