@@ -110,10 +110,10 @@ final class SaveEntryParametersTests: XCTestCase {
       precision: .month, start: start, end: end, label: nil, timezone: "Europe/Lisbon")
     XCTAssertNoThrow(try parameters(title: "Lisbon", marks: .chapter, occurrence: span))
     XCTAssertThrowsError(try parameters(title: "Lisbon", marks: .firstTime, occurrence: span)) {
+      // Web `validateOccurrence` words it this way.
       XCTAssertEqual(
         $0 as? SaveEntryError,
-        .invalid(
-          "The end date must follow the start and use Range, Approximate, or Age precision."))
+        .invalid("Only ranges, ages, or approximate periods can have an end date."))
     }
   }
 

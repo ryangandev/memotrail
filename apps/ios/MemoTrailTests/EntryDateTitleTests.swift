@@ -205,7 +205,8 @@ final class EntryDateTitleTests: XCTestCase {
     var ended = range
     ended.end = "2023-01-01"
     XCTAssertEqual(try ended.resolve().end, try date("2023-01-01T12:00:00Z"))
-    ended.endMode = .present
+    // Present clears the end date, as the editor and Web do.
+    ended.setPresent(true)
     XCTAssertNil(try ended.resolve().end)
   }
 

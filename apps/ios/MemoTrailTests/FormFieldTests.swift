@@ -66,7 +66,7 @@ final class FormFieldTests: XCTestCase {
     draft.start = "2020-01-02"
     draft.end = "2021-03-04"
     XCTAssertNotNil(try draft.resolve().end)
-    draft.endMode = .present
+    draft.setPresent(true)
     let ongoing = try draft.resolve()
     XCTAssertNil(ongoing.end)
     XCTAssertEqual(OccurrenceDraft(ongoing).endMode, .present)
