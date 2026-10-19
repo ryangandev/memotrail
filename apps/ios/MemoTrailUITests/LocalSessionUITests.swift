@@ -80,13 +80,89 @@ final class LocalSessionUITests: XCTestCase {
     }
   }
 
+  /// Visits every screen in light, dark, and the largest accessibility text size, and keeps a
+  /// screenshot of the top of each screen and of the screen scrolled once, for a pixel review.
+  /// It reads seeded data and saves nothing.
+  func testScreenTourInEachAppearanceAndTheLargestTextSize() throws {
+    for (appearance, contentSize) in [
+      ("light", nil), ("dark", nil), ("light", "UICTContentSizeCategoryAccessibilityXXXL"),
+    ] as [(String, String?)] {
+      let pass = contentSize == nil ? appearance : "largest text"
+      let app = try launchLocalSession(contentSize: contentSize, appearance: appearance)
+      XCTAssertTrue(app.tabBars.buttons["Dashboard"].waitForExistence(timeout: 20))
+      tourScreen(app, "Dashboard, \(pass)")
+
+      app.buttons["workspace-new-entry"].tap()
+      XCTAssertTrue(app.buttons["Close quick capture"].waitForExistence(timeout: 10))
+      tourScreen(app, "Quick Capture, \(pass)", scroll: false)
+      app.buttons["Close quick capture"].tap()
+
+      for (tab, expected) in [
+        ("Timeline", "Finished the first marathon"), ("Library", "Grandmother's recipe cards"),
+      ] {
+        app.tabBars.buttons[tab].tap()
+        XCTAssertTrue(text(expected, in: app).waitForExistence(timeout: 15), tab)
+        tourScreen(app, "\(tab), \(pass)")
+      }
+
+      app.buttons["workspace-search"].tap()
+      let field = app.textFields["Search Library"]
+      XCTAssertTrue(field.waitForExistence(timeout: 10))
+      field.typeText("Living in Lisbon\n")
+      XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
+      tourScreen(app, "Library results, \(pass)", scroll: false)
+      let result = app.buttons
+        .matching(NSPredicate(format: "label CONTAINS %@", "Living in Lisbon")).firstMatch
+      XCTAssertTrue(result.waitForExistence(timeout: 10))
+      reveal(result, in: app).tap()
+      XCTAssertTrue(app.buttons["item-edit"].waitForExistence(timeout: 15))
+      tourScreen(app, "Chapter Item page, \(pass)")
+      reveal(app.buttons["item-edit"], in: app).tap()
+      XCTAssertTrue(app.buttons["editor-save"].waitForExistence(timeout: 10))
+      tourScreen(app, "Entry editor, \(pass)")
+      app.buttons["Cancel"].tap()
+      XCTAssertTrue(app.buttons["item-edit"].waitForExistence(timeout: 10))
+
+      app.tabBars.buttons["More"].tap()
+      XCTAssertTrue(reveal(app.buttons["more-settings"], in: app).waitForExistence(timeout: 10))
+      tourScreen(app, "More, \(pass)")
+      for (identifier, route) in [
+        ("more-firstTimes", "First Times"), ("more-tags", "Tags"), ("more-trash", "Trash"),
+      ] {
+        reveal(app.buttons[identifier], in: app).tap()
+        XCTAssertTrue(app.navigationBars[route].waitForExistence(timeout: 10), route)
+        tourScreen(app, "\(route), \(pass)")
+        app.navigationBars.buttons.element(boundBy: 0).tap()
+      }
+      reveal(app.buttons["more-settings"], in: app).tap()
+      XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 10))
+      tourScreen(app, "Settings, \(pass)")
+      reveal(app.buttons["Export"], in: app).tap()
+      XCTAssertTrue(app.navigationBars["Export"].waitForExistence(timeout: 10))
+      tourScreen(app, "Export, \(pass)")
+      app.terminate()
+    }
+  }
+
+  /// Keeps the screen once it settles and, unless `scroll` is false, again after one swipe up.
+  private func tourScreen(_ app: XCUIApplication, _ name: String, scroll: Bool = true) {
+    Thread.sleep(forTimeInterval: 1.5)
+    attach(app, name)
+    guard scroll else { return }
+    app.swipeUp()
+    Thread.sleep(forTimeInterval: 1)
+    attach(app, "\(name), scrolled")
+    app.swipeDown()
+  }
+
   // MARK: Harness
 
   /// `offline` fails every request once the session is open, like an iPhone with no network.
   /// `contentSize` names a text size category, such as `UICTContentSizeCategoryAccessibilityL`.
-  func launchLocalSession(offline: Bool = false, contentSize: String? = nil) throws
-    -> XCUIApplication
-  {
+  /// `appearance` is `light` or `dark`, the values Settings stores; it follows the system if nil.
+  func launchLocalSession(
+    offline: Bool = false, contentSize: String? = nil, appearance: String? = nil
+  ) throws -> XCUIApplication {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_REVIEW_SESSION"] ?? ""
     guard !path.isEmpty else {
       throw XCTSkip("Run apps/ios/scripts/review-local-session.py with the local Supabase stack.")
@@ -96,6 +172,7 @@ final class LocalSessionUITests: XCTestCase {
     if let contentSize {
       app.launchArguments += ["-UIPreferredContentSizeCategoryName", contentSize]
     }
+    if let appearance { app.launchArguments += ["-native-appearance", appearance] }
     app.launchEnvironment["MEMOTRAIL_REVIEW_SESSION"] = path
     app.launch()
     return app
