@@ -101,7 +101,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
     });
     await page.goto("/");
     await page
-      .getByRole("button", { name: "Search your trail", exact: true })
+      .getByRole("button", { name: "Search everything", exact: true })
       .click();
     const commandPalette = page.getByRole("dialog", {
       name: "Search MemoTrail",

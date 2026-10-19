@@ -3,11 +3,15 @@
   min-width: 0;
   max-width: 400px;
   flex: 1;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-2) var(--mt-space-4) var(--mt-space-2)
-    var(--mt-space-2);
+  gap: var(--mt-space-2-5);
+  padding: 0 var(--mt-space-4) 0 var(--mt-space-3-5);
   text-align: left;
   cursor: text;
+}
+
+.trigger > svg {
+  flex: none;
+  color: var(--mt-color-accent);
 }
 
 .trigger[aria-expanded="true"],
@@ -15,23 +19,10 @@
   visibility: hidden;
 }
 
-.triggerMark {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  flex: none;
-  place-items: center;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-accent-border-faint);
-  border-radius: 50%;
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-halo);
-}
-
 .triggerPrompt {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  font-size: var(--mt-font-size-body);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -141,37 +132,21 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--mt-space-4);
-  min-height: 64px;
-  padding: var(--mt-space-4) var(--capture-inline-padding);
+  min-height: 56px;
+  padding: var(--mt-space-3) var(--mt-space-3) 0 var(--capture-inline-padding);
   background: transparent;
 }
 
 .dialogHeader h2 {
+  min-width: 0;
   font-family: var(--mt-font-family-serif);
   font-size: var(--mt-font-size-title-small);
   font-weight: var(--mt-font-weight-medium);
-}
-
-.dialogTitle {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--mt-space-3);
-}
-
-.dialogMark {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  flex: 0 0 auto;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
+  line-height: var(--mt-line-height-tight);
 }
 
 .dialogBody {
-  padding: 0;
+  padding: 0 var(--capture-inline-padding) var(--capture-inline-padding);
 }
 
 @media (max-width: 720px) {
@@ -188,25 +163,11 @@
         env(safe-area-inset-bottom)
     );
   }
-
-  .dialogHeader {
-    padding-block: var(--mt-space-4);
-  }
 }
 
 @media (max-width: 390px) {
-  .dialogHeader,
-  .dialogTitle {
-    gap: var(--mt-space-2);
-  }
-
   .dialogHeader h2 {
     font-size: var(--mt-font-size-body-large);
-  }
-
-  .dialogMark {
-    width: 28px;
-    height: 28px;
   }
 }
 

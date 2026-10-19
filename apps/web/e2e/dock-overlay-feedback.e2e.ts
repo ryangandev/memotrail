@@ -10,7 +10,7 @@ test("dock feedback stays readable over light and dark content and places Search
   await page.goto("/library");
   const capture = page.getByRole("button", { name: "New entry", exact: true });
   const search = page.getByRole("button", {
-    name: "Search your trail",
+    name: "Search everything",
     exact: true,
   });
   await expect(capture).toBeVisible();
@@ -150,7 +150,7 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
     )
       .raw()
       .toBuffer({ resolveWithObject: true });
-    // Sample blank areas beside the controls on the same solid background.
+    // Sample blank areas between the controls on the same solid background.
     // Opaque header/footer overlays would make the panel look like three bands.
     const samples = [
       header.y + header.height / 2,
@@ -158,7 +158,7 @@ test("expanded capture shares a glass surface and keeps its save hint inside nar
       actions.y + actions.height / 2,
     ].map((y) => {
       const position =
-        (Math.round(y) * info.width + Math.round(box.x + box.width - 14)) *
+        (Math.round(y) * info.width + Math.round(box.x + box.width * 0.62)) *
         info.channels;
       return Array.from(data.subarray(position, position + 3));
     });

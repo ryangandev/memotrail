@@ -100,7 +100,12 @@ Capture happens in two modes, and both must feel effortless: a mood or sudden re
   The Entry page's Date fact appears only when it says more than that heading, such as the time of an exact moment or an end the heading leaves out.
   Because the date already names it, an untitled Entry does not repeat its date beside the title.
 - A Chapter needs a name, so the Entry editor asks for a title when it turns an Entry into a Chapter.
-- The Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
+- On Web the Dashboard holds the composer as one quiet card.
+  Its placeholder asks "What’s on your mind?", and below it sit a Today chip for the date, a Voice chip, a Photos chip, and Save with its Command Return shortcut beside it.
+  The formatting toolbar appears when the person engages the editor or has written something.
+  On a phone the Voice chip shows only its icon.
+- Away from the Dashboard, the Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
+  The Dashboard already holds a composer, so there the dock keeps Search alone and Command J opens the same Quick Capture dialog.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
   Formatting survives later edits in the rich Entry editor and appears on full note surfaces.
 - Rich formatting never replaces the Entry's clean plaintext body, so search, reviews, export, and clients that do not render formatting still receive readable writing.
@@ -262,14 +267,15 @@ Year reviews are reached from Reviews, not from Timeline.
 
 Dashboard is ordered around:
 
-1. A personal greeting with today's date, and compact counts linking to their destinations.
+1. A serif greeting such as "Good evening, Ryan", with no trailing period, over one muted line of today's date and compact counts linking to their destinations.
 2. Full-width Quick Capture.
-3. A quiet resurfaced memory alongside Now.
-4. Full-width Recent Entries with single-line titles and summaries and optional tags; an untitled Entry is named by its date.
+3. Now beside From your past, a quiet resurfaced memory on a warm tint.
+4. Full-width Recent, the latest Entries as Library rows with single-line titles and summaries and optional tags; an untitled Entry is named by its date.
 
 Narrow screens and iOS stack these sections in the same reading order.
-Search stays available in the Web bottom dock, and in the header of each iOS primary tab as a shortcut to Library.
-The counts open Timeline, Library, First Times, or Tags.
+Search stays available in the Web bottom dock, labeled "Search everything", which holds Search alone on the Dashboard and rests above the tab bar on a phone, and in the header of each iOS primary tab as a shortcut to Library.
+The counts are Entries, Chapters now, First Times, and Tags, and open Library, Timeline, First Times, or Tags; a count of zero is left out, and a new Library shows only the date.
+A new Library shows an invitation to write the first Entry or import notes in place of Now, From your past, and Recent.
 Now lists the current Chapters: those that have started and have no end.
 Each shows how long it has been going on and opens its Entry page, and Now links to Timeline.
 Duration labels must not imply more precision than the recorded dates.

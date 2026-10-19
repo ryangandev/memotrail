@@ -1,4 +1,5 @@
 import { test, expect } from "./helpers/workspace-test";
+import { openQuickCaptureByShortcut } from "./helpers/quick-capture";
 
 test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
   page,
@@ -33,7 +34,7 @@ test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
   await expect(editor.locator("strong")).toHaveText("Keep this bold");
   await expect(toggle).toBeVisible();
 
-  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  await openQuickCaptureByShortcut(page);
   const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
   const dialogEditor = dialog.getByRole("textbox", {
     name: "Entry text",
@@ -47,7 +48,7 @@ test("sidebar shortcuts persist and leave editor bold shortcuts alone", async ({
   await expect(toggle).toBeVisible();
 
   await page
-    .getByRole("button", { name: "Search your trail", exact: true })
+    .getByRole("button", { name: "Search everything", exact: true })
     .click();
   await page
     .getByRole("searchbox", { name: "Search MemoTrail" })
