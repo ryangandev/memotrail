@@ -128,6 +128,13 @@ struct MTLoadingSkeleton: View {
             )
             .frame(width: proxy.size.width * 2.2)
             .offset(x: isShimmering ? proxy.size.width * 1.2 : -proxy.size.width * 1.2)
+            // Scoped to the band: a repeating `withAnimation` would also drive every layout
+            // change in the same transaction, such as a presenting sheet, which on iOS 17 then
+            // slides and redraws forever.
+            .animation(
+              MTEasing.inOut.animation(duration: MTMotion.shimmer)
+                .repeatForever(autoreverses: false),
+              value: isShimmering)
           }
         }
       }
@@ -135,11 +142,7 @@ struct MTLoadingSkeleton: View {
       .contentShape(Rectangle())
       .onAppear {
         guard isAnimated else { return }
-        withAnimation(
-          MTEasing.inOut.animation(duration: MTMotion.shimmer).repeatForever(autoreverses: false)
-        ) {
-          isShimmering = true
-        }
+        isShimmering = true
       }
   }
 }
