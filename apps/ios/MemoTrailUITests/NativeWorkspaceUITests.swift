@@ -34,32 +34,44 @@ final class NativeWorkspaceUITests: XCTestCase {
 
   func testPrimaryTabsMoreRoutesAndBackNavigation() {
     let app = launch("--review-navigation")
-    for title in ["Dashboard", "Inbox", "Timeline", "Library", "More"] {
+    // Web's mobile navigation: Dashboard, Timeline, Library, and More. There is no Inbox.
+    for title in ["Dashboard", "Timeline", "Library", "More"] {
       XCTAssertTrue(app.tabBars.buttons[title].exists)
     }
+    XCTAssertEqual(app.tabBars.buttons.count, 4)
     app.tabBars.buttons["More"].tap()
-    XCTAssertTrue(app.buttons["more-map"].waitForExistence(timeout: 3))
-    app.swipeUp()
-    app.buttons["more-design-system"].tap()
+    // Web `mobileMoreGroups`, each destination opening on the More stack and returning to it.
+    // The group labels are drawn in uppercase, so match them ignoring case.
+    for group in ["Focused views", "Organize", "Trash and settings"] {
+      let label = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", group)).firstMatch
+      XCTAssertTrue(label.waitForExistence(timeout: 3), group)
+    }
+    attach(app, "More")
+    for (identifier, title) in [
+      ("more-firstTimes", "First Times"), ("more-tags", "Tags"), ("more-trash", "Trash"),
+    ] {
+      reveal(app.buttons[identifier], in: app).tap()
+      XCTAssertTrue(app.navigationBars[title].waitForExistence(timeout: 3), title)
+      attach(app, title)
+      app.navigationBars.buttons["More"].tap()
+      XCTAssertTrue(app.buttons[identifier].waitForExistence(timeout: 3), identifier)
+    }
+    reveal(app.buttons["more-design-system"], in: app).tap()
     app.buttons["design-preview-settings"].tap()
     app.buttons["Dark"].tap()
     XCTAssertTrue(app.staticTexts["Dark appearance"].waitForExistence(timeout: 3))
     app.navigationBars.buttons["More"].tap()
     attach(app, "More after leaving dark gallery preview")
-    app.swipeDown()
-    app.buttons["more-map"].tap()
-    XCTAssertTrue(app.staticTexts["map-count"].waitForExistence(timeout: 3))
-    attach(app, "Map")
-    app.navigationBars.buttons["More"].tap()
-    app.swipeUp()
-    app.buttons["more-tags"].tap()
-    XCTAssertTrue(app.navigationBars["Tags"].waitForExistence(timeout: 3))
-    app.navigationBars.buttons["More"].tap()
-    app.swipeUp()
-    app.buttons["more-settings"].tap()
+    reveal(app.buttons["more-settings"], in: app).tap()
     XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
-    XCTAssertTrue(app.buttons["Export archive"].exists)
+    // Settings links to Tags and Export; import stays on the Web.
+    XCTAssertTrue(reveal(app.buttons["Export archive"], in: app).exists)
+    XCTAssertTrue(app.staticTexts["Import notes"].exists)
     attach(app, "Settings")
+    reveal(app.buttons["Archive organization"], in: app).tap()
+    XCTAssertTrue(app.navigationBars["Tags"].waitForExistence(timeout: 3))
+    app.navigationBars.buttons["Settings"].tap()
+    XCTAssertTrue(app.navigationBars["Settings"].waitForExistence(timeout: 3))
   }
 
   func testGalleryDarkAppearanceAndLargeTextRecords() {
