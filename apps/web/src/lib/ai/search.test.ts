@@ -16,7 +16,6 @@ const plan = {
   itemClassifications: [],
   dateFrom: null,
   dateTo: null,
-  beforeLatestHome: false,
   order: "oldest",
 };
 describe("AI search trust boundary", () => {
@@ -31,7 +30,13 @@ describe("AI search trust boundary", () => {
         .reference.enum,
     ).toEqual(sourceQuotations(sources[0].text).map((q) => `S1:${q.id}`));
     expect(searchPlanSchema.additionalProperties).toBe(false);
-    expect(searchPlanSchema.required).toContain("beforeLatestHome");
+    expect(searchPlanSchema.required).not.toContain("beforeLatestHome");
+    expect(searchPlanSchema.properties).not.toHaveProperty("beforeLatestHome");
+    expect(searchPlanSchema.properties.itemClassifications.items.enum).toEqual([
+      "entry",
+      "chapter",
+      "first_time",
+    ]);
     expect(
       parseSearchFindings(
         {
@@ -53,7 +58,6 @@ describe("AI search trust boundary", () => {
       evidenceParameters(
         parseSearchPlan({ ...plan, itemClassifications: ["entry"] })!,
         request,
-        "2026-09-12",
       ).p_item_classifications,
     ).toEqual([]);
   });
@@ -154,9 +158,10 @@ describe("AI search trust boundary", () => {
       { queries: Array(7).fill("a") },
       { order: "random" },
       { itemClassifications: ["unknown"] },
+      { itemClassifications: ["home"] },
+      { itemClassifications: ["milestone"] },
       { dateFrom: "2026-02-30" },
       { dateFrom: "2026-05-01", dateTo: "2026-01-01" },
-      { beforeLatestHome: "yes" },
     ])
       expect(parseSearchPlan({ ...plan, ...invalid })).toBeNull();
   });
@@ -180,7 +185,6 @@ describe("AI search trust boundary", () => {
           dateFrom: "2020-01-01",
         })!,
         request,
-        "2026-09-12",
       ),
     ).toMatchObject({
       p_item_classifications: ["entry"],
@@ -281,14 +285,48 @@ describe("AI search trust boundary", () => {
       ).length,
     ).toBeLessThan(44000);
   });
-  it("declares missing precision without fabricating dates", () => {
-    const { notices } = buildSearchSources(
+  it("sends no before-move boundary and uses only the archive's own evidence", () => {
+    const request = parseAISearchInput({
+      parameters: { q: "skiing" },
+      timeZone: "UTC",
+    })!.request;
+    const parameters = evidenceParameters(parseSearchPlan(plan)!, request);
+    expect(Object.keys(parameters).sort()).toEqual([
+      "p_date_from",
+      "p_date_to",
+      "p_item_classifications",
+      "p_order",
+      "p_queries",
+      "p_tag_names",
+    ]);
+    const { sources, notices } = buildSearchSources(
       {
+        entries: [],
         latest_home_reference: { id, title: "Home", date_precision: "age" },
         reference_window_applied: false,
       },
       [],
     );
-    expect(notices.join(" ")).toContain("uncertain date");
+    expect(sources).toEqual([]);
+    expect(notices.join(" ")).not.toContain("Home");
+  });
+  it("shows a Chapter's and a First Time's marks as recorded facts", () => {
+    const { sources } = buildSearchSources(
+      {
+        entries: [
+          {
+            id,
+            title: "Living in Portland",
+            body: "",
+            item_kind: "entry",
+            item_subtype: "chapter",
+            is_first_time: true,
+          },
+        ],
+      },
+      [],
+    );
+    expect(sources[0]?.text).toContain('"item_subtype": "chapter"');
+    expect(sources[0]?.text).toContain('"is_first_time": true');
   });
 });

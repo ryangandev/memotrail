@@ -24,7 +24,6 @@ const plan = {
   itemClassifications: [],
   dateFrom: null,
   dateTo: null,
-  beforeLatestHome: false,
   order: "oldest",
 };
 const output = (v: unknown) => ({
@@ -123,41 +122,31 @@ it("never retries or displays forged citations", async () => {
   });
   expect(generate).toHaveBeenCalledTimes(2);
 });
-it("broadens reference-only move retrieval without discarding the date boundary or manual filters", async () => {
-  const home = { id: "22222222-2222-4222-8222-222222222222", title: "Move" };
+it("broadens an empty keyword match without discarding manual filters", async () => {
   generate
     .mockResolvedValueOnce(
-      output({
-        ...plan,
-        beforeLatestHome: true,
-        itemClassifications: ["entry"],
-      }),
+      output({ ...plan, itemClassifications: ["entry"] }),
     )
     .mockResolvedValueOnce(
       output({ insufficientEvidence: true, findings: [] }),
     );
   rpc
-    .mockResolvedValueOnce({
-      data: { entries: [], latest_home_reference: home },
-      error: null,
-    })
-    .mockResolvedValueOnce({
-      data: { ...evidence, latest_home_reference: home },
-      error: null,
-    });
+    .mockResolvedValueOnce({ data: { entries: [] }, error: null })
+    .mockResolvedValueOnce({ data: evidence, error: null });
   const answer = await searchWithAI(client, "owner", {
     ...input,
-    parameters: { q: "What was I thinking before my last move?", tag: "life" },
+    parameters: { q: "What was I thinking last winter?", tag: "life" },
   });
   expect(rpc).toHaveBeenLastCalledWith(
     "archive_wiki_search_evidence",
     expect.objectContaining({
       p_queries: [""],
-      p_before_latest_home: true,
       p_item_classifications: [],
       p_tag_names: ["life"],
     }),
   );
+  expect(rpc.mock.calls[0]?.[1]).not.toHaveProperty("p_before_latest_home");
+  expect(rpc.mock.calls[0]?.[1]).not.toHaveProperty("p_as_of");
   expect(answer.sources.map((source) => source.recordID)).toContain(
     evidence.entries[0].id,
   );
@@ -170,14 +159,10 @@ it("rejects an invalid planner response without querying records", async () => {
   });
   expect(rpc).not.toHaveBeenCalled();
 });
-it("retains manual filters and explains an unavailable Home boundary", async () => {
+it("retains manual filters over inferred Chapter and First Time labels", async () => {
   generate
     .mockResolvedValueOnce(
-      output({
-        ...plan,
-        beforeLatestHome: true,
-        itemClassifications: ["home"],
-      }),
+      output({ ...plan, itemClassifications: ["chapter", "first_time"] }),
     )
     .mockResolvedValueOnce(
       output({ insufficientEvidence: true, findings: [] }),
@@ -185,7 +170,7 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
   const answer = await searchWithAI(client, "owner", {
     ...input,
     parameters: {
-      q: "Before my last move?",
+      q: "Before I left Portland?",
       type: "entry",
       tag: "life",
       from: "2020-01-01",
@@ -201,5 +186,16 @@ it("retains manual filters and explains an unavailable Home boundary", async () 
       p_date_to: "2026-01-01",
     }),
   );
-  expect(answer.notices.join(" ")).toContain("No dated Home");
+  expect(answer.notices.join(" ")).not.toContain("Home");
+});
+it("tells the planner the three classifications and no before-move boundary", async () => {
+  generate
+    .mockResolvedValueOnce(output(plan))
+    .mockResolvedValueOnce(output({ insufficientEvidence: true, findings: [] }));
+  await searchWithAI(client, "owner", input);
+  const instructions = String(generate.mock.calls[0]?.[2]);
+  expect(instructions).toContain(
+    "Valid classifications are entry, chapter, and first_time",
+  );
+  expect(instructions).not.toMatch(/beforeLatestHome|vehicle|milestone|move/i);
 });
