@@ -74,27 +74,44 @@ struct CaptureDraft: Codable, Equatable, Sendable {
   }
 }
 
-struct CaptureDraftStore {
-  private let defaults: UserDefaults
+/// What reading the stored draft found: the draft, and whether all of it could be read.
+struct CaptureDraftReading: Equatable, Sendable {
+  static let partialNotice =
+    "Some of your saved draft could not be restored. The original stays on this device."
+  static let unreadableNotice =
+    "Your saved draft could not be read. The original stays on this device."
+
+  let draft: CaptureDraft?
+  /// False when reading lost part of the stored draft, such as an overlong note.
+  let isComplete: Bool
+
+  /// What the composer says when part of the draft could not come back, like Web.
+  var notice: String? {
+    guard !isComplete else { return nil }
+    return draft == nil ? Self.unreadableNotice : Self.partialNotice
+  }
+}
+
+/// The composer's draft on this iPhone, like Web `inbox-draft.ts`. Reading never writes. A
+/// draft that could not be read in full is set aside under its quarantine key before anything
+/// replaces it, and nothing replaces it when that fails.
+struct CaptureDraftStore: Sendable {
+  private let storage: any CaptureStorage
 
   init(defaults: UserDefaults = .standard) {
-    self.defaults = defaults
+    storage = UserDefaultsCaptureStorage(defaults: defaults)
+  }
+
+  init(storage: any CaptureStorage) {
+    self.storage = storage
   }
 
   func load(ownerID: UUID) -> CaptureDraft? {
-    let key = Self.storageKey(ownerID: ownerID)
+    read(ownerID: ownerID).draft
+  }
 
-    guard let data = defaults.data(forKey: key),
-      let draft = try? JSONDecoder().decode(CaptureDraft.self, from: data),
-      draft.hasContent,
-      draft.title.count <= CaptureInput.titleLimit,
-      draft.body.count <= CaptureInput.bodyLimit
-    else {
-      defaults.removeObject(forKey: key)
-      return nil
-    }
-
-    return draft
+  func read(ownerID: UUID) -> CaptureDraftReading {
+    Self.inspect(storage.data(forKey: Self.storageKey(ownerID: ownerID)))
   }
 
   @discardableResult
@@ -107,25 +124,107 @@ struct CaptureDraftStore {
     draft.occurrenceDraft = occurrenceDraft
     draft.bodyRich = bodyRich?.text == body ? bodyRich : nil
 
-    guard draft.hasContent else {
-      defaults.removeObject(forKey: key)
+    do {
+      try keepUnreadableDraft(ownerID: ownerID)
+      guard draft.hasContent else {
+        try storage.remove(forKey: key)
+        return false
+      }
+      try storage.set(JSONEncoder().encode(draft), forKey: key)
+      return true
+    } catch {
       return false
     }
-
-    guard let data = try? JSONEncoder().encode(draft) else {
-      return false
-    }
-
-    defaults.set(data, forKey: key)
-    return true
   }
 
   func clear(ownerID: UUID) {
-    defaults.removeObject(forKey: Self.storageKey(ownerID: ownerID))
+    do {
+      try keepUnreadableDraft(ownerID: ownerID)
+      try storage.remove(forKey: Self.storageKey(ownerID: ownerID))
+    } catch {
+      // A draft that could not be set aside stays where it is.
+    }
+  }
+
+  /// The originals of drafts that could not be read in full, oldest first.
+  func quarantinedDrafts(ownerID: UUID) -> [StoredJSON] {
+    CaptureQuarantine.read(storage.data(forKey: Self.quarantineKey(ownerID: ownerID)))
+      .map(\.value)
   }
 
   static func storageKey(ownerID: UUID) -> String {
     "memotrail.inboxDraft.\(ownerID.uuidString.lowercased())"
+  }
+
+  static func quarantineKey(ownerID: UUID) -> String {
+    "memotrail.inboxDraftQuarantine.\(ownerID.uuidString.lowercased())"
+  }
+
+  /// Before the stored draft is replaced or removed, sets it aside if reading it loses
+  /// anything. Throws when it cannot, so the caller leaves the stored draft alone.
+  private func keepUnreadableDraft(ownerID: UUID) throws {
+    guard let stored = storage.data(forKey: Self.storageKey(ownerID: ownerID)), !stored.isEmpty,
+      !Self.inspect(stored).isComplete
+    else { return }
+    try CaptureQuarantine.add(
+      [StoredJSON(raw: stored)], key: Self.quarantineKey(ownerID: ownerID), storage: storage)
+  }
+
+  /// Reads whatever part of a stored draft is usable, like Web `inspectInboxDraft`. Writing
+  /// over today's limits comes back cut to them instead of the whole draft disappearing.
+  static func inspect(_ data: Data?) -> CaptureDraftReading {
+    guard let data, !data.isEmpty else { return CaptureDraftReading(draft: nil, isComplete: true) }
+    guard
+      let stored = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+        as? [String: Any]
+    else { return CaptureDraftReading(draft: nil, isComplete: false) }
+
+    var isComplete = true
+    func text(_ key: String, limit: Int) -> String {
+      guard let value = stored[key] as? String else {
+        isComplete = false
+        return ""
+      }
+      let kept = String(value.prefix(limit))
+      if kept != value { isComplete = false }
+      return kept
+    }
+    func date(_ key: String, required: Bool) -> Date? {
+      switch stored[key] {
+      case let seconds as Double: return Date(timeIntervalSinceReferenceDate: seconds)
+      case nil, is NSNull:
+        if required { isComplete = false }
+        return nil
+      default:
+        isComplete = false
+        return nil
+      }
+    }
+    func decoded<Value: Decodable>(_ key: String, as type: Value.Type) -> Value? {
+      guard let value = stored[key], !(value is NSNull) else { return nil }
+      guard let json = StoredJSON(value), let result = try? JSONDecoder().decode(type, from: json.data)
+      else {
+        isComplete = false
+        return nil
+      }
+      return result
+    }
+
+    let title = text("title", limit: CaptureInput.titleLimit)
+    let body = text("body", limit: CaptureInput.bodyLimit)
+    let updatedAt = date("updatedAt", required: true) ?? Date(timeIntervalSince1970: 0)
+    let occurredAt = date("occurredAt", required: false)
+    let occurrenceDraft = decoded("occurrenceDraft", as: OccurrenceDraft.self)
+    var bodyRich = decoded("bodyRich", as: EntryEmphasisContent.self)
+    if let rich = bodyRich, rich.text != body {
+      bodyRich = nil
+      isComplete = false
+    }
+
+    var draft = CaptureDraft(title: title, body: body, occurredAt: occurredAt, updatedAt: updatedAt)
+    draft.occurrenceDraft = occurrenceDraft
+    draft.bodyRich = bodyRich
+    return CaptureDraftReading(draft: draft.hasContent ? draft : nil, isComplete: isComplete)
   }
 }
 
@@ -381,56 +480,212 @@ enum CaptureUploadFailure: Equatable, Sendable {
   }
 }
 
-struct CaptureQueueStore {
-  static let maximumEntryCount = 100
+/// Where captures, the draft, and their quarantines are kept on this iPhone. A write can fail,
+/// so the stores never replace what they could not set aside first.
+protocol CaptureStorage: Sendable {
+  func data(forKey key: String) -> Data?
+  func set(_ data: Data, forKey key: String) throws
+  func remove(forKey key: String) throws
+}
 
-  private let defaults: UserDefaults
+/// The standard storage: this app's user defaults.
+struct UserDefaultsCaptureStorage: CaptureStorage {
+  let defaults: UserDefaults
 
-  init(defaults: UserDefaults = .standard) {
-    self.defaults = defaults
+  /// A value stored in any other form still comes back, so it can be set aside, not lost.
+  func data(forKey key: String) -> Data? {
+    switch defaults.object(forKey: key) {
+    case nil: nil
+    case let data as Data: data
+    case let text as String: Data(text.utf8)
+    case let value?:
+      (try? JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed]))
+        ?? Data(String(describing: value).utf8)
+    }
   }
 
-  func load(ownerID: UUID) -> [QueuedCapture] {
-    let key = Self.storageKey(ownerID: ownerID)
+  func set(_ data: Data, forKey key: String) throws {
+    defaults.set(data, forKey: key)
+  }
 
-    guard let data = defaults.data(forKey: key),
-      let queue = try? JSONDecoder().decode(StoredCaptureQueue.self, from: data),
-      [1, 2, 3].contains(queue.version),
-      queue.entries.count <= Self.maximumEntryCount,
-      queue.entries.allSatisfy(\.isValid),
-      Set(queue.entries.map(\.id)).count == queue.entries.count
-    else {
-      defaults.removeObject(forKey: key)
-      return []
+  func remove(forKey key: String) throws {
+    defaults.removeObject(forKey: key)
+  }
+}
+
+/// One stored JSON value, written with sorted keys so the same content always compares equal.
+/// Text that is not JSON is kept as a JSON string.
+struct StoredJSON: Hashable, Sendable {
+  let data: Data
+
+  init?(_ object: Any) {
+    guard
+      let data = try? JSONSerialization.data(
+        withJSONObject: object, options: [.fragmentsAllowed, .sortedKeys, .withoutEscapingSlashes])
+    else { return nil }
+    self.data = data
+  }
+
+  /// Stored bytes as they are: their JSON when they hold JSON, otherwise their text.
+  init(raw data: Data) {
+    if let object = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed]),
+      let json = StoredJSON(object)
+    {
+      self = json
+    } else {
+      self = StoredJSON(
+        String(data: data, encoding: .utf8) ?? "base64:" + data.base64EncodedString())!
     }
+  }
 
-    return queue.entries
+  var object: Any {
+    (try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])) ?? NSNull()
+  }
+
+  /// The stored form, which identifies the value until it is discarded.
+  var key: String { String(decoding: data, as: UTF8.self) }
+}
+
+/// Values set aside because they could not be read, like Web's quarantine: a JSON array of
+/// `{quarantinedAt, value}`, each value kept as it was found.
+enum CaptureQuarantine {
+  struct Item {
+    let quarantinedAt: String
+    let value: StoredJSON
+  }
+
+  private static let unknownDate = "1970-01-01T00:00:00.000Z"
+
+  /// What a quarantine holds. Even a damaged quarantine keeps what it holds.
+  static func read(_ data: Data?) -> [Item] {
+    guard let data, !data.isEmpty else { return [] }
+    guard let items = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+      as? [Any]
+    else { return [Item(quarantinedAt: unknownDate, value: StoredJSON(raw: data))] }
+    return items.compactMap { item in
+      if let held = item as? [String: Any], let date = held["quarantinedAt"] as? String,
+        let value = held["value"].flatMap(StoredJSON.init)
+      {
+        return Item(quarantinedAt: date, value: value)
+      }
+      return StoredJSON(item).map { Item(quarantinedAt: unknownDate, value: $0) }
+    }
+  }
+
+  /// Adds values the quarantine does not already hold. Throws when it cannot store them.
+  static func add(_ values: [StoredJSON], key: String, storage: any CaptureStorage) throws {
+    let held = read(storage.data(forKey: key))
+    var known = Set(held.map(\.value))
+    let now = EntryTimestamp.string(from: Date())
+    let added = values.compactMap { value -> Item? in
+      known.insert(value).inserted ? Item(quarantinedAt: now, value: value) : nil
+    }
+    guard !added.isEmpty else { return }
+    try write(held + added, key: key, storage: storage)
+  }
+
+  /// Stores exactly these items, or removes the quarantine when there are none.
+  static func write(_ items: [Item], key: String, storage: any CaptureStorage) throws {
+    guard !items.isEmpty else {
+      try storage.remove(forKey: key)
+      return
+    }
+    let array = items.map { ["quarantinedAt": $0.quarantinedAt, "value": $0.value.object] }
+    try storage.set(
+      JSONSerialization.data(withJSONObject: array, options: [.sortedKeys, .withoutEscapingSlashes]),
+      forKey: key)
+  }
+}
+
+/// A stored capture that cannot be sent, as the person sees it, like Web `UnreadableCapture`.
+struct UnreadableCapture: Equatable, Identifiable, Sendable {
+  /// The stored form, which identifies it until it is discarded.
+  let key: String
+  /// The title and note it holds, or its stored form when it holds neither, for Copy text.
+  let text: String
+  /// The photo drafts it names, which stay out of the composer until it is discarded.
+  let photoIDs: [UUID]
+
+  var id: String { key }
+
+  init(_ value: StoredJSON) {
+    key = value.key
+    let object = value.object
+    text = Self.recoverableText(object).nonEmpty ?? value.key
+    photoIDs = Self.photoIDs(object)
+  }
+
+  /// Web `recoverableText`: the title and the note, or the formatted note's text.
+  private static func recoverableText(_ object: Any) -> String {
+    if let text = object as? String { return text }
+    guard let capture = object as? [String: Any] else { return "" }
+    let title = capture["title"] as? String ?? ""
+    let body = (capture["body"] as? String).flatMap(\.nonEmpty)
+      ?? ((capture["bodyRich"] as? [String: Any])?["text"] as? String) ?? ""
+    return [title, body].filter { !$0.isEmpty }.joined(separator: "\n\n")
+  }
+
+  /// Web `unreadableAttachmentIds`.
+  private static func photoIDs(_ object: Any) -> [UUID] {
+    guard let capture = object as? [String: Any],
+      let attachments = capture["attachments"] as? [Any]
+    else { return [] }
+    return attachments.compactMap {
+      (($0 as? [String: Any])?["id"] as? String).flatMap(UUID.init(uuidString:))
+    }
+  }
+}
+
+/// What the stored queue holds: the captures that can be sent, and every stored item that
+/// cannot be read as one, which is kept so the person can copy its writing.
+struct ParsedCaptureQueue: Sendable {
+  var entries: [QueuedCapture] = []
+  var unreadable: [StoredJSON] = []
+}
+
+/// Captures waiting on this iPhone, like Web `inbox-queue.ts`. Reading never writes. Before
+/// any write, whatever could not be read moves to the quarantine, and the write is refused
+/// when that fails, so a reduced queue is never stored over what it could not read.
+struct CaptureQueueStore: Sendable {
+  static let maximumEntryCount = 100
+  /// Queue versions this release reads. It always writes the newest.
+  static let readableVersions: Set<Int> = [1, 2, 3]
+  static let currentVersion = 3
+
+  private let storage: any CaptureStorage
+
+  init(defaults: UserDefaults = .standard) {
+    storage = UserDefaultsCaptureStorage(defaults: defaults)
+  }
+
+  init(storage: any CaptureStorage) {
+    self.storage = storage
+  }
+
+  /// The captures that can be sent.
+  func load(ownerID: UUID) -> [QueuedCapture] {
+    read(ownerID: ownerID).entries
   }
 
   func enqueue(_ entry: QueuedCapture, ownerID: UUID) -> [QueuedCapture]? {
-    let currentQueue = load(ownerID: ownerID)
+    let state = read(ownerID: ownerID)
 
-    if currentQueue.contains(where: { $0.id == entry.id }) {
-      return currentQueue
+    if state.entries.contains(where: { $0.id == entry.id }) {
+      return state.entries
     }
 
-    guard entry.isValid, currentQueue.count < Self.maximumEntryCount else {
+    guard entry.isValid, state.entries.count < Self.maximumEntryCount else {
       return nil
     }
 
-    let nextQueue = currentQueue + [entry]
-    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+    let nextQueue = state.entries + [entry]
+    return write(state, nextQueue, ownerID: ownerID) ? nextQueue : nil
   }
 
   func remove(entryID: UUID, ownerID: UUID) -> [QueuedCapture]? {
-    let nextQueue = load(ownerID: ownerID).filter { $0.id != entryID }
-
-    if nextQueue.isEmpty {
-      defaults.removeObject(forKey: Self.storageKey(ownerID: ownerID))
-      return []
-    }
-
-    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+    let state = read(ownerID: ownerID)
+    let nextQueue = state.entries.filter { $0.id != entryID }
+    return write(state, nextQueue, ownerID: ownerID) ? nextQueue : nil
   }
 
   /// Marks one capture as refused in place, keeping its content and position, like Web
@@ -438,31 +693,134 @@ struct CaptureQueueStore {
   func markRejected(
     entryID: UUID, rejection: QueuedCaptureRejection, ownerID: UUID
   ) -> [QueuedCapture]? {
-    let currentQueue = load(ownerID: ownerID)
-    guard currentQueue.contains(where: { $0.id == entryID }) else { return currentQueue }
+    let state = read(ownerID: ownerID)
+    guard state.entries.contains(where: { $0.id == entryID }) else { return state.entries }
 
-    let nextQueue = currentQueue.map { entry in
+    let nextQueue = state.entries.map { entry in
       guard entry.id == entryID else { return entry }
       var rejected = entry
       rejected.rejection = rejection
       return rejected
     }
-    return save(nextQueue, ownerID: ownerID) ? nextQueue : nil
+    return write(state, nextQueue, ownerID: ownerID) ? nextQueue : nil
+  }
+
+  /// Every stored capture that cannot be sent, in the quarantine or still in the queue.
+  func unreadableCaptures(ownerID: UUID) -> [UnreadableCapture] {
+    var seen = Set<StoredJSON>()
+    return (quarantine(ownerID: ownerID).map(\.value) + read(ownerID: ownerID).unreadable)
+      .filter { seen.insert($0).inserted }
+      .map(UnreadableCapture.init)
+  }
+
+  /// Removes one unreadable capture for good, like Web `discardUnreadableCapture`. Its photo
+  /// drafts go first, except any another stored capture still names, so a failure leaves it
+  /// listed for another try. Every other unreadable item is set aside, never dropped.
+  func discardUnreadable(
+    _ capture: UnreadableCapture, ownerID: UUID, removePhoto: (UUID) throws -> Void
+  ) -> Bool {
+    let state = read(ownerID: ownerID)
+    let held = quarantine(ownerID: ownerID)
+    let now = EntryTimestamp.string(from: Date())
+    var seen = Set<String>()
+    let kept = (held + state.unreadable.map { CaptureQuarantine.Item(quarantinedAt: now, value: $0) })
+      .filter { $0.value.key != capture.key && seen.insert($0.value.key).inserted }
+    let stillNamed = Set(
+      state.entries.flatMap { $0.attachments.map(\.id) }
+        + kept.flatMap { UnreadableCapture($0.value).photoIDs })
+
+    do {
+      for photoID in capture.photoIDs where !stillNamed.contains(photoID) {
+        try removePhoto(photoID)
+      }
+      try CaptureQuarantine.write(kept, key: Self.quarantineKey(ownerID: ownerID), storage: storage)
+      // The queue only loses items that are now safe in the quarantine.
+      if !state.unreadable.isEmpty {
+        try store(state.entries, ownerID: ownerID)
+      }
+      return true
+    } catch {
+      return false
+    }
   }
 
   static func storageKey(ownerID: UUID) -> String {
     "memotrail.inboxQueue.\(ownerID.uuidString.lowercased())"
   }
 
-  private func save(_ entries: [QueuedCapture], ownerID: UUID) -> Bool {
-    let queue = StoredCaptureQueue(version: 3, entries: entries)
+  static func quarantineKey(ownerID: UUID) -> String {
+    "memotrail.inboxQueueQuarantine.\(ownerID.uuidString.lowercased())"
+  }
 
-    guard let data = try? JSONEncoder().encode(queue) else {
+  /// Web `parseInboxQueue`: valid captures load; an item that fails to decode or validate, an
+  /// id repeated with different content, every item of an unknown version, and a queue that
+  /// cannot be read at all become unreadable items. An exact repeat is the same capture.
+  static func parse(_ data: Data?) -> ParsedCaptureQueue {
+    guard let data, !data.isEmpty else { return ParsedCaptureQueue() }
+    guard let root = try? JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+    else { return ParsedCaptureQueue(unreadable: [StoredJSON(raw: data)]) }
+    guard let queue = root as? [String: Any], let items = queue["entries"] as? [Any] else {
+      return ParsedCaptureQueue(unreadable: [StoredJSON(raw: data)])
+    }
+    let isReadableVersion = (queue["version"] as? Int).map { readableVersions.contains($0) } ?? false
+
+    var parsed = ParsedCaptureQueue()
+    var seen: [UUID: StoredJSON] = [:]
+    let decoder = JSONDecoder()
+    for item in items {
+      guard let stored = StoredJSON(item) else { continue }
+      guard isReadableVersion,
+        let capture = try? decoder.decode(QueuedCapture.self, from: stored.data),
+        capture.isValid
+      else {
+        parsed.unreadable.append(stored)
+        continue
+      }
+      if let earlier = seen[capture.id] {
+        // The same id with different content: keep the first and set this one aside.
+        if earlier != stored { parsed.unreadable.append(stored) }
+        continue
+      }
+      seen[capture.id] = stored
+      parsed.entries.append(capture)
+    }
+    return parsed
+  }
+
+  private func read(ownerID: UUID) -> ParsedCaptureQueue {
+    Self.parse(storage.data(forKey: Self.storageKey(ownerID: ownerID)))
+  }
+
+  private func quarantine(ownerID: UUID) -> [CaptureQuarantine.Item] {
+    CaptureQuarantine.read(storage.data(forKey: Self.quarantineKey(ownerID: ownerID)))
+  }
+
+  /// Stores the captures that can be sent, after setting aside anything unreadable in the
+  /// stored queue. Nothing is written when that fails.
+  private func write(_ state: ParsedCaptureQueue, _ nextQueue: [QueuedCapture], ownerID: UUID)
+    -> Bool
+  {
+    do {
+      if !state.unreadable.isEmpty {
+        try CaptureQuarantine.add(
+          state.unreadable, key: Self.quarantineKey(ownerID: ownerID), storage: storage)
+      }
+      try store(nextQueue, ownerID: ownerID)
+      return true
+    } catch {
       return false
     }
+  }
 
-    defaults.set(data, forKey: Self.storageKey(ownerID: ownerID))
-    return true
+  private func store(_ entries: [QueuedCapture], ownerID: UUID) throws {
+    let key = Self.storageKey(ownerID: ownerID)
+    guard !entries.isEmpty else {
+      try storage.remove(forKey: key)
+      return
+    }
+    try storage.set(
+      JSONEncoder().encode(StoredCaptureQueue(version: Self.currentVersion, entries: entries)),
+      forKey: key)
   }
 }
 

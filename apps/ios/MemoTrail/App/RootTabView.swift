@@ -17,6 +17,8 @@ struct RootTabView: View {
   @State private var capturePhotos: [PhotoDraft]
   @State private var hasLocalDraft: Bool
   @State private var hasLoadedCapturePhotos = false
+  /// Why the saved draft did not come back in full, shown once the composer is ready.
+  @State private var draftNotice: String?
   @State private var navigator = AppNavigator()
 
   init(
@@ -28,7 +30,8 @@ struct RootTabView: View {
     queueStore: CaptureQueueStore = CaptureQueueStore(),
     photoStore: CapturePhotoStore = CapturePhotoStore()
   ) {
-    let draft = draftStore.load(ownerID: user.id)
+    let reading = draftStore.read(ownerID: user.id)
+    let draft = reading.draft
 
     self.client = client
     self.user = user
@@ -52,6 +55,7 @@ struct RootTabView: View {
     _captureOccurrence = State(initialValue: draft?.captureOccurrence)
     _capturePhotos = State(initialValue: [])
     _hasLocalDraft = State(initialValue: draft != nil)
+    _draftNotice = State(initialValue: reading.notice)
   }
 
   var body: some View {
@@ -130,6 +134,8 @@ struct RootTabView: View {
     // A capture that reached MemoTrail changes every list that shows Entries.
     .onChange(of: captureController.entriesRevision) { navigator.entriesChanged() }
     .task {
+      captureController.showDraftNotice(draftNotice)
+      draftNotice = nil
       await loadCapturePhotosIfNeeded()
     }
   }
@@ -166,8 +172,10 @@ struct RootTabView: View {
       (try? await Task.detached {
         try photoStore.load(ownerID: ownerID)
       }.value) ?? []
+    // A queued or unreadable capture still owns its photos until it is sent or discarded.
     let queuedPhotoIDs = Set(
       captureController.pendingEntries.flatMap { $0.attachments.map(\.id) }
+        + captureController.unreadableCaptures.flatMap(\.photoIDs)
     )
     capturePhotos = loadedPhotos.filter { !queuedPhotoIDs.contains($0.id) }
     hasLocalDraft =

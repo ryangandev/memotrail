@@ -9,6 +9,8 @@ import Observation
 @Observable
 final class CaptureController {
   private(set) var pendingEntries: [QueuedCapture]
+  /// Stored captures this iPhone could not read, kept so their writing can be copied.
+  private(set) var unreadableCaptures: [UnreadableCapture]
   private(set) var isSaving = false
   private(set) var isSyncing = false
   /// The latest capture or sync problem, shown in the composer until the next attempt.
@@ -42,6 +44,7 @@ final class CaptureController {
     self.photoStore = photoStore
     self.networkMonitor = networkMonitor
     pendingEntries = queueStore.load(ownerID: ownerID)
+    unreadableCaptures = queueStore.unreadableCaptures(ownerID: ownerID)
 
     networkMonitor.pathUpdateHandler = { [weak self] path in
       guard path.status == .satisfied else { return }
@@ -60,7 +63,30 @@ final class CaptureController {
   /// Rereads the queue on this iPhone, then sends whatever still waits.
   func refresh() async {
     pendingEntries = queueStore.load(ownerID: ownerID)
+    unreadableCaptures = queueStore.unreadableCaptures(ownerID: ownerID)
     _ = await synchronizePendingEntries()
+  }
+
+  /// Shows why a saved draft did not come back in full, like Web's draft notice.
+  func showDraftNotice(_ notice: String?) {
+    guard let notice else { return }
+    captureError = notice
+  }
+
+  /// Removes one unreadable capture for good, like Web's Discard for an unreadable capture.
+  /// Its photo drafts go first, so a failure leaves it listed for another try.
+  func discardUnreadable(_ capture: UnreadableCapture) async -> Bool {
+    let queueStore = queueStore
+    let photoStore = photoStore
+    let ownerID = ownerID
+    let discarded = await Task.detached {
+      queueStore.discardUnreadable(capture, ownerID: ownerID) { photoID in
+        try photoStore.remove(photoID: photoID, ownerID: ownerID)
+      }
+    }.value
+    pendingEntries = queueStore.load(ownerID: ownerID)
+    unreadableCaptures = queueStore.unreadableCaptures(ownerID: ownerID)
+    return discarded
   }
 
   func save(
