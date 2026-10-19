@@ -199,6 +199,15 @@ final class LocalSessionUITests: XCTestCase {
     return composer
   }
 
+  /// The number in a count such as "21 Entries" shown in `scope`, or 0 if none shows. The tests
+  /// share one seeded account and some add records, so later tests can check a minimum.
+  func count(_ noun: String, in scope: XCUIElement) -> Int {
+    let label = scope.staticTexts
+      .matching(NSPredicate(format: "label MATCHES %@", "^[0-9]+ \(noun)$")).firstMatch
+    guard label.waitForExistence(timeout: 10) else { return 0 }
+    return Int(label.label.prefix { $0.isNumber }) ?? 0
+  }
+
   func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
     app.descendants(matching: .any)[identifier]
   }

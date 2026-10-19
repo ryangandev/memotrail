@@ -1,7 +1,8 @@
 import XCTest
 
 // Library browse and search, and First Times, signed in as the seeded account. The seed has four
-// Chapters (one also a First Time), three First Times, and 21 Entries in all.
+// Chapters (one also a First Time), three First Times, and 21 Entries in all. Tests that run
+// earlier in the same session add Entries, Chapters, and First Times, so those counts are minimums.
 extension LocalSessionUITests {
   func testLibrarySearchFiltersChaptersAndFirstTimes() throws {
     let app = try launchLocalSession()
@@ -12,7 +13,7 @@ extension LocalSessionUITests {
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     XCTAssertTrue(element("library-items", in: app).waitForExistence(timeout: 15))
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["21 Entries"].exists)
+    XCTAssertGreaterThanOrEqual(count("Entries", in: app), 21)
     attach(app, "Library browse")
 
     // Browse labels Chapters and First Times and leaves a plain Entry unlabeled.
@@ -68,7 +69,8 @@ extension LocalSessionUITests {
     reveal(app.buttons["library-filters"], in: app).tap()
     reveal(recordMenu(in: app), in: app).tap()
     app.buttons["Chapters"].tap()
-    XCTAssertTrue(app.staticTexts["4 Entries"].waitForExistence(timeout: 10))
+    XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 10))
+    XCTAssertGreaterThanOrEqual(count("Entries", in: app), 4)
     XCTAssertTrue(
       reveal(
         app.buttons.matching(
@@ -80,13 +82,13 @@ extension LocalSessionUITests {
     attach(app, "Library chapters only")
     reveal(recordMenu(in: app), in: app).tap()
     app.buttons["First Times"].tap()
-    XCTAssertTrue(app.staticTexts["3 Entries"].waitForExistence(timeout: 10))
-    XCTAssertTrue(
-      reveal(
-        app.buttons.matching(
-          NSPredicate(format: "label BEGINSWITH %@", "First Time, Finished the first marathon")
-        ).firstMatch, in: app
-      ).exists)
+    // The marathon is not a Chapter, so it shows once the First Times results replace them.
+    let marathon = app.buttons.matching(
+      NSPredicate(format: "label BEGINSWITH %@", "First Time, Finished the first marathon")
+    ).firstMatch
+    XCTAssertTrue(marathon.waitForExistence(timeout: 10))
+    XCTAssertGreaterThanOrEqual(count("Entries", in: app), 3)
+    XCTAssertTrue(reveal(marathon, in: app).exists)
     attach(app, "Library first times only")
   }
 
@@ -98,7 +100,9 @@ extension LocalSessionUITests {
     XCTAssertTrue(app.navigationBars["First Times"].waitForExistence(timeout: 10))
 
     // The three marked Entries, one of them also a Chapter, and no photos on any.
-    XCTAssertTrue(text("3 First Times", in: app).waitForExistence(timeout: 15))
+    let summary = app.otherElements["First Times summary"]
+    XCTAssertTrue(summary.waitForExistence(timeout: 15))
+    XCTAssertGreaterThanOrEqual(count("First Times", in: summary), 3)
     XCTAssertTrue(text("0 photos", in: app).exists)
     for title in [
       "First sourdough loaf", "Finished the first marathon", "First job at the bookshop",
