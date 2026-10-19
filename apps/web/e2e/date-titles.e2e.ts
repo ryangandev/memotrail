@@ -125,19 +125,22 @@ test("untitled Entries are named by their date and never wait to be organized", 
   }
 
   await page.goto("/library");
-  const items = page.getByRole("list", { name: "Library items" });
+  const items = page.getByRole("region", { name: "Entries", exact: true });
   await expect(items.getByRole("listitem")).toHaveCount(8);
   for (const [title, note] of named) {
     const row = items.getByRole("listitem").filter({ hasText: note });
-    await expect(row.locator("strong")).toHaveText(title);
+    await expect(row.getByRole("link")).toHaveAccessibleName(title);
     await expect(row.getByText(title)).toHaveCount(1);
+    // The title already is the date, so the date column stays empty.
+    await expect(row.locator("time")).toHaveCount(0);
   }
+  // Under the October 2026 heading a date leaves out the year.
   await expect(
     items
       .getByRole("listitem")
       .filter({ hasText: "A titled memory" })
-      .locator("small"),
-  ).toHaveText("Oct 1, 2026");
+      .locator("time"),
+  ).toHaveText("Oct 1");
 
   await page.keyboard.press("ControlOrMeta+k");
   const palette = page.getByRole("dialog", { name: "Search MemoTrail" });
@@ -178,7 +181,9 @@ test("untitled Entries are named by their date and never wait to be organized", 
     await page.goto(retired);
     await expect(page).toHaveURL(/\/library(\?show=needs-organizing)?$/);
     await expect(
-      page.getByRole("list", { name: "Library items" }).getByRole("listitem"),
+      page
+        .getByRole("region", { name: "Entries", exact: true })
+        .getByRole("listitem"),
     ).toHaveCount(8);
     await expect(
       page.getByRole("heading", { name: "Needs organizing" }),

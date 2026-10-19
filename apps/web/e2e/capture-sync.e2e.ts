@@ -284,7 +284,7 @@ for (const late of [false, true])
     // Both tabs show the synced capture, not only the one that sent it.
     await expect(
       page
-        .getByRole("list", { name: "Library items" })
+        .getByRole("region", { name: "Entries", exact: true })
         .getByText("Once across tabs", { exact: true }),
     ).toBeVisible();
     await expect(

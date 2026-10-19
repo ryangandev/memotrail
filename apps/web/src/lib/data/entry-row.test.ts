@@ -4,6 +4,7 @@ import {
   entryRowDateTime,
   entryRowGroup,
   entryRowLabels,
+  entryRowSnippet,
   groupEntryRows,
 } from "./entry-row";
 import type { Occurrence } from "./occurrence";
@@ -176,6 +177,45 @@ describe("entryRowDateTime", () => {
     expect(entryRowDateTime(occurrence({ datePrecision: "unknown" }))).toBe(
       null,
     );
+  });
+});
+
+describe("entryRowSnippet", () => {
+  it("starts near the first match and marks every matched word", () => {
+    const body =
+      "We drove for hours along the coast before stopping for the night. The old lantern on the porch still worked after the storm, and the lantern light was warm.";
+    const parts = entryRowSnippet(body, "Lantern");
+    expect(parts[0].text.startsWith("…")).toBe(true);
+    expect(parts.filter((part) => part.match).map((part) => part.text)).toEqual(
+      ["lantern", "lantern"],
+    );
+    expect(parts.map((part) => part.text).join("")).toContain(
+      "The old lantern on the porch",
+    );
+  });
+
+  it("starts at the beginning when the match is early or missing", () => {
+    expect(entryRowSnippet("A lantern  on\nthe porch.", "lantern")).toEqual([
+      { match: false, text: "A " },
+      { match: true, text: "lantern" },
+      { match: false, text: " on the porch." },
+    ]);
+    expect(entryRowSnippet("Only the title matched.", "porch")).toEqual([
+      { match: false, text: "Only the title matched." },
+    ]);
+  });
+
+  it("matches text in any script and treats the query as plain text", () => {
+    expect(
+      entryRowSnippet("今天学习了电弧打火机", "学习").filter(
+        (part) => part.match,
+      ),
+    ).toEqual([{ match: true, text: "学习" }]);
+    expect(entryRowSnippet("Cost (approx.) $5", "(approx.)")).toEqual([
+      { match: false, text: "Cost " },
+      { match: true, text: "(approx.)" },
+      { match: false, text: " $5" },
+    ]);
   });
 });
 

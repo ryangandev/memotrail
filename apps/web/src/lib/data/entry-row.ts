@@ -163,6 +163,72 @@ export function groupEntryRows<Item>(
   return groups;
 }
 
+/** A run of excerpt text, marked when it matched the search. */
+export type EntryRowSnippetPart = { match: boolean; text: string };
+
+const snippetLead = 48;
+const snippetLength = 220;
+
+/**
+ * One line of an Entry's writing for a search result: the text around the first word that
+ * matched, with every matched word marked. Text without a match starts at the beginning.
+ */
+export function entryRowSnippet(
+  text: string,
+  query: string,
+): EntryRowSnippetPart[] {
+  const compact = text.replace(/\s+/g, " ").trim();
+  if (!compact) return [];
+  const terms = [
+    ...new Set(
+      query
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .map((term) => term.toLocaleLowerCase()),
+    ),
+  ].sort((left, right) => right.length - left.length);
+  const pattern = terms.length
+    ? new RegExp(terms.map(escapeRegExp).join("|"), "giu")
+    : null;
+
+  const first = pattern ? compact.search(pattern) : -1;
+  let start = 0;
+  if (first > snippetLead) {
+    const space = compact.lastIndexOf(" ", first - snippetLead);
+    start = space >= 0 ? space + 1 : first - snippetLead;
+  }
+  const characters = Array.from(compact.slice(start));
+  const clipped = characters.length > snippetLength;
+  const shown = clipped
+    ? characters.slice(0, snippetLength).join("").trimEnd()
+    : characters.join("");
+
+  const parts: EntryRowSnippetPart[] = [];
+  const push = (part: string, match: boolean) => {
+    const last = parts.at(-1);
+    if (!part) return;
+    if (last && !last.match && !match) last.text += part;
+    else parts.push({ match, text: part });
+  };
+  if (start > 0) push("…", false);
+  let cursor = 0;
+  if (pattern) {
+    for (const found of shown.matchAll(pattern)) {
+      push(shown.slice(cursor, found.index), false);
+      push(found[0], true);
+      cursor = found.index + found[0].length;
+    }
+  }
+  push(shown.slice(cursor), false);
+  if (clipped) push("…", false);
+  return parts;
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 type CalendarParts = { day: number; month: number; year: number };
 
 function calendarParts(

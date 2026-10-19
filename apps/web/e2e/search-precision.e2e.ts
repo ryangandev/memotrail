@@ -128,7 +128,7 @@ test("Search date filters include overlapping periods without inventing date pre
       ).error,
     ).toBeNull();
     await page.goto("/library");
-    await page.getByText("Filters", { exact: true }).click();
+    await page.getByRole("button", { name: "Dates", exact: true }).click();
     await page
       .getByRole("textbox", { name: "From", exact: true })
       .fill("2017-02-31");
@@ -142,24 +142,25 @@ test("Search date filters include overlapping periods without inventing date pre
     await page
       .getByRole("textbox", { name: "From", exact: true })
       .fill("2017-07-10");
+    // A complete date applies on its own, with no button to press.
+    await expect(page).toHaveURL(/from=2017-07-10/);
     await page
       .getByRole("textbox", { name: "To", exact: true })
       .fill("2017-07-10");
-    await page.getByRole("button", { name: "Search", exact: true }).click();
     await expect(page).toHaveURL(/from=2017-07-10&to=2017-07-10/);
     await expect(
-      page.getByRole("heading", { name: "Year-only memory", exact: true }),
+      page.getByRole("link", { name: "Year-only memory" }),
     ).toBeVisible({ timeout: 5000 });
     const card = (title: string) =>
-      page.locator("article").filter({
-        has: page.getByRole("heading", { name: title, exact: true }),
+      page.locator("[data-ui-entry-row]").filter({
+        has: page.getByRole("link", { name: title }),
       });
     await expect(card("Year-only memory").locator("time")).toHaveText("2017");
     await expect(card("Month-only memory").locator("time")).toHaveText(
       "Jul 2017",
     );
     await expect(card("Long period memory").locator("time")).toHaveText(
-      "Jan 1, 2016 to Feb 3, 2019",
+      "Jan 1, 2016 - Feb 3, 2019",
     );
     await expect(card("College stage memory").locator("time")).toHaveText(
       "2015 - 2020",
@@ -209,9 +210,7 @@ test("Search date filters include overlapping periods without inventing date pre
     await page.goto("/library?q=2019-02-03");
     await expect(card("Long period memory")).toBeVisible();
     await page.goto("/library?q=Unknown%20memory");
-    await expect(card("Unknown memory").locator("time")).toHaveText(
-      "Date unknown",
-    );
+    await expect(card("Unknown memory").locator("time")).toHaveText("Undated");
   } finally {
     expect((await admin.auth.admin.deleteUser(ownerID)).error).toBeNull();
   }

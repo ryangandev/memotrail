@@ -9,6 +9,7 @@ import { SeparatedList } from "@/components/separated-list";
 import styles from "./entry-row.module.css";
 
 export type EntryRowThumbnail = {
+  /** What the photo shows, or empty when the row's title already says enough. */
   alt: string;
   /** A thumbnail address, or null when the photo cannot be shown. */
   src: string | null;
@@ -100,7 +101,9 @@ export function EntryRow({
           <span className={styles.title} id={`${id}-title`}>
             {isChapter ? <ChapterMark /> : null}
             {isFirstTime ? <FirstTimeMark /> : null}
-            <span className={styles.titleText}>{title}</span>
+            <span className={styles.titleText} data-entry-row-title>
+              {title}
+            </span>
           </span>
           {excerpt ? (
             <span className={styles.excerpt} id={`${id}-excerpt`}>

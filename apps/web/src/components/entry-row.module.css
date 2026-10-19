@@ -149,7 +149,7 @@
 .thumbnail {
   width: var(--entry-row-thumbnail);
   height: var(--entry-row-thumbnail);
-  align-self: center;
+  align-self: start;
   border-radius: var(--mt-radius-xsmall);
 }
 
@@ -173,8 +173,8 @@
   padding-top: var(--mt-space-0-5);
 }
 
-.group + .group {
-  margin-top: 0;
+.group {
+  container-type: inline-size;
 }
 
 .groupHeading {
@@ -211,6 +211,17 @@
   .item[data-thumbnail] .thumbnail {
     grid-column: 2;
     grid-row: 1 / span 2;
+    align-self: center;
+  }
+
+  /* Phone rows keep to the date, the title, and one line of writing. */
+  .tags {
+    display: none;
+  }
+
+  .groupHeading {
+    padding: var(--mt-space-5) 0 var(--mt-space-1-5);
+    font-size: var(--mt-font-size-caption);
   }
 
   .item[data-undated-title] .date {

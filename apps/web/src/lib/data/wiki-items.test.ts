@@ -28,7 +28,7 @@ const item = {
   updated_at: "2026-09-16T00:00:00Z",
 };
 
-describe("Life Wiki workspace data", () => {
+describe("Library workspace data", () => {
   it("parses a unified item row", () => {
     expect(parseWikiItemRows([item])).toEqual([
       expect.objectContaining({

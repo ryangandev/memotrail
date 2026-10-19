@@ -39,7 +39,10 @@ type WikiItemRow = {
   updated_at: string;
 };
 
-/** One page of everything in Library, most recently changed first. */
+/**
+ * One page of every Entry in Library, newest first by the date it happened, with undated Entries
+ * last.
+ */
 export async function getWikiItemsWorkspace(page: number) {
   const context = await getAuthenticatedContext();
   if (!context) return null;
@@ -56,7 +59,7 @@ export async function getWikiItemsWorkspace(page: number) {
   return {
     error:
       result.error || !items
-        ? "Your Life Wiki could not load. Refresh to try again."
+        ? "Library could not load. Refresh to try again."
         : null,
     items: items ?? [],
   };
