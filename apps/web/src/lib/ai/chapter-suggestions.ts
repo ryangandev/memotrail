@@ -59,9 +59,12 @@ const isRow = (value: unknown): value is Row =>
 const text = (value: unknown) => (typeof value === "string" ? value : null);
 
 const DAY = 86_400_000;
-const dayNumber = (date: string) => Math.floor(Date.parse(`${date}T00:00:00Z`) / DAY);
+const dayNumber = (date: string) =>
+  Math.floor(Date.parse(`${date}T00:00:00Z`) / DAY);
 function addDays(date: string, days: number) {
-  return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY).toISOString().slice(0, 10);
+  return new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY)
+    .toISOString()
+    .slice(0, 10);
 }
 function addMonths(date: string, months: number) {
   const value = new Date(`${date}T00:00:00Z`);
@@ -74,25 +77,44 @@ function addMonths(date: string, months: number) {
  * How much two stretches of days overlap: the overlap over the union. A stretch without an end
  * runs through the day after `today`. This mirrors the database function `window_iou`.
  */
-export function windowIou(left: KnownWindow, right: KnownWindow, today: string) {
+export function windowIou(
+  left: KnownWindow,
+  right: KnownWindow,
+  today: string,
+) {
   const leftStart = dayNumber(left.windowStart);
   const rightStart = dayNumber(right.windowStart);
   const tomorrow = dayNumber(today) + 1;
-  const leftEnd = Math.max(left.windowEnd ? dayNumber(left.windowEnd) : tomorrow, leftStart + 1);
-  const rightEnd = Math.max(right.windowEnd ? dayNumber(right.windowEnd) : tomorrow, rightStart + 1);
-  const overlap = Math.max(0, Math.min(leftEnd, rightEnd) - Math.max(leftStart, rightStart));
+  const leftEnd = Math.max(
+    left.windowEnd ? dayNumber(left.windowEnd) : tomorrow,
+    leftStart + 1,
+  );
+  const rightEnd = Math.max(
+    right.windowEnd ? dayNumber(right.windowEnd) : tomorrow,
+    rightStart + 1,
+  );
+  const overlap = Math.max(
+    0,
+    Math.min(leftEnd, rightEnd) - Math.max(leftStart, rightStart),
+  );
   const total = leftEnd - leftStart + (rightEnd - rightStart) - overlap;
   return total <= 0 ? 0 : overlap / total;
 }
 
-function parsePoint(value: unknown): { date: string; precision: "day" | "month" } | null {
+function parsePoint(
+  value: unknown,
+): { date: string; precision: "day" | "month" } | null {
   if (typeof value !== "string") return null;
   const month = /^(\d{4})-(\d{2})$/.exec(value);
   const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
   const full = month ? `${value}-01` : day ? value : null;
   if (!full) return null;
   const parsed = new Date(`${full}T00:00:00Z`);
-  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== full) return null;
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== full
+  )
+    return null;
   return { date: full, precision: month ? "month" : "day" };
 }
 
@@ -108,25 +130,32 @@ export type SuggestionContext = {
  * Keeps only the suggestions that are safe to show. A suggestion that is wrong in any way is
  * dropped, never repaired: proposing nothing is a good answer.
  */
-export function validateSuggestions(raw: unknown, ctx: SuggestionContext): ValidSuggestion[] {
+export function validateSuggestions(
+  raw: unknown,
+  ctx: SuggestionContext,
+): ValidSuggestion[] {
   if (!isRow(raw) || !Array.isArray(raw.suggestions)) return [];
-  const pending = ctx.suggestions.filter((item) => item.status === "pending").length;
+  const pending = ctx.suggestions.filter(
+    (item) => item.status === "pending",
+  ).length;
   const room = Math.max(0, MAX_PENDING - pending);
   const entries = [...ctx.entries.values()];
   if (entries.length === 0) return [];
-  const earliest = entries.reduce((a, b) => (a.windowStart <= b.windowStart ? a : b)).windowStart;
-  const known: KnownWindow[] = [
-    ...ctx.chapters,
-    ...ctx.suggestions,
-  ];
-  const chapterTitles = new Set(ctx.chapters.map((chapter) => chapter.title.trim().toLowerCase()));
+  const earliest = entries.reduce((a, b) =>
+    a.windowStart <= b.windowStart ? a : b,
+  ).windowStart;
+  const known: KnownWindow[] = [...ctx.chapters, ...ctx.suggestions];
+  const chapterTitles = new Set(
+    ctx.chapters.map((chapter) => chapter.title.trim().toLowerCase()),
+  );
   const kept: ValidSuggestion[] = [];
 
   for (const item of raw.suggestions) {
     if (kept.length >= room || kept.length >= MAX_PENDING) break;
     if (!isRow(item)) continue;
 
-    const name = typeof item.name === "string" ? item.name.normalize("NFC").trim() : "";
+    const name =
+      typeof item.name === "string" ? item.name.normalize("NFC").trim() : "";
     if (
       name === "" ||
       codePointLength(name) > 80 ||
@@ -141,14 +170,21 @@ export function validateSuggestions(raw: unknown, ctx: SuggestionContext): Valid
     const windowStart = start.date;
     let windowEnd: string | null = null;
     if (end) {
-      windowEnd = end.precision === "month" ? addMonths(end.date, 1) : addDays(end.date, 1);
+      windowEnd =
+        end.precision === "month"
+          ? addMonths(end.date, 1)
+          : addDays(end.date, 1);
       if (windowEnd <= windowStart) continue;
       // The end may not lie after today.
-      const limit = end.precision === "month" ? addMonths(`${ctx.today.slice(0, 7)}-01`, 1) : addDays(ctx.today, 1);
+      const limit =
+        end.precision === "month"
+          ? addMonths(`${ctx.today.slice(0, 7)}-01`, 1)
+          : addDays(ctx.today, 1);
       if (windowEnd > limit) continue;
     }
     // The start may not reach back before what was read.
-    const floor = start.precision === "month" ? `${earliest.slice(0, 7)}-01` : earliest;
+    const floor =
+      start.precision === "month" ? `${earliest.slice(0, 7)}-01` : earliest;
     if (windowStart < floor) continue;
 
     if (!Array.isArray(item.entries)) continue;
@@ -158,23 +194,47 @@ export function validateSuggestions(raw: unknown, ctx: SuggestionContext): Valid
       if (entry && !cited.includes(entry)) cited.push(entry);
     }
     if (cited.length < 4 || cited.length > 20) continue;
-    const firstDay = cited.reduce((a, b) => (a < b.windowStart ? a : b.windowStart), cited[0].windowStart);
-    const lastDay = cited.reduce((a, b) => (a > b.windowStart ? a : b.windowStart), cited[0].windowStart);
+    const firstDay = cited.reduce(
+      (a, b) => (a < b.windowStart ? a : b.windowStart),
+      cited[0].windowStart,
+    );
+    const lastDay = cited.reduce(
+      (a, b) => (a > b.windowStart ? a : b.windowStart),
+      cited[0].windowStart,
+    );
     if (dayNumber(lastDay) - dayNumber(firstDay) < 21) continue;
 
     // The Chapter rule: its window holds every Entry cited for it.
-    if (cited.some((entry) => entry.windowStart < windowStart || (windowEnd !== null && entry.windowEnd > windowEnd)))
+    if (
+      cited.some(
+        (entry) =>
+          entry.windowStart < windowStart ||
+          (windowEnd !== null && entry.windowEnd > windowEnd),
+      )
+    )
       continue;
     // Still going on is only believable when the newest cited Entry is recent.
-    if (end === null && dayNumber(ctx.today) - dayNumber(lastDay) > 45) continue;
+    if (end === null && dayNumber(ctx.today) - dayNumber(lastDay) > 45)
+      continue;
 
-    const rationale = typeof item.rationale === "string" ? item.rationale.normalize("NFC").trim() : "";
+    const rationale =
+      typeof item.rationale === "string"
+        ? item.rationale.normalize("NFC").trim()
+        : "";
     if (rationale === "" || codePointLength(rationale) > 400) continue;
-    if (!quotationsHold(rationale, cited.map((entry) => `${entry.title}\n${entry.excerpt}`))) continue;
+    if (
+      !quotationsHold(
+        rationale,
+        cited.map((entry) => `${entry.title}\n${entry.excerpt}`),
+      )
+    )
+      continue;
 
     const candidate: KnownWindow = { windowStart, windowEnd };
-    if (known.some((other) => windowIou(candidate, other, ctx.today) >= 0.5)) continue;
-    if (kept.some((other) => windowIou(candidate, other, ctx.today) >= 0.5)) continue;
+    if (known.some((other) => windowIou(candidate, other, ctx.today) >= 0.5))
+      continue;
+    if (kept.some((other) => windowIou(candidate, other, ctx.today) >= 0.5))
+      continue;
 
     kept.push({
       name,
@@ -192,13 +252,16 @@ export function validateSuggestions(raw: unknown, ctx: SuggestionContext): Valid
 }
 
 function labelFor(row: Row, span: boolean) {
-  const timezone = validTimezone(row.occurredTimezone) ? row.occurredTimezone : "UTC";
+  const timezone = validTimezone(row.occurredTimezone)
+    ? row.occurredTimezone
+    : "UTC";
   const occurrence = {
     occurredAt: text(row.occurredStart),
     occurredEnd: text(row.occurredEnd),
     occurredLabel: text(row.occurredLabel),
     occurredTimezone: timezone,
-    datePrecision: (text(row.datePrecision) ?? "unknown") as OccurrencePrecision,
+    datePrecision: (text(row.datePrecision) ??
+      "unknown") as OccurrencePrecision,
   };
   return span ? occurrenceSpanLabel(occurrence) : occurrenceLabel(occurrence);
 }
@@ -210,18 +273,30 @@ export type SuggestionInputs = {
 };
 
 export function parseSuggestionInputs(data: unknown): SuggestionInputs | null {
-  if (!isRow(data) || !Array.isArray(data.entries) || !Array.isArray(data.chapters) || !Array.isArray(data.suggestions))
+  if (
+    !isRow(data) ||
+    !Array.isArray(data.entries) ||
+    !Array.isArray(data.chapters) ||
+    !Array.isArray(data.suggestions)
+  )
     return null;
   const entries: SuggestionEntry[] = [];
   for (const row of data.entries) {
-    if (!isRow(row) || typeof row.id !== "string" || typeof row.windowStart !== "string") continue;
+    if (
+      !isRow(row) ||
+      typeof row.id !== "string" ||
+      typeof row.windowStart !== "string"
+    )
+      continue;
     const windowStart = row.windowStart;
     entries.push({
       ref: `S${entries.length + 1}`,
       id: row.id,
       title: text(row.title)?.trim() ?? "",
       excerpt: text(row.excerpt)?.trim() ?? "",
-      tags: Array.isArray(row.tags) ? row.tags.filter((tag): tag is string => typeof tag === "string") : [],
+      tags: Array.isArray(row.tags)
+        ? row.tags.filter((tag): tag is string => typeof tag === "string")
+        : [],
       dateLabel: labelFor(row, false),
       windowStart,
       windowEnd: text(row.windowEnd) ?? addDays(windowStart, 1),
@@ -239,13 +314,23 @@ export function parseSuggestionInputs(data: unknown): SuggestionInputs | null {
   }
   const suggestions: SuggestionInputs["suggestions"] = [];
   for (const row of data.suggestions) {
-    if (!isRow(row) || typeof row.windowStart !== "string" || typeof row.status !== "string") continue;
-    suggestions.push({ status: row.status, windowStart: row.windowStart, windowEnd: text(row.windowEnd) });
+    if (
+      !isRow(row) ||
+      typeof row.windowStart !== "string" ||
+      typeof row.status !== "string"
+    )
+      continue;
+    suggestions.push({
+      status: row.status,
+      windowStart: row.windowStart,
+      windowEnd: text(row.windowEnd),
+    });
   }
   return { entries, chapters, suggestions };
 }
 
-const clip = (value: string, limit: number) => Array.from(value).slice(0, limit).join("");
+const clip = (value: string, limit: number) =>
+  Array.from(value).slice(0, limit).join("");
 
 /**
  * The input the model reads: newest Entries first, excerpts shortened and then the oldest Entries
@@ -256,7 +341,12 @@ export function fitSuggestionInput(
   today: string,
 ): { entries: SuggestionEntry[]; input: string } {
   const spans = inputs.suggestions.map((item) => ({
-    span: monthSpanLabel([{ windowStart: item.windowStart, windowEnd: item.windowEnd ?? addDays(today, 1) }]),
+    span: monthSpanLabel([
+      {
+        windowStart: item.windowStart,
+        windowEnd: item.windowEnd ?? addDays(today, 1),
+      },
+    ]),
   }));
   const build = (entries: SuggestionEntry[]) => {
     const prompt: SuggestionPromptEntry[] = entries.map((entry) => ({
@@ -270,7 +360,10 @@ export function fitSuggestionInput(
     return buildChapterSuggestionInput({
       today,
       entries: prompt,
-      existingChapters: inputs.chapters.map((chapter) => ({ name: chapter.title, span: chapter.span })),
+      existingChapters: inputs.chapters.map((chapter) => ({
+        name: chapter.title,
+        span: chapter.span,
+      })),
       earlierSuggestions: spans,
     });
   };
@@ -279,13 +372,19 @@ export function fitSuggestionInput(
   let entries = inputs.entries;
   let input = build(entries);
   if (size(input) <= SUGGESTION_MAX_BYTES) return { entries, input };
-  entries = entries.map((entry) => ({ ...entry, excerpt: clip(entry.excerpt, EXCERPT_CODE_POINTS) }));
+  entries = entries.map((entry) => ({
+    ...entry,
+    excerpt: clip(entry.excerpt, EXCERPT_CODE_POINTS),
+  }));
   input = build(entries);
   if (size(input) <= SUGGESTION_MAX_BYTES) return { entries, input };
   // Drop the oldest by halving the overshoot, then settle one by one.
   let count = entries.length;
   while (count > 0) {
-    count = Math.min(count - 1, Math.floor((count * SUGGESTION_MAX_BYTES) / size(input)));
+    count = Math.min(
+      count - 1,
+      Math.floor((count * SUGGESTION_MAX_BYTES) / size(input)),
+    );
     entries = entries.slice(0, Math.max(count, 0));
     input = build(entries);
     if (size(input) <= SUGGESTION_MAX_BYTES) break;
@@ -317,7 +416,12 @@ const RELEASABLE = new Set([
   "provider_authentication",
 ]);
 
-async function recordRun(client: SupabaseClient, lease: string, suggestions: ValidSuggestion[], model: string) {
+async function recordRun(
+  client: SupabaseClient,
+  lease: string,
+  suggestions: ValidSuggestion[],
+  model: string,
+) {
   const stored = await client.rpc("store_chapter_suggestions", {
     p_lease_until: lease,
     p_suggestions: suggestions,
@@ -338,24 +442,39 @@ export async function runChapterSuggestions(
   today: string,
 ): Promise<SuggestionRunResult> {
   const claim = await client.rpc("claim_chapter_suggestion_run");
-  if (claim.error || !isRow(claim.data) || claim.data.due !== true || typeof claim.data.leaseUntil !== "string")
+  if (
+    claim.error ||
+    !isRow(claim.data) ||
+    claim.data.due !== true ||
+    typeof claim.data.leaseUntil !== "string"
+  )
     return { status: "skipped" };
   const lease = claim.data.leaseUntil;
   const release = async (code: string): Promise<SuggestionRunResult> => {
-    await client.rpc("release_chapter_suggestion_run", { p_lease_until: lease });
+    await client.rpc("release_chapter_suggestion_run", {
+      p_lease_until: lease,
+    });
     return { status: "released", code };
   };
 
-  const read = await client.rpc("chapter_suggestion_inputs", { p_since: suggestionHorizon(today) });
+  const read = await client.rpc("chapter_suggestion_inputs", {
+    p_since: suggestionHorizon(today),
+  });
   const inputs = read.error ? null : parseSuggestionInputs(read.data);
   if (!inputs) return release("inputs_unavailable");
 
   if (inputs.entries.length < SUGGESTION_MIN_ENTRIES) {
-    return { status: "stored", stored: await recordRun(client, lease, [], REVIEW_MODEL) };
+    return {
+      status: "stored",
+      stored: await recordRun(client, lease, [], REVIEW_MODEL),
+    };
   }
   const fitted = fitSuggestionInput(inputs, today);
   if (fitted.entries.length < SUGGESTION_MIN_ENTRIES) {
-    return { status: "stored", stored: await recordRun(client, lease, [], REVIEW_MODEL) };
+    return {
+      status: "stored",
+      stored: await recordRun(client, lease, [], REVIEW_MODEL),
+    };
   }
 
   let answer: Awaited<ReturnType<typeof requestAI>>;
@@ -371,7 +490,8 @@ export async function runChapterSuggestions(
       timeoutMs: 120_000,
     });
   } catch (error) {
-    if (error instanceof AIError && RELEASABLE.has(error.code)) return release(error.code);
+    if (error instanceof AIError && RELEASABLE.has(error.code))
+      return release(error.code);
     // Billing is uncertain, the model declined, or the answer was cut off: wait out the month.
     await recordRun(client, lease, [], REVIEW_MODEL);
     return { status: "stored", stored: 0 };
@@ -388,5 +508,8 @@ export async function runChapterSuggestions(
   } catch {
     suggestions = [];
   }
-  return { status: "stored", stored: await recordRun(client, lease, suggestions, answer.model) };
+  return {
+    status: "stored",
+    stored: await recordRun(client, lease, suggestions, answer.model),
+  };
 }

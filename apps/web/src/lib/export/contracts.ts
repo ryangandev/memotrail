@@ -126,6 +126,134 @@ export function entryMarkdown(entry: Record<string, unknown>) {
     .join("\n");
   return `---\n${frontmatter}\n---\n\n${typeof entry.body === "string" ? entry.body : ""}\n`;
 }
+const isObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const quoted = (text: string) =>
+  text
+    .split("\n")
+    .map((line) => (line ? `> ${line}` : ">"))
+    .join("\n");
+
+const stringList = (value: unknown) =>
+  Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
+
+/** The last day before an exclusive end, as YYYY-MM-DD, or the start when the end is unusable. */
+function lastDay(start: string, endExclusive: string) {
+  const end = Date.parse(`${endExclusive}T00:00:00Z`);
+  const first = Date.parse(`${start}T00:00:00Z`);
+  if (!Number.isFinite(end) || !Number.isFinite(first)) return start;
+  return new Date(Math.max(first, end - 86_400_000)).toISOString().slice(0, 10);
+}
+
+const fromEntries = (ids: string[]) =>
+  ids.length
+    ? `From ${ids.map((entryId) => `entries/${entryId}.md`).join(", ")}`
+    : null;
+
+/**
+ * A stored review as readable Markdown, or null when the row has no review. It is a record of
+ * what was stored, so quotes are the stored text and are not checked against the Entries again.
+ * `chapterTitle` names a Chapter review.
+ */
+export function reviewMarkdown(
+  review: Record<string, unknown>,
+  chapterTitle: string | null,
+) {
+  const content = review.content;
+  if (!isObject(content) || typeof content.summary !== "string") return null;
+  const fields = [
+    "id",
+    "scope",
+    "chapter_id",
+    "review_year",
+    "model",
+    "generated_at",
+    "entries_read",
+    "entries_in_period",
+  ];
+  const frontmatter = fields
+    .map((key) => `${key}: ${JSON.stringify(review[key] ?? null)}`)
+    .join("\n");
+  const subject =
+    review.scope === "year"
+      ? String(review.review_year ?? "")
+      : chapterTitle?.trim() || "this Chapter";
+  const feelings = isObject(content.feelings) ? content.feelings : {};
+  const phases = Array.isArray(feelings.phases) ? feelings.phases : [];
+  const themes = Array.isArray(content.themes) ? content.themes : [];
+  const quotes = Array.isArray(content.quotes) ? content.quotes : [];
+
+  const parts = [
+    `---\n${frontmatter}\n---`,
+    `# Review of ${subject}`,
+    "> Written by Claude at your request. This is AI interpretation, not your own writing. Quotes are copied exactly from your Entries.",
+    content.summary,
+  ];
+
+  const felt: string[] = [];
+  if (typeof feelings.overview === "string" && feelings.overview)
+    felt.push(feelings.overview);
+  for (const phase of phases) {
+    if (!isObject(phase) || typeof phase.feeling !== "string") continue;
+    const start =
+      typeof phase.windowStart === "string" ? phase.windowStart : "";
+    const end = typeof phase.windowEnd === "string" ? phase.windowEnd : "";
+    const dates = start
+      ? end
+        ? `${start} to ${lastDay(start, end)}`
+        : start
+      : null;
+    felt.push(
+      [
+        `### ${phase.feeling}`,
+        dates ? `Entries dated ${dates}.` : null,
+        typeof phase.description === "string" ? phase.description : null,
+        fromEntries(stringList(phase.entryIds)),
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    );
+  }
+  if (felt.length) parts.push(["## How it felt", ...felt].join("\n\n"));
+
+  const themeParts: string[] = [];
+  for (const theme of themes) {
+    if (!isObject(theme) || typeof theme.name !== "string") continue;
+    themeParts.push(
+      [
+        `### ${theme.name}`,
+        typeof theme.description === "string" ? theme.description : null,
+        fromEntries(stringList(theme.entryIds)),
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+    );
+  }
+  if (themeParts.length)
+    parts.push(["## What kept coming back", ...themeParts].join("\n\n"));
+
+  const quoteParts: string[] = [];
+  for (const quote of quotes) {
+    if (!isObject(quote) || typeof quote.text !== "string") continue;
+    quoteParts.push(
+      [
+        quoted(quote.text),
+        ">",
+        `> From entries/${typeof quote.entryId === "string" ? quote.entryId : ""}.md`,
+        typeof quote.why === "string" && quote.why
+          ? `\nWhy it stands out: ${quote.why}`
+          : "",
+      ].join("\n"),
+    );
+  }
+  if (quoteParts.length)
+    parts.push(["## In your words", ...quoteParts].join("\n\n"));
+  return `${parts.join("\n\n")}\n`;
+}
+
 export function mediaArchivePath(row: Record<string, unknown>) {
   if (
     !isUUID(row.attachment_id) ||

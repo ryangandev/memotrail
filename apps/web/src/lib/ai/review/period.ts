@@ -7,8 +7,7 @@ import {
 } from "@/lib/data/occurrence";
 
 export type ReviewSubject =
-  | { scope: "chapter"; chapterId: string }
-  | { scope: "year"; year: number };
+  { scope: "chapter"; chapterId: string } | { scope: "year"; year: number };
 
 export type PeriodEntry = {
   id: string;
@@ -38,13 +37,16 @@ type Row = Record<string, unknown>;
 const text = (value: unknown) => (typeof value === "string" ? value : null);
 
 function labelFor(row: Row, span: boolean) {
-  const timezone = validTimezone(row.occurred_timezone) ? row.occurred_timezone : "UTC";
+  const timezone = validTimezone(row.occurred_timezone)
+    ? row.occurred_timezone
+    : "UTC";
   const occurrence = {
     occurredAt: text(row.occurred_start),
     occurredEnd: text(row.occurred_end),
     occurredLabel: text(row.occurred_label),
     occurredTimezone: timezone,
-    datePrecision: (text(row.date_precision) ?? "unknown") as OccurrencePrecision,
+    datePrecision: (text(row.date_precision) ??
+      "unknown") as OccurrencePrecision,
   };
   return span ? occurrenceSpanLabel(occurrence) : occurrenceLabel(occurrence);
 }
@@ -85,7 +87,9 @@ export async function loadPeriod(
   });
   if (error) {
     throw new PeriodError(
-      error.message === "review_subject_unavailable" ? "review_not_eligible" : "period_unavailable",
+      error.message === "review_subject_unavailable"
+        ? "review_not_eligible"
+        : "period_unavailable",
     );
   }
   if (!Array.isArray(data)) throw new PeriodError("period_unavailable");
@@ -96,11 +100,19 @@ export async function loadPeriod(
 
   let chapters: PeriodChapter[] = [];
   if (subject.scope === "year") {
-    const result = await client.rpc("review_period_chapters", { p_year: subject.year });
-    if (result.error || !Array.isArray(result.data)) throw new PeriodError("period_unavailable");
+    const result = await client.rpc("review_period_chapters", {
+      p_year: subject.year,
+    });
+    if (result.error || !Array.isArray(result.data))
+      throw new PeriodError("period_unavailable");
     chapters = result.data.flatMap((row) =>
       isRow(row) && typeof row.entry_id === "string"
-        ? [{ name: text(row.title)?.trim() || "Untitled Chapter", span: labelFor(row, true) }]
+        ? [
+            {
+              name: text(row.title)?.trim() || "Untitled Chapter",
+              span: labelFor(row, true),
+            },
+          ]
         : [],
     );
   }
@@ -118,15 +130,25 @@ const MONTHS = new Intl.DateTimeFormat("en-US", {
 });
 
 /** "January 2025 - March 2025", or a single month, from the first and last day a set of Entries stands for. */
-export function monthSpanLabel(entries: readonly Pick<PeriodEntry, "windowStart" | "windowEnd">[]) {
-  const starts = entries.flatMap((entry) => (entry.windowStart ? [entry.windowStart] : []));
+export function monthSpanLabel(
+  entries: readonly Pick<PeriodEntry, "windowStart" | "windowEnd">[],
+) {
+  const starts = entries.flatMap((entry) =>
+    entry.windowStart ? [entry.windowStart] : [],
+  );
   if (starts.length === 0) return "Date unknown";
   const first = [...starts].sort()[0];
-  const ends = entries.map((entry) => entry.windowEnd ?? entry.windowStart!).sort();
+  const ends = entries
+    .map((entry) => entry.windowEnd ?? entry.windowStart!)
+    .sort();
   const lastExclusive = ends[ends.length - 1];
   const last = new Date(`${lastExclusive}T00:00:00Z`);
   last.setUTCDate(last.getUTCDate() - 1);
   const from = MONTHS.format(new Date(`${first}T00:00:00Z`));
-  const to = MONTHS.format(last < new Date(`${first}T00:00:00Z`) ? new Date(`${first}T00:00:00Z`) : last);
+  const to = MONTHS.format(
+    last < new Date(`${first}T00:00:00Z`)
+      ? new Date(`${first}T00:00:00Z`)
+      : last,
+  );
   return from === to ? from : `${from} - ${to}`;
 }

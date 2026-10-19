@@ -1,7 +1,7 @@
 "use client";
 import { Dialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/button";
+import { Button, ButtonLink } from "@/components/button";
 import { notify } from "@/components/app-toast";
 
 import Link from "next/link";
@@ -21,7 +21,9 @@ import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { PageFrame } from "@/components/page-frame";
 import { SeparatedList } from "@/components/separated-list";
+import { ChapterSuggestionCard } from "@/components/chapter-suggestion-card";
 import type { EntryMarks } from "@/components/entry-marks-fields";
+import type { ChapterSuggestion } from "@/lib/data/review-input";
 import type { TimelineItem } from "@/lib/data/timeline";
 import {
   createTimelineLayout,
@@ -77,6 +79,7 @@ export function TimelineWorkspace({
   loadError,
   ownerId,
   referenceDate,
+  suggestion,
   tagOptions,
 }: {
   birthDate: string | null;
@@ -87,6 +90,8 @@ export function TimelineWorkspace({
   loadError: string | null;
   ownerId: string;
   referenceDate: string;
+  /** The oldest Chapter suggestion still waiting, or null. */
+  suggestion: ChapterSuggestion | null;
   tagOptions: string[];
 }) {
   const [selection, setSelection] = useState<EditorSelection | null>(null);
@@ -187,17 +192,33 @@ export function TimelineWorkspace({
             <span>{rangeLabel(layout.start, layout.end)}</span>
           ) : null}
         </SeparatedList>
-        {/* Its border sets the button apart, so it needs no separator. */}
-        {birthDateAvailable && !birthDate && !loadError ? (
-          <Button
-            variant="secondary"
-            onClick={() => setShowBirthDatePrompt(true)}
-            type="button"
-          >
-            Set birth date
-          </Button>
-        ) : null}
+        {/* Their borders set the buttons apart, so they need no separator. */}
+        <div className={styles.summaryActions}>
+          <ButtonLink href="/reviews" variant="secondary">
+            Year reviews
+          </ButtonLink>
+          {birthDateAvailable && !birthDate && !loadError ? (
+            <Button
+              variant="secondary"
+              onClick={() => setShowBirthDatePrompt(true)}
+              type="button"
+            >
+              Set birth date
+            </Button>
+          ) : null}
+        </div>
       </div>
+
+      {suggestion && !loadError ? (
+        <div className={styles.suggestion}>
+          <ChapterSuggestionCard
+            ownerId={ownerId}
+            suggestion={suggestion}
+            tagOptions={tagOptions}
+            timezone={defaultTimezone}
+          />
+        </div>
+      ) : null}
 
       {loadError ? (
         <div className={styles.message} role="alert">

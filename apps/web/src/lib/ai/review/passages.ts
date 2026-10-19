@@ -33,7 +33,7 @@ function sentencePieces(cps: string[], paragraph: Piece): Piece[] {
   // Map UTF-16 offsets from the segmenter back to code point offsets.
   const offsets: number[] = [];
   let point = 0;
-  for (let unit = 0; unit < text.length; ) {
+  for (let unit = 0; unit < text.length;) {
     offsets[unit] = point;
     const code = text.codePointAt(unit)!;
     const width = code > 0xffff ? 2 : 1;

@@ -1,17 +1,35 @@
 import { createServer, type IncomingMessage, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterAll, afterEach, beforeAll, beforeEach, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  expect,
+  it,
+  vi,
+} from "vitest";
 vi.mock("server-only", () => ({}));
-import { AIProviderFailure, anthropicProvider, readAIBaseURL } from "./provider";
+import {
+  AIProviderFailure,
+  anthropicProvider,
+  readAIBaseURL,
+} from "./provider";
 
-type Handler = (request: IncomingMessage, body: string) => {
+type Handler = (
+  request: IncomingMessage,
+  body: string,
+) => {
   status?: number;
   events?: Array<[string, unknown]>;
   error?: { type: string; message: string };
 };
 let server: Server;
 let handler: Handler;
-let seen: Array<{ headers: IncomingMessage["headers"]; body: Record<string, unknown> }>;
+let seen: Array<{
+  headers: IncomingMessage["headers"];
+  body: Record<string, unknown>;
+}>;
 
 function message(blocks: Array<Record<string, unknown>>, stop = "end_turn") {
   const events: Array<[string, unknown]> = [
@@ -77,7 +95,9 @@ beforeAll(async () => {
       seen.push({ headers: request.headers, body: JSON.parse(body) });
       const answer = handler(request, body);
       if (answer.error) {
-        response.writeHead(answer.status ?? 400, { "content-type": "application/json" });
+        response.writeHead(answer.status ?? 400, {
+          "content-type": "application/json",
+        });
         response.end(JSON.stringify({ type: "error", error: answer.error }));
         return;
       }
@@ -152,11 +172,15 @@ it("sends neither thinking nor effort unless an effort is asked for", async () =
 });
 
 it("reports refusal and cut-off stop reasons for the caller to handle", async () => {
-  handler = () => ({ events: message([{ type: "text", text: "" }], "refusal") });
+  handler = () => ({
+    events: message([{ type: "text", text: "" }], "refusal"),
+  });
   await expect(anthropicProvider().generate(request)).resolves.toMatchObject({
     stopReason: "refusal",
   });
-  handler = () => ({ events: message([{ type: "text", text: "{" }], "max_tokens") });
+  handler = () => ({
+    events: message([{ type: "text", text: "{" }], "max_tokens"),
+  });
   await expect(anthropicProvider().generate(request)).resolves.toMatchObject({
     stopReason: "max_tokens",
   });
@@ -169,26 +193,35 @@ it.each([
   [429, "rate_limit_error", "provider_error", "uncertain"],
   [500, "api_error", "provider_error", "uncertain"],
   [529, "overloaded_error", "provider_error", "uncertain"],
-])("maps HTTP %i to %s and never retries", async (status, type, code, outcome) => {
-  handler = () => ({ status, error: { type, message: "No." } });
-  await expect(anthropicProvider().generate(request)).rejects.toMatchObject({
-    code,
-    outcome,
-  });
-  expect(seen).toHaveLength(1);
-});
+])(
+  "maps HTTP %i to %s and never retries",
+  async (status, type, code, outcome) => {
+    handler = () => ({ status, error: { type, message: "No." } });
+    await expect(anthropicProvider().generate(request)).rejects.toMatchObject({
+      code,
+      outcome,
+    });
+    expect(seen).toHaveLength(1);
+  },
+);
 
 it("treats a request that outlives its timeout as interrupted and unknown", async () => {
   handler = () => ({ events: [] });
   const slow = createServer(() => undefined);
   await new Promise<void>((resolve) => slow.listen(0, "127.0.0.1", resolve));
-  vi.stubEnv("AI_API_BASE_URL", `http://127.0.0.1:${(slow.address() as AddressInfo).port}`);
+  vi.stubEnv(
+    "AI_API_BASE_URL",
+    `http://127.0.0.1:${(slow.address() as AddressInfo).port}`,
+  );
   try {
     const failure = await anthropicProvider()
       .generate({ ...request, timeoutMs: 150 })
       .catch((error) => error);
     expect(failure).toBeInstanceOf(AIProviderFailure);
-    expect(failure).toMatchObject({ code: "provider_interrupted", outcome: "uncertain" });
+    expect(failure).toMatchObject({
+      code: "provider_interrupted",
+      outcome: "uncertain",
+    });
   } finally {
     slow.closeAllConnections();
     await new Promise<void>((resolve) => slow.close(() => resolve()));
@@ -206,8 +239,13 @@ it("sends photo blocks before the text for the paused photo feature", async () =
       },
     ],
   });
-  expect((seen[0].body.messages as Array<{ content: unknown[] }>)[0].content).toEqual([
-    { type: "image", source: { type: "base64", media_type: "image/webp", data: "AAAA" } },
+  expect(
+    (seen[0].body.messages as Array<{ content: unknown[] }>)[0].content,
+  ).toEqual([
+    {
+      type: "image",
+      source: { type: "base64", media_type: "image/webp", data: "AAAA" },
+    },
     { type: "text", text: "input" },
   ]);
 });
@@ -227,7 +265,9 @@ it("fails closed without a key or with an unsafe address", async () => {
 
 it("accepts only HTTPS or loopback addresses", () => {
   expect(readAIBaseURL({})).toEqual({ ok: true, baseURL: undefined });
-  expect(readAIBaseURL({ AI_API_BASE_URL: "https://proxy.example.com/v1/" })).toEqual({
+  expect(
+    readAIBaseURL({ AI_API_BASE_URL: "https://proxy.example.com/v1/" }),
+  ).toEqual({
     ok: true,
     baseURL: "https://proxy.example.com/v1",
   });
@@ -235,7 +275,14 @@ it("accepts only HTTPS or loopback addresses", () => {
     ok: true,
     baseURL: "http://127.0.0.1:4010",
   });
-  expect(readAIBaseURL({ AI_API_BASE_URL: "http://localhost:4010" }).ok).toBe(true);
-  for (const bad of ["http://example.com", "ftp://example.com", "not a url", "http://127.0.0.1.evil.test"])
+  expect(readAIBaseURL({ AI_API_BASE_URL: "http://localhost:4010" }).ok).toBe(
+    true,
+  );
+  for (const bad of [
+    "http://example.com",
+    "ftp://example.com",
+    "not a url",
+    "http://127.0.0.1.evil.test",
+  ])
     expect(readAIBaseURL({ AI_API_BASE_URL: bad })).toEqual({ ok: false });
 });

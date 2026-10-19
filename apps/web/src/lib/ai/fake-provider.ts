@@ -14,7 +14,10 @@ export type FakeStep =
   | AIProviderFailure
   | ((
       request: AIProviderRequest,
-    ) => AIProviderResult | AIProviderFailure | Promise<AIProviderResult | AIProviderFailure>);
+    ) =>
+      | AIProviderResult
+      | AIProviderFailure
+      | Promise<AIProviderResult | AIProviderFailure>);
 
 export function fakeProvider(...steps: FakeStep[]) {
   const requests: AIProviderRequest[] = [];
@@ -23,7 +26,8 @@ export function fakeProvider(...steps: FakeStep[]) {
     async generate(request) {
       requests.push(request);
       const step = queue.shift();
-      if (!step) throw new Error("The fake provider ran out of scripted answers");
+      if (!step)
+        throw new Error("The fake provider ran out of scripted answers");
       const outcome = typeof step === "function" ? await step(request) : step;
       if (outcome instanceof AIProviderFailure) throw outcome;
       return outcome;

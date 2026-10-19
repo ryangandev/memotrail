@@ -8,6 +8,17 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.summaryActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mt-space-2);
+}
+
+.suggestion {
+  margin-top: var(--mt-space-5);
+}
+
 .message {
   display: flex;
   min-height: 150px;

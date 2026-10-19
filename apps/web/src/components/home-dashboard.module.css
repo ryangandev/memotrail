@@ -277,8 +277,16 @@
   align-items: start;
 }
 
+.columns.withNotice {
+  grid-template-areas: "capture capture" "notice notice" "memories now" "recent recent";
+}
+
 .capturePanel {
   grid-area: capture;
+  min-width: 0;
+}
+.noticeRow {
+  grid-area: notice;
   min-width: 0;
 }
 .memoryColumn {
@@ -307,6 +315,9 @@
   .columns {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "capture" "memories" "now" "recent";
+  }
+  .columns.withNotice {
+    grid-template-areas: "capture" "notice" "memories" "now" "recent";
   }
 }
 

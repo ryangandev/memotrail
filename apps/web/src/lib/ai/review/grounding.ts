@@ -59,7 +59,13 @@ export type ReviewContent = {
     }[];
   };
   themes: { name: string; description: string; entryIds: string[] }[];
-  quotes: { entryId: string; start: number; end: number; text: string; why: string }[];
+  quotes: {
+    entryId: string;
+    start: number;
+    end: number;
+    text: string;
+    why: string;
+  }[];
 };
 
 export type MapQuote = {
@@ -135,7 +141,9 @@ const QUOTED = /"([^"]*)"|“([^”]*)”|「([^」]*)」|『([^』]*)』/g;
 export function quotationsHold(prose: string, evidence: readonly string[]) {
   const haystack = collapse(evidence.join("\n"));
   for (const match of prose.matchAll(QUOTED)) {
-    const run = collapse(match.slice(1).find((part) => part !== undefined) ?? "");
+    const run = collapse(
+      match.slice(1).find((part) => part !== undefined) ?? "",
+    );
     if (run !== "" && !haystack.includes(run)) return false;
   }
   return true;
@@ -150,7 +158,8 @@ function citations(
   for (const item of array(value)) {
     if (typeof item !== "string" || !/^E\d+$/.test(item)) continue;
     const entry = ctx.entries.get(item);
-    if (!entry || (entry.isNote && !options.allowNote) || refs.includes(item)) continue;
+    if (!entry || (entry.isNote && !options.allowNote) || refs.includes(item))
+      continue;
     refs.push(item);
   }
   return refs.slice(0, CITATIONS_MAX);
@@ -177,12 +186,17 @@ function passageRef(value: unknown): PassageRef | null {
 
 type ResolvedQuote = MapQuote;
 
-function resolveQuote(raw: unknown, ctx: GroundingContext): ResolvedQuote | null {
+function resolveQuote(
+  raw: unknown,
+  ctx: GroundingContext,
+): ResolvedQuote | null {
   if (!isObject(raw)) return null;
   const why = field(raw.why, LIMITS.why);
   const from = passageRef(raw.from);
-  const to = raw.to === null || raw.to === undefined ? null : passageRef(raw.to);
-  if (!why || !from || (raw.to !== null && raw.to !== undefined && !to)) return null;
+  const to =
+    raw.to === null || raw.to === undefined ? null : passageRef(raw.to);
+  if (!why || !from || (raw.to !== null && raw.to !== undefined && !to))
+    return null;
 
   if (ctx.candidates) {
     const candidate = ctx.candidates.find(
@@ -207,7 +221,11 @@ function resolveQuote(raw: unknown, ctx: GroundingContext): ResolvedQuote | null
   const entry = ctx.entries.get(from.ref);
   if (!entry) return null;
   const last = to ?? from;
-  if (last.ref !== from.ref || last.number < from.number || last.number - from.number + 1 > QUOTE_PASSAGES)
+  if (
+    last.ref !== from.ref ||
+    last.number < from.number ||
+    last.number - from.number + 1 > QUOTE_PASSAGES
+  )
     return null;
   const first = entry.passages.get(from.number);
   const final = entry.passages.get(last.number);
@@ -217,7 +235,8 @@ function resolveQuote(raw: unknown, ctx: GroundingContext): ResolvedQuote | null
     if (!entry.passages.has(number)) return null;
   const text = Array.from(entry.body).slice(first.start, final.end).join("");
   const size = codePointLength(text);
-  if (size < QUOTE_MIN || size > QUOTE_MAX || !entry.body.includes(text)) return null;
+  if (size < QUOTE_MIN || size > QUOTE_MAX || !entry.body.includes(text))
+    return null;
   return {
     from: raw.from as string,
     to: to ? (raw.to as string) : null,
@@ -237,7 +256,10 @@ function resolveQuotes(raw: unknown, ctx: GroundingContext, max: number) {
     const entry = ctx.entries.get(quote.ref)!;
     if (!quotationsHold(quote.why, [entry.sentText])) continue;
     const overlaps = kept.some(
-      (other) => other.ref === quote.ref && quote.start < other.end && other.start < quote.end,
+      (other) =>
+        other.ref === quote.ref &&
+        quote.start < other.end &&
+        other.start < quote.end,
     );
     if (!overlaps) kept.push(quote);
   }
@@ -254,13 +276,22 @@ function resolvePhases(raw: unknown, ctx: GroundingContext, max: number) {
     const refs = citations(item.entries, ctx, { allowNote: false });
     if (refs.length < 1) continue;
     const evidence = evidenceFor(refs, ctx);
-    if (!quotationsHold(feeling, evidence) || !quotationsHold(description, evidence)) continue;
+    if (
+      !quotationsHold(feeling, evidence) ||
+      !quotationsHold(description, evidence)
+    )
+      continue;
     phases.push({ feeling, description, refs });
   }
   return phases.slice(0, max);
 }
 
-function resolveThemes(raw: unknown, ctx: GroundingContext, max: number, descriptionMax: number) {
+function resolveThemes(
+  raw: unknown,
+  ctx: GroundingContext,
+  max: number,
+  descriptionMax: number,
+) {
   const themes: { name: string; description: string; refs: string[] }[] = [];
   for (const item of array(raw)) {
     if (!isObject(item)) continue;
@@ -270,7 +301,11 @@ function resolveThemes(raw: unknown, ctx: GroundingContext, max: number, descrip
     const refs = citations(item.entries, ctx, { allowNote: false });
     if (refs.length < 2 || distinctDays(refs, ctx) < 2) continue;
     const evidence = evidenceFor(refs, ctx);
-    if (!quotationsHold(name, evidence) || !quotationsHold(description, evidence)) continue;
+    if (
+      !quotationsHold(name, evidence) ||
+      !quotationsHold(description, evidence)
+    )
+      continue;
     themes.push({ name, description, refs });
   }
   return themes.slice(0, max);
@@ -297,12 +332,19 @@ function phaseWindow(refs: readonly string[], ctx: GroundingContext) {
 }
 
 /** A full review, from one request or from the final step of a long period. */
-export function resolveReview(raw: unknown, ctx: GroundingContext): ReviewContent {
-  if (!isObject(raw) || !isObject(raw.feelings)) throw new GroundingError("invalid_review");
+export function resolveReview(
+  raw: unknown,
+  ctx: GroundingContext,
+): ReviewContent {
+  if (!isObject(raw) || !isObject(raw.feelings))
+    throw new GroundingError("invalid_review");
   const summary = required(field(raw.summary, LIMITS.summary));
   const overview = required(field(raw.feelings.overview, LIMITS.overview));
   const everything = allEvidence(ctx);
-  if (!quotationsHold(summary, everything) || !quotationsHold(overview, everything))
+  if (
+    !quotationsHold(summary, everything) ||
+    !quotationsHold(overview, everything)
+  )
     throw new GroundingError("invalid_review");
 
   const phases = resolvePhases(raw.feelings.phases, ctx, 6)
@@ -313,8 +355,11 @@ export function resolveReview(raw: unknown, ctx: GroundingContext): ReviewConten
     .map((phase, order) => ({ phase, order }))
     .sort(
       (a, b) =>
-        (a.phase.window.start < b.phase.window.start ? -1 : a.phase.window.start > b.phase.window.start ? 1 : 0) ||
-        a.order - b.order,
+        (a.phase.window.start < b.phase.window.start
+          ? -1
+          : a.phase.window.start > b.phase.window.start
+            ? 1
+            : 0) || a.order - b.order,
     )
     .map(({ phase }) => phase);
   const themes = resolveThemes(raw.themes, ctx, 6, LIMITS.themeDescription);
@@ -325,7 +370,11 @@ export function resolveReview(raw: unknown, ctx: GroundingContext): ReviewConten
 
   const minimumThemes = ctx.entriesInPeriod >= 20 ? 2 : 1;
   const minimumQuotes = ctx.entriesInPeriod >= 10 ? 3 : 1;
-  if (phases.length < 1 || themes.length < minimumThemes || quotes.length < minimumQuotes)
+  if (
+    phases.length < 1 ||
+    themes.length < minimumThemes ||
+    quotes.length < minimumQuotes
+  )
     throw new GroundingError("ungrounded_review");
 
   const id = (ref: string) => ctx.entries.get(ref)!.id;
@@ -360,17 +409,20 @@ export function resolveReview(raw: unknown, ctx: GroundingContext): ReviewConten
 export function resolveMap(raw: unknown, ctx: GroundingContext): MapResult {
   if (!isObject(raw)) throw new GroundingError("invalid_review");
   const notes = required(field(raw.notes, LIMITS.notes));
-  if (!quotationsHold(notes, allEvidence(ctx))) throw new GroundingError("invalid_review");
+  if (!quotationsHold(notes, allEvidence(ctx)))
+    throw new GroundingError("invalid_review");
   const arc = resolvePhases(raw.arc, ctx, 4).map((phase) => ({
     feeling: phase.feeling,
     description: phase.description,
     entries: phase.refs,
   }));
-  const themes = resolveThemes(raw.themes, ctx, 5, LIMITS.themeDescription).map((theme) => ({
-    name: theme.name,
-    description: theme.description,
-    entries: theme.refs,
-  }));
+  const themes = resolveThemes(raw.themes, ctx, 5, LIMITS.themeDescription).map(
+    (theme) => ({
+      name: theme.name,
+      description: theme.description,
+      entries: theme.refs,
+    }),
+  );
   const quotes = resolveQuotes(raw.quotes, ctx, 12);
   if (arc.length < 1) throw new GroundingError("ungrounded_review");
   return { notes, arc, themes, quotes };

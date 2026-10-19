@@ -72,9 +72,12 @@ export async function POST(request: Request) {
       localDateInTimezone(new Date(), timezone),
     );
     after(() =>
-      advanceReview(client, ownerID, started.reviewId, started.jobStartedAt).catch(
-        () => undefined,
-      ),
+      advanceReview(
+        client,
+        ownerID,
+        started.reviewId,
+        started.jobStartedAt,
+      ).catch(() => undefined),
     );
     return Response.json(
       {

@@ -37,8 +37,13 @@ export async function POST(
       p_review_id: id,
     });
     if (error)
-      throw new AIError("review_unavailable", 503, "Could not read this review.");
-    if (!data) throw new AIError("not_found", 404, "This review no longer exists.");
+      throw new AIError(
+        "review_unavailable",
+        503,
+        "Could not read this review.",
+      );
+    if (!data)
+      throw new AIError("not_found", 404, "This review no longer exists.");
     if (data.status === "generating" && aiProviderConfigured()) {
       const job = await client
         .from("entry_reviews")
@@ -69,7 +74,11 @@ export async function DELETE(
       p_review_id: id,
     });
     if (error)
-      throw new AIError("review_unavailable", 503, "Could not delete this review.");
+      throw new AIError(
+        "review_unavailable",
+        503,
+        "Could not delete this review.",
+      );
     return Response.json({ deleted: data === true }, { headers });
   } catch (error) {
     return aiErrorResponse(error);

@@ -66,7 +66,12 @@ it("pauses every other feature for direct generation, even with a configured pro
       generateAI("owner", feature, "system", "prompt"),
     ).rejects.toMatchObject({ code: "ai_paused", status: 503 });
   await expect(
-    requestAI({ ownerID: "owner", feature: "tagging", system: "s", input: "p" }),
+    requestAI({
+      ownerID: "owner",
+      feature: "tagging",
+      system: "s",
+      input: "p",
+    }),
   ).rejects.toMatchObject({ code: "ai_paused", message: AI_PAUSED_MESSAGE });
   expect(createClient).not.toHaveBeenCalled();
 });

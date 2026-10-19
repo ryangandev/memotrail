@@ -1,0 +1,312 @@
+/*
+ * A review is three kinds of text that must never be mistaken for one another: facts from the
+ * person's records (plain), Claude's interpretation (a tinted surface with a warm edge and an
+ * "Interpretation" badge), and the person's own words (set as quotes). The surface styles do the
+ * distinguishing, so it does not depend on the badge alone. Selectors carry the panel class
+ * twice over so the Item page's paragraph and link colors do not reach in.
+ */
+
+.panel {
+  display: grid;
+  gap: var(--mt-space-4);
+  min-width: 0;
+}
+
+.panel .muted,
+.panel .meta,
+.panel .previous,
+.panel .label {
+  margin: 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
+.panel .label {
+  color: var(--mt-color-ink-faint);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.panel .previous {
+  color: var(--mt-color-ink-faint);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.readyHeader {
+  display: grid;
+  gap: var(--mt-space-1);
+}
+
+.actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--mt-space-2);
+}
+
+.start {
+  display: grid;
+  justify-items: start;
+  gap: var(--mt-space-3);
+}
+
+.failure {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-3) var(--mt-space-4);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-danger-border);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-danger-subtle);
+}
+
+.panel .failure p {
+  margin: 0;
+  color: var(--mt-color-danger);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-body);
+}
+
+.progress {
+  display: grid;
+  gap: var(--mt-space-2);
+  padding: var(--mt-space-4);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  background: var(--mt-color-surface-raised);
+}
+
+.panel .progress p {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-body);
+}
+
+.panel .progress p.muted {
+  color: var(--mt-color-ink-muted);
+}
+
+.skeletons {
+  display: grid;
+  gap: var(--mt-space-2);
+  margin-top: var(--mt-space-2);
+}
+
+.body {
+  display: grid;
+  gap: var(--mt-space-5);
+}
+
+.body > div {
+  display: grid;
+  gap: var(--mt-space-5);
+}
+
+.notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mt-space-2) var(--mt-space-3);
+  margin: 0;
+  padding: var(--mt-space-3) var(--mt-space-4);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
+  background: var(--mt-color-surface-subtle);
+}
+
+.panel .notice span {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
+.records {
+  display: grid;
+  gap: var(--mt-space-3);
+  padding-top: var(--mt-space-4);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+.panel .records p {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-body);
+}
+
+.panel .records p.meta,
+.panel .records p.label {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+}
+
+.tags,
+.plainList,
+.themes,
+.phases {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mt-space-2);
+}
+
+.panel .tags a {
+  text-decoration: none;
+}
+
+.plainList {
+  gap: var(--mt-space-1-5);
+  margin-top: var(--mt-space-1);
+}
+
+.interpretationHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--mt-space-2);
+}
+
+.interpretationHeader h3 {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+}
+
+.interpretation {
+  display: grid;
+  gap: var(--mt-space-4);
+  padding: var(--mt-space-5);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-inline-start: var(--mt-size-stroke-thick) solid var(--mt-color-warm);
+  border-radius: var(--mt-radius-large);
+  background: var(--mt-color-warm-wash);
+}
+
+.panel .interpretation p,
+.panel .interpretation h4 {
+  margin: 0;
+  color: var(--mt-color-ink);
+  line-height: var(--mt-line-height-paragraph);
+  overflow-wrap: anywhere;
+}
+
+.panel .interpretation p {
+  font-size: var(--mt-font-size-body);
+}
+
+.panel .interpretation h4 {
+  font-size: var(--mt-font-size-body);
+  font-weight: var(--mt-font-weight-semibold);
+}
+
+.phases,
+.themes {
+  gap: var(--mt-space-5);
+}
+
+.phases > li,
+.themes > li {
+  display: grid;
+  gap: var(--mt-space-1-5);
+}
+
+.panel .interpretation p.range {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+}
+
+.citations {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+}
+
+.citations summary {
+  width: fit-content;
+  cursor: pointer;
+  color: var(--mt-color-ink-muted);
+}
+
+.citations summary:hover {
+  color: var(--mt-color-ink);
+}
+
+.citations ul {
+  display: grid;
+  gap: var(--mt-space-1-5);
+  margin: var(--mt-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel .entryLink {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mt-space-1) var(--mt-space-2);
+  color: var(--mt-color-accent);
+  font-size: var(--mt-font-size-caption);
+  text-decoration: none;
+}
+
+.panel .entryLink span:first-child {
+  color: var(--mt-color-ink-faint);
+}
+
+.panel .entryLink:hover span:last-child {
+  text-decoration: underline;
+}
+
+.words {
+  display: grid;
+  gap: var(--mt-space-4);
+}
+
+.quote {
+  display: grid;
+  gap: var(--mt-space-2);
+  margin: 0;
+  padding-inline-start: var(--mt-space-4);
+  border-inline-start: var(--mt-size-stroke-thick) solid
+    var(--mt-color-accent-stripe);
+}
+
+.quote blockquote {
+  margin: 0;
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-story);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.quote figcaption {
+  display: grid;
+  gap: var(--mt-space-1);
+}
+
+.panel .why {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}
+
+.panel .footer {
+  margin: 0;
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+}

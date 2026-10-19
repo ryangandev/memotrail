@@ -13,7 +13,9 @@ import { PageFrame } from "@/components/page-frame";
 import { SectionHeader } from "@/components/section-header";
 import { PreferredNameSetting } from "@/components/preferred-name-setting";
 import { SemanticSearchSetting } from "@/components/semantic-search-setting";
+import { ReviewsSetting } from "@/components/reviews-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { loadReviewSettings } from "@/lib/data/reviews";
 import {
   storedBirthDate,
   storedProfileTimezone,
@@ -67,6 +69,7 @@ export default async function SettingsPage() {
   const semanticSearch = storedSemanticSearchPreference(
     profile.error ? null : profile.data,
   );
+  const reviewSettings = await loadReviewSettings(context.client);
   const cookieStore = await cookies();
   const preferredName =
     !profile.error && typeof profile.data?.display_name === "string"
@@ -141,6 +144,8 @@ export default async function SettingsPage() {
         {semanticSearch.available ? (
           <SemanticSearchSetting initialEnabled={semanticSearch.enabled} />
         ) : null}
+
+        {reviewSettings ? <ReviewsSetting initial={reviewSettings} /> : null}
 
         <div className={pageStyles.preferenceList}>
           <AppearanceSetting initialPreference={themePreference} />

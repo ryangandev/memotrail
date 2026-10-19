@@ -13,7 +13,9 @@ import {
 } from "./packing";
 
 let counter = 0;
-function entry(overrides: Partial<PackableEntry> & { words?: number } = {}): PackableEntry {
+function entry(
+  overrides: Partial<PackableEntry> & { words?: number } = {},
+): PackableEntry {
   counter += 1;
   const { words = 20, ...rest } = overrides;
   const sentence = "This is a plain sentence about my day and what happened.";
@@ -21,23 +23,39 @@ function entry(overrides: Partial<PackableEntry> & { words?: number } = {}): Pac
     id: `e${String(counter).padStart(4, "0")}`,
     isSubject: false,
     title: "",
-    body: Array.from({ length: Math.max(1, Math.round(words / 10)) }, () => sentence).join(" "),
+    body: Array.from(
+      { length: Math.max(1, Math.round(words / 10)) },
+      () => sentence,
+    ).join(" "),
     tags: [],
     isFirstTime: false,
     ...rest,
   };
 }
 
-const lineOf = (i: number) => `Sentence number ${i} in this long Entry goes on and on.`;
-const bodyOf = (sentences: number) => Array.from({ length: sentences }, (_, i) => lineOf(i)).join("\n");
+const lineOf = (i: number) =>
+  `Sentence number ${i} in this long Entry goes on and on.`;
+const bodyOf = (sentences: number) =>
+  Array.from({ length: sentences }, (_, i) => lineOf(i)).join("\n");
 const estimateOf = (sentences: number) =>
-  packPeriod([{ id: "x", isSubject: false, title: "", body: bodyOf(sentences), tags: [], isFirstTime: false }])
-    .steps[0].estimatedInputTokens;
+  packPeriod([
+    {
+      id: "x",
+      isSubject: false,
+      title: "",
+      body: bodyOf(sentences),
+      tags: [],
+      isFirstTime: false,
+    },
+  ]).steps[0].estimatedInputTokens;
 const perSentence = (estimateOf(1001) - estimateOf(1)) / 1000;
 
 /** An Entry whose estimate is about `tokens`. */
 function sized(tokens: number, overrides: Partial<PackableEntry> = {}) {
-  const sentences = Math.max(1, Math.round((tokens - estimateOf(1)) / perSentence) + 1);
+  const sentences = Math.max(
+    1,
+    Math.round((tokens - estimateOf(1)) / perSentence) + 1,
+  );
   return entry({ body: bodyOf(sentences), ...overrides });
 }
 
@@ -96,14 +114,26 @@ describe("packPeriod", () => {
     expect(packed.mode).toBe("segmented");
     const maps = packed.steps.filter((step) => step.kind === "map");
     const reduce = packed.steps.at(-1)!;
-    expect(reduce).toMatchObject({ kind: "reduce", entryIds: [], estimatedInputTokens: REDUCE_INPUT_TOKENS });
-    expect(maps.flatMap((step) => step.entryIds)).toEqual(entries.map((item) => item.id));
+    expect(reduce).toMatchObject({
+      kind: "reduce",
+      entryIds: [],
+      estimatedInputTokens: REDUCE_INPUT_TOKENS,
+    });
+    expect(maps.flatMap((step) => step.entryIds)).toEqual(
+      entries.map((item) => item.id),
+    );
     for (const step of maps) {
       expect(step.estimatedInputTokens).toBeLessThanOrEqual(SEGMENT_TOKENS);
       expect(step.entryIds.length).toBeGreaterThan(0);
     }
-    expect(packed.steps.map((step) => step.index)).toEqual(packed.steps.map((_, i) => i));
-    expect(packed).toMatchObject({ trimmedEntries: 0, entriesRead: 8, trimCodePoints: null });
+    expect(packed.steps.map((step) => step.index)).toEqual(
+      packed.steps.map((_, i) => i),
+    );
+    expect(packed).toMatchObject({
+      trimmedEntries: 0,
+      entriesRead: 8,
+      trimCodePoints: null,
+    });
   });
 
   it("keeps the Chapter note with the first part", () => {
@@ -111,7 +141,9 @@ describe("packPeriod", () => {
     const entries = [note, ...Array.from({ length: 6 }, () => sized(40_000))];
     const packed = packPeriod(entries);
     expect(packed.steps[0].entryIds[0]).toBe(note.id);
-    expect(packed.steps.slice(1).every((step) => !step.entryIds.includes(note.id))).toBe(true);
+    expect(
+      packed.steps.slice(1).every((step) => !step.entryIds.includes(note.id)),
+    ).toBe(true);
     expect(packed.entryIds[0]).toBe(note.id);
   });
 
@@ -123,7 +155,9 @@ describe("packPeriod", () => {
     expect(packed.trimmedEntries).toBe(5);
     expect(packed.entriesRead).toBe(5);
     expect(packed.entriesInPeriod).toBe(5);
-    expect(packed.steps.filter((step) => step.kind === "map").length).toBeLessThanOrEqual(MAX_SEGMENTS);
+    expect(
+      packed.steps.filter((step) => step.kind === "map").length,
+    ).toBeLessThanOrEqual(MAX_SEGMENTS);
   });
 
   it("shortens a single huge Entry that could never fit in a part", () => {
@@ -139,9 +173,14 @@ describe("packPeriod", () => {
     const long = (firstTime: boolean) =>
       entry({
         isFirstTime: firstTime,
-        body: Array.from({ length: 140 }, (_, i) => `Sentence ${i} is here and goes on a little bit longer.`).join(" "),
+        body: Array.from(
+          { length: 140 },
+          (_, i) => `Sentence ${i} is here and goes on a little bit longer.`,
+        ).join(" "),
       });
-    const entries = Array.from({ length: 1000 }, (_, i) => long(i === 100 || i === 900));
+    const entries = Array.from({ length: 1000 }, (_, i) =>
+      long(i === 100 || i === 900),
+    );
     const packed = packPeriod(entries);
     expect(packed.trimCodePoints).toBe(TRIM_CODE_POINTS);
     expect(packed.entriesInPeriod).toBe(1000);
@@ -149,11 +188,16 @@ describe("packPeriod", () => {
     expect(packed.entriesRead).toBeLessThan(1000);
     expect(packed.entryIds).toContain(entries[100].id);
     expect(packed.entryIds).toContain(entries[900].id);
-    expect(packed.steps.filter((step) => step.kind === "map").length).toBeLessThanOrEqual(MAX_SEGMENTS);
+    expect(
+      packed.steps.filter((step) => step.kind === "map").length,
+    ).toBeLessThanOrEqual(MAX_SEGMENTS);
     for (const step of packed.steps)
-      if (step.kind === "map") expect(step.estimatedInputTokens).toBeLessThanOrEqual(SEGMENT_TOKENS);
+      if (step.kind === "map")
+        expect(step.estimatedInputTokens).toBeLessThanOrEqual(SEGMENT_TOKENS);
     // Chronological order is kept and the kept Entries are spread across the period.
-    const order = packed.entryIds.map((id) => entries.findIndex((item) => item.id === id));
+    const order = packed.entryIds.map((id) =>
+      entries.findIndex((item) => item.id === id),
+    );
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     const quarter = (index: number) => Math.floor(index / 250);
     expect(new Set(order.map(quarter)).size).toBe(4);
@@ -165,7 +209,10 @@ describe("packPeriod", () => {
     const note = entry({ isSubject: true, title: "Everything" });
     const long = () =>
       entry({
-        body: Array.from({ length: 140 }, (_, i) => `Sentence ${i} is here and goes on a little bit longer.`).join(" "),
+        body: Array.from(
+          { length: 140 },
+          (_, i) => `Sentence ${i} is here and goes on a little bit longer.`,
+        ).join(" "),
       });
     const packed = packPeriod([note, ...Array.from({ length: 1000 }, long)]);
     expect(packed.entryIds[0]).toBe(note.id);
@@ -179,14 +226,21 @@ describe("packPeriod", () => {
 
   it("handles a period with nothing in it", () => {
     const packed = packPeriod([]);
-    expect(packed).toMatchObject({ mode: "single", entriesRead: 0, entriesInPeriod: 0 });
+    expect(packed).toMatchObject({
+      mode: "single",
+      entriesRead: 0,
+      entriesInPeriod: 0,
+    });
     expect(packed.steps[0].entryIds).toEqual([]);
   });
 });
 
 describe("sentPassages", () => {
   it("sends whole passages within the first code points and says when it cut", () => {
-    const body = Array.from({ length: 200 }, (_, i) => `This is sentence number ${i} of a long Entry.`).join(" ");
+    const body = Array.from(
+      { length: 200 },
+      (_, i) => `This is sentence number ${i} of a long Entry.`,
+    ).join(" ");
     const all = sentPassages(body, null);
     const cut = sentPassages(body, TRIM_CODE_POINTS);
     expect(all.trimmed).toBe(false);
@@ -207,7 +261,10 @@ describe("estimateJobMicros", () => {
     const heavy = packPeriod(Array.from({ length: 8 }, () => sized(40_000)));
     const maps = heavy.steps.filter((step) => step.kind === "map");
     expect(estimateJobMicros(heavy.steps, price)).toBe(
-      maps.reduce((sum, step) => sum + step.estimatedInputTokens * 2 + 10_000 * 10, 0) +
+      maps.reduce(
+        (sum, step) => sum + step.estimatedInputTokens * 2 + 10_000 * 10,
+        0,
+      ) +
         REDUCE_INPUT_TOKENS * 2 +
         16_000 * 10,
     );

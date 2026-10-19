@@ -37,12 +37,14 @@ describe("segmentPassages", () => {
   });
 
   it("handles mixed text", () => {
-    const body = "今天 I started the new job。It felt like 重新开始. Good day overall.";
+    const body =
+      "今天 I started the new job。It felt like 重新开始. Good day overall.";
     expectExactOffsets(body);
   });
 
   it("counts offsets in code points for emoji and other astral characters", () => {
-    const body = "We hiked the ridge 🥾 and it was great. 𠮷野家 for dinner was better than expected.";
+    const body =
+      "We hiked the ridge 🥾 and it was great. 𠮷野家 for dinner was better than expected.";
     const passages = expectExactOffsets(body);
     expect(codePointLength(body)).toBeLessThan(body.length);
     const last = passages[passages.length - 1];
@@ -73,7 +75,8 @@ describe("segmentPassages", () => {
   });
 
   it("keeps a short paragraph on its own", () => {
-    const body = "A long first paragraph with real words in it.\nHi.\nAnother long paragraph with real words in it.";
+    const body =
+      "A long first paragraph with real words in it.\nHi.\nAnother long paragraph with real words in it.";
     const passages = expectExactOffsets(body);
     expect(passages.map((passage) => passage.text)).toContain("Hi.");
   });

@@ -256,10 +256,7 @@ export async function requestAI(options: AIRequestOptions) {
         "The AI model declined this request. Your Entries are unchanged.",
       );
     }
-    if (
-      !result.text ||
-      result.stopReason !== "end_turn"
-    ) {
+    if (!result.text || result.stopReason !== "end_turn") {
       code = "incomplete_generation";
       throw new AIError(
         "incomplete_generation",

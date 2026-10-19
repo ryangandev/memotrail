@@ -111,7 +111,11 @@ it("reserves reviews at the review model's prices against both monthly budgets",
     maxTokens: 4000,
     timeoutMs: 240_000,
   });
-  expect(result).toMatchObject({ model: REVIEW_MODEL, inputTokens: 1000, outputTokens: 200 });
+  expect(result).toMatchObject({
+    model: REVIEW_MODEL,
+    inputTokens: 1000,
+    outputTokens: 200,
+  });
 });
 
 it("reads both monthly budgets from the environment and refuses nonsense", () => {
@@ -138,16 +142,71 @@ it("enforces each feature's prompt and answer limits before reserving anything",
   setAIProviderForTests(provider);
   const big = (bytes: number) => "a".repeat(bytes);
   const refused = (options: Parameters<typeof requestAI>[0]) =>
-    expect(requestAI(options)).rejects.toMatchObject({ code: "request_too_large" });
-  await refused({ ownerID: "o", feature: "classification", system: "", input: big(64_001) });
-  await refused({ ownerID: "o", feature: "classification", system: "", input: "x", maxTokens: 2049 });
-  await refused({ ownerID: "o", feature: "review", system: "", input: big(800_001), maxTokens: 100 });
-  await refused({ ownerID: "o", feature: "review", system: "", input: "x", maxTokens: 16_001 });
-  await refused({ ownerID: "o", feature: "chapter_suggestion", system: "", input: big(160_001), maxTokens: 100 });
-  await refused({ ownerID: "o", feature: "chapter_suggestion", system: "", input: "x", maxTokens: 6_001 });
-  await refused({ ownerID: "o", feature: "review", system: "", input: "x", maxTokens: 0 });
-  await refused({ ownerID: "o", feature: "review", system: "", input: "x", maxTokens: 1.5 });
-  await refused({ ownerID: "o", feature: "review", system: "", input: "x", model: "claude-unpriced" });
+    expect(requestAI(options)).rejects.toMatchObject({
+      code: "request_too_large",
+    });
+  await refused({
+    ownerID: "o",
+    feature: "classification",
+    system: "",
+    input: big(64_001),
+  });
+  await refused({
+    ownerID: "o",
+    feature: "classification",
+    system: "",
+    input: "x",
+    maxTokens: 2049,
+  });
+  await refused({
+    ownerID: "o",
+    feature: "review",
+    system: "",
+    input: big(800_001),
+    maxTokens: 100,
+  });
+  await refused({
+    ownerID: "o",
+    feature: "review",
+    system: "",
+    input: "x",
+    maxTokens: 16_001,
+  });
+  await refused({
+    ownerID: "o",
+    feature: "chapter_suggestion",
+    system: "",
+    input: big(160_001),
+    maxTokens: 100,
+  });
+  await refused({
+    ownerID: "o",
+    feature: "chapter_suggestion",
+    system: "",
+    input: "x",
+    maxTokens: 6_001,
+  });
+  await refused({
+    ownerID: "o",
+    feature: "review",
+    system: "",
+    input: "x",
+    maxTokens: 0,
+  });
+  await refused({
+    ownerID: "o",
+    feature: "review",
+    system: "",
+    input: "x",
+    maxTokens: 1.5,
+  });
+  await refused({
+    ownerID: "o",
+    feature: "review",
+    system: "",
+    input: "x",
+    model: "claude-unpriced",
+  });
   expect(rpc).not.toHaveBeenCalled();
   expect(requests).toHaveLength(0);
 });
@@ -171,7 +230,9 @@ it("requires the independently authorized photo feature before sending image dat
   const { provider, requests } = fakeProvider(completed("OK"));
   setAIProviderForTests(provider);
   await expect(
-    generateAI("owner", "classification", "system", "prompt", 10, undefined, [photo]),
+    generateAI("owner", "classification", "system", "prompt", 10, undefined, [
+      photo,
+    ]),
   ).rejects.toMatchObject({ code: "invalid_images" });
   expect(rpc).not.toHaveBeenCalled();
   expect(requests).toHaveLength(0);
@@ -188,7 +249,12 @@ it("does not send anything when the atomic permission and budget reservation ref
   ] as const) {
     rpc.mockResolvedValueOnce({ data: null, error: { message } });
     await expect(
-      requestAI({ ownerID: "owner", feature: "review", system: "s", input: "p" }),
+      requestAI({
+        ownerID: "owner",
+        feature: "review",
+        system: "s",
+        input: "p",
+      }),
     ).rejects.toMatchObject({ code, status });
   }
   expect(requests).toHaveLength(0);
@@ -223,21 +289,32 @@ it("charges a cut-off answer as billed and reports it", async () => {
   await expect(
     requestAI({ ownerID: "owner", feature: "review", system: "s", input: "p" }),
   ).rejects.toMatchObject({ code: "incomplete_generation" });
-  expect(finishCall()).toMatchObject({ p_status: "completed", p_error_code: "incomplete_generation" });
+  expect(finishCall()).toMatchObject({
+    p_status: "completed",
+    p_error_code: "incomplete_generation",
+  });
 });
 
 it("keeps an interrupted request's reservation charged and a rejected one free", async () => {
-  setAIProviderForTests(fakeProvider(interrupted(), outage(), rejected()).provider);
+  setAIProviderForTests(
+    fakeProvider(interrupted(), outage(), rejected()).provider,
+  );
   const call = () =>
     requestAI({ ownerID: "owner", feature: "review", system: "s", input: "p" });
   await expect(call()).rejects.toMatchObject({ code: "provider_interrupted" });
-  expect(finishCall()).toMatchObject({ p_status: "uncertain", p_input_tokens: null });
+  expect(finishCall()).toMatchObject({
+    p_status: "uncertain",
+    p_input_tokens: null,
+  });
   rpc.mockClear();
   await expect(call()).rejects.toMatchObject({ code: "provider_error" });
   expect(finishCall()).toMatchObject({ p_status: "uncertain" });
   rpc.mockClear();
   await expect(call()).rejects.toMatchObject({ code: "provider_error" });
-  expect(finishCall()).toMatchObject({ p_status: "failed", p_error_code: "provider_error" });
+  expect(finishCall()).toMatchObject({
+    p_status: "failed",
+    p_error_code: "provider_error",
+  });
 });
 
 it("treats an unexpected provider exception as interrupted and unknown", async () => {
@@ -249,7 +326,10 @@ it("treats an unexpected provider exception as interrupted and unknown", async (
   await expect(
     requestAI({ ownerID: "owner", feature: "review", system: "s", input: "p" }),
   ).rejects.toBeInstanceOf(AIError);
-  expect(finishCall()).toMatchObject({ p_status: "uncertain", p_error_code: "provider_interrupted" });
+  expect(finishCall()).toMatchObject({
+    p_status: "uncertain",
+    p_error_code: "provider_interrupted",
+  });
 });
 
 it("needs a configured provider, review model, and address", async () => {

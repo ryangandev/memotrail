@@ -80,7 +80,12 @@ const isRow = (value: unknown): value is Row =>
 
 /** Reads the job the database handed back, refusing anything that is not the shape this code wrote. */
 export function parseJobState(value: unknown): JobState | null {
-  if (!isRow(value) || !Array.isArray(value.steps) || !Array.isArray(value.entryIds)) return null;
+  if (
+    !isRow(value) ||
+    !Array.isArray(value.steps) ||
+    !Array.isArray(value.entryIds)
+  )
+    return null;
   const subject = isRow(value.subject) ? value.subject : null;
   const parsedSubject: ReviewSubject | null =
     subject?.scope === "chapter" && typeof subject.chapterId === "string"
@@ -103,7 +108,9 @@ export function parseJobState(value: unknown): JobState | null {
     if (
       !isRow(step) ||
       !Number.isInteger(step.index) ||
-      (step.kind !== "review" && step.kind !== "map" && step.kind !== "reduce") ||
+      (step.kind !== "review" &&
+        step.kind !== "map" &&
+        step.kind !== "reduce") ||
       !Array.isArray(step.entryIds) ||
       typeof step.status !== "string"
     )
@@ -111,7 +118,9 @@ export function parseJobState(value: unknown): JobState | null {
     steps.push({
       index: step.index as number,
       kind: step.kind,
-      entryIds: step.entryIds.filter((id): id is string => typeof id === "string"),
+      entryIds: step.entryIds.filter(
+        (id): id is string => typeof id === "string",
+      ),
       status: step.status,
       result: step.result,
     });
@@ -120,11 +129,15 @@ export function parseJobState(value: unknown): JobState | null {
     disclosureVersion: value.disclosureVersion,
     planHash: value.planHash,
     mode: value.mode,
-    entryIds: value.entryIds.filter((id): id is string => typeof id === "string"),
-    noteEntryId: typeof value.noteEntryId === "string" ? value.noteEntryId : null,
+    entryIds: value.entryIds.filter(
+      (id): id is string => typeof id === "string",
+    ),
+    noteEntryId:
+      typeof value.noteEntryId === "string" ? value.noteEntryId : null,
     entriesInPeriod: value.entriesInPeriod as number,
     trimmedEntries: value.trimmedEntries as number,
-    trimCodePoints: typeof value.trimCodePoints === "number" ? value.trimCodePoints : null,
+    trimCodePoints:
+      typeof value.trimCodePoints === "number" ? value.trimCodePoints : null,
     language: value.language,
     subject: parsedSubject,
     steps,
@@ -132,7 +145,11 @@ export function parseJobState(value: unknown): JobState | null {
 }
 
 const SERVER_ERRORS: Record<string, [string, number, string]> = {
-  ai_disabled: ["review_consent_required", 403, "Turn on reviews in Settings first."],
+  ai_disabled: [
+    "review_consent_required",
+    403,
+    "Turn on reviews in Settings first.",
+  ],
   review_disclosure_outdated: [
     "review_consent_required",
     403,
@@ -159,7 +176,11 @@ function claimError(message: string | undefined) {
   const known = message ? SERVER_ERRORS[message] : undefined;
   return known
     ? new AIError(known[0], known[1], known[2])
-    : new AIError("review_unavailable", 503, "Reviews are unavailable right now. Your Entries are unchanged.");
+    : new AIError(
+        "review_unavailable",
+        503,
+        "Reviews are unavailable right now. Your Entries are unchanged.",
+      );
 }
 
 function sha256(value: unknown) {
@@ -178,14 +199,24 @@ export async function startReview(
 ): Promise<StartedReview> {
   const read =
     subject.scope === "chapter"
-      ? await client.rpc("chapter_review", { p_chapter_id: subject.chapterId, p_local_date: localDate })
-      : await client.rpc("year_review", { p_year: subject.year, p_local_date: localDate });
+      ? await client.rpc("chapter_review", {
+          p_chapter_id: subject.chapterId,
+          p_local_date: localDate,
+        })
+      : await client.rpc("year_review", {
+          p_year: subject.year,
+          p_local_date: localDate,
+        });
   if (read.error || !isRow(read.data)) throw claimError(undefined);
   const settings = isRow(read.data.settings) ? read.data.settings : {};
-  if (settings.reviewsEnabled !== true || settings.disclosureVersion !== REVIEW_DISCLOSURE_VERSION)
+  if (
+    settings.reviewsEnabled !== true ||
+    settings.disclosureVersion !== REVIEW_DISCLOSURE_VERSION
+  )
     throw claimError("ai_disabled");
   const eligibility = isRow(read.data.eligibility) ? read.data.eligibility : {};
-  if (eligibility.status !== "eligible") throw claimError("review_not_eligible");
+  if (eligibility.status !== "eligible")
+    throw claimError("review_not_eligible");
 
   let period: Awaited<ReturnType<typeof loadPeriod>>;
   try {
@@ -211,10 +242,18 @@ export async function startReview(
 
   const kept = new Set(packed.entryIds);
   const language = chooseReviewLanguage(
-    period.entries.filter((entry) => kept.has(entry.id)).map((entry) => `${entry.title}\n${entry.body}`),
+    period.entries
+      .filter((entry) => kept.has(entry.id))
+      .map((entry) => `${entry.title}\n${entry.body}`),
   );
-  const revision = new Map(period.entries.map((entry) => [entry.id, entry.revision]));
-  const steps = packed.steps.map((step) => ({ index: step.index, kind: step.kind, entryIds: step.entryIds }));
+  const revision = new Map(
+    period.entries.map((entry) => [entry.id, entry.revision]),
+  );
+  const steps = packed.steps.map((step) => ({
+    index: step.index,
+    kind: step.kind,
+    entryIds: step.entryIds,
+  }));
   const planHash = sha256({
     entries: packed.entryIds.map((id) => [id, revision.get(id)]),
     mode: packed.mode,
@@ -227,8 +266,15 @@ export async function startReview(
 
   const budgets = aiMonthlyBudgets();
   if (!budgets)
-    throw new AIError("invalid_budget", 503, "The server AI budget needs configuration.");
-  const estimate = estimateJobMicros(packed.steps, aiModelPricing[REVIEW_MODEL]);
+    throw new AIError(
+      "invalid_budget",
+      503,
+      "The server AI budget needs configuration.",
+    );
+  const estimate = estimateJobMicros(
+    packed.steps,
+    aiModelPricing[REVIEW_MODEL],
+  );
   const allowed = await aiAdminClient().rpc("ai_budget_allows", {
     p_owner_id: ownerID,
     p_estimated_micros: estimate,
@@ -263,7 +309,8 @@ export async function startReview(
       steps,
     },
   });
-  if (claimed.error || !isRow(claimed.data)) throw claimError(claimed.error?.message);
+  if (claimed.error || !isRow(claimed.data))
+    throw claimError(claimed.error?.message);
   const { reviewId, jobStartedAt, done, total } = claimed.data;
   if (
     typeof reviewId !== "string" ||
@@ -272,7 +319,12 @@ export async function startReview(
     !Number.isInteger(total)
   )
     throw claimError(undefined);
-  return { reviewId, jobStartedAt, done: done as number, total: total as number };
+  return {
+    reviewId,
+    jobStartedAt,
+    done: done as number,
+    total: total as number,
+  };
 }
 
 type StepOutcome = "finished" | "stopped";
@@ -301,7 +353,9 @@ export async function advanceReview(
     });
     if (claim.error || !isRow(claim.data) || claim.data.status !== "ok") return;
     const claimed = Array.isArray(claim.data.claimed)
-      ? claim.data.claimed.filter((index): index is number => Number.isInteger(index))
+      ? claim.data.claimed.filter((index): index is number =>
+          Number.isInteger(index),
+        )
       : [];
     if (claimed.length === 0) return;
     const state = parseJobState(claim.data.state);
@@ -318,7 +372,15 @@ export async function advanceReview(
     }
     const outcomes = await Promise.all(
       claimed.map((index) =>
-        runStep({ client, ownerID, reviewId, jobStartedAt, state, period, index }),
+        runStep({
+          client,
+          ownerID,
+          reviewId,
+          jobStartedAt,
+          state,
+          period,
+          index,
+        }),
       ),
     );
     if (outcomes.includes("stopped")) return;
@@ -326,7 +388,12 @@ export async function advanceReview(
   }
 }
 
-async function failJob(client: SupabaseClient, reviewId: string, jobStartedAt: string, code: string) {
+async function failJob(
+  client: SupabaseClient,
+  reviewId: string,
+  jobStartedAt: string,
+  code: string,
+) {
   await client
     .rpc("fail_entry_review", {
       p_review_id: reviewId,
@@ -340,8 +407,10 @@ async function failJob(client: SupabaseClient, reviewId: string, jobStartedAt: s
 }
 
 function failureCode(error: unknown) {
-  if (error instanceof AIError || error instanceof GroundingError) return error.code;
-  const message = isRow(error) && typeof error.message === "string" ? error.message : "";
+  if (error instanceof AIError || error instanceof GroundingError)
+    return error.code;
+  const message =
+    isRow(error) && typeof error.message === "string" ? error.message : "";
   return /^[a-z0-9_]{1,64}$/.test(message) ? message : "generation_failed";
 }
 
@@ -356,7 +425,8 @@ type StepContext = {
 };
 
 async function runStep(context: StepContext): Promise<StepOutcome> {
-  const { client, ownerID, reviewId, jobStartedAt, state, period, index } = context;
+  const { client, ownerID, reviewId, jobStartedAt, state, period, index } =
+    context;
   try {
     const step = state.steps.find((item) => item.index === index);
     if (!step) throw new GroundingError("invalid_review");
@@ -377,7 +447,8 @@ async function runStep(context: StepContext): Promise<StepOutcome> {
     // Numbers belong to the plan, so they mean the same Entry in every step.
     const refs = new Map<string, string>();
     let next = 1;
-    for (const id of state.entryIds) refs.set(id, id === state.noteEntryId ? "E0" : `E${next++}`);
+    for (const id of state.entryIds)
+      refs.set(id, id === state.noteEntryId ? "E0" : `E${next++}`);
     const subjectEntry = period.entries.find((entry) => entry.isSubject);
     const subject: PromptSubject =
       state.subject.scope === "chapter"
@@ -402,16 +473,21 @@ async function runStep(context: StepContext): Promise<StepOutcome> {
       const sent = sentPassages(entry.body, state.trimCodePoints);
       return { entry, ref, sent };
     });
-    const promptEntries: PromptEntry[] = prepared.map(({ entry, ref, sent }) => ({
-      id: ref,
-      role: entry.isSubject ? "chapter_note" : "entry",
-      date: entry.dateLabel,
-      title: entry.title,
-      tags: entry.tags,
-      firstTime: entry.isFirstTime,
-      trimmed: sent.trimmed,
-      passages: sent.passages.map((passage) => ({ id: `${ref}.P${passage.id}`, text: passage.text })),
-    }));
+    const promptEntries: PromptEntry[] = prepared.map(
+      ({ entry, ref, sent }) => ({
+        id: ref,
+        role: entry.isSubject ? "chapter_note" : "entry",
+        date: entry.dateLabel,
+        title: entry.title,
+        tags: entry.tags,
+        firstTime: entry.isFirstTime,
+        trimmed: sent.trimmed,
+        passages: sent.passages.map((passage) => ({
+          id: `${ref}.P${passage.id}`,
+          text: passage.text,
+        })),
+      }),
+    );
     const groundingEntries = new Map<string, GroundingEntry>(
       prepared.map(({ entry, ref, sent }) => [
         ref,
@@ -423,7 +499,9 @@ async function runStep(context: StepContext): Promise<StepOutcome> {
           body: entry.body,
           windowStart: entry.windowStart,
           windowEnd: entry.windowEnd,
-          passages: new Map(sent.passages.map((passage) => [passage.id, passage])),
+          passages: new Map(
+            sent.passages.map((passage) => [passage.id, passage]),
+          ),
           sentText: sent.passages.map((passage) => passage.text).join("\n"),
         },
       ]),
@@ -432,7 +510,9 @@ async function runStep(context: StepContext): Promise<StepOutcome> {
     const selection = {
       entriesInPeriod: state.entriesInPeriod,
       entriesSent,
-      trimmedEntries: prepared.filter(({ entry, sent }) => !entry.isSubject && sent.trimmed).length,
+      trimmedEntries: prepared.filter(
+        ({ entry, sent }) => !entry.isSubject && sent.trimmed,
+      ).length,
     };
     const chapters = state.subject.scope === "year" ? period.chapters : [];
     const common = { language: state.language, subject, selection, chapters };
@@ -440,7 +520,10 @@ async function runStep(context: StepContext): Promise<StepOutcome> {
       entries: groundingEntries,
       entriesInPeriod: state.entriesInPeriod,
     };
-    const read = prepared.map(({ entry }) => ({ entryId: entry.id, revision: entry.revision }));
+    const read = prepared.map(({ entry }) => ({
+      entryId: entry.id,
+      revision: entry.revision,
+    }));
 
     if (step.kind === "map") {
       const maps = state.steps.filter((item) => item.kind === "map");
@@ -451,7 +534,11 @@ async function runStep(context: StepContext): Promise<StepOutcome> {
         input: buildMapInput({
           ...common,
           entries: promptEntries,
-          part: { index: maps.findIndex((item) => item.index === index) + 1, of: maps.length, dates: monthSpanLabel(present) },
+          part: {
+            index: maps.findIndex((item) => item.index === index) + 1,
+            of: maps.length,
+            dates: monthSpanLabel(present),
+          },
         }),
         maxTokens: STEP_MAX_TOKENS.map,
         schema: mapSchema as unknown as Record<string, unknown>,
@@ -504,7 +591,9 @@ async function storeReview(
   return stored.data === true ? "finished" : "stopped";
 }
 
-function mapResultOf(step: StepState): (MapResult & { read: { entryId: string; revision: number }[] }) | null {
+function mapResultOf(
+  step: StepState,
+): (MapResult & { read: { entryId: string; revision: number }[] }) | null {
   const result = step.result;
   if (
     !isRow(result) ||
@@ -515,58 +604,80 @@ function mapResultOf(step: StepState): (MapResult & { read: { entryId: string; r
     !Array.isArray(result.read)
   )
     return null;
-  return result as unknown as MapResult & { read: { entryId: string; revision: number }[] };
+  return result as unknown as MapResult & {
+    read: { entryId: string; revision: number }[];
+  };
 }
 
 async function runReduce(
   context: StepContext,
-  shared: { byId: Map<string, PeriodEntry>; refs: Map<string, string>; subject: PromptSubject },
+  shared: {
+    byId: Map<string, PeriodEntry>;
+    refs: Map<string, string>;
+    subject: PromptSubject;
+  },
 ): Promise<StepOutcome> {
   const { ownerID, state, period } = context;
   const { byId, refs, subject } = shared;
   const idOf = new Map([...refs].map(([id, ref]) => [ref, id]));
   const maps = state.steps.filter((item) => item.kind === "map");
-  const results = maps.map((item) => ({ step: item, result: mapResultOf(item) }));
-  if (results.some((item) => !item.result)) throw new GroundingError("invalid_review");
+  const results = maps.map((item) => ({
+    step: item,
+    result: mapResultOf(item),
+  }));
+  if (results.some((item) => !item.result))
+    throw new GroundingError("invalid_review");
 
   const presentRef = (ref: string) => {
     const id = idOf.get(ref);
     return id !== undefined && byId.has(id);
   };
   const candidates: (Candidate & { part: number })[] = [];
-  const parts: ReducePart[] = results.map(({ step: item, result }, partIndex) => {
-    const members = item.entryIds.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
-    for (const quote of result!.quotes) {
-      const entry = byId.get(idOf.get(quote.ref) ?? "");
-      if (!entry || !entry.body.includes(quote.text)) continue;
-      candidates.push({
-        from: quote.from,
-        to: quote.to,
-        ref: quote.ref,
-        start: quote.start,
-        end: quote.end,
-        text: quote.text,
-        part: partIndex,
-      });
-    }
-    return {
-      index: partIndex + 1,
-      dates: monthSpanLabel(members),
-      entryCount: members.filter((entry) => !entry.isSubject).length,
-      notes: result!.notes,
-      arc: result!.arc
-        .map((phase) => ({ ...phase, entries: phase.entries.filter(presentRef) }))
-        .filter((phase) => phase.entries.length > 0),
-      themes: result!.themes
-        .map((theme) => ({ ...theme, entries: theme.entries.filter(presentRef) }))
-        .filter((theme) => theme.entries.length > 0),
-    };
-  });
+  const parts: ReducePart[] = results.map(
+    ({ step: item, result }, partIndex) => {
+      const members = item.entryIds.flatMap((id) =>
+        byId.has(id) ? [byId.get(id)!] : [],
+      );
+      for (const quote of result!.quotes) {
+        const entry = byId.get(idOf.get(quote.ref) ?? "");
+        if (!entry || !entry.body.includes(quote.text)) continue;
+        candidates.push({
+          from: quote.from,
+          to: quote.to,
+          ref: quote.ref,
+          start: quote.start,
+          end: quote.end,
+          text: quote.text,
+          part: partIndex,
+        });
+      }
+      return {
+        index: partIndex + 1,
+        dates: monthSpanLabel(members),
+        entryCount: members.filter((entry) => !entry.isSubject).length,
+        notes: result!.notes,
+        arc: result!.arc
+          .map((phase) => ({
+            ...phase,
+            entries: phase.entries.filter(presentRef),
+          }))
+          .filter((phase) => phase.entries.length > 0),
+        themes: result!.themes
+          .map((theme) => ({
+            ...theme,
+            entries: theme.entries.filter(presentRef),
+          }))
+          .filter((theme) => theme.entries.length > 0),
+      };
+    },
+  );
 
   const cited = new Set<string>();
   for (const part of parts) {
-    for (const phase of part.arc) phase.entries.forEach((ref) => cited.add(ref));
-    for (const theme of part.themes) theme.entries.forEach((ref) => cited.add(ref));
+    for (const phase of part.arc)
+      phase.entries.forEach((ref) => cited.add(ref));
+    for (const theme of part.themes)
+      theme.entries.forEach((ref) => cited.add(ref));
   }
   for (const candidate of candidates) cited.add(candidate.ref);
 
@@ -596,10 +707,14 @@ async function runReduce(
     date: byId.get(idOf.get(candidate.ref)!)!.dateLabel,
     text: candidate.text,
   }));
-  const sentEntries = [...new Set(results.flatMap(({ result }) => result!.read.map((item) => item.entryId)))].filter(
-    (id) => byId.has(id),
-  );
-  const entriesRead = sentEntries.filter((id) => id !== state.noteEntryId).length;
+  const sentEntries = [
+    ...new Set(
+      results.flatMap(({ result }) => result!.read.map((item) => item.entryId)),
+    ),
+  ].filter((id) => byId.has(id));
+  const entriesRead = sentEntries.filter(
+    (id) => id !== state.noteEntryId,
+  ).length;
   const selection = {
     entriesInPeriod: state.entriesInPeriod,
     entriesSent: entriesRead,
@@ -635,13 +750,18 @@ async function runReduce(
     candidates,
   });
   const revisionRead = new Map(
-    results.flatMap(({ result }) => result!.read.map((item) => [item.entryId, item.revision] as const)),
+    results.flatMap(({ result }) =>
+      result!.read.map((item) => [item.entryId, item.revision] as const),
+    ),
   );
   return await storeReview(
     context,
     content,
     answer.model,
     entriesRead,
-    sentEntries.map((entryId) => ({ entryId, revision: revisionRead.get(entryId)! })),
+    sentEntries.map((entryId) => ({
+      entryId,
+      revision: revisionRead.get(entryId)!,
+    })),
   );
 }

@@ -13,6 +13,11 @@ import {
 } from "@/lib/data/entry-detail";
 import { loadEntryPhotos } from "@/lib/data/entry-photos";
 import { chapterPage, loadChapterContents } from "@/lib/data/chapter-contents";
+import {
+  loadChapterReview,
+  loadReviewSettings,
+  reviewToday,
+} from "@/lib/data/reviews";
 import styles from "@/components/entry-detail-view.module.css";
 
 export const dynamic = "force-dynamic";
@@ -69,6 +74,7 @@ export default async function WikiItemPage({
       ? loadChapterContents(context.client, item.id, page)
       : null,
   ]);
+  const review = isChapter ? await loadReview(context.client, item.id) : null;
   // A page past the last one opens the first, as Library does.
   if (item && contents && page > 1 && !contents.failed) {
     if (contents.entries.length === 0) redirect(`/items/${item.id}`);
@@ -81,7 +87,9 @@ export default async function WikiItemPage({
       ) : item ? (
         <EntryDetailView
           chapter={
-            isChapter ? { contents, now: new Date().toISOString(), page } : null
+            isChapter
+              ? { contents, now: new Date().toISOString(), page, review }
+              : null
           }
           entry={item}
           ownerId={context.viewer.id}
@@ -92,6 +100,23 @@ export default async function WikiItemPage({
       )}
     </PageFrame>
   );
+}
+
+/** A Chapter's review, shown only when its data and the review settings could be read. */
+async function loadReview(
+  client: NonNullable<
+    Awaited<ReturnType<typeof getAuthenticatedContext>>
+  >["client"],
+  chapterId: string,
+) {
+  const { localDate, timezone } = await reviewToday();
+  const [data, preferences] = await Promise.all([
+    loadChapterReview(client, chapterId, localDate),
+    loadReviewSettings(client),
+  ]);
+  return data && preferences
+    ? { data, preferences, timezone, today: localDate }
+    : null;
 }
 
 function UnavailableItem() {

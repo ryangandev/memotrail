@@ -18,8 +18,11 @@ export function EmptyTrashControl({
   onBusy,
   onResult,
   onFinish,
+  reviewsExist = false,
 }: {
   disabled: boolean;
+  /** Whether reviews exist, so the confirmation says they are deleted with their Entries. */
+  reviewsExist?: boolean;
   onBusy: (busy: boolean) => void;
   onResult: (result: TrashActionResult) => void;
   onFinish: () => void;
@@ -134,8 +137,11 @@ export function EmptyTrashControl({
           description={
             <>
               This includes all Trash pages, not just the visible items. Their
-              records and private photos will be permanently removed. This
-              cannot be undone.
+              records and private photos will be permanently removed.
+              {reviewsExist
+                ? " Reviews that read these Entries are deleted too."
+                : ""}{" "}
+              This cannot be undone.
             </>
           }
           eyebrow={<>Permanent action</>}

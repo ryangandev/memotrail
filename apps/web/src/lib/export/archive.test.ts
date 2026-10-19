@@ -102,6 +102,68 @@ describe("complete ZIP streaming", () => {
     expect(names).toContain("data/entries.json");
     expect(names.join(" ")).not.toMatch(/homes|vehicles|milestones/);
   });
+  it("adds each stored review as reviews/{id}.md and says what they are in the README", async () => {
+    const chapterID = "00000000-0000-0000-0000-0000000000c1";
+    const reviewID = "00000000-0000-0000-0000-0000000000d1";
+    const f = fixture();
+    f.snapshot.row_count = 3;
+    f.snapshot.datasets = { entries: 1, entry_reviews: 2 };
+    f.rows.length = 0;
+    f.rows.push(
+      {
+        position: 1,
+        dataset: "entries",
+        value: {
+          id: chapterID,
+          title: "Job search",
+          item_subtype: "chapter",
+          body: "",
+        },
+      },
+      {
+        position: 2,
+        dataset: "entry_reviews",
+        value: {
+          id: reviewID,
+          scope: "chapter",
+          chapter_id: chapterID,
+          content: {
+            summary: "A steady spring.",
+            feelings: { overview: "", phases: [] },
+            themes: [],
+            quotes: [],
+          },
+        },
+      },
+      {
+        position: 3,
+        dataset: "entry_reviews",
+        // A job that never produced a review has no content and no file.
+        value: {
+          id: "00000000-0000-0000-0000-0000000000d2",
+          scope: "year",
+          content: null,
+        },
+      },
+    );
+    const data = Buffer.from(
+      await new Response(
+        createExportArchive(
+          f.client,
+          owner,
+          f.snapshot,
+          new AbortController().signal,
+        ),
+      ).arrayBuffer(),
+    );
+    const names = data.toString("latin1");
+    expect(names).toContain(`reviews/${reviewID}.md`);
+    expect(names).not.toContain(
+      "reviews/00000000-0000-0000-0000-0000000000d2.md",
+    );
+    expect(names).toContain("data/entry_reviews.json");
+    expect(hasCompleteExport(new Uint8Array(data))).toBe(true);
+  });
   it.each([
     { ...media, available: false },
     { ...media, object_path: "other-owner/photo.png" },

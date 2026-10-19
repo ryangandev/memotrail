@@ -73,7 +73,11 @@ type Prepared = {
 
 function costOf(entry: PackableEntry, trim: number | null) {
   const sent = sentPassages(entry.body, trim);
-  const text = [entry.title, ...entry.tags, ...sent.passages.map((passage) => passage.text)].join("\n");
+  const text = [
+    entry.title,
+    ...entry.tags,
+    ...sent.passages.map((passage) => passage.text),
+  ].join("\n");
   return {
     cost: estimateTokens(text) + sent.passages.length * PASSAGE_OVERHEAD_TOKENS,
     trimmed: sent.trimmed,
@@ -86,10 +90,18 @@ function prepare(entry: PackableEntry): Prepared {
   return { entry, full, short };
 }
 
-type Layout = { mode: "single" | "segmented"; segments: Prepared[][]; noteCost: number };
+type Layout = {
+  mode: "single" | "segmented";
+  segments: Prepared[][];
+  noteCost: number;
+};
 
 /** Consecutive parts, each within the limit. The note rides with the first part. */
-function segment(items: Prepared[], trim: boolean, noteCost: number): Prepared[][] | null {
+function segment(
+  items: Prepared[],
+  trim: boolean,
+  noteCost: number,
+): Prepared[][] | null {
   const parts: Prepared[][] = [];
   let current: Prepared[] = [];
   let used = noteCost;
@@ -108,9 +120,19 @@ function segment(items: Prepared[], trim: boolean, noteCost: number): Prepared[]
   return parts.length <= MAX_SEGMENTS ? parts : null;
 }
 
-function layout(items: Prepared[], trim: boolean, noteCost: number): Layout | null {
-  const total = noteCost + items.reduce((sum, item) => sum + (trim ? item.short.cost : item.full.cost), 0);
-  if (total <= SINGLE_PASS_TOKENS) return { mode: "single", segments: [items], noteCost };
+function layout(
+  items: Prepared[],
+  trim: boolean,
+  noteCost: number,
+): Layout | null {
+  const total =
+    noteCost +
+    items.reduce(
+      (sum, item) => sum + (trim ? item.short.cost : item.full.cost),
+      0,
+    );
+  if (total <= SINGLE_PASS_TOKENS)
+    return { mode: "single", segments: [items], noteCost };
   const parts = segment(items, trim, noteCost);
   return parts ? { mode: "segmented", segments: parts, noteCost } : null;
 }
@@ -155,7 +177,9 @@ export function packPeriod(entries: readonly PackableEntry[]): Packed {
     const firstTimes = prepared.filter((item) => item.entry.isFirstTime);
     const others = prepared.filter((item) => !item.entry.isFirstTime);
     const build = (protectedCount: number, otherCount: number) => {
-      const protectedKept = evenly(firstTimes.length, protectedCount).map((i) => firstTimes[i]);
+      const protectedKept = evenly(firstTimes.length, protectedCount).map(
+        (i) => firstTimes[i],
+      );
       const otherKept = evenly(others.length, otherCount).map((i) => others[i]);
       const keep = new Set([...protectedKept, ...otherKept]);
       return prepared.filter((item) => keep.has(item));
@@ -165,7 +189,10 @@ export function packPeriod(entries: readonly PackableEntry[]): Packed {
     let protectedCount = firstTimes.length;
     let otherCount = 0;
     if (withAllFirstTimes(0)) {
-      otherCount = largest(others.length, (count) => withAllFirstTimes(count) !== null);
+      otherCount = largest(
+        others.length,
+        (count) => withAllFirstTimes(count) !== null,
+      );
     } else {
       protectedCount = largest(
         firstTimes.length,
@@ -186,16 +213,21 @@ export function packPeriod(entries: readonly PackableEntry[]): Packed {
       index: 0,
       kind: "review",
       entryIds: [...noteIds, ...kept.map((item) => item.entry.id)],
-      estimatedInputTokens: noteCost + kept.reduce((sum, item) => sum + cost(item), 0),
+      estimatedInputTokens:
+        noteCost + kept.reduce((sum, item) => sum + cost(item), 0),
     });
   } else {
     plan.segments.forEach((part, index) => {
       steps.push({
         index,
         kind: "map",
-        entryIds: [...(index === 0 ? noteIds : []), ...part.map((item) => item.entry.id)],
+        entryIds: [
+          ...(index === 0 ? noteIds : []),
+          ...part.map((item) => item.entry.id),
+        ],
         estimatedInputTokens:
-          (index === 0 ? noteCost : 0) + part.reduce((sum, item) => sum + cost(item), 0),
+          (index === 0 ? noteCost : 0) +
+          part.reduce((sum, item) => sum + cost(item), 0),
       });
     });
     steps.push({
@@ -215,12 +247,19 @@ export function packPeriod(entries: readonly PackableEntry[]): Packed {
     trimmedEntries: trim ? kept.filter((item) => item.short.trimmed).length : 0,
     entriesInPeriod: prepared.length,
     entriesRead: kept.length,
-    estimatedInputTokens: steps.reduce((sum, step) => sum + step.estimatedInputTokens, 0),
+    estimatedInputTokens: steps.reduce(
+      (sum, step) => sum + step.estimatedInputTokens,
+      0,
+    ),
   };
 }
 
 /** Output allowances per step kind, also used for the up-front cost estimate. */
-export const STEP_MAX_TOKENS = { review: 16_000, reduce: 16_000, map: 10_000 } as const;
+export const STEP_MAX_TOKENS = {
+  review: 16_000,
+  reduce: 16_000,
+  map: 10_000,
+} as const;
 
 /** What a whole job could cost at most, in micro-dollars: the largest each request may bill. */
 export function estimateJobMicros(

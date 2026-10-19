@@ -8,6 +8,8 @@ import { PageHeader } from "@/components/page-header";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { SectionHeader } from "@/components/section-header";
 import { Badge } from "@/components/badge";
+import { ReviewNoticeCard } from "@/components/review-notice-card";
+import type { ReviewNotice } from "@/lib/data/review-input";
 import type {
   HomeEntry,
   HomeResurfacedMemory,
@@ -27,7 +29,14 @@ import { SeparatedList } from "@/components/separated-list";
 import { wikiEntryHref, wikiItemIdentityLabel } from "@/lib/data/wiki-item";
 import styles from "./home-dashboard.module.css";
 
-export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
+export function HomeDashboard({
+  reviewNotice = null,
+  workspace,
+}: {
+  /** The one review notice to show, when reviews are on and one is due. */
+  reviewNotice?: ReviewNotice | null;
+  workspace: HomeWorkspace;
+}) {
   const { snapshot, viewer, timezone } = workspace;
   const now = new Date();
   const name =
@@ -72,8 +81,17 @@ export function HomeDashboard({ workspace }: { workspace: HomeWorkspace }) {
           {capture}
         </>
       ) : (
-        <div className={styles.columns}>
+        <div
+          className={[styles.columns, reviewNotice ? styles.withNotice : null]
+            .filter(Boolean)
+            .join(" ")}
+        >
           <div className={styles.capturePanel}>{capture}</div>
+          {reviewNotice ? (
+            <div className={styles.noticeRow}>
+              <ReviewNoticeCard notice={reviewNotice} />
+            </div>
+          ) : null}
           <div className={styles.memoryColumn}>{memory}</div>
           <div className={styles.nowColumn}>{nowItems}</div>
           <div className={styles.recentRow}>{recent}</div>

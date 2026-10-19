@@ -196,9 +196,7 @@ type Common = {
   chapters: PromptChapter[];
 };
 
-export function buildReviewInput(
-  input: Common & { entries: PromptEntry[] },
-) {
+export function buildReviewInput(input: Common & { entries: PromptEntry[] }) {
   return stableStringify({
     stage: "review",
     outputLanguage: input.language,
