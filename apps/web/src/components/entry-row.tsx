@@ -51,7 +51,7 @@ export type EntryRowProps = {
 /**
  * One Entry in a list: a muted date column, a one-line serif title with the Chapter and First
  * Time marks, a one-line excerpt, quiet tags, and an optional photo. Library, Dashboard, a
- * Chapter's page, and Trash all draw Entries with it. Below 560px of list width the date moves
+ * Chapter's page, and Trash all draw Entries with it. At 620px of list width or less the date moves
  * above the title. Render it inside EntryRowList or EntryRowGroup.
  * Specified in packages/design-system/components/entry-row.yaml.
  */

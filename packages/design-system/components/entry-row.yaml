@@ -98,7 +98,7 @@ content:
   length: A title of a few words; longer titles, excerpts, and tag lists end with an ellipsis on one line.
   notes:
     - The title is 18 px on a wide list and 17 px on a narrow one, until a matching type role exists.
-    - Below 620 px of list width the date moves above the title, and an untitled Entry shows no date line.
+    - Below 620 px of list width the date moves above the title, an untitled Entry shows no date line, and tags are left out.
     - An untitled Entry is titled by its date, such as Monday, October 19, 2026, and leaves the date column empty; entryRowLabels() in apps/web/src/lib/data/entry-row.ts writes both.
     - Dates keep the precision they were recorded at, such as Oct 17, Oct 2024, 2019, or Fall 2025, and a Chapter shows its span, such as Jan 2026 - now.
     - Rows under a month heading leave out the year the heading already names.
