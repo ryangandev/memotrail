@@ -224,7 +224,9 @@
   display: none;
 }
 
+/* The text-only button's padding sits past the column, so its words end on the column edge. */
 .trash {
+  margin-right: calc(var(--mt-space-3-5) * -1);
   margin-left: auto;
 }
 
