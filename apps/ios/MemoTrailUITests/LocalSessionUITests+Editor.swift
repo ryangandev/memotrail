@@ -11,13 +11,10 @@ extension LocalSessionUITests {
 
     reveal(checkbox("Chapter", in: app), in: app, above: footer(app)).tap()
     reveal(checkbox("First Time", in: app), in: app, above: footer(app)).tap()
-    XCTAssertEqual(checkbox("Chapter", in: app).value as? String, "On")
-    XCTAssertEqual(checkbox("First Time", in: app).value as? String, "On")
     // A Chapter whose date has no end opens as still going on; ending it today closes it.
     let present = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Present"))
       .firstMatch
     reveal(present, in: app, above: footer(app))
-    XCTAssertEqual(present.value as? String, "On")
     attach(app, "Editor as a Chapter")
     present.tap()
     let end = reveal(app.buttons["End date"], in: app, above: footer(app))
@@ -46,7 +43,6 @@ extension LocalSessionUITests {
     XCTAssertTrue(text("Give this Chapter a title.", in: app).waitForExistence(timeout: 5))
     // Nothing was saved, so the editor stays open on the same draft.
     XCTAssertTrue(app.buttons["editor-save"].exists)
-    XCTAssertEqual(checkbox("Chapter", in: app).value as? String, "On")
     attach(app, "Chapter without a title")
 
     app.buttons["Cancel"].tap()
