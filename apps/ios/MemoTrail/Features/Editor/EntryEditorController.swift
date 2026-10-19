@@ -58,7 +58,8 @@ final class EntryEditorController {
     self.mode = mode
     self.client = client
     self.ownerID = ownerID
-    draft = EntryEditorDraft(mode: mode, timezone: timezone)
+    let draft = EntryEditorDraft(mode: mode, timezone: timezone)
+    self.draft = draft
     let opening = EntryEditorNote.opening(draft.original)
     openingNote = opening.note
     hasWebOnlyFormatting = opening.hasWebOnlyFormatting
@@ -187,7 +188,7 @@ final class EntryEditorController {
   /// Saves the draft, then attaches the new photos to the same Entry.
   func save() async -> SaveOutcome {
     guard !isBusy else { return .failed }
-    let note =
+    let note: (body: String, richText: EntryRichText?) =
       isNoteEditable
       ? EntryEditorNote.toSave(current: note, opening: openingNote, original: draft.original)
       : (draft.original?.body ?? "", draft.original?.richText)

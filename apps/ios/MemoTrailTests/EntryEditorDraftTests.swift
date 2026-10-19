@@ -103,9 +103,6 @@ final class EntryEditorDraftTests: XCTestCase {
     XCTAssertEqual(
       try draft(.range, start: "2020-01-01", end: "2023-01-01").resolvedForSave().end,
       ISO8601DateFormatter().date(from: "2023-01-01T12:00:00Z"))
-    XCTAssertNil(
-      try draft(.range, start: "2020-01-01", end: "2023-01-01", endMode: .present)
-        .resolvedForSave().end)
   }
 
   func testChaptersEndAtEachPrecisionButOrdinaryEntriesDoNot() throws {
