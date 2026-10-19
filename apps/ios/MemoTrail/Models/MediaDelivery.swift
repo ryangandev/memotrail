@@ -1,54 +1,23 @@
 import Foundation
 @preconcurrency import Supabase
 
-/// Retain the draft's identity; an uncertain response never authorizes deleting its original.
+/// Uploads a photo original and registers it on its Entry. Registering never changes the Entry's
+/// revision, so an editor keeps the revision it read. The draft keeps its identity, and an
+/// uncertain answer never authorizes deleting its original.
 @MainActor
 enum EntryPhotoUpload {
-  struct WritingRevision: Encodable {
-    let entryID: UUID
-    let expectedRevision: Int
-
-    enum CodingKeys: String, CodingKey {
-      case entryID = "p_entry_id"
-      case expectedRevision = "p_expected_revision"
-    }
-  }
-
-  /// Photo-only changes commute with writing. Never adopt an unseen writing revision.
-  static func writingRevision(client: SupabaseClient, entryID: UUID?, revision: Int?) async throws
-    -> Int?
-  {
-    guard let entryID, let revision else { return revision }
-    return try await confirmedWritingRevision(revision: revision) {
-      try await client.rpc(
-        "entry_writing_revision",
-        params: WritingRevision(entryID: entryID, expectedRevision: revision)
-      ).execute().value
-    }
-  }
-
-  static func confirmedWritingRevision(revision: Int, request: () async throws -> Int) async throws
-    -> Int
-  {
-    try Task.checkCancellation()
-    let confirmed = try await request()
-    try Task.checkCancellation()
-    guard confirmed >= revision else { throw URLError(.badServerResponse) }
-    return confirmed
-  }
-
   static func confirm(
     upload: () async throws -> Void, register: () async throws -> Bool
   ) async throws -> Bool {
     try Task.checkCancellation()
+    // A failed upload may still have stored the original, so registering decides.
     do { try await upload() } catch { try Task.checkCancellation() }
     try Task.checkCancellation()
     return try await register()
   }
 
   static func attach(
-    _ draft: FirstTimePhotoDraft, entryID: UUID, ownerID: UUID, client: SupabaseClient,
-    registration: String = "register_entry_attachment"
+    _ draft: PhotoDraft, entryID: UUID, ownerID: UUID, client: SupabaseClient
   ) async throws -> Bool {
     guard try await client.auth.session.user.id == ownerID else {
       throw URLError(.userAuthenticationRequired)
@@ -63,9 +32,9 @@ enum EntryPhotoUpload {
       guard try await client.auth.session.user.id == ownerID else {
         throw URLError(.userAuthenticationRequired)
       }
-      let rows: [RegisteredFirstTimeAttachment] = try await client.rpc(
-        registration,
-        params: RegisterFirstTimeAttachmentParameters(
+      let rows: [RegisteredEntryAttachment] = try await client.rpc(
+        "register_entry_attachment",
+        params: RegisterEntryAttachmentParameters(
           entryID: entryID, draft: draft, objectPath: path)
       ).execute().value
       guard try await client.auth.session.user.id == ownerID else {
@@ -77,6 +46,32 @@ enum EntryPhotoUpload {
 }
 
 enum MediaDelivery {
+  /// A signed-in `POST` to one of MemoTrail's own Web API routes, such as
+  /// `api/media/photos?entryId=` or `api/media/metadata?attachmentId=`. The session must still
+  /// belong to `ownerID` before and after the request.
+  static func apiRequest<T: Decodable>(
+    path: String, query: URLQueryItem, client: SupabaseClient, ownerID: UUID
+  ) async throws -> T {
+    guard let base = AppConfiguration.apiURL,
+      var components = URLComponents(
+        url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)
+    else { throw URLError(.badURL) }
+    components.queryItems = [query]
+    guard let url = components.url else { throw URLError(.badURL) }
+    let session = try await client.auth.session
+    guard session.user.id == ownerID else { throw URLError(.userAuthenticationRequired) }
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.timeoutInterval = 45
+    request.cachePolicy = .reloadIgnoringLocalCacheData
+    request.setValue("Bearer \(session.accessToken)", forHTTPHeaderField: "Authorization")
+    let (data, response) = try await URLSession.shared.data(for: request)
+    guard let http = response as? HTTPURLResponse, http.statusCode == 200,
+      try await client.auth.session.user.id == ownerID
+    else { throw URLError(.badServerResponse) }
+    return try JSONDecoder().decode(T.self, from: data)
+  }
+
   struct RequestBody: Encodable {
     let paths: [String]
     let trash: Bool

@@ -1569,7 +1569,7 @@
     "size.capture.thumbnail": "A selected photo in the composer on phones.",
     "size.capture.thumbnailRegular": "A selected photo in the composer in a wide window.",
     "size.capture.removeButton": "The remove button on a selected photo.",
-    "size.focusedRecord.photoColumn": "The narrowest a column of a focused record's photos gets.",
+    "size.focusedRecord.photoColumn": "The narrowest a column of a record's photos gets.",
     "size.checkbox.small": "The box of a small checkbox, for dense option rows.",
     "size.checkbox.medium": "The box of a medium checkbox.",
     "size.toast.width": "The widest a toast gets.",

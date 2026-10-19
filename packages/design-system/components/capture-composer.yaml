@@ -88,17 +88,13 @@ content:
 accessibility:
   role: A form named Quick capture on Web and a container with the same label on iOS.
   label: Each action names what it does, such as Add photos, Start voice capture, or Remove selected photo 2, and the editor is labeled Entry text.
-  focus: The editor comes first, then the date, voice, and photo actions, then the save action. The dialog variant focuses the editor when it opens; Command or Control and Return saves on Web.
+  focus: The editor comes first, then the date, voice, and photo actions, then the save action. The dialog variant focuses the editor when it opens. Command-Return on a hardware keyboard saves, and Control-Return also saves on Web; in the iOS dialog variant it saves wherever focus is.
   minimumHitTarget: "{size.hitTarget}"
   dynamicType: Text scales with Dynamic Type on iOS and browser zoom on Web. The quiet actions keep their size, and the action bar wraps the save action below them when it cannot fit.
 
 platformDifferences:
-  - difference: iOS saves a capture to the Inbox and labels its action Save to Inbox; Web saves it straight to the Library and labels it Save.
-    reason: docs/product.md retires the Inbox, and Web follows it. The iOS app still writes captures through the retired Inbox queue, so its label says what it does until it moves to the current schema.
-  - difference: Web's date chooses only a day and an optional time; iOS still opens the full date editor, labels the active action Custom date, and offers Use capture time.
-    reason: docs/product.md keeps capture free of date precision, which the Entry editor owns. The iOS composer follows when native work resumes.
   - difference: Web has no header in the page variant and asks the question as the editor's placeholder; iOS keeps the sparkle and the serif question above the editor.
-    reason: The Quiet ledger Dashboard puts the question in the writing area itself. iOS follows when native work resumes.
+    reason: The Quiet ledger Dashboard puts the question in the writing area itself. iOS follows when it takes up the Quiet ledger design.
   - difference: Web pads the composer 20 px in both variants above 720 px and 14 px in the page variant up to 720 px; iOS uses the 20 and 16 pt phone padding.
     reason: The iOS app runs only on iPhone, so it never reaches the wider layout.
   - difference: Web shows the date, voice, and photo actions as quiet chips with labels, drops the voice label at phone widths, and prints the Command Return hint beside Save in the page variant; iOS shows icons only and puts every status in the strip above the actions.
@@ -107,8 +103,8 @@ platformDifferences:
     reason: The wider target is easier to tap with a thumb, and the bar still fits three actions and the save action on the narrowest iPhone.
   - difference: Web shows photos in a draft at 72 px in a wide window and 64 px on a phone; iOS shows them at the 76 pt phone size.
     reason: The iOS app runs only on iPhone.
-  - difference: Web lists captures waiting to sync under the composer, as Pending sync, and shows photo upload progress beside the save action; the iOS composer shows neither.
-    reason: The iOS app still saves through the retired Inbox queue, which has no pending sync list or batch upload progress; both come to iOS with its move to the current schema.
+  - difference: Web lists captures waiting to sync under the composer, as Pending sync, and shows photo upload progress beside the save action. iOS lists them under the composer only in Quick Capture, shows a one-line notice that opens Pending sync on the Dashboard, and shows upload progress in its own strip above the actions.
+    reason: The Dashboard card already sits above the Dashboard's own sections on a narrow screen, so a notice keeps it short; an iPhone action bar has no room beside the save action.
   - difference: Selecting a draft photo on Web opens it in a single-photo dialog; iOS shows the thumbnail without a viewer.
     reason: docs/product.md asks for the dialog on Web, where hover and a large window make checking a photo before saving useful. On iPhone the thumbnail is the photo the person just picked from their library.
   - difference: The draft message names this device on Web and this iPhone on iOS.

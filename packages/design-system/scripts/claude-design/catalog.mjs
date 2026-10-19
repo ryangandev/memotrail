@@ -306,7 +306,6 @@ export const specOnlyGroups = {
   CaptureComposer: "Patterns",
   CommandPalette: "Patterns",
   Dialog: "Patterns",
-  FocusedRecord: "Patterns",
   PhotoViewer: "Patterns",
   RichText: "Content",
   SyncStatus: "Feedback",

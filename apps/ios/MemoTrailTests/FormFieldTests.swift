@@ -66,7 +66,7 @@ final class FormFieldTests: XCTestCase {
     draft.start = "2020-01-02"
     draft.end = "2021-03-04"
     XCTAssertNotNil(try draft.resolve().end)
-    draft.endMode = .present
+    draft.setPresent(true)
     let ongoing = try draft.resolve()
     XCTAssertNil(ongoing.end)
     XCTAssertEqual(OccurrenceDraft(ongoing).endMode, .present)
@@ -125,5 +125,21 @@ final class FormFieldTests: XCTestCase {
     XCTAssertEqual(draft.precision, .day)
     XCTAssertEqual(draft.start, "2024-05-06")
     XCTAssertEqual(draft.endMode, .date)
+  }
+
+  func testAnImpossibleCameraDateLeavesTheDraftAsItWas() throws {
+    let previous = OccurrenceDraft(
+      EntryOccurrence(precision: .unknown, start: nil, end: nil, label: "Soon", timezone: "UTC"))
+    for date in ["2024-02-30", "2024-5-6"] {
+      let metadata = try JSONDecoder().decode(
+        PhotoCameraMetadata.self,
+        from: Data(
+          #"{"attachmentId":"6F9619FF-8B86-D011-B42D-00C04FC964FF","sourceVersion":"v1","calendarDate":"\#(date)"}"#
+            .utf8))
+      XCTAssertThrowsError(try metadata.calendarDraft(previous: previous)) { error in
+        XCTAssertEqual(
+          error.localizedDescription, "This camera date is invalid. Edit the date manually.")
+      }
+    }
   }
 }

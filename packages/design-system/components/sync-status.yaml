@@ -6,7 +6,8 @@ platforms:
     path: apps/web/src/components/sync-status.tsx
     symbols: [SyncStatus, SyncStatusButton]
   ios:
-    unavailable: Native screens show pending captures where people already look for them, as a notice on Home and a Pending sync section with Retry now at the top of the Inbox, rather than as an indicator in a top bar that iOS does not have.
+    path: apps/ios/MemoTrail/DesignSystem/Components/MTSyncStatus.swift
+    symbols: [MTSyncStatusButton]
 
 purpose: A quiet indicator of Entries captured on this device that have not reached MemoTrail yet, which syncs them and opens the list of what is waiting.
 
@@ -62,15 +63,15 @@ content:
     - When MemoTrail refused or could not read a capture, the label and dot take the danger color, because only the person can resolve it.
 
 accessibility:
-  role: A button that syncs now and opens the Pending sync dialog. While a sync runs it carries aria-busy.
-  label: The counts, with a title that says what pressing it does, such as Sync now and review captures waiting on this device.
+  role: A button that syncs now and opens the Pending sync dialog. While a sync runs it carries aria-busy on Web and the value Syncing on iOS.
+  label: The counts, with a title on Web and a hint on iOS that says what pressing it does, such as Sync now and review captures waiting on this device.
   focus: Keyboard focus draws an inset accent ring. The dialog returns focus to the indicator when it closes.
   minimumHitTarget: "{size.hitTarget}"
-  dynamicType: Web uses fixed pixel sizes that grow with browser zoom. Below 720 px the indicator grows to a 44 px touch target.
+  dynamicType: Web uses fixed pixel sizes that grow with browser zoom. Below 720 px the indicator grows to a 44 px touch target. On iOS the label scales with Dynamic Type in the header and stays on one line.
 
 platformDifferences:
-  - difference: Web only. iOS has no sync indicator.
-    reason: iOS has no workspace top bar; its Home notice and the Inbox's Pending sync section show the same counts and Retry now where people review captures.
+  - difference: iOS shows the indicator in each primary tab's navigation bar and opens Pending sync as a sheet; it has no hover state, and the dot holds still while Reduce Motion is on.
+    reason: The navigation bar is the iPhone's workspace header, where Web's phone top bar shows the indicator. Touch has no hover, and iOS honors the system motion setting.
 
 specimens:
   - id: sync-status-counts

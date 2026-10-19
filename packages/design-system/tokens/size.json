@@ -444,9 +444,9 @@
       }
     },
     "focusedRecord": {
-      "$description": "Focused record geometry for iOS MTFocusedRecordPage. Web has no focused record page.",
+      "$description": "Record photo geometry for iOS MTRecordPhotos, the photo grid on a record's page.",
       "photoColumn": {
-        "$description": "The narrowest a column of a focused record's photos gets.",
+        "$description": "The narrowest a column of a record's photos gets.",
         "$value": {
           "value": 220,
           "unit": "px"

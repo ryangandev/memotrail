@@ -31,28 +31,32 @@ A failed client request, such as saving Appearance offline, is handled where it 
 Use this table to find the first likely files, then search by the product term or RPC name.
 Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/MemoTrail`.
 
-| Request                                                        | Web                                                                                                                                                                                                                           | iOS                                                                                   | Shared data and tests                                                              |
-| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Authentication or environment                                  | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                                                                                                                        | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                            |
-| Capture, drafts, dates, rich text, or offline sync             | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`                                                                                               | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests                 |
-| Library browsing, search, AI suggestions, or exploration       | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `lib/ai`, `lib/data/search*`, `lib/search`                                                                                                     | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                         |
-| Chapter or year reviews, Chapter suggestions, or their notices | `app/reviews`, `app/api/reviews`, `app/api/chapter-suggestions`, `components/review-*`, `components/chapter-suggestion-*`, `components/reviews-setting`, `lib/ai/review`, `lib/ai/chapter-suggestions.ts`, `lib/data/review*` | none yet                                                                              | review migrations `202610190030` to `202610190038` and `0082_reviews.test.sql`     |
-| Photos, metadata, or export                                    | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                                                                                                         | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                                    |
-| Import from another app                                        | `app/settings/import`, `app/api/import`, `components/import-*`, `lib/import`                                                                                                                                                  | none yet                                                                              | import migrations `202610190040` to `202610190044` and `0081_import_jobs.test.sql` |
-| Timeline, Chapters, or First Times                             | matching `app` route, workspace component, and `lib/data` module                                                                                                                                                              | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                              |
-| Tags, links, the Item page, or Trash                           | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                                                                                                         | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests            |
-| Visual system                                                  | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                                                                                                  | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator                 |
+| Request                                                        | Web                                                                                                                                                                                                                           | iOS                                                                                                                                 | Shared data and tests                                                              |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Authentication or environment                                  | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                                                                                                                        | `Features/Authentication`, `App/AppConfiguration.swift`                                                                             | foundation and security migrations, `0001_rls.test.sql`                            |
+| Capture, drafts, dates, rich text, or offline sync             | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`                                                                                               | `Features/Capture`, `Features/Editor`, `Models/CaptureQueue.swift`, `Models/EntryOccurrence.swift`                                  | Inbox, occurrence, review, and media migrations and matching tests                 |
+| Library browsing, search, AI suggestions, or exploration       | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `lib/ai`, `lib/data/search*`, `lib/search`                                                                                                     | `Features/Library`; AI is Web-only                                                                                                  | AI, evidence, exploration, and search migrations and tests                         |
+| Chapter or year reviews, Chapter suggestions, or their notices | `app/reviews`, `app/api/reviews`, `app/api/chapter-suggestions`, `components/review-*`, `components/chapter-suggestion-*`, `components/reviews-setting`, `lib/ai/review`, `lib/ai/chapter-suggestions.ts`, `lib/data/review*` | `Features/Item/ItemReviewView.swift` shows a saved Chapter review read-only                                                         | review migrations `202610190030` to `202610190038` and `0082_reviews.test.sql`     |
+| Photos, metadata, or export                                    | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                                                                                                         | `Features/Capture`, `Features/Editor`, `Features/Item`, `Features/Export`, `Models/MediaDelivery.swift`, `Models/EntryPhotos.swift` | media, cleanup, and export migrations and tests                                    |
+| Import from another app                                        | `app/settings/import`, `app/api/import`, `components/import-*`, `lib/import`                                                                                                                                                  | none; Settings says Import is on the Web                                                                                            | import migrations `202610190040` to `202610190044` and `0081_import_jobs.test.sql` |
+| Timeline, Chapters, or First Times                             | matching `app` route, workspace component, and `lib/data` module                                                                                                                                                              | matching directory under `Features` and model under `Models`                                                                        | matching contract and occurrence migrations and tests                              |
+| Tags, links, the Item page, or Trash                           | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                                                                                                         | matching directory under `Features`                                                                                                 | organization, relationship, Trash, and Empty Trash migrations and tests            |
+| Visual system                                                  | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                                                                                                  | `DesignSystem`, `DesignSystem/Generated`                                                                                            | `packages/design-system/tokens`, `components` specs, and generator                 |
 
-Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
-The More tab lays out `WorkspaceRoute.groups`; Web's mobile More is now a plain list of First Times, Reviews, Tags, Import, Trash, and Settings, which the native rewrite follows.
 Web destinations, the sidebar's three groups, the phone tab bar and More list, and the mapping from a path to its destination live in `lib/workspace-destinations.ts`.
 A detail page names the destination it belongs to through PageHeader's `back`; `components/workspace-destination.tsx` draws that back link and reports the destination to `components/workspace-shell.tsx`, so an Entry page marks Library, Timeline, First Times, or Trash active.
-`App/AppNavigator.swift` carries cross-tab links that Web expresses as routes, such as `/inbox?entry=` and `/timeline?entry=`; the destination consumes a request once its data has loaded.
-`App/WorkspaceToolbar.swift` is the native form of the Web phone workspace header on each primary tab: the brand mark that opens the Dashboard, New entry for Quick Capture, search into Library, and the initial avatar that opens Settings.
+`App/RootTabView.swift` holds the four primary tabs, Dashboard, Timeline, Library, and More, like Web's phone navigation.
+It owns the `CaptureController` and the capture draft, and puts the controller in the environment for the Dashboard, Quick Capture, and the workspace header.
+The More tab lays out `WorkspaceRoute.groups` in `App/WorkspaceRoute.swift` as tiles: First Times, Tags, Trash, and Settings.
+Web's mobile More is a plain list that also has Reviews and Import, which have no native page; iOS follows the plain list when it takes up the Quiet ledger design.
+`App/AppNavigator.swift` carries cross-tab links that Web expresses as routes, such as `/library?tag=`, `/library?record=`, and `/first-times`; the destination consumes a request once its data has loaded.
+Its `entriesRevision` rises after any Entry is saved, moved to Trash, restored, or synced, so every tab reloads what it shows.
+`App/ItemLink.swift` opens every Entry, Chapters and First Times included, on the Item page in `Features/Item`, like Web `wikiEntryHref`.
+`App/WorkspaceToolbar.swift` is the native form of the Web phone workspace header on each primary tab: the brand mark that opens the Dashboard, New entry for Quick Capture, the pending-sync count while captures wait, search into Library, and the initial avatar that opens Settings.
 It still carries New entry and search, which Web now places in its bottom `WorkspaceActionDock`.
-Map data and MapKit presentation live in `Features/Map`; native Settings live in `Features/Settings`.
+Native Settings live in `Features/Settings`.
 `Features/Settings/SettingsController.swift` reads and writes one `profiles` column per save, with the Web validation rules in `Models/ProfileSettings.swift`; `AppNavigator.profileRevision` tells the Dashboard to reload its greeting.
-Native controllers that reload after a change (History, Timeline, Homes, Vehicles, First Times, Goals, People, and Trash) give each load a generation token, like `LibraryController`: a reload replaces any load still running, and only the newest response applies.
+Native controllers that reload after a change (Dashboard, Library, Timeline, First Times, Trash, and the Item page) give each load a generation token, like `LibraryController`: a reload replaces any load still running, and only the newest response applies.
 
 For a database behavior, search migrations for the newest definition of the relevant RPC instead of assuming the first occurrence is current.
 Pair it with the test file carrying the same feature name.
@@ -90,12 +94,11 @@ Pair it with the test file carrying the same feature name.
   Prepared export snapshots were discarded with the conversion; a new export works immediately.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination, with each row's date fields.
   Migration `202610180087` dropped its `p_needs_organizing` filter with the Needs organizing view.
-  It keeps the earlier six-argument `wiki_items_workspace`, with every argument required so PostgREST resolves each call to one function, for the Web deployed before it; a later migration removes it once the Web that names untitled Entries by date is deployed.
+  Migration `202610190017` dropped the earlier five- and six-argument overloads and added `is_first_time`, so one five-argument function with defaults remains.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
   Web opens every Entry, Chapters and First Times included, on `/items/[entry]`, which reads `entry_detail` for the current content, tags, Locations, marks, and provenance links.
-  Native Library still routes Homes, Vehicles, First Times, Goals, and People to their focused pages, which no longer exist on Web, so native follows Web before it works against the current schema.
-  It sends Moments and Periods to the Timeline, and still sends Entries it considers unreviewed to Inbox review until native follows Web.
-  `App/WikiItemLink.swift` holds that routing for every native link to an Item, and `AppNavigator.openLibrary(collection:)` and `openLibrary(tag:)` open Library filtered to one Collection or tag, like Web `/library?tag=`.
+  Native Library opens every row on the same Item page through `App/ItemLink.swift`, and `AppNavigator.openLibrary(tag:)` and `openLibrary(record:)` open Library filtered to one tag or one Record, like Web `/library?tag=` and `?record=`.
+  Native browse pages by 36 rows with Load more, where Web pages by 12 with Previous and Next.
 - The former `people`, `person_versions`, and `entry_people` tables and People RPCs were removed by `202610040002_remove_people.sql`.
 - The former authored `places` and `place_versions` tables and Place-only RPCs were removed by `202609240002_remove_authored_places.sql`.
 - `locations` stores private per-Entry address and coordinate snapshots with provider provenance and revision state. It is not a Wiki Item or reusable catalog.
@@ -112,7 +115,7 @@ Pair it with the test file carrying the same feature name.
   A Location's label is its formatted address, which `normalize_location_snapshot` derives from the address parts when the provider gave none; a photo position with no address reads as its coordinates.
   A Chapter may omit a Location entirely, and typing an address part in the editor replaces any chosen search result, so an edited address never keeps old coordinates.
   `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
-- Quick Capture creates an organized `entry:entry` in Library; the Web Entry editor and iOS Inbox review save that same Entry without a Kind selector.
+- Quick Capture creates an organized `entry:entry` in Library; the Web and iOS Entry editors save that same Entry without a Kind selector.
 - A Chapter or a First Time is an Entry: it is created in the Entry editor from Timeline or First Times, or marked later on its Item page.
 - Migration `202610040004` dropped `organize_capture`, `extract_capture_item`, `capture_extraction_source`, and the Capture handoffs to Goals, Homes, and Vehicles, so Captures no longer hand off to focused records.
   Migration `202610040008` turned the `source_capture` subtype those handoffs left on a source Entry back into a plain `entry`.
@@ -133,11 +136,14 @@ Pair it with the test file carrying the same feature name.
   It writes plaintext and `body_rich` in one revision, and clears formatting when `p_body_rich` is null and the primary Location when `p_primary_location` is null.
   `p_photo_location` (`{attachmentId, latitude, longitude}`) adds the photo's GPS position as a `photo` Location, and fails with `photo_source_changed` if the photo is no longer the Entry's active original.
   Migration `202610040008` replaced `review_wiki_item_with_location_rich` and its nested review steps, which took a Kind that could only be `entry`, and dropped functions no client called: `save_home_entry`, `save_vehicle_entry`, `save_timeline_entry`, `mark_goal_achieved_with_first_time`, `library_text_matches`, and `save_location`.
-- Native iOS uses the canonical Entry decoding and filter identities.
-  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040008`, `202610190001`, and `202610190010` through `202610190017` removed, so it fails against them until it is rewritten to follow Web.
-  Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
-  Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
-  The retired Place surface and saved-Location catalog are removed, and a Chapter's Location is optional.
+- Native iOS follows the current schema: `Models/EntryAPI.swift` reads `editable_entry` and `entry_detail`, saves through `save_entry` with both marks, and moves an Entry to Trash only at the revision it read and while `deleted_at` is null, like Web `trashWikiItem`.
+  `Models/SaveEntry.swift` builds the 15 arguments and resends an untouched Location as the existing snapshot with its revision, because a null `p_primary_location` clears it.
+  `NativeContractTests/testEveryNativeRPCResolvesAgainstTheCurrentSchema` calls every RPC and table read iOS uses, so a dropped function or column fails a contract test instead of a person's save.
+- Native `Features/Editor/EntryEditorSheet.swift` is the one Entry editor for new and saved Entries, opened from the Item page, Timeline, and First Times.
+  Its fields follow Web: Title, Note, Tags with Most used, Photos, the Chapter and First Time checkboxes, Date, the Location preview with Remove and Undo, and Camera dates, with Move to Trash, Cancel, and Save in the footer.
+  `Models/EntryEditorDraft.swift` ports Web `resolveOccurrenceDraft`: an empty calendar date saves as Unknown and keeps its description, an end without a start asks for the start first, and a stale revision shows "This Entry changed on another device. Close it, refresh, and edit the latest version."
+  When some photos fail to attach, the Entry stays saved and the editor stays open, and Save again updates the same Entry.
+  Location editing and provider address search are Web-only; iOS shows a saved Location and can remove it.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, or media.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich` and carries the exact matching plaintext.
   The `discard_stale_entry_rich_text` trigger removes `body_rich` whenever a write leaves its text different from `body`, so plaintext focused editors, direct client writes, and restores cannot keep outdated formatted text for search or export.
@@ -150,8 +156,8 @@ Pair it with the test file carrying the same feature name.
   The Debug gallery exercises standalone and sheet presentation, plus an encode/decode save preview using `Models/EntryEmphasisContent.swift`.
   This codec authors the paragraph and emphasis subset of Web's versioned `body_rich` document and rejects unsupported blocks or marks rather than flattening them.
   Native Capture now writes through it like Web: `CaptureCard` edits one formatted note, `EntryEmphasisContent.capture` trims surrounding whitespace without dropping formatting, and drafts, the offline queue, and the Entry insert carry `body_rich` only when it matches the saved plaintext.
-  Native review opens editable emphasis in the same editor and saves the editor's document when the note changes.
-  An untouched note resends its original `body_rich`, so Web-only lists, quotes, links, and code survive a review that does not edit the note.
+  The native Entry editor opens editable emphasis in the same editor and saves the editor's document when the note changes.
+  A note with Web-only lists, quotes, links, or code opens read-only with an Edit note here action that confirms first, and an untouched note resends its original `body_rich`, so that formatting survives a save that does not edit the note.
 - Tags and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
 - Tags own grouping and descriptive labels, and the Chapter and First Time marks own how an Entry reads on Timeline and in Library.
 - A Chapter's occurrence range describes the stretch of time it names, such as a home, a job, or a school; typed facts about a home or vehicle are ordinary writing.
@@ -205,42 +211,23 @@ Pair it with the test file carrying the same feature name.
 - Every Timeline item is a link to its Item page through `wikiEntryHref`. Adding opens `NewEntryDialog` from `components/entry-editor-dialog.tsx` with the Add Chapter or Add First Time preset.
 - The Entry editor's Chapter and First Time checkboxes live in `components/entry-marks-fields.tsx` beside the date fields; a Chapter requires a title.
 - Timeline server data loads the bands, the profile's time zone and birth date, and tag choices in parallel.
-- Native `Features/Timeline`, paused before migration `202610040009`, still follows the earlier Web phone layout: track cards, the Moment, Home, Vehicle, and First Time chooser, the first-visit birth date prompt, and the Timeline editor with the Settings time zone, Collections, and tags through `save_timeline_entry_with_organization`.
-  `TimelineWorkspace` in `Models/TimelineEntry.swift` ports the First Times projection and the summary's year range.
-  Like Web, Homes, Vehicles, and First Times open their focused pages from the Timeline and their editors from a Dashboard or Library link.
-- Native `Features/Homes` follows Web `/homes` and `/homes/[id]`: `HomesView` lists current and earlier Homes as record cards, `HomeDetailView` is the focused page with Edit and Version history, and `ResidenceEditorSheet` is the Web Home editor on `MTSheet` with its Home details, Location, and Memories and organization sections.
-  Library, the Map, and Collections open the same focused page; like Web, native editors show a saved Location's preview and edit its address by hand, and provider address search stays Web-only.
-- Native `Features/Vehicles` follows Web `/vehicles` and `/vehicles/[id]` with `VehiclesView`, `VehicleDetailView`, and `VehicleEditorSheet`, sharing `MTRecordSection`, `MTEntityCard`, and `MTFocusedRecordPage` with Homes.
-  `EntryPrimaryLocations` in `Models/EntryLocation.swift` loads each Vehicle's primary Location like Web `getPrimaryEntryLocations`, and a failed load makes the workspace unavailable.
-  The editor's `MTLocationPanel` shows the saved Location with Remove, which saves through `save_vehicle_with_location` with a null Location.
-- Native `Features/FirstTimes` follows Web `/first-times` and `/first-times/[id]` with `FirstTimesView`, `FirstTimeDetailView`, and `FirstTimeEditorSheet` on the same shared parts.
-  Its cards keep the Web First Time visual, falling back from a photo to the Location map to the card's archive number, and count only original photos, not generated variants.
-  Its primary Location loads like a Vehicle's, and removing it saves through `save_first_time_with_location` with a null Location.
-- Native `Features/Goals` follows Web `/goals` and `/goals/[id]` with `GoalsView`, `GoalDetailView`, and `GoalEditorSheet`.
-  The list groups Goals by reflective state like Web `goalSections`, and a Goal's own page pages past the first 100 Goals to find it, like Web `getGoalsWorkspace(targetId)`.
-  The editor keeps the Web Related Items picker and, for a saved Bucket List Goal, the milestone panel, which records the achievement through `achieve_goal_with_occurrence` and stays open.
-  `App/ConnectedItemsSection.swift` lists a record's Connected Items and routes them like Web `wikiEntryHref`: Moments and Periods open on the Timeline, and other records open their own page through `WikiItemDestinationView`.
-- Native Timeline, Homes, Vehicles, and First Times code predates Chapters: it reads `milestones`, `homes`, `vehicles`, and the Home, Vehicle, and First Time save RPCs that migrations `202610190010` through `202610190012` dropped or replaced, so it fails until native follows Web.
-- Native Goals code predates the Web Someday simplification and now the Web removal of Someday: it calls the save, extraction, and achievement RPCs and reads the `goals` table that migrations `202610040003` and `202610190001` replaced or dropped, so it fails until native follows Web.
-- Native Inbox code predates the Web retirement of Inbox: its Inbox lists only `unreviewed` Entries, so it stays empty, and its Capture handoffs call `extract_capture_to_goal`, `_home`, and `_vehicle`, which migration `202610040004` drops, so they fail until native follows Web.
-- Native People code predates the Web removal of People and calls functions that migration `202610040002` drops; it is retired when native follows Web.
-- Native `Features/People` followed Web `/people` and `/people/[id]` with `PeopleView`, `PersonDetailView`, and `PersonEditorSheet` over `PeopleController`.
-  The list loads `people_workspace` in pages of 100 through `MTLoadMore`, and a Person's own page loads `person_record` by ID, so it opens the same way from People, Library, or a Collection.
-  Like Web, a Person has no version history, and Move to Trash stays disabled until every Item link is removed and saved, which `trash_person` also requires.
-- Native `Features/History` follows Web `/items/[entry]` and `/history` over `EntryHistoryController`: `WikiItemDetailView` is the Item page with the current writing and facts, the Kind's actions, Related Items, and Current photos, while `EntryHistoryIndexView` and `EntryHistoryDetailView` list Items with earlier versions and compare and restore one.
-  `EntryRelationsView` saves links as they change, `LinkedGoalSheet` creates a linked Goal through `extract_goal_from_item`, and Move to Trash applies only at the revision shown, like Web `trashWikiItem`.
-  `Models/EntryHistory.swift` holds the snapshot model and the Web `lib/data/history.ts` presentation rules.
-  `reloadOnReturn` in `App/AppNavigator.swift` reloads the Item page, version history, and each focused page when version history or a linked Item returns, so a restore or change made there shows at once.
-- Native Collections code described below predates the Web merge of Collections into tags and calls functions that migration `202610040001` drops; it is retired when native follows Web.
-- Native `TagsView` in `Features/Collections` follows Web `/tags`: badges with each tag's Entry count, name search, and New Tag.
-  `OrganizationEditorSheet` is the Web `OrganizationControl` dialog on `MTSheet` over `OrganizationActions`, which call `save_organization`, `trash_collection`, `merge_tags`, and `delete_unused_tag` with the Web failure messages.
+- Native `Features/Timeline` follows Web `/timeline` over `timeline_workspace`.
+  `Models/TimelineLayout.swift` is a Swift port of `createTimelineLayout`, checked against the Web output, and `TimelineCanvas` draws its two bands, year marks, and Today line in a horizontal scroll that opens at the recent end.
+  Its geometry lives in `TimelineMetrics` as constants that mirror the Web layout code, not as design tokens.
+  Unlike Web, which lists the Timeline below 780 px, the canvas also shows on a phone.
+  Items without a calendar date are listed under it as Without a calendar date, Set birth date opens only when the person asks, and Add opens the Entry editor with the Chapter or First Time mark set.
+  Year reviews and Chapter suggestions are Web-only.
+- Native `Features/FirstTimes` follows Web `/first-times` over `first_times_workspace`, and Add opens the Entry editor with First Time checked.
+  Its counts appear only after a successful load.
+- Native `Features/Item` is the Item page for every Entry, like Web `/items/[entry]`, over `entry_detail`: the date heading for an untitled Entry, the note, photos with `MTPhotoPreview`, the Date, Tags, and Locations facts, Edit, and Move to Trash, which confirms in a popover.
+  A dated Chapter adds its saved review read-only from `chapter_review`, "In this Chapter" from `chapter_entries` 50 at a time, and "Chapters during this time" from `chapter_overlaps`; a Chapter with no start date offers Add a start date instead.
+  A review quote shows only while its words still appear in the current note, matched by text, and a quote or citation whose Entry is in Trash is hidden with a note saying so.
+  Making, deleting, and turning on reviews are Web-only.
+- Native `Features/Tags` follows Web `/tags` over `tags_workspace`, with `OrganizationActions` calling `save_tag`, `merge_tags`, and `delete_unused_tag` with the Web failure messages.
   A saved tag's editor loads up to five of its Entries through `search_wiki_items` only when it opens, like Web, and View all opens Library filtered to the tag through `AppNavigator.openLibrary(tag:)`.
-- Native `CollectionsView` and `CollectionDetailView` follow Web `/collections` and `/collections/[id]` over `CollectionsController`, which loads `collections_workspace` with the editor identities from `organization_workspace`, like Web `getCollectionsWorkspace`.
-  A Collection's Entry cards render Web's rich notes through `EntryRichTextMap`, the shared Web `loadEntryRichTextMap` port Library also uses, and their Collection and tag links open Library filtered to them.
-  The same `OrganizationEditorSheet` creates, edits, and moves Collections to Trash; a Collection moved to Trash from its own page closes that page once the editor has closed.
-  New entry opens Quick Capture through `AppNavigator.startCapture()`, and Settings' Archive organization leaves the Settings sheet for Collections through `routeAfterSettings`, like Web's `/collections` link.
-- Native `Features/Trash` follows Web `/trash` over `TrashController`: the retention badge and note, Empty Trash, and cards that restore or delete forever through the Web RPCs and messages, with results as toasts.
-  Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
+  Settings' Tags row leaves the Settings sheet for Tags through `routeAfterSettings`.
+- Native `Features/Trash` follows Web `/trash` over `TrashController`: Empty Trash and rows that restore or delete forever through the Web RPCs and messages, with results as toasts and dates in the profile time zone.
+  Delete forever and Empty Trash confirm in Web's Permanent action sheets with Web's titles, add "Reviews that read these Entries are deleted too." when `review_settings` counts any, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
 - Web Timeline has only the band view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
   Its open calendar and time picker render in the top layer as manual popovers, so a scrolling or translucent container such as Quick Capture's native dialog cannot clip them.
@@ -257,26 +244,26 @@ Pair it with the test file carrying the same feature name.
   While the browser reports online, the provider retries a run that left a capture waiting through `lib/data/inbox-sync-retry.ts`, backing off from 1 second to at most 1 minute and restarting after progress.
   `online` can fire before requests get through, so a single attempt per event is not enough.
   The retry belongs to the provider's lifetime, never the per-tab store, so it stops on `offline` and on sign-out and cannot send one person's queue under a later session.
-- Sync failures are classified by PostgREST and Postgres error code, never message text, in Web `lib/data/sync-failure.ts` and native `CaptureSyncFailure` in `Models/InboxEntry.swift`.
+- Sync failures are classified by PostgREST and Postgres error code, never message text, in Web `lib/data/sync-failure.ts` and native `CaptureSyncFailure` in `Models/CaptureQueue.swift`.
   Missing codes, connection and schema-cache errors, and retryable SQLSTATEs stay retryable; JWT errors ask the person to sign in again; `PGRST1xx`, `42501`, and SQLSTATE classes `22`, `23`, and `54` are refusals.
   `syncInboxEntry` and `registerEntryAttachment` in `app/inbox/actions.ts` return `rejected` for a refusal, and the client also refuses a photo that changed or has an invalid path on the device.
 - A capture insert refused as a duplicate looks up the existing Entry: an active one counts as synced, one in Trash is refused with its own message, and a failed lookup downgrades the refusal to a retry.
   `entry_deleted_forever` (SQLSTATE `23505`) is refused without a lookup, and `register_entry_attachment` raises `entry_in_trash` or `entry_deleted_forever` for the owner's Entry; each code is matched together with its SQLSTATE.
-- Photo uploads run through Web `lib/data/inbox-photo-sync.ts` and native `InboxController.synchronizeAttachments`, which classify a Storage error by its status code, never message text, with Web `classifyUploadFailure` and native `CaptureUploadFailure`.
+- Photo uploads run through Web `lib/data/inbox-photo-sync.ts` and native `CaptureController.synchronizeAttachments`, which classify a Storage error by its status code, never message text, with Web `classifyUploadFailure` and native `CaptureUploadFailure`.
   `409` means an earlier upload whose answer was lost, so registration continues; network errors, `408`, `423`, `425`, `429`, and `5xx` retry; `401` asks the person to sign in; `413`, `415`, and other `4xx` refuse the photo with a fitting message.
   Storage answers an expired session with the same `403` as a policy denial, so a `403` first checks the session with the Auth server: the same owner means a refusal, an unreachable server a retry, and anything else a sign-in.
   `attachment_object_missing` is a refusal only when the original is no longer on the device; while it is, the next run uploads it again.
   When registration refuses a photo that was just uploaded, the client removes that unregistered original, which the Storage delete policy allows.
   This removal is best effort; there is still no server sweep of abandoned unregistered uploads.
-- A refused capture keeps its content in the queue with a `rejection` marker (message and time), written by `rejectInboxQueueEntry` in `lib/data/inbox-queue.ts` or `InboxQueueStore.markRejected`.
+- A refused capture keeps its content in the queue with a `rejection` marker (message and time), written by `rejectInboxQueueEntry` in `lib/data/inbox-queue.ts` or `CaptureQueueStore.markRejected`.
   Runs skip marked captures and continue with later ones, and a malformed marker only makes the capture sendable again.
   If the marker cannot be stored, the run stops with a retry instead, so the capture is never sent again unmarked.
-  Discard, `InboxSyncStore.discard` or `InboxController.discardRejected`, removes only refused captures: their photo drafts first, then the queue entry, so orphaned photos cannot reappear in a composer.
+  Discard, `InboxSyncStore.discard` or `CaptureController.discardRejected`, removes only refused captures: their photo drafts first, then the queue entry, so orphaned photos cannot reappear in a composer.
 - Reading the Web queue never writes, and no write persists a reduced queue.
   Stored items that fail validation, repeat an id with different content, carry a future version, or sit in a damaged queue are kept in the `memotrail:inbox-queue-quarantine:<owner>` key by `lib/data/inbox-queue.ts` before any write, and the write is refused when that fails.
   Pending sync lists them as unreadable with Copy text and Discard, and their photos stay out of the draft until they are discarded.
   A Web draft that no longer validates restores what it can, with a notice, and its original is kept under `memotrail:inbox-draft-quarantine:<owner>` before it is replaced.
-  Native `InboxQueueStore.load` still deletes the queue on a failed decode or validation; it is paused and tracked by #24.
+  Native `CaptureQueueStore` in `Models/CaptureQueue.swift` follows the same rules with the `memotrail.inboxQueueQuarantine.<owner>` and `memotrail.inboxDraftQuarantine.<owner>` keys, still reads version 1 to 3 queues, and lists unreadable captures in Pending sync with Copy text and Discard.
 - A per-owner Web Lock serializes runs across tabs, and each capture is reread from storage before it is sent, so a tab skips captures another tab already synced.
   `storage` events refresh the pending lists of other tabs, and a tab whose captures another tab synced refreshes its route so Library and Dashboard stay current.
   The tab that sends a capture needs no extra refresh, because the sync Server Actions revalidate and return its current route.
@@ -288,8 +275,11 @@ Pair it with the test file carrying the same feature name.
   Leaving the Dashboard or closing Quick Capture ends a voice capture, whichever composer started it.
 - Drafts follow other tabs: `storage` events for the draft key reload the writing and date, and a per-owner `BroadcastChannel` announces photo changes, after which a tab rereads IndexedDB without the photos of queued captures.
   A tab restored from the back-forward cache rereads both, and a dictating tab stops voice capture rather than overwrite another tab's edit.
-- Native `InboxController` belongs to the root tab view and retries on network-path changes, so iOS sync is already independent of any composer.
-  Native `RootTabView` also owns the draft and binds it into both `CaptureCard`s, so the Dashboard and Quick Capture already share it.
+- Native `CaptureController` in `Features/Capture` belongs to the root tab view, so iOS sync is independent of any composer.
+  It syncs on a network change, on returning to the foreground, after a save, and on Retry now, and while online it retries a run that left a capture waiting after 1, 2, 4, 8, 15, 30, and then every 60 seconds through `CaptureSyncRetry`, restarting after any capture syncs.
+  Going offline, signing out, or deleting the account stops the backoff, and an expired session stops sync with an error until the same person signs in again or the token refreshes.
+  Like Web, each run rereads the queue before each capture, sends the oldest first, sets a refused capture aside without blocking later ones, and stops at the first capture that has to wait.
+  Native `RootTabView` also owns the draft and binds it into both `CaptureCard`s, so the Dashboard and Quick Capture share it.
 
 ## Media rules
 
@@ -325,7 +315,7 @@ Pair it with the test file carrying the same feature name.
 - Suggestion and search outputs are schema-validated and remain separate from original writing until explicit user action.
 - Search answers cite exact stored evidence; provenance does not imply that the model's conclusion is true.
 - `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS. Linked Location fields contribute searchable context.
-  Native `LibraryController` runs the same relevance-ordered search as Web Library, with the grouped Record filter, Collection, tag, and local date filters, and loads each result's `body_rich` separately like Web `loadEntryRichTextMap`.
+  Native `LibraryController` runs the same keyword search as Web Library with `p_order` `relevance` and no embedding arguments, with the Record, tag, and local date filters, searches 400 ms after typing stops, and loads each result's `body_rich` separately like Web `loadEntryRichTextMap`.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and opens the Library page for filtered search. Legacy `/search` URLs redirect there with their query parameters.
 
 ## Review and Chapter suggestion rules
@@ -489,7 +479,7 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   `packages/design-system/schema/component-spec.schema.json` is its JSON Schema.
   The control and overlay specs map Web to native as follows: IconButton to `MTIconButton`, Icon to `MTIcon`, TextField, SearchField, and Checkbox to their `MTFields.swift` fields, SelectField to `MTSelectField` with `MTSelectGroup`, DateField to Web `DatePickerField` and `MTDateField`, and TimeZoneField to Web `TimezoneSelect` and `MTTimeZoneField`.
   One Dialog spec covers Web `Dialog` and `ConfirmationDialog` with `MTSheet` and `confirmationDialog`, and one Toast spec covers Web `AppToaster` with `MTToast` and `MTToastCenter`.
-  CommandPalette, SyncStatus, and WorkspaceActionDock are Web-only, so their specs mark iOS `unavailable` and give the reason.
+  CommandPalette and WorkspaceActionDock are Web-only, so their specs mark iOS `unavailable` and give the reason; `sync-status.yaml` pairs SyncStatus with `MTSyncStatusButton` in the native workspace header.
   `pnpm design-system:check` validates every spec against the schema, then checks what a schema cannot: that the files declare the symbols, that every token exists on the platforms that use it with the type its property needs, that token rules name only real props, values, parts, and states, and that specimen ids are unique.
 - Specs pair these Web components with their native counterparts, and a spec named differently from the Web component says so.
   `badge.yaml` pairs Badge with `MTBadge`, and `button.yaml` pairs Button with `mtButtonStyle`.
@@ -497,9 +487,8 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   `section-header.yaml` pairs SectionHeader with `MTSectionHeader`, whose `list` variant is the uppercase list heading on iOS and a sentence-case label on Web.
   `image.yaml` pairs ProgressiveImage with `MTRemoteImage`, `skeleton.yaml` pairs Skeleton with `MTLoadingSkeleton`, and `upload-progress.yaml` pairs PhotoUploadProgress with `MTUploadProgress`.
   `separated-list.yaml` pairs SeparatedList with `MTFlowLayout` and `MTFlowSeparator`.
-  `record-card.yaml` pairs RecordCard with `MTRecordCard`, `MTEntityCard`, and `MTCollectionCard`.
+  `record-card.yaml` pairs RecordCard with `MTRecordCard` and its visual and body parts.
   `capture-composer.yaml` pairs CaptureComposer with `CaptureCard`, and `photo-viewer.yaml` pairs PhotoPreviewDialog with `MTPhotoPreview`.
-  `focused-record.yaml` lists `MTFocusedRecordPage` as iOS-only, because Web opens every record on the Item page.
   `rich-text.yaml` pairs EntryRichTextContent and RichTextEditor with `MTRichTextContent` and `MTRichTextEditor`.
 - The generator writes each spec's enum values as lists and union types, its prop defaults, and the specimen list into `apps/web/src/generated/design-system.ts`, and the same as Swift enums, `MT<Name>Defaults`, and `MTComponentSpecimen` into `apps/ios/MemoTrail/DesignSystem/Generated/ComponentVariants.swift`.
   Web props and native parameters take those types and defaults, so a value removed from a spec stops both platforms compiling; component unit tests catch the other direction, a value the spec adds that a Web stylesheet does not draw.
@@ -522,11 +511,14 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   `pnpm design-system:test:previews` renders every card in both themes in Chromium and checks that each spec specimen draws every prop value it covers.
 - The Web Dashboard route loads `getHomeWorkspace` on the server and renders `components/home-dashboard.tsx` with component-owned CSS.
   Dashboard composes the shared PageFrame, PageHeader, CaptureComposer, EmptyState, ProgressiveImage, and Badge; Memory and Recent Entries share one Entry card renderer.
-  Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the ribbon, rows, and cards.
-  Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` shows the same header over `CaptureCard(style: .dialog)` full screen, where Web now anchors the composer to its bottom dock.
+  Native `Features/Home` mirrors it with `MTPage`, `MTPageHeader`, `CaptureCard`, `MTEmptyState`, `MTRemoteImage`, and `MTBadge`; `DashboardComponents.swift` owns the counts, rows, and cards, with the identifiers `dashboard-counts`, `dashboard-memory`, `dashboard-now`, and `dashboard-recent`.
+  The memory and Now stack on a phone, as Web stacks them below 900 px, and a one-line notice above them opens Pending sync while captures wait or cannot be read.
+  Web `QuickCaptureDialog` shows CaptureComposer's dialog variant under its own header; native `QuickCaptureView` in `Features/Capture` shows the same header over `CaptureCard(style: .dialog)` full screen, where Web now anchors the composer to its bottom dock.
+  The native composer saves a calendar day with an optional time from `Features/Capture/CaptureDate.swift`, and Command-Return saves from a hardware keyboard.
   Both composers open the relevant date in place, keep only problems in the composer, and announce a synced capture with a toast.
-  A capture saved without a connection gets an info toast instead: Web checks the browser's connection before syncing, while `InboxController` confirms a capture once when its first sync cannot reach MemoTrail and keeps later offline retries quiet.
+  A capture saved without a connection gets an info toast instead: Web checks the browser's connection before syncing, while `CaptureController` confirms a capture once when its first sync cannot reach MemoTrail and keeps later offline retries quiet.
   Web `SyncStatus` in the sidebar's account row and the phone top bar counts waiting and refused captures separately, and reads Synced when nothing waits; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
+  Native `MTSyncStatusButton` in `WorkspaceToolbar` does the same and opens Pending sync as a sheet.
   A refused capture is announced with an error toast, and `PendingCaptureList` and native `PendingCaptureRow` give it Copy text and a confirmed Discard; Retry now appears only while a capture is still waiting.
 - Web `components/entry-editor-dialog.tsx` is the Entry editor on the Item page, with Cancel and Save changes, and its `NewEntryDialog` adds a Chapter or First Time from Timeline and First Times.
   It edits photos through `EntryPhotoField`: new photos upload after the Entry saves, and a saved photo moves to Trash at once after confirmation.
@@ -540,7 +532,6 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
 - Dashboard "Now" lists the Chapters that have started and not ended, and its First Time count comes from the mark.
 - `/homes`, `/vehicles`, and `/first-times/[id]` redirect through `redirectRetiredRecord` in `lib/data/retired-routes.ts`: an address that names an Entry opens its Item page while the Entry exists, and every other address opens Timeline (or First Times).
   `/inbox` redirects to `/library` and `/inbox?entry=` to `/items/[entry]` in `next.config.ts`; Library ignores the retired `show=needs-organizing` parameter.
-  Native `Features/Inbox` still shows the retired list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`, including its Save to Library footer, until native follows Web.
   Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
 - Button, Dialog, PageHeader, EmptyState, and the previously reviewed gallery components are approved migration targets.
 - Production actions use Button, IconButton, or ButtonLink without changing submit or navigation semantics; composite internals and navigation controls retain their distinct roles.
@@ -584,29 +575,30 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   Generated `DesignTokens.swift` supplies semantic colors, the `MTTextRole` and `MTFont` text roles that follow Dynamic Type, `MTIcon`, `MTPageWidth`, spacing, sizes, layout, radius, motion and easing, line heights, shadow layers, state, materials, elevation, and the catalogs the gallery lists.
   `MTFoundations.swift` holds the view helpers that apply them, such as `mtTextRole`, `mtIcon`, `mtShadow`, `mtMaterial`, `mtLineSpacing`, and the `MTIcon` image and label initializers.
   Native actions use `mtButtonStyle` variants and sizes or `MTIconButton`; `MTBadge`, `MTPageHeader`, `MTSectionHeader`, and `MTEmptyState` mirror the Web Badge, PageHeader, SectionHeader, and EmptyState.
-  `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library and People.
-  `MTSectionHeader` with the `list` variant and `MTListSurface` are the uppercase list heading and bordered row surface that the Inbox and Library share, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
+  `MTLoadMore` loads a list's next page as its end scrolls into view, or offers a retry, for Library, Tags, Trash, and a Chapter's Entries.
+  `MTSectionHeader` with the `list` variant and `MTListSurface` are the uppercase list heading and bordered row surface that Library uses, and `MTListRowButtonStyle` gives whole-row links their pressed surface.
   `MTSheet` is the Web Dialog: its eyebrow, serif title, close action, scrolling content, failure message, and footer actions.
-  A form sheet opens at full height with room to push detail such as Version history, and a fitted sheet sizes itself to short content; `MTSheetOption` is the Web dialog's icon, title, and description choice.
+  A form sheet opens at full height for editors, and a fitted sheet sizes itself to short content; `MTSheetOption` is the Web dialog's icon, title, and description choice.
   `confirmationDialog` stands in for the Web confirmation shell.
   `MTFields.swift` owns the labeled text, textarea, search, select, and checkbox fields on one shared surface; `MTSelectGroup` titles runs of select options like a Web `optgroup`, and `MTDateField` edits optional wall-time text at day, month, or year granularity, and `MTTimeZoneField` lists offsets for the reference date.
-  `OccurrenceEditor` and `MTOrganizationEditor` are the shared date and Collection/tag editors; adding a name opens a picker sheet so suggestions stay above the keyboard.
-  `MTCards.swift` owns `MTRecordCard`, `MTCollectionCard`, and the shared `MTCardButtonStyle`; `MTRichTextContent` renders `Models/EntryRichText.swift`, which validates Web `body_rich` documents like `lib/data/rich-text.ts` and falls back to the plain body.
+  `OccurrenceEditor` is the Web date editor, and `MTOrganizationEditor` is the Web tag field with Most used suggestions, reusing a tag that differs only by case and showing the count from 60 of the 70 allowed; adding a name opens a picker sheet so suggestions stay above the keyboard.
+  `MTCheckbox` passes its accessibility identifier through and reads On or Off, and `MTFlowLayout` can align each row on its children's first text baseline, as the date toggles do.
+  `MTCards.swift` owns `MTRecordCard`, `MTRecordCardFooter`, and the shared `MTCardButtonStyle`; `MTRichTextContent` renders `Models/EntryRichText.swift`, which validates Web `body_rich` documents like `lib/data/rich-text.ts` and falls back to the plain body.
   With a line limit it flows the writing into one clamped preview that keeps emphasis, list markers, and line breaks.
   `MTToastCenter` shows Web-timed success, info, and error toasts in a pass-through window above sheets.
   Like Web, they rise from the bottom, clear of the tab bar, sheet actions, and the keyboard, so back and close buttons stay reachable.
   `MTMedia.swift` owns `MTRemoteImage`, the loading skeleton, `MTUploadProgress`, and `MTPhotoField`; feature editors use them instead of private image loaders.
   `MTPhotoPreview` shows saved photos whole and pages between them with Previous, Next, and the position, like Web's photo viewer; `MTPhotoField` and `MTRecordPhotos` open it.
-  `MTRecordDetail.swift` owns the focused-record parts: `MTFormSection` is the Web editor fieldset whose fields sit on the raised surface, with an accent tone for panels such as the Goal's Bucket List milestone, and `MTFactList`, `MTDetailSection`, and `MTRecordPhotos` lay out a record's facts, Story, Organize, and photos.
-  `MTFocusedRecordPage` composes them into the Web `FocusedRecordDetail` page with Edit and Version history, and `MTFocusedRecordUnavailable` stands in for a missing record.
-  `MTRecordArchive.swift` owns `MTRecordSection`, `MTEntityCard`, and `MTRecordCardFooter`: the Web record workspace section, the Home and Vehicle `RecordCard`, and the badge footer every record card shares.
+  `MTRecordDetail.swift` owns `MTFormSection`, the Web editor fieldset whose fields sit on the raised surface, with an accent tone for panels such as the tag editor's Merge this tag, and `MTFactList`, `MTDetailSection`, and `MTRecordPhotos`, which lay out facts, sections, and photos.
   `MTLocation.swift` owns `MTLocationSnapshot`, a MapKit still with a pin that stands in for the Web static map, `MTLocationPreview`, the Web selected-Location card, and `MTLocationPanel`, the Web Location picker's panel; record cards fall back from a photo to that map to `MTRecordMark`, with glass badges over the visual.
   Clipped media sets a matching content shape, because clipping does not limit hit testing and filled photos would otherwise take taps meant for neighboring controls.
 - The Debug-only `DesignSystem/DesignSystemGallery.swift` renders those real components with appearance and text-size controls, in the same section order as the Web gallery.
-  It is reached from the signed-out screen, More, or Settings; broad existing-screen migration follows review.
-- Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, synthetic Map, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.
+  It is reached from the signed-out screen, More, or Settings.
+- Debug launch arguments in `App/NativeReview.swift` expose isolated gallery, sign-in, and navigation review modes; `--review-design-section <name>` opens one gallery section directly.
+  The navigation mode has no backend, so First Times, Tags, and Trash show their unavailable states there.
   `--review-local-session` signs in with a disposable local Supabase session from `scripts/review-local-session.py`, keeps it out of the Keychain, and accepts only 127.0.0.1 endpoints.
   Adding `--review-offline` fails that session's requests like an iPhone with no network once it has signed in, through the `NativeReviewNetwork` switch the local contract tests also use.
+  In that mode the environment key `MEMOTRAIL_REVIEW_UNREADABLE_CAPTURE` seeds one unreadable capture into an empty queue, and `-native-appearance dark` forces dark mode.
   Release builds omit these modes and the gallery; `MemoTrailUI` runs their Simulator interaction tests.
   `scripts/local_supabase.py` owns disposable account creation and cleanup for both native local scripts.
 - Native app targets skip App Intents metadata extraction because they declare no App Intents.
@@ -639,12 +631,12 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
 - Web address searches and static maps pass through authenticated route handlers, so `GEOAPIFY_API_KEY` is never exposed to the browser.
   The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
 - The Web Map destination is retired along with its tile proxy and Leaflet; Web shows a Location only as an editor preview and on record cards.
-  The native Map still reads current Entry-Location links through owner-scoped RLS, pages them in stable order with a 5,000-link cap, and uses MapKit clustering in `Features/Map`, until native follows Web.
+  The native Map is retired too; iOS shows a saved Location as a MapKit still in the Entry editor and on First Times cards, lists it as a fact on the Item page, and has no address search.
 - Static Location previews accept only light or dark theme parameters; the authenticated route chooses an allowlisted Geoapify style while keeping the provider key server-side.
 - Address search and preview routes each consume an owner-scoped hourly database quota before contacting Geoapify.
 - iOS receives public backend configuration and the Web API base URL.
 - `lib/auth/api.ts` verifies Web cookie or native bearer identity for media, metadata, and export independently of AI availability.
-  AI routes add their own per-feature gate before shared authentication, and native AI entry points remain paused as well.
+  AI routes add their own per-feature gate before shared authentication, and iOS has no AI entry points.
 - `src/proxy.ts` refreshes the Supabase session for pages and Server Actions.
   API routes are outside its matcher because they authenticate and refresh the session themselves, so Next.js does not copy upload bodies for the proxy, and an upload the browser abandons ends quietly.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.

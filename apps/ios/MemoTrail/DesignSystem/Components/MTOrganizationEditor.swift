@@ -1,42 +1,57 @@
 import SwiftUI
 
-/// Shows a record's Collections or tags like the Web EntryOrganizationEditor: tag pills and
-/// ledger-style Collection chips with remove buttons. Adding opens a picker sheet that finds
-/// existing names or creates new ones, so suggestions stay visible above the keyboard.
+/// Shows a record's tags like the Web EntryOrganizationEditor: tag pills with remove buttons,
+/// the most used tags as one-tap suggestions while none is added, and the count only once it
+/// nears the limit. Adding opens a picker sheet that finds existing names, reusing a tag that
+/// differs only by case, or creates new ones, so suggestions stay visible above the keyboard.
 struct MTOrganizationEditor: View {
   enum Kind: Sendable {
-    case collection, tag
+    case tag
 
-    var title: String { self == .collection ? "Collections" : "Tags" }
-    var singular: String { self == .collection ? "Collection" : "tag" }
-    var countLimit: Int { self == .collection ? 20 : 50 }
-    var lengthLimit: Int { self == .collection ? 80 : 60 }
-    fileprivate var icon: MTIcon { self == .collection ? .archive : .tag }
-    fileprivate var identifier: String { self == .collection ? "collection" : "tag" }
+    var title: String { "Tags" }
+    var singular: String { "tag" }
+    var countLimit: Int { EntryLimits.tagCount }
+    var lengthLimit: Int { EntryLimits.tagName }
+    fileprivate var icon: MTIcon { .tag }
+    fileprivate var identifier: String { "tag" }
   }
 
   let kind: Kind
   @Binding var names: [String]
+  /// The person's names, most used first.
   let options: [String]
   @State private var isPicking = false
   @Environment(\.isEnabled) private var isEnabled
+
+  private var suggestions: [String] {
+    names.isEmpty ? EntryTagField.suggestions(names, options: options) : []
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       MTFieldLabel(title: kind.title)
       MTFlowLayout(spacing: MTSpacing.s2, lineSpacing: MTSpacing.s3) {
-        ForEach(names, id: \.self) { name in
-          if kind == .tag { tagChip(name) } else { collectionChip(name) }
-        }
+        ForEach(names, id: \.self) { name in tagChip(name) }
         if names.count < kind.countLimit { addButton }
       }
-      // Collection bookends and remove buttons extend above their chips.
-      .padding(.top, kind == .collection ? MTSpacing.s2 : 0)
-      Text("\(names.count) of \(kind.countLimit)")
-        .font(MTFont.note)
-        .foregroundStyle(MTColor.inkFaint)
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .accessibilityLabel("\(names.count) of \(kind.countLimit) \(kind.title)")
+      if !suggestions.isEmpty {
+        MTFlowLayout(spacing: MTSpacing.s2, lineSpacing: MTSpacing.s2) {
+          Text("Most used")
+            .font(MTFont.note)
+            .foregroundStyle(MTColor.inkFaint)
+            .frame(minHeight: MTLayout.InlineAction.height)
+            .accessibilityHidden(true)
+          ForEach(suggestions, id: \.self) { suggestion($0) }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Most used tags")
+      }
+      if EntryTagField.showsLimit(names) {
+        Text("\(names.count) of \(kind.countLimit) \(kind.title.lowercased())")
+          .font(MTFont.note)
+          .foregroundStyle(MTColor.inkFaint)
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
     }
     .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.choice)
     .sheet(isPresented: $isPicking) {
@@ -69,74 +84,6 @@ struct MTOrganizationEditor: View {
     .overlay { Capsule().strokeBorder(MTColor.accentBorder, lineWidth: MTSize.Stroke.thin) }
   }
 
-  private func collectionChip(_ name: String) -> some View {
-    Text(name)
-      .font(MTFont.collectionName)
-      .foregroundStyle(MTColor.ink)
-      .lineLimit(1)
-      .padding(.vertical, MTLayout.Organization.labelInset)
-      .padding(.horizontal, MTSpacing.s6)
-      .frame(minHeight: MTLayout.Organization.labelHeight)
-      .background {
-        ZStack {
-          MTColor.warmSubtle
-          LinearGradient(
-            stops: [
-              .init(color: MTColor.labelSheen, location: 0),
-              .init(color: .clear, location: 0.44),
-              .init(color: .clear, location: 0.58),
-              .init(color: MTColor.labelShade, location: 1),
-            ], startPoint: .top, endPoint: .bottom)
-        }
-        .shadow(
-          color: MTColor.labelShade, radius: MTLayout.Organization.glowRadius,
-          y: MTLayout.Organization.glowOffset)
-      }
-      .overlay {
-        VStack {
-          Rectangle().fill(MTColor.labelEdge).frame(height: MTSize.Stroke.thin)
-          Spacer()
-          Rectangle().fill(MTColor.labelEdge).frame(height: MTSize.Stroke.thin)
-        }
-      }
-      .overlay {
-        HStack {
-          bookend
-          Spacer()
-          bookend
-        }
-      }
-      .overlay(alignment: .topTrailing) {
-        Button {
-          remove(name)
-        } label: {
-          Image(.close).font(.mtIcon(MTSize.Icon.s10, weight: .semibold))
-            .foregroundStyle(MTColor.inkMuted)
-            .frame(
-              width: MTLayout.Organization.removeButton, height: MTLayout.Organization.removeButton
-            )
-            .background(MTColor.surfaceRaised, in: Circle())
-            .overlay { Circle().strokeBorder(MTColor.borderStrong, lineWidth: MTSize.Stroke.thin) }
-            .mtShadow(MTShadow.raised)
-            .frame(width: MTLayout.InlineAction.height, height: MTLayout.InlineAction.height)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .offset(x: MTLayout.Organization.removeOffset, y: -MTLayout.Organization.removeOffset)
-        .accessibilityLabel("Remove \(name) from \(kind.title)")
-      }
-      .padding(.trailing, MTSpacing.s2)
-      .accessibilityElement(children: .contain)
-  }
-
-  private var bookend: some View {
-    Rectangle()
-      .fill(MTColor.warmSubtle)
-      .overlay { Rectangle().strokeBorder(MTColor.warm, lineWidth: MTSize.Stroke.medium) }
-      .frame(width: MTLayout.Organization.bookendWidth)
-      .padding(.vertical, -MTLayout.Organization.bookendOverhang)
-  }
-
   private var addButton: some View {
     Button {
       isPicking = true
@@ -145,35 +92,47 @@ struct MTOrganizationEditor: View {
         .labelStyle(MTInlineIconLabelStyle())
         .font(MTFont.caption)
         .foregroundStyle(MTColor.inkMuted)
-        .padding(.leading, kind == .collection ? MTLayout.Organization.addInset : MTSpacing.s2)
+        .padding(.leading, MTSpacing.s2)
         .padding(.trailing, MTSpacing.s3)
-        .frame(
-          minHeight: kind == .collection
-            ? MTLayout.Organization.addHeight : MTLayout.InlineAction.height
-        )
+        .frame(minHeight: MTLayout.InlineAction.height)
         .background {
-          if kind == .collection {
-            Rectangle()
-              .strokeBorder(
-                style: StrokeStyle(
-                  lineWidth: MTSize.Stroke.thin,
-                  dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap])
-              )
-              .foregroundStyle(MTColor.labelDash)
-          } else {
-            Capsule()
-              .strokeBorder(
-                style: StrokeStyle(
-                  lineWidth: MTSize.Stroke.thin,
-                  dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap])
-              )
-              .foregroundStyle(MTColor.borderStrong)
-          }
+          Capsule()
+            .strokeBorder(
+              style: StrokeStyle(
+                lineWidth: MTSize.Stroke.thin,
+                dash: [MTLayout.DashedBorder.dot, MTLayout.DashedBorder.gap])
+            )
+            .foregroundStyle(MTColor.borderStrong)
         }
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
     .accessibilityIdentifier("organization-add-\(kind.identifier)")
+  }
+
+  /// A most used name that one tap adds, written the way it already is.
+  private func suggestion(_ name: String) -> some View {
+    Button {
+      if names.count < kind.countLimit,
+        !names.contains(where: { $0.lowercased() == name.lowercased() })
+      {
+        names.append(name)
+      }
+    } label: {
+      Label(name, icon: .plus)
+        .labelStyle(MTInlineIconLabelStyle())
+        .lineLimit(1)
+        .font(MTFont.caption)
+        .foregroundStyle(MTColor.inkMuted)
+        .padding(.leading, MTSpacing.s2)
+        .padding(.trailing, MTSpacing.s3)
+        .frame(minHeight: MTLayout.InlineAction.height)
+        .background(MTColor.surfaceSubtle, in: Capsule())
+        .overlay { Capsule().strokeBorder(MTColor.border, lineWidth: MTSize.Stroke.thin) }
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel("Add \(kind.singular) \(name)")
   }
 
   private func remove(_ name: String) {
@@ -281,23 +240,23 @@ private struct MTOrganizationPicker: View {
     // above the keyboard and leave room for only one row.
     .presentationDetents([.large])
     .onAppear { isSearching = true }
+    // A name left in the search field stays, as on Web, even when the sheet is swiped away.
+    .onDisappear { addText() }
   }
 
   private var searchField: some View {
-    let tone = kind == .tag ? MTColor.accent : MTColor.warm
-    let shape = RoundedRectangle(
-      cornerRadius: kind == .tag
-        ? MTLayout.Organization.tagSearchRadius : MTLayout.Organization.labelSearchRadius)
+    let tone = MTColor.accent
+    let shape = RoundedRectangle(cornerRadius: MTLayout.Organization.tagSearchRadius)
     return HStack(spacing: MTSpacing.s2) {
       Image(.search).font(.mtIcon(MTSize.Icon.s15, weight: .medium))
       TextField(
         "Search or create a \(kind.singular)", text: $query,
         prompt: Text("Find or create \(kind.singular.lowercased())").foregroundStyle(
-          kind == .tag ? MTColor.accentPrompt : MTColor.warmPrompt)
+          MTColor.accentPrompt)
       )
       .font(MTFont.body)
       .foregroundStyle(MTColor.ink)
-      .textInputAutocapitalization(kind == .tag ? .never : .words)
+      .textInputAutocapitalization(.never)
       .autocorrectionDisabled()
       .submitLabel(.done)
       .focused($isSearching)
@@ -308,7 +267,7 @@ private struct MTOrganizationPicker: View {
       .onChange(of: query) {
         if query.count > kind.lengthLimit { query = String(query.prefix(kind.lengthLimit)) }
         // Tags also add on a comma, as on the Web.
-        if kind == .tag, query.hasSuffix(",") {
+        if query.hasSuffix(",") {
           query.removeLast()
           addText()
         }
@@ -316,28 +275,11 @@ private struct MTOrganizationPicker: View {
       .accessibilityIdentifier("organization-search-\(kind.identifier)")
     }
     .foregroundStyle(tone)
-    .padding(.leading, kind == .collection ? MTSpacing.s4 : MTSpacing.s3)
-    .padding(.trailing, MTSpacing.s3)
+    .padding(.horizontal, MTSpacing.s3)
     .frame(height: MTSize.Field.medium)
     .background(MTColor.surfaceRaised, in: shape)
-    .overlay {
-      if kind == .collection {
-        HStack {
-          Rectangle().fill(tone).frame(width: MTLayout.Organization.searchSpine)
-          Spacer()
-        }
-        .clipShape(shape)
-      }
-    }
     .overlay { shape.strokeBorder(tone, lineWidth: MTSize.Stroke.thin) }
-    .background {
-      if kind == .tag {
-        shape.stroke(MTState.Focus.halo, lineWidth: MTState.Focus.haloStroke)
-      } else {
-        shape.fill(MTColor.borderStrong).offset(
-          x: MTLayout.Organization.searchShadowOffset, y: MTLayout.Organization.searchShadowOffset)
-      }
-    }
+    .background { shape.stroke(MTState.Focus.halo, lineWidth: MTState.Focus.haloStroke) }
   }
 
   private func row(_ name: String) -> some View {

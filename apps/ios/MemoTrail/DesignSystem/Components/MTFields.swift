@@ -398,9 +398,20 @@ struct MTCheckbox: View {
   var detail: String?
   @Binding var isOn: Bool
   var size: MTCheckboxSize = MTCheckboxDefaults.size
+  /// Names the whole row for UI tests. The row is one accessibility element, so the identifier
+  /// goes on that element rather than on a modifier around the checkbox.
+  var identifier: String?
   @Environment(\.isEnabled) private var isEnabled
 
   var body: some View {
+    if let identifier {
+      control.accessibilityIdentifier(identifier)
+    } else {
+      control
+    }
+  }
+
+  private var control: some View {
     Button {
       isOn.toggle()
     } label: {

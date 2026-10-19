@@ -3,19 +3,12 @@ import Foundation
 import SwiftUI
 
 enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
-  case map, people, homes, vehicles, firstTimes, goals, collections, tags, history, trash, settings
+  case firstTimes, tags, trash, settings
   var id: String { rawValue }
   var title: String {
     switch self {
-    case .map: "Map"
-    case .people: "People"
-    case .homes: "Homes"
-    case .vehicles: "Vehicles"
     case .firstTimes: "First Times"
-    case .goals: "Goals"
-    case .collections: "Collections"
     case .tags: "Tags"
-    case .history: "Version history"
     case .trash: "Trash"
     case .settings: "Settings"
     }
@@ -23,26 +16,18 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
   /// Web's navigation icon for the destination.
   var icon: MTIcon {
     switch self {
-    case .map: .map
-    case .people: .person
-    case .homes: .home
-    case .vehicles: .car
     case .firstTimes: .star
-    case .goals: .target
-    case .collections: .archive
     case .tags: .tag
-    case .history: .clock
     case .trash: .trash
     case .settings: .settings
     }
   }
 
-  /// Web's mobile More groups.
+  /// Web `mobileMoreGroups`.
   static let groups: [(title: String, routes: [Self])] = [
-    ("Explore", [.map]),
-    ("Focused views", [.people, .homes, .vehicles, .firstTimes, .goals]),
-    ("Organize", [.collections, .tags]),
-    ("Archive and account", [.history, .trash, .settings]),
+    ("Focused views", [.firstTimes]),
+    ("Organize", [.tags]),
+    ("Trash and settings", [.trash, .settings]),
   ]
 }
 
@@ -91,14 +76,17 @@ struct MoreView: View {
           route: route, client: client, user: user, isAuthenticationBusy: isAuthenticationBusy,
           signOut: signOut)
       }
+      .itemDestination(client: client, ownerID: user.id)
     }
   }
 }
 
-/// Web `mobileMoreGroup`: an uppercase label above two columns of destinations.
+/// Web `mobileMoreGroup`: an uppercase label above two columns of destinations, or one column
+/// at accessibility text sizes so each name keeps whole words.
 private struct MoreGroup<Content: View>: View {
   let title: String
   @ViewBuilder let content: Content
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
@@ -107,7 +95,9 @@ private struct MoreGroup<Content: View>: View {
         .foregroundStyle(MTColor.inkFaint)
         .accessibilityAddTraits(.isHeader)
       LazyVGrid(
-        columns: Array(repeating: GridItem(.flexible(), spacing: MTSpacing.s2), count: 2),
+        columns: Array(
+          repeating: GridItem(.flexible(), spacing: MTSpacing.s2),
+          count: typeSize.isAccessibilitySize ? 1 : 2),
         spacing: MTSpacing.s2
       ) {
         content
@@ -131,8 +121,8 @@ private struct MoreTile: View {
       Text(title)
         .font(MTFont.caption)
         .foregroundStyle(MTColor.ink)
-        .lineLimit(2)
         .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
       Spacer(minLength: 0)
     }
     .padding(MTSpacing.s3)
@@ -149,57 +139,12 @@ struct WorkspaceDestinationView: View {
 
   var body: some View {
     switch route {
-    case .map:
-      #if DEBUG
-        if NativeReviewMode.current == .navigation {
-          LocationMapView(preview: NativeReviewView.mapSnapshot)
-        } else {
-          LocationMapView(client: client, ownerID: user.id)
-        }
-      #else
-        LocationMapView(client: client, ownerID: user.id)
-      #endif
-    case .people: PeopleView(client: client, ownerID: user.id)
-    case .homes: HomesView(client: client, ownerID: user.id)
-    case .vehicles: VehiclesView(client: client, ownerID: user.id)
     case .firstTimes: FirstTimesView(client: client, ownerID: user.id)
-    case .goals: GoalsView(client: client, ownerID: user.id)
-    case .collections: CollectionsView(client: client, ownerID: user.id)
     case .tags: TagsView(client: client, ownerID: user.id)
-    case .history: EntryHistoryIndexView(client: client, ownerID: user.id)
     case .trash: TrashView(client: client, ownerID: user.id)
     case .settings:
       NativeSettingsView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut)
-    }
-  }
-}
-
-/// Canonical detail routing, shared by Library, the Map, the Dashboard, and Connected Items.
-/// Like Web `wikiEntryHref`, only a Person from People opens a Person page; a person Entry and
-/// any Item without a focused page open as an Item.
-struct WikiItemDestinationView: View {
-  let client: SupabaseClient
-  let ownerID: UUID
-  let entryID: UUID
-  let kind: WikiItemKind
-  let subtype: String
-  var personID: UUID? = nil
-
-  var body: some View {
-    switch (kind, subtype, personID) {
-    case (.entity, "person", let personID?):
-      PersonDetailView(client: client, ownerID: ownerID, personID: personID)
-    case (.entity, "home", _):
-      HomeDetailView(client: client, ownerID: ownerID, entryID: entryID)
-    case (.entity, "vehicle", _):
-      VehicleDetailView(client: client, ownerID: ownerID, entryID: entryID)
-    case (.goal, _, _):
-      GoalDetailView(client: client, ownerID: ownerID, entryID: entryID)
-    case (.entry, "first_time", _):
-      FirstTimeDetailView(client: client, ownerID: ownerID, entryID: entryID)
-    default:
-      WikiItemDetailView(client: client, ownerID: ownerID, entryID: entryID)
     }
   }
 }

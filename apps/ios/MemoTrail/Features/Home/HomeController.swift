@@ -7,14 +7,15 @@ import Observation
 final class HomeController {
   private(set) var snapshot: HomeSnapshot?
   private(set) var resurfacedMemory: HomeResurfacedMemory?
-  /// The newest unreviewed captures, as in Web's Ready to organize.
-  private(set) var inboxPreview: [HomeInboxPreview] = []
   private(set) var hasLoaded = false
   private(set) var isLoading = false
   private(set) var loadErrorMessage: String?
 
   private let client: SupabaseClient
   private let ownerID: UUID
+  /// Only the newest load applies its result, so a save that lands while an earlier load is
+  /// in flight still shows up and a slower earlier response cannot replace it.
+  private var loadGeneration = UUID()
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -22,13 +23,15 @@ final class HomeController {
   }
 
   func load(date: Date = .now, timezone: TimeZone = .current) async {
-    guard !isLoading else { return }
-
+    let generation = UUID()
+    loadGeneration = generation
     isLoading = true
-    loadErrorMessage = nil
     defer {
-      isLoading = false
-      hasLoaded = true
+      if loadGeneration == generation {
+        isLoading = false
+        // A load that was cancelled, such as by leaving the screen, has not loaded anything.
+        if !Task.isCancelled { hasLoaded = true }
+      }
     }
 
     do {
@@ -41,7 +44,6 @@ final class HomeController {
       async let resurfacedMemoryTask: HomeResurfacedMemory? = loadResurfacedMemory(
         parameters: request.resurfacingParameters
       )
-      async let inboxPreviewTask = loadInboxPreview()
       let rows: [HomeSnapshot] =
         try await client
         .rpc("home_workspace", params: request.parameters)
@@ -78,10 +80,12 @@ final class HomeController {
         loadedMemory = memory
       }
 
+      guard loadGeneration == generation else { return }
       snapshot = loadedSnapshot
       resurfacedMemory = loadedMemory
-      inboxPreview = await inboxPreviewTask
+      loadErrorMessage = nil
     } catch {
+      guard loadGeneration == generation, !Task.isCancelled else { return }
       loadErrorMessage = "MemoTrail could not load Home. Pull to refresh or try again."
     }
   }
@@ -95,22 +99,6 @@ final class HomeController {
       .execute()
       .value
     return rows?.first
-  }
-
-  private func loadInboxPreview() async -> [HomeInboxPreview] {
-    let rows: [HomeInboxPreview]? =
-      try? await client
-      .from("entries")
-      .select("id,title,body,created_at")
-      .eq("owner_id", value: ownerID.uuidString)
-      .eq("inbox_status", value: "unreviewed")
-      .is("deleted_at", value: nil)
-      .order("created_at", ascending: false)
-      .order("id", ascending: false)
-      .limit(3)
-      .execute()
-      .value
-    return rows ?? []
   }
 
   private func signedURLMap(paths: [String]) async -> [String: URL] {

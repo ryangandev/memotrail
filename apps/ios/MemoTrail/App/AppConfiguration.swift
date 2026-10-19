@@ -1,8 +1,6 @@
 import Foundation
 
 enum AppConfiguration {
-  static let aiEnabled = false
-
   static var apiURL: URL? {
     #if DEBUG
       if NativeReviewMode.current == .localSession { return NativeReviewSession.current?.apiURL }
