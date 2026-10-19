@@ -1,47 +1,67 @@
+import SwiftUI
 import XCTest
 
 @testable import MemoTrail
 
+/// The Dashboard's `home_workspace` and `home_resurfaced_memory` rows, shaped like
+/// `supabase/migrations/202610190016_chapter_dashboard.sql`, and the app navigator.
 final class HomeEntryTests: XCTestCase {
-  func testSnapshotDecodesCountsStagesEntriesAndPrivateAttachmentMetadata() throws {
+  func testSnapshotDecodesCountsRecentEntriesNowItemsAndPrivateAttachmentMetadata() throws {
     let snapshot = try decodeSnapshot()
 
     XCTAssertEqual(snapshot.snapshotDate, "2026-09-03")
     XCTAssertEqual(snapshot.profileDisplayName, "Ryan Home")
-    XCTAssertEqual(snapshot.inboxCount, 2)
     XCTAssertEqual(snapshot.entryCount, 4)
     XCTAssertEqual(snapshot.firstTimeCount, 1)
-    XCTAssertEqual(snapshot.collectionCount, 1)
-    XCTAssertEqual(snapshot.currentStages.first?.title, "Living in California")
-    XCTAssertEqual(snapshot.recentEntries.first?.collectionNames, ["Things I Learned"])
-    XCTAssertEqual(snapshot.recentEntries.first?.tagNames, ["curiosity"])
-    XCTAssertEqual(snapshot.recentEntries.first?.coverAttachment?.bucketID, "entry-media")
-    XCTAssertNil(snapshot.recentEntries.first?.coverAttachment?.signedURL)
+    XCTAssertEqual(snapshot.tagCount, 3)
+    XCTAssertEqual(snapshot.nowCount, 1)
+    let entry = try XCTUnwrap(snapshot.recentEntries.first)
+    XCTAssertEqual(entry.tagNames, ["curiosity"])
+    XCTAssertEqual(entry.coverAttachment?.bucketID, "entry-media")
+    XCTAssertEqual(entry.coverAttachment?.byteSize, 2048)
+    XCTAssertNil(entry.coverAttachment?.signedURL)
+    let now = try XCTUnwrap(snapshot.nowItems.first)
+    XCTAssertEqual(now.displayTitle, "Living in California")
+    XCTAssertTrue(now.isFirstTime)
   }
 
-  func testRecentEntryPresentsWebTypeDateAndTitle() throws {
+  func testCountsMayArriveAsStringsButMustBeWholeAndNonNegative() throws {
+    XCTAssertEqual(try decodeSnapshot(entryCount: "12").entryCount, 12)
+    XCTAssertThrowsError(try decodeSnapshot(entryCount: -1))
+    XCTAssertThrowsError(try decodeSnapshot(entryCount: "many"))
+  }
+
+  func testRecentEntryPresentsWebIdentityDateAndTitle() throws {
     let entry = try XCTUnwrap(decodeSnapshot().recentEntries.first)
 
-    XCTAssertEqual(entry.displayType, "Entry")
+    XCTAssertEqual(entry.identityLabel, "Entry")
     XCTAssertEqual(entry.occurrence.displayLabel, "Sep 3, 2026")
-    XCTAssertEqual(entry.cardTitle, entry.title)
+    XCTAssertEqual(entry.displayTitle, "Why clear aligners move teeth")
+
+    let chapter = try XCTUnwrap(
+      decodeSnapshot(entryTitle: "  ", entrySubtype: "chapter").recentEntries.first)
+    XCTAssertEqual(chapter.identityLabel, "Chapter")
+    XCTAssertEqual(chapter.displayTitle, "Thursday, September 3, 2026")
   }
 
-  func testStagePresentsOngoingSpanInOccurrenceTimezone() throws {
-    let stage = try XCTUnwrap(decodeSnapshot().currentStages.first)
+  func testNowItemPresentsAnOngoingSpanInItsRecordedZone() throws {
+    let now = try XCTUnwrap(decodeSnapshot().nowItems.first)
 
-    XCTAssertEqual(stage.occurrence.spanLabel, "Since 2025")
+    XCTAssertEqual(now.occurrence.timezone, "America/Los_Angeles")
+    XCTAssertEqual(now.occurrence.spanLabel, "Since 2025")
+    let untitled = try XCTUnwrap(decodeSnapshot(nowTitle: NSNull()).nowItems.first)
+    XCTAssertEqual(untitled.displayTitle, "2025")
   }
 
   func testHumanLabelsTakePriorityOverDates() throws {
     let snapshot = try decodeSnapshot(
       entryOccurredLabel: "The first warm weekend",
-      stageOccurredLabel: "My California chapter"
+      nowOccurredLabel: "My California chapter"
     )
 
     XCTAssertEqual(
       snapshot.recentEntries.first?.occurrence.displayLabel, "The first warm weekend")
-    XCTAssertEqual(snapshot.currentStages.first?.occurrence.spanLabel, "My California chapter")
+    XCTAssertEqual(snapshot.nowItems.first?.occurrence.spanLabel, "My California chapter")
   }
 
   func testRequestUsesTheSelectedTimezoneCalendarDate() throws {
@@ -83,6 +103,7 @@ final class HomeEntryTests: XCTestCase {
     let data = try JSONEncoder().encode(request.parameters)
     let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
+    XCTAssertEqual(Set(object.keys), ["p_local_date", "p_timezone", "p_recent_limit"])
     XCTAssertEqual(object["p_local_date"] as? String, "1970-01-01")
     XCTAssertEqual(object["p_timezone"] as? String, "GMT")
     XCTAssertEqual(object["p_recent_limit"] as? Int, 10)
@@ -96,9 +117,9 @@ final class HomeEntryTests: XCTestCase {
     let data = try JSONEncoder().encode(request.resurfacingParameters)
     let object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
+    XCTAssertEqual(Set(object.keys), ["p_local_date", "p_timezone"])
     XCTAssertEqual(object["p_local_date"] as? String, "1970-01-01")
     XCTAssertEqual(object["p_timezone"] as? String, "GMT")
-    XCTAssertNil(object["p_recent_limit"])
   }
 
   func testOnThisDayMemoryDecodesCompleteEntryContext() throws {
@@ -106,9 +127,8 @@ final class HomeEntryTests: XCTestCase {
 
     XCTAssertEqual(memory.kind, .onThisDay)
     XCTAssertEqual(memory.yearsAgo, 1)
-    XCTAssertEqual(memory.entry.title, "First coastal train ride")
-    XCTAssertEqual(memory.entry.displayType, "First Time")
-    XCTAssertEqual(memory.entry.collectionNames, ["Journeys"])
+    XCTAssertEqual(memory.entry.displayTitle, "First coastal train ride")
+    XCTAssertEqual(memory.entry.identityLabel, "Entry")
     XCTAssertEqual(memory.entry.tagNames, ["coast"])
     XCTAssertEqual(memory.entry.coverAttachment?.objectPath, "owner/entry/coast.png")
   }
@@ -123,7 +143,6 @@ final class HomeEntryTests: XCTestCase {
   func testMemoryRejectsInvalidSelectionCombinations() throws {
     XCTAssertThrowsError(try decodeMemory(yearsAgo: 0))
     XCTAssertThrowsError(try decodeMemory(kind: "from_your_archive", yearsAgo: 1))
-    XCTAssertThrowsError(try decodeMemory(inboxStatus: "unreviewed"))
     XCTAssertThrowsError(try decodeMemory(occurredStart: nil))
     XCTAssertThrowsError(try decodeMemory(kind: "unsupported"))
   }
@@ -139,91 +158,81 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(HomePresentation.firstName("   "), "there")
   }
 
-  func testInboxPreviewUsesTitleOrFirstNoteLineLikeWeb() throws {
-    func preview(_ title: String?, _ body: String) throws -> HomeInboxPreview {
-      let object: [String: Any?] = [
-        "id": UUID().uuidString, "title": title, "body": body,
-        "created_at": "2026-09-03T15:00:00Z",
-      ]
-      let data = try JSONSerialization.data(withJSONObject: object.mapValues { $0 ?? NSNull() })
-      return try decoder.decode(HomeInboxPreview.self, from: data)
-    }
-    let titled = try preview("Market notes", "Peaches and basil")
-    XCTAssertEqual(titled.displayTitle, "Market notes")
-    XCTAssertEqual(titled.excerpt, "Peaches and basil")
-    let untitled = try preview(nil, "  First line\nSecond line")
-    XCTAssertEqual(untitled.displayTitle, "First line")
-    XCTAssertNil(untitled.excerpt)
-    XCTAssertEqual(try preview(" ", " ").displayTitle, "Untitled capture")
-  }
-
   @MainActor
-  func testNavigatorOpensTabsRoutesAndRecordRequests() {
+  func testNavigatorOpensTabsRoutesLibraryFiltersAndCapture() {
     let navigator = AppNavigator()
-    navigator.show(.collections)
+    navigator.show(.tags)
     XCTAssertEqual(navigator.selectedTab, .more)
-    XCTAssertEqual(navigator.morePath, [.collections])
-    let entry = UUID()
-    navigator.reviewInboxEntry(entry)
-    XCTAssertEqual(navigator.selectedTab, .inbox)
-    XCTAssertEqual(navigator.inboxReviewRequest, entry)
-    navigator.openTimelineEntry(entry)
-    XCTAssertEqual(navigator.selectedTab, .timeline)
-    XCTAssertEqual(navigator.timelineEntryRequest, entry)
-    navigator.show(.library)
+    XCTAssertEqual(navigator.morePath, NavigationPath([WorkspaceRoute.tags]))
+    navigator.openLibrary(tag: "coast")
     XCTAssertEqual(navigator.selectedTab, .library)
+    XCTAssertEqual(navigator.libraryFilterRequest, .tag("coast"))
+    navigator.openLibrary(record: .chapter)
+    XCTAssertEqual(navigator.libraryFilterRequest, .record(.chapter))
+    navigator.show(.timeline)
+    XCTAssertEqual(navigator.selectedTab, .timeline)
+    navigator.searchLibrary()
+    XCTAssertTrue(navigator.librarySearchRequested)
+    XCTAssertEqual(navigator.selectedTab, .library)
+    XCTAssertFalse(navigator.isShowingQuickCapture)
+    navigator.startCapture()
+    XCTAssertTrue(navigator.isShowingQuickCapture)
+    navigator.showPendingCaptures()
+    XCTAssertTrue(navigator.isShowingPendingCaptures)
+    let revision = navigator.entriesRevision
+    navigator.entriesChanged()
+    XCTAssertEqual(navigator.entriesRevision, revision + 1)
   }
 
-  func testRootTabsMatchTheFiveDestinationProductContract() {
+  func testRootTabsAreTheFourNativeDestinations() {
+    XCTAssertEqual(RootTabDestination.allCases, [.home, .timeline, .library, .more])
     XCTAssertEqual(
-      RootTabDestination.allCases,
-      [.home, .inbox, .timeline, .library, .more]
-    )
-    XCTAssertEqual(
-      RootTabDestination.allCases.map(\.title),
-      [
-        "Dashboard", "Inbox", "Timeline", "Library", "More",
-      ])
+      RootTabDestination.allCases.map(\.title), ["Dashboard", "Timeline", "Library", "More"])
     XCTAssertFalse(RootTabDestination.allCases.map(\.systemImage).contains(where: \.isEmpty))
   }
 
-  private var decoder: JSONDecoder {
-    let decoder = JSONDecoder()
-    decoder.dateDecodingStrategy = .iso8601
-    return decoder
+  func testMoreGroupsMatchWebsMobileMenu() {
+    XCTAssertEqual(
+      WorkspaceRoute.groups.map { $0.title }, ["Focused views", "Organize", "Trash and settings"])
+    XCTAssertEqual(WorkspaceRoute.groups.flatMap { $0.routes }, WorkspaceRoute.allCases)
+    XCTAssertEqual(
+      WorkspaceRoute.allCases.map(\.title), ["First Times", "Tags", "Trash", "Settings"])
   }
 
+  private var decoder: JSONDecoder { JSONDecoder() }
+
   private func decodeSnapshot(
+    entryCount: Any = 4,
+    entryTitle: String = "Why clear aligners move teeth",
+    entrySubtype: String = "entry",
     entryOccurredLabel: String? = nil,
-    stageOccurredLabel: String? = nil
+    nowTitle: Any = "Living in California",
+    nowOccurredLabel: String? = nil
   ) throws -> HomeSnapshot {
     let object: [[String: Any]] = [
       [
         "snapshot_date": "2026-09-03",
         "profile_display_name": "Ryan Home",
-        "inbox_count": 2,
-        "entry_count": 4,
+        "entry_count": entryCount,
         "first_time_count": 1,
-        "collection_count": 1,
-        "current_stage_count": 1,
+        "tag_count": 3,
+        "now_count": 1,
         "recent_entries": [
           [
             "entry_id": "10000000-0000-4000-8000-000000000001",
-            "title": "Why clear aligners move teeth",
+            "title": entryTitle,
             "body":
               "A steady, gentle force encourages bone to remodel around a tooth over time.",
             "item_kind": "entry",
-            "item_subtype": "entry",
-            "inbox_status": "unreviewed",
-            "occurred_start": "2026-09-03T19:00:00Z",
+            "item_subtype": entrySubtype,
+            "occurred_start": "2026-09-03T19:00:00+00:00",
             "occurred_end": NSNull(),
             "date_precision": "day",
             "occurred_label": entryOccurredLabel.map { $0 as Any } ?? NSNull(),
             "occurred_timezone": "America/Los_Angeles",
             "revision": 1,
-            "created_at": "2026-09-03T02:00:00Z",
-            "updated_at": "2026-09-03T02:00:00Z",
-            "collection_names": ["Things I Learned"],
+            "created_at": "2026-09-03T02:00:00.123456+00:00",
+            "updated_at": "2026-09-03T02:00:00.123456+00:00",
             "tag_names": ["curiosity"],
             "attachments": [
               [
@@ -239,17 +248,15 @@ final class HomeEntryTests: XCTestCase {
             ],
           ]
         ],
-        "current_stages": [
+        "now_items": [
           [
             "entry_id": "30000000-0000-4000-8000-000000000001",
-            "title": "Living in California",
-            "body": "A chapter out west.",
-            "track_id": "40000000-0000-4000-8000-000000000001",
-            "track_name": "Places",
-            "occurred_start": "2025-01-01T08:00:00Z",
+            "title": nowTitle,
+            "is_first_time": true,
+            "occurred_start": "2025-01-01T08:00:00+00:00",
             "occurred_end": NSNull(),
             "date_precision": "year",
-            "occurred_label": stageOccurredLabel.map { $0 as Any } ?? NSNull(),
+            "occurred_label": nowOccurredLabel.map { $0 as Any } ?? NSNull(),
             "occurred_timezone": "America/Los_Angeles",
           ]
         ],
@@ -262,26 +269,25 @@ final class HomeEntryTests: XCTestCase {
   private func decodeMemory(
     kind: String = "on_this_day",
     yearsAgo: Int? = 1,
-    inboxStatus: String = "organized",
-    occurredStart: String? = "2025-09-03T19:00:00Z"
+    occurredStart: String? = "2025-09-03T19:00:00+00:00"
   ) throws -> HomeResurfacedMemory {
     let object: [[String: Any]] = [
       [
+        "resurfacing_kind": kind,
+        "years_ago": yearsAgo.map { $0 as Any } ?? NSNull(),
         "entry_id": "50000000-0000-4000-8000-000000000001",
         "title": "First coastal train ride",
         "body": "A quiet afternoon on the coast.",
         "item_kind": "entry",
-        "item_subtype": "first_time",
-        "inbox_status": inboxStatus,
+        "item_subtype": "entry",
         "occurred_start": occurredStart.map { $0 as Any } ?? NSNull(),
         "occurred_end": NSNull(),
         "date_precision": "day",
         "occurred_label": NSNull(),
         "occurred_timezone": "America/Los_Angeles",
         "revision": 1,
-        "created_at": "2025-09-03T19:00:00Z",
-        "updated_at": "2025-09-03T19:00:00Z",
-        "collection_names": ["Journeys"],
+        "created_at": "2025-09-03T19:00:00+00:00",
+        "updated_at": "2025-09-03T19:00:00+00:00",
         "tag_names": ["coast"],
         "attachments": [
           [
@@ -295,18 +301,9 @@ final class HomeEntryTests: XCTestCase {
             "pixel_height": 800,
           ]
         ],
-        "resurfacing_kind": kind,
-        "years_ago": yearsAgo.map { $0 as Any } ?? NSNull(),
       ]
     ]
     let data = try JSONSerialization.data(withJSONObject: object)
-    let rows = try decoder.decode([HomeResurfacedMemory].self, from: data)
-    guard let memory = rows.first else {
-      throw DecodingError.valueNotFound(
-        HomeResurfacedMemory.self,
-        .init(codingPath: [], debugDescription: "Expected one memory fixture.")
-      )
-    }
-    return memory
+    return try XCTUnwrap(decoder.decode([HomeResurfacedMemory].self, from: data).first)
   }
 }

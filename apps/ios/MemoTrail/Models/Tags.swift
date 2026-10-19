@@ -138,13 +138,13 @@ struct TagUsageRow: Decodable, Equatable, Sendable {
 
   /// Web `tagOptionsByUse`: most used first, then by name ignoring case.
   static func optionsByUse(_ rows: [Self]) -> [String] {
-    rows.map { (name: $0.name, count: $0.entryTags.first?.count ?? 0) }
-      .sorted {
-        $0.count != $1.count
-          ? $0.count > $1.count
-          : $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-      }
-      .map(\.name)
+    func uses(_ row: Self) -> Int { row.entryTags.first?.count ?? 0 }
+    func precedes(_ left: Self, _ right: Self) -> Bool {
+      let (leftUses, rightUses) = (uses(left), uses(right))
+      if leftUses != rightUses { return leftUses > rightUses }
+      return left.name.localizedCaseInsensitiveCompare(right.name) == .orderedAscending
+    }
+    return rows.sorted(by: precedes).map(\.name)
   }
 }
 

@@ -5,6 +5,13 @@ import XCTest
 
 @testable import MemoTrail
 
+/// Native contracts against the local Supabase stack. `verify-local-contracts.py` signs in a
+/// disposable account and passes its session in `MEMOTRAIL_NATIVE_CONTRACT_CONFIG`; without it
+/// every test skips.
+///
+/// This file is the shared harness: the configured client and the helpers below. Each feature
+/// adds its own tests in `NativeContractTests+<Area>.swift` as `extension NativeContractTests`,
+/// so identifiers stay `MemoTrailTests/NativeContractTests/<test>`.
 @MainActor
 final class NativeContractTests: XCTestCase {
   // Keep synthetic sessions out of the device Keychain, including unsigned test hosts.
@@ -39,7 +46,8 @@ final class NativeContractTests: XCTestCase {
     let ownerID: UUID
   }
 
-  private func client(session: URLSession = .shared) async throws -> (SupabaseClient, UUID) {
+  /// A client signed in as the disposable contract account, sending through `session`.
+  func client(session: URLSession = .shared) async throws -> (SupabaseClient, UUID) {
     let path = ProcessInfo.processInfo.environment["MEMOTRAIL_NATIVE_CONTRACT_CONFIG"] ?? ""
     guard !path.isEmpty, !path.contains("$(") else {
       throw XCTSkip("Run apps/ios/scripts/verify-local-contracts.py with the local Supabase stack.")
@@ -63,1336 +71,393 @@ final class NativeContractTests: XCTestCase {
     return (client, config.ownerID)
   }
 
-  func testCaptureReviewLibraryAndSearchUseTheSameEntryIdentity() async throws {
+  // MARK: P1 contracts
+
+  /// Calls every RPC, table, and Storage path iOS uses through the app's own parameter types,
+  /// so a renamed argument (PGRST202), a missing column (PGRST204), or a changed return shape
+  /// fails here before any screen meets it. The Web API routes (`/api/media/*`, `/api/export`)
+  /// are not part of the schema and are covered by the Web suite.
+  func testEveryNativeRPCResolvesAgainstTheCurrentSchema() async throws {
     let (client, ownerID) = try await client()
-    let id = UUID()
-    let title = "Native contract \(id.uuidString)"
-    let payload = InboxEntryInsert(
-      id: id, ownerID: ownerID, title: title, body: "A private synthetic Entry.",
-      occurredStart: nil, occurredTimezone: "UTC", datePrecision: "unknown",
-      clientID: "native-contract:\(id)")
-    try await client.from("entries").insert(payload).execute()
+    let api = EntryAPI(client: client, ownerID: ownerID)
+    let marker = String(UUID().uuidString.prefix(8)).lowercased()
+    let tag = "smoke \(marker)"
+    let lisbon = "Europe/Lisbon"
 
-    let inbox = CaptureController(client: client, ownerID: ownerID)
-    await inbox.load()
-    XCTAssertNil(inbox.loadErrorMessage)
-    let entry = try XCTUnwrap(inbox.entries.first { $0.id == id })
-    XCTAssertEqual(entry.itemKind, .entry)
-    XCTAssertEqual(entry.itemSubtype, "entry")
+    // save_entry: a closed Chapter, and a formatted First Time dated inside it.
+    let chapterID = UUID()
+    let chapterStart = try XCTUnwrap(EntryTimestamp.date(from: "2021-03-01T12:00:00Z"))
+    let chapterEnd = try XCTUnwrap(EntryTimestamp.date(from: "2021-08-01T12:00:00Z"))
+    let chapter = try await api.save(
+      SaveEntryParameters(
+        entryID: chapterID, expectedRevision: nil, title: "Smoke Chapter \(marker)", body: "",
+        richText: nil,
+        occurrence: EntryOccurrence(
+          precision: .month, start: chapterStart, end: chapterEnd, label: nil, timezone: lisbon),
+        tagNames: [], location: nil, marks: .chapter))
+    XCTAssertEqual(chapter, SavedEntry(entryID: chapterID, revision: 1))
+    let entryID = UUID()
+    let body = "Harbor lights"
+    let richText = try JSONDecoder().decode(
+      EntryRichText.self,
+      from: Data(
+        #"{"version":1,"text":"Harbor lights","document":{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"Harbor","marks":[{"type":"bold"}]},{"type":"text","text":" lights"}]}]}}"#
+          .utf8))
+    let entryDay = try XCTUnwrap(EntryTimestamp.date(from: "2021-05-10T11:00:00Z"))
+    _ = try await api.save(
+      SaveEntryParameters(
+        entryID: entryID, expectedRevision: nil, title: nil, body: body, richText: richText,
+        occurrence: EntryOccurrence(
+          precision: .day, start: entryDay, end: nil, label: nil, timezone: lisbon),
+        tagNames: [tag], location: nil, marks: .firstTime))
 
-    // Browsing lists organized records only, while search also finds Inbox captures.
+    // editable_entry, entry_detail, chapter_entries, chapter_overlaps, and the tag options read.
+    let editable = try await api.editable(entryID)
+    XCTAssertEqual(editable?.richText, richText)
+    XCTAssertEqual(editable?.tagNames, [tag])
+    XCTAssertEqual(editable?.marks, .firstTime)
+    let missing = try await api.editable(UUID())
+    XCTAssertNil(missing)
+    let detail = try await api.detail(entryID)
+    XCTAssertEqual(detail?.tags.map(\.name), [tag])
+    XCTAssertEqual(detail?.displayTitle, "Monday, May 10, 2021")
+    let inside = try await api.chapterEntries(id: chapterID, offset: 0)
+    XCTAssertEqual(inside.map(\.id), [entryID])
+    XCTAssertEqual(inside.first?.totalCount, 1)
+    // A Chapter never overlaps itself.
+    let overlaps = try await api.chapterOverlaps(id: chapterID)
+    XCTAssertFalse(overlaps.contains { $0.id == chapterID })
+    let options = try await api.tagOptions()
+    XCTAssertTrue(options.contains(tag))
+
+    // The `entries` formatting read and the `entry_locations` read.
+    let formatting = await EntryRichTextMap.load(
+      [(id: entryID, body: body)], client: client, ownerID: ownerID)
+    XCTAssertEqual(formatting, [entryID: richText])
+    let locations = try await EntryPrimaryLocations.load(
+      client: client, ownerID: ownerID, entryIDs: [entryID])
+    XCTAssertEqual(locations, [:])
+
+    // Storage upload and register_entry_attachment, then trash_entry_attachment.
+    let photo = try photoDraft()
+    let attached = try await api.attachPhoto(photo, entryID: entryID)
+    XCTAssertTrue(attached)
+    let trashedPhoto = try await api.trashPhoto(photo.id)
+    XCTAssertTrue(trashedPhoto)
+
+    // home_workspace and home_resurfaced_memory.
+    let home = HomeController(client: client, ownerID: ownerID)
+    await home.load()
+    XCTAssertNil(home.loadErrorMessage)
+    XCTAssertNotNil(home.snapshot)
+
+    // wiki_items_workspace, the Library tags read, and search_wiki_items without semantic
+    // arguments.
     let library = LibraryController(client: client, ownerID: ownerID)
     await library.load()
     XCTAssertNil(library.errorMessage)
-    XCTAssertFalse(library.items.contains { $0.id == id })
-    library.query = title
+    XCTAssertNil(library.filtersErrorMessage)
+    XCTAssertEqual(library.items.first { $0.id == chapterID }?.subtype, .chapter)
+    XCTAssertTrue(library.tagOptions.contains(tag))
+    library.tagName = tag
     await library.search()
     XCTAssertNil(library.searchErrorMessage)
-    XCTAssertTrue(try XCTUnwrap(library.results.first { $0.id == id }).isInInbox)
+    XCTAssertEqual(library.results.map(\.id), [entryID])
 
-    let result = await inbox.review(
-      entry: entry,
-      draft: EntryReviewDraft(
-        title: title, body: entry.body, collectionNames: ["Native contract"],
-        tagNames: ["native-contract"], occurrence: entry.occurrence),
-      intent: .done)
-    XCTAssertEqual(result.status, .done, result.message)
-
-    library.clearAll()
-    await library.load()
-    let organized = try XCTUnwrap(library.items.first { $0.id == id })
-    XCTAssertEqual(organized.itemKind, .entry)
-    XCTAssertFalse(organized.isInInbox)
-
-    library.query = title
-    library.classification = .entry
-    library.tagName = "native-contract"
-    await library.search()
-    XCTAssertNil(library.searchErrorMessage)
-    let found = try XCTUnwrap(library.results.first { $0.id == id })
-    XCTAssertFalse(found.isInInbox)
-    XCTAssertEqual(found.tagNames, ["native-contract"])
-    XCTAssertEqual(found.collectionNames, ["Native contract"])
-    XCTAssertTrue(library.collectionOptions.contains("Native contract"))
-    XCTAssertTrue(library.tagOptions.contains("native-contract"))
-    library.classification = .goal
-    await library.search()
-    XCTAssertFalse(library.results.contains { $0.id == id })
-
-    let stale = await inbox.review(
-      entry: entry,
-      draft: EntryReviewDraft(
-        title: title, body: "A stale edit", collectionNames: [], tagNames: [],
-        occurrence: entry.occurrence),
-      intent: .done)
-    XCTAssertEqual(stale.status, .conflict)
-  }
-
-  func testInboxReviewKeepsFormattingAndTrashUsesTheCurrentRevision() async throws {
-    let (client, ownerID) = try await client()
-    let id = UUID()
-    try await client.from("entries").insert(
-      InboxEntryInsert(
-        id: id, ownerID: ownerID, title: nil, body: "Harbor lights", occurredStart: nil,
-        occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
-    ).execute()
-    let inbox = CaptureController(client: client, ownerID: ownerID)
-    await inbox.load()
-    let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
-    XCTAssertNil(capture.bodyRich)
-
-    let note = NSMutableAttributedString(
-      string: "Harbor", attributes: [.font: UIFont.boldSystemFont(ofSize: 17)])
-    note.append(
-      NSAttributedString(string: " lights", attributes: [.font: UIFont.systemFont(ofSize: 17)]))
-    let rich = try XCTUnwrap(EntryRichText(EntryEmphasisContent(attributedText: note)))
-    let saved = await inbox.review(
-      entry: capture,
-      draft: EntryReviewDraft(
-        title: "", body: "Harbor lights", bodyRich: rich, collectionNames: [], tagNames: [],
-        occurrence: capture.occurrence),
-      intent: .save)
-    XCTAssertEqual(saved.status, .saved, saved.message)
-    await inbox.load()
-    let formatted = try XCTUnwrap(inbox.entries.first { $0.id == id })
-    XCTAssertEqual(formatted.bodyRich, rich)
-    XCTAssertGreaterThan(formatted.revision, capture.revision)
-
-    // Library search results show the same formatting, like Web `loadEntryRichTextMap`.
-    let library = LibraryController(client: client, ownerID: ownerID)
-    library.query = "Harbor lights"
-    await library.search()
-    XCTAssertNil(library.searchErrorMessage)
-    XCTAssertEqual(library.results.first { $0.id == id }?.bodyRich, rich)
-
-    // Like Web, a capture moves to Trash only at the revision the person reviewed.
-    let stale = await inbox.moveToTrash(capture)
-    XCTAssertNotNil(stale)
-    XCTAssertTrue(inbox.entries.contains { $0.id == id })
-    let trashed = await inbox.moveToTrash(formatted)
-    XCTAssertNil(trashed)
-    XCTAssertFalse(inbox.entries.contains { $0.id == id })
-    await inbox.load()
-    XCTAssertNil(inbox.loadErrorMessage)
-    XCTAssertFalse(inbox.entries.contains { $0.id == id })
-  }
-
-  #if DEBUG
-    func testOfflineCaptureIsConfirmedOnceAndAnnouncedAgainOnlyWhenItSyncs() async throws {
-      let (client, ownerID) = try await client(session: NativeReviewNetwork.session())
-      defer { NativeReviewNetwork.isOffline = false }
-      let suiteName = "NativeContractTests.\(UUID().uuidString)"
-      addTeardownBlock {
-        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
-      }
-      let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-      let inbox = CaptureController(
-        client: client, ownerID: ownerID, queueStore: CaptureQueueStore(defaults: defaults))
-      // Let the connectivity monitor's first update pass, so each save starts its own sync.
-      try await Task.sleep(for: .milliseconds(500))
-      let center = MTToastCenter.shared
-
-      // Without a connection the capture stays on this iPhone, confirmed by one toast rather
-      // than a problem in the composer.
-      NativeReviewNetwork.isOffline = true
-      let note = "Offline capture \(UUID().uuidString)"
-      var shown = Set(center.toasts.map(\.id))
-      let didSave = await inbox.save(title: "", body: note)
-      XCTAssertTrue(didSave)
-      var announced = try await toasts(after: shown, from: inbox)
-      XCTAssertEqual(
-        announced.map(\.message),
-        ["Saved on this iPhone. MemoTrail will sync when you are online."])
-      XCTAssertEqual(announced.map(\.tone), [.info])
-      XCTAssertNil(inbox.captureError)
-      XCTAssertEqual(inbox.pendingEntries.map(\.body), [note])
-
-      // Retrying while still offline announces it nowhere again.
-      shown = Set(center.toasts.map(\.id))
-      let retried = await inbox.synchronizePendingEntries()
-      XCTAssertFalse(retried)
-      XCTAssertTrue(center.toasts.allSatisfy { shown.contains($0.id) })
-      XCTAssertNil(inbox.captureError)
-      XCTAssertEqual(inbox.pendingEntries.map(\.body), [note])
-
-      // Back online, the waiting capture syncs and is announced as saved.
-      NativeReviewNetwork.isOffline = false
-      shown = Set(center.toasts.map(\.id))
-      let synced = await inbox.synchronizePendingEntries()
-      XCTAssertTrue(synced)
-      announced = center.toasts.filter { !shown.contains($0.id) }
-      XCTAssertEqual(announced.map(\.message), ["Saved to Inbox."])
-      XCTAssertTrue(inbox.pendingEntries.isEmpty)
-      await inbox.load()
-      XCTAssertTrue(inbox.entries.contains { $0.body == note })
-
-      // An online save is announced once, after it syncs, without an offline confirmation.
-      let onlineNote = "Online capture \(UUID().uuidString)"
-      shown = Set(center.toasts.map(\.id))
-      let didSaveOnline = await inbox.save(title: "", body: onlineNote)
-      XCTAssertTrue(didSaveOnline)
-      announced = try await toasts(after: shown, from: inbox)
-      XCTAssertEqual(announced.map(\.message), ["Saved to Inbox."])
-      XCTAssertNil(inbox.captureError)
-      XCTAssertTrue(inbox.pendingEntries.isEmpty)
-    }
-
-    func testRefusedCapturesStayOnThisIPhoneWithoutBlockingLaterCaptures() async throws {
-      let (client, ownerID) = try await client(session: NativeReviewNetwork.session())
-      defer { NativeReviewNetwork.isOffline = false }
-      let suiteName = "NativeContractTests.\(UUID().uuidString)"
-      let photoRoot = FileManager.default.temporaryDirectory.appending(
-        path: "NativeContractTests.\(UUID().uuidString)", directoryHint: .isDirectory)
-      addTeardownBlock {
-        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
-        try? FileManager.default.removeItem(at: photoRoot)
-      }
-      let queueStore = CaptureQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
-      let photoStore = CapturePhotoStore(rootURL: photoRoot)
-      let inbox = CaptureController(
-        client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
-      // Let the connectivity monitor's first update pass, so each save starts its own sync.
-      try await Task.sleep(for: .milliseconds(500))
-      let center = MTToastCenter.shared
-
-      // Offline, queue a note Postgres text cannot store, a photo capture whose photo then
-      // changes on this iPhone, and a valid capture saved after both.
-      NativeReviewNetwork.isOffline = true
-      let marker = UUID().uuidString
-      let refusedNote = "Pasted from a terminal \u{0000} log \(marker)"
-      let photo = try photoDraft()
-      try photoStore.save(photo, ownerID: ownerID)
-      for (title, body, photos) in [
-        ("", refusedNote, []), ("Harbor photo \(marker)", "", [photo]),
-        ("", "A later capture \(marker)", []),
-      ] as [(String, String, [PhotoDraft])] {
-        let shown = Set(center.toasts.map(\.id))
-        let didSave = await inbox.save(title: title, body: body, photos: photos)
-        XCTAssertTrue(didSave)
-        _ = try await toasts(after: shown, from: inbox)
-      }
-      let queued = inbox.pendingEntries
-      XCTAssertEqual(queued.count, 3)
-      XCTAssertEqual(inbox.waitingEntryCount, 3)
-      // A capture that may still sync is never discarded.
-      let keptWaiting = await inbox.discardRejected(queued[0].id)
-      XCTAssertFalse(keptWaiting)
-      XCTAssertEqual(inbox.pendingEntries.map(\.id), queued.map(\.id))
-      let format = UIGraphicsImageRendererFormat()
-      format.scale = 1
-      let changedData = UIGraphicsImageRenderer(size: CGSize(width: 6, height: 6), format: format)
-        .pngData { context in
-          UIColor.systemOrange.setFill()
-          context.fill(CGRect(x: 0, y: 0, width: 6, height: 6))
-        }
-      try photoStore.save(
-        try PhotoDraft.validate(
-          id: photo.id, data: changedData, mimeType: .png, originalFilename: "kept.png",
-          pixelWidth: 6, pixelHeight: 6),
-        ownerID: ownerID)
-
-      // Online, MemoTrail refuses the first two once, each kept with why, while the later
-      // capture still syncs. Neither is reported as offline.
-      NativeReviewNetwork.isOffline = false
-      let shown = Set(center.toasts.map(\.id))
-      let synced = await inbox.synchronizePendingEntries()
-      XCTAssertTrue(synced)
-      let announced = center.toasts.filter { !shown.contains($0.id) }
-      XCTAssertEqual(
-        announced.map(\.message),
-        ["MemoTrail did not accept 2 Entries. Review them in your Inbox.", "Saved to Inbox."])
-      XCTAssertEqual(announced.map(\.tone), [.error, .success])
-      XCTAssertNil(inbox.captureError)
-      XCTAssertEqual(inbox.pendingEntries.map(\.id), Array(queued.map(\.id).prefix(2)))
-      XCTAssertEqual(inbox.pendingEntries.map(\.body), [refusedNote, ""])
-      XCTAssertEqual(
-        inbox.pendingEntries.map { $0.rejection?.message },
-        [
-          "MemoTrail cannot accept this Entry, so it will not sync. "
-            + "Copy its text to keep it, then discard it.",
-          "This Entry is in your Inbox, but one of its photos changed on this iPhone, "
-            + "so they will not sync. Discard to remove them from this iPhone.",
-        ])
-      XCTAssertEqual(inbox.waitingEntryCount, 0)
-      XCTAssertEqual(inbox.pendingSummary, "2 Entries not accepted")
-
-      // The refused note never reached MemoTrail, while the photo capture's Entry did.
-      struct StoredEntry: Decodable { let id: UUID }
-      let stored: [StoredEntry] =
-        try await client.from("entries").select("id")
-        .in("id", values: queued.map { $0.id.uuidString })
-        .execute().value
-      XCTAssertEqual(Set(stored.map(\.id)), Set(queued.map(\.id).suffix(2)))
-      await inbox.load()
-      XCTAssertTrue(inbox.entries.contains { $0.id == queued[1].id })
-
-      // After a relaunch, refused captures are still marked and are never sent again.
-      let relaunched = CaptureController(
-        client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
-      XCTAssertEqual(relaunched.pendingEntries, inbox.pendingEntries)
-      NativeReviewNetwork.isOffline = true
-      let quiet = Set(center.toasts.map(\.id))
-      let resent = await relaunched.synchronizePendingEntries()
-      XCTAssertFalse(resent)
-      XCTAssertTrue(center.toasts.allSatisfy { quiet.contains($0.id) })
-      XCTAssertNil(relaunched.captureError)
-      NativeReviewNetwork.isOffline = false
-
-      // Discarding removes the capture's photo files first, then the capture itself.
-      let discardedPhoto = await relaunched.discardRejected(queued[1].id)
-      XCTAssertTrue(discardedPhoto)
-      XCTAssertFalse(try photoStore.load(ownerID: ownerID).contains { $0.id == photo.id })
-      let discardedNote = await relaunched.discardRejected(queued[0].id)
-      XCTAssertTrue(discardedNote)
-      XCTAssertTrue(relaunched.pendingEntries.isEmpty)
-      XCTAssertTrue(queueStore.load(ownerID: ownerID).isEmpty)
-    }
-
-    func testCapturesWhoseEntryIsInTrashOrDeletedForeverStopInsteadOfRetrying() async throws {
-      let (client, ownerID) = try await client(session: NativeReviewNetwork.session())
-      defer { NativeReviewNetwork.isOffline = false }
-      let (inbox, photoStore) = try await isolatedInbox(client: client, ownerID: ownerID)
-      let center = MTToastCenter.shared
-
-      // Offline, queue a note, a photo capture, and a note that will be deleted forever.
-      NativeReviewNetwork.isOffline = true
-      let marker = UUID().uuidString
-      let photo = try photoDraft()
-      try photoStore.save(photo, ownerID: ownerID)
-      for (body, photos) in [
-        ("Trashed note \(marker)", []), ("Trashed photo \(marker)", [photo]),
-        ("Deleted forever \(marker)", []),
-      ] as [(String, [PhotoDraft])] {
-        let shown = Set(center.toasts.map(\.id))
-        let didSave = await inbox.save(title: "", body: body, photos: photos)
-        XCTAssertTrue(didSave)
-        _ = try await toasts(after: shown, from: inbox)
-      }
-      let queued = inbox.pendingEntries
-      XCTAssertEqual(queued.count, 3)
-
-      // Each Entry reached MemoTrail on an attempt whose answer never came back, then went to
-      // Trash on another device, where the last one was deleted forever.
-      NativeReviewNetwork.isOffline = false
-      for capture in queued {
-        try await client.from("entries").insert(
-          InboxEntryInsert(
-            id: capture.id, ownerID: ownerID, title: nil, body: capture.body, occurredStart: nil,
-            occurredTimezone: "UTC", clientID: "ios:\(capture.id.uuidString.lowercased())")
-        ).execute()
-        try await moveToTrashElsewhere(capture.id, client: client)
-      }
-      let trash = TrashController(client: client, ownerID: ownerID)
-      await trash.load()
-      let deletedNote = try XCTUnwrap(trash.items.first { $0.itemID == queued[2].id })
-      let deleted = await trash.deleteForever(deletedNote)
-      XCTAssertEqual(deleted, .init(message: "Item permanently deleted.", tone: .success))
-
-      // Each stops for good with why instead of retrying, and a later capture still syncs.
-      let shown = Set(center.toasts.map(\.id))
-      let didSave = await inbox.save(title: "", body: "A later capture \(marker)")
-      XCTAssertTrue(didSave)
-      let announced = try await toasts(after: shown, from: inbox)
-      XCTAssertEqual(
-        announced.map(\.message),
-        ["MemoTrail did not accept 3 Entries. Review them in your Inbox.", "Saved to Inbox."])
-      XCTAssertNil(inbox.captureError)
-      XCTAssertEqual(inbox.pendingEntries.map(\.id), queued.map(\.id))
-      XCTAssertEqual(
-        inbox.pendingEntries.map { $0.rejection?.message },
-        [
-          "This Entry is already in Trash, so it will not sync again. "
-            + "Restore it from Trash to keep it, then discard this copy.",
-          "This Entry is in Trash, so its photos will not be attached. "
-            + "Discard to remove them from this iPhone.",
-          "This Entry was deleted forever, so MemoTrail will not create it again. "
-            + "Copy its text to keep it, then discard it.",
-        ])
-      XCTAssertEqual(inbox.pendingSummary, "3 Entries not accepted")
-
-      // The Entry deleted forever never came back, and no photo went to the one in Trash.
-      struct StoredEntry: Decodable {
-        let id: UUID
-        let deleted_at: String?
-      }
-      let stored: [StoredEntry] =
-        try await client.from("entries").select("id,deleted_at")
-        .in("id", values: queued.map { $0.id.uuidString })
-        .execute().value
-      XCTAssertEqual(Set(stored.map(\.id)), Set(queued.prefix(2).map(\.id)))
-      XCTAssertTrue(stored.allSatisfy { $0.deleted_at != nil })
-      let photoFolder = "\(ownerID.uuidString.lowercased())/\(queued[1].id.uuidString.lowercased())"
-      let uploaded = try await storedNames(in: photoFolder, client: client)
-      XCTAssertEqual(uploaded, [])
-
-      // Discard keeps working for these, like any refused capture.
-      for capture in queued {
-        let discarded = await inbox.discardRejected(capture.id)
-        XCTAssertTrue(discarded)
-      }
-      XCTAssertTrue(inbox.pendingEntries.isEmpty)
-    }
-
-    func testRefusedPhotoUploadsStopWhileOneWhoseAnswerWasLostAttaches() async throws {
-      let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
-      defer { HeldResponseProtocol.gate.answerNextUpload(nil) }
-      let (inbox, photoStore) = try await isolatedInbox(client: client, ownerID: ownerID)
-      let center = MTToastCenter.shared
-      let marker = UUID().uuidString
-
-      // Storage refuses one photo as too large, and denies another for a person still signed
-      // in, which the session check confirms is a refusal rather than an expired session.
-      for (body, statusCode) in [("Too large \(marker)", "413"), ("Denied \(marker)", "403")] {
-        let photo = try photoDraft()
-        try photoStore.save(photo, ownerID: ownerID)
-        HeldResponseProtocol.gate.answerNextUpload(.refuse(statusCode: statusCode))
-        let shown = Set(center.toasts.map(\.id))
-        let didSave = await inbox.save(title: "", body: body, photos: [photo])
-        XCTAssertTrue(didSave)
-        let announced = try await toasts(after: shown, from: inbox)
-        XCTAssertEqual(
-          announced.map(\.message), ["MemoTrail did not accept 1 Entry. Review it in your Inbox."])
-      }
-      XCTAssertEqual(
-        inbox.pendingEntries.map { $0.rejection?.message },
-        [
-          "This Entry is in your Inbox, but one of its photos is too large for MemoTrail, "
-            + "so they will not sync. Discard to remove them from this iPhone.",
-          "This Entry is in your Inbox, but MemoTrail cannot accept one of its photos, "
-            + "so they will not sync. Discard to remove them from this iPhone.",
-        ])
-      let refusedEntries = inbox.pendingEntries.map(\.id)
-      await inbox.load()
-      XCTAssertEqual(Set(inbox.entries.map(\.id)).intersection(refusedEntries), Set(refusedEntries))
-      let refusedPhotos = try await attachmentCount(entryIDs: refusedEntries, client: client)
-      XCTAssertEqual(refusedPhotos, 0)
-
-      // The next photo reaches Storage, but its answer is lost, so it waits on this iPhone.
-      let photo = try photoDraft()
-      try photoStore.save(photo, ownerID: ownerID)
-      HeldResponseProtocol.gate.answerNextUpload(.loseResponse)
-      let didSave = await inbox.save(title: "", body: "Lost upload \(marker)", photos: [photo])
-      XCTAssertTrue(didSave)
-      let offline = "Photos are saved on this iPhone. MemoTrail will retry when you are online."
-      for _ in 0..<150 where inbox.isSyncing || inbox.captureError != offline {
-        try await Task.sleep(for: .milliseconds(100))
-      }
-      XCTAssertEqual(inbox.captureError, offline)
-      XCTAssertEqual(inbox.waitingEntryCount, 1)
-      let waiting = try XCTUnwrap(inbox.pendingEntries.last)
-      let waitingPhotos = try await attachmentCount(entryIDs: [waiting.id], client: client)
-      XCTAssertEqual(waitingPhotos, 0)
-
-      // A retry finds the stored original in Storage and attaches it.
-      let shown = Set(center.toasts.map(\.id))
-      let synced = await inbox.synchronizePendingEntries()
-      XCTAssertTrue(synced)
-      XCTAssertEqual(
-        center.toasts.filter { !shown.contains($0.id) }.map(\.message),
-        ["Saved to Inbox with 1 photo."])
-      XCTAssertNil(inbox.captureError)
-      XCTAssertEqual(inbox.waitingEntryCount, 0)
-      let attached = try await attachmentCount(entryIDs: [waiting.id], client: client)
-      XCTAssertEqual(attached, 1)
-      XCTAssertFalse(try photoStore.load(ownerID: ownerID).contains { $0.id == photo.id })
-    }
-
-    func testPhotoThatArrivesAfterDeleteForeverIsRefusedAndItsUploadRemoved() async throws {
-      let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
-      defer {
-        HeldResponseProtocol.gate.answerNextUpload(nil)
-        HeldResponseProtocol.gate.releaseHeldResponse()
-      }
-      let (inbox, photoStore) = try await isolatedInbox(client: client, ownerID: ownerID)
-      let center = MTToastCenter.shared
-
-      // The original is stored, and its answer waits while another device deletes the Entry
-      // forever.
-      let photo = try photoDraft()
-      try photoStore.save(photo, ownerID: ownerID)
-      HeldResponseProtocol.gate.answerNextUpload(.hold)
-      let shown = Set(center.toasts.map(\.id))
-      let didSave = await inbox.save(
-        title: "", body: "Deleted forever during its upload \(UUID().uuidString)",
-        photos: [photo])
-      XCTAssertTrue(didSave)
-      try await waitForHeldResponse()
-      let capture = try XCTUnwrap(inbox.pendingEntries.first)
-      try await moveToTrashElsewhere(capture.id, client: client)
-      let trash = TrashController(client: client, ownerID: ownerID)
-      await trash.load()
-      let trashed = try XCTUnwrap(trash.items.first { $0.itemID == capture.id })
-      let deleted = await trash.deleteForever(trashed)
-      XCTAssertEqual(deleted, .init(message: "Item permanently deleted.", tone: .success))
-      HeldResponseProtocol.gate.releaseHeldResponse()
-
-      let announced = try await toasts(after: shown, from: inbox)
-      XCTAssertEqual(
-        announced.map(\.message), ["MemoTrail did not accept 1 Entry. Review it in your Inbox."])
-      XCTAssertEqual(
-        inbox.pendingEntries.map { $0.rejection?.message },
-        [
-          "This Entry was deleted forever, so MemoTrail will not create it again. "
-            + "Copy its text to keep it, then discard it."
-        ])
-      let stored: [ExistingRow] =
-        try await client.from("entries").select("id")
-        .eq("id", value: capture.id.uuidString).execute().value
-      XCTAssertEqual(stored.count, 0)
-      // The unregistered original does not outlive its Entry.
-      let folder = "\(ownerID.uuidString.lowercased())/\(capture.id.uuidString.lowercased())"
-      let remaining = try await storedNames(in: folder, client: client)
-      XCTAssertEqual(remaining, [])
-    }
-
-    /// An Inbox with its own queue and photo files, past its first connectivity update so each
-    /// save starts its own sync.
-    private func isolatedInbox(client: SupabaseClient, ownerID: UUID) async throws
-      -> (CaptureController, CapturePhotoStore)
-    {
-      let suiteName = "NativeContractTests.\(UUID().uuidString)"
-      let photoRoot = FileManager.default.temporaryDirectory.appending(
-        path: "NativeContractTests.\(UUID().uuidString)", directoryHint: .isDirectory)
-      addTeardownBlock {
-        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
-        try? FileManager.default.removeItem(at: photoRoot)
-      }
-      let queueStore = CaptureQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
-      let photoStore = CapturePhotoStore(rootURL: photoRoot)
-      let inbox = CaptureController(
-        client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
-      try await Task.sleep(for: .milliseconds(500))
-      return (inbox, photoStore)
-    }
-
-    /// Moves an Entry to Trash the way another device does.
-    private func moveToTrashElsewhere(_ entryID: UUID, client: SupabaseClient) async throws {
-      try await client.from("entries")
-        .update(["deleted_at": ISO8601DateFormatter().string(from: Date())])
-        .eq("id", value: entryID.uuidString)
-        .execute()
-    }
-
-    private func attachmentCount(entryIDs: [UUID], client: SupabaseClient) async throws -> Int {
-      let rows: [ExistingRow] =
-        try await client.from("attachments").select("id")
-        .in("entry_id", values: entryIDs.map(\.uuidString))
-        .execute().value
-      return rows.count
-    }
-
-    /// Waits for the sync a save starts, then returns the toasts shown since `shown`.
-    private func toasts(after shown: Set<UUID>, from inbox: CaptureController) async throws
-      -> [MTToast]
-    {
-      let deadline = Date().addingTimeInterval(15)
-      while Date() < deadline,
-        inbox.isSyncing || MTToastCenter.shared.toasts.allSatisfy({ shown.contains($0.id) })
-      {
-        try await Task.sleep(for: .milliseconds(100))
-      }
-      return MTToastCenter.shared.toasts.filter { !shown.contains($0.id) }
-    }
-  #endif
-
-  func testSettingsSaveAndClearTheProfileLikeWeb() async throws {
-    let (client, ownerID) = try await client()
-    let settings = SettingsController(client: client, ownerID: ownerID)
-    await settings.load()
-    XCTAssertNil(settings.loadErrorMessage)
-    XCTAssertNotNil(settings.profile)
-
-    let named = await settings.savePreferredName("  River  Gan ")
-    XCTAssertEqual(named, .init(isSaved: true, message: "Preferred name saved."))
-    let born = await settings.saveBirthDate("1994-04-18")
-    XCTAssertEqual(born, .init(isSaved: true, message: "Birth date saved."))
-    let zoned = await settings.saveTimezone("Asia/Tokyo")
-    XCTAssertEqual(zoned, .init(isSaved: true, message: "Default time zone saved."))
-    let future = await settings.saveBirthDate("2999-01-01")
-    XCTAssertFalse(future.isSaved)
-
-    let reloaded = SettingsController(client: client, ownerID: ownerID)
-    await reloaded.load()
-    XCTAssertEqual(
-      reloaded.profile,
-      ProfileSettings(preferredName: "River Gan", birthDate: "1994-04-18", timezone: "Asia/Tokyo"))
-
-    let cleared = await reloaded.savePreferredName("")
-    XCTAssertEqual(cleared, .init(isSaved: true, message: "Preferred name cleared."))
-    let removed = await reloaded.saveBirthDate("")
-    XCTAssertEqual(removed, .init(isSaved: true, message: "Birth date removed."))
-    await settings.load()
-    XCTAssertNil(settings.profile?.preferredName)
-    XCTAssertNil(settings.profile?.birthDate)
-  }
-
-  func testTimelineCreatesMomentAndPeriodWithoutLegacyKinds() async throws {
-    let (client, ownerID) = try await client()
+    // first_times_workspace and timeline_workspace.
+    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
+    await firstTimes.load()
+    XCTAssertNil(firstTimes.loadErrorMessage)
+    XCTAssertTrue(firstTimes.entries.contains { $0.id == entryID })
     let timeline = TimelineController(client: client, ownerID: ownerID)
     await timeline.load()
     XCTAssertNil(timeline.loadErrorMessage)
-    let track = try XCTUnwrap(timeline.tracks.first { $0.systemKey == "other_events" })
-    let start = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-01-01T12:00:00Z"))
-    for (kind, subtype) in [(TimelineKind.event, "moment"), (.stage, "period")] {
-      let title = "Native \(subtype) \(UUID().uuidString)"
-      let occurrence = EntryOccurrence(
-        precision: .day, start: start,
-        end: kind == .stage ? start.addingTimeInterval(86_400) : nil, label: nil, timezone: "UTC")
-      let result = await timeline.save(
-        entry: nil, trackID: track.id, kind: kind, title: title, body: "Synthetic Timeline record.",
-        occurrence: occurrence, collectionNames: ["Native trips"], tagNames: ["native"])
-      XCTAssertEqual(result, .init(message: "Moment created.", status: .created))
-      let entry = try XCTUnwrap(timeline.entries.first { $0.title == title })
-      XCTAssertEqual(entry.itemKind, .entry)
-      XCTAssertEqual(entry.itemSubtype, subtype)
-      XCTAssertEqual(entry.collectionNames, ["Native trips"])
-      XCTAssertEqual(entry.tagNames, ["native"])
+    XCTAssertTrue(timeline.chapters.contains { $0.id == chapterID })
+    XCTAssertTrue(timeline.firstTimes.contains { $0.id == entryID })
+
+    // The profiles read and write.
+    let settings = SettingsController(client: client, ownerID: ownerID)
+    await settings.load()
+    XCTAssertNil(settings.loadErrorMessage)
+    let zoned = await settings.saveTimezone(lisbon)
+    XCTAssertTrue(zoned.isSaved, zoned.message)
+
+    // tags_workspace, save_tag, merge_tags, delete_unused_tag, and the tag preview search.
+    let tags = OrganizationActions(client: client, ownerID: ownerID)
+    let listed = try await tags.load(query: marker)
+    XCTAssertEqual(listed.map(\.name), [tag])
+    XCTAssertEqual(listed.first?.entryCount, 1)
+    for name in ["spare \(marker)", "other \(marker)"] {
+      let created = await tags.save(TagSaveRequest(name: name, id: nil, expectedRevision: nil))
+      XCTAssertNil(created)
     }
-    XCTAssertTrue(timeline.collectionOptions.contains("Native trips"))
+    var named = try await tags.load(query: marker)
+    let spare = try XCTUnwrap(named.first { $0.name == "spare \(marker)" })
+    let other = try XCTUnwrap(named.first { $0.name == "other \(marker)" })
+    let renamed = await tags.save(
+      TagSaveRequest(name: "kept \(marker)", id: other.id, expectedRevision: other.revision))
+    XCTAssertNil(renamed)
+    named = try await tags.load(query: marker)
+    let kept = try XCTUnwrap(named.first { $0.name == "kept \(marker)" })
+    let merged = await tags.mergeTags(spare, into: kept)
+    XCTAssertNil(merged)
+    named = try await tags.load(query: marker)
+    XCTAssertEqual(Set(named.map(\.name)), [tag, "kept \(marker)"])
+    let unused = try XCTUnwrap(named.first { $0.name == "kept \(marker)" })
+    let removed = await tags.deleteUnusedTag(unused)
+    XCTAssertNil(removed)
+    let previews = await tags.tagEntryPreviews(tag)
+    XCTAssertEqual(try previews.get().map(\.id), [entryID])
 
-    // Editing replaces the organization, and Move to Trash removes the moment.
-    let moment = try XCTUnwrap(timeline.entries.first { $0.itemSubtype == "moment" })
-    let saved = await timeline.save(
-      entry: moment, trackID: moment.trackID, kind: .event, title: moment.title,
-      body: moment.body, occurrence: moment.occurrence, collectionNames: [], tagNames: ["edited"])
-    XCTAssertEqual(saved, .init(message: "Moment saved.", status: .saved))
-    let edited = try XCTUnwrap(timeline.entries.first { $0.id == moment.id })
-    XCTAssertEqual(edited.collectionNames, [])
-    XCTAssertEqual(edited.tagNames, ["edited"])
-    let trashed = await timeline.moveToTrash(edited)
-    XCTAssertEqual(trashed, .init(message: "Moment moved to Trash.", status: .trashed))
-    XCTAssertFalse(timeline.entries.contains { $0.id == moment.id })
-  }
-
-  func testHomeWithoutLocationCanBeSavedAndLoaded() async throws {
-    let (client, ownerID) = try await client()
-    let homes = ResidenceController(client: client, ownerID: ownerID)
-    let result = await homes.save(
-      entryID: nil, expectedRevision: nil, title: "Native Home \(UUID().uuidString)", body: "",
-      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
-      occurredTimezone: "UTC", placeID: nil, placeName: "", address: "", city: "", region: "",
-      country: "", latitude: nil, longitude: nil, placeNotes: "", moveInReason: "",
-      moveOutReason: "", collectionNames: [], tagNames: [])
-    XCTAssertEqual(result.status, .created, result.message)
-    XCTAssertEqual(result.message, "Home created.")
-    let identity = try XCTUnwrap(result.identity)
-    XCTAssertNil(identity.placeID)
-    await homes.load()
-    XCTAssertNil(homes.loadErrorMessage)
-    let home = try XCTUnwrap(homes.entries.first { $0.id == identity.id })
-    XCTAssertNil(home.placeID)
-    XCTAssertEqual(home.displayLocation, "Location not added")
-
-    // Saving again reports Web's saved message and keeps the Home without a Location.
-    let edited = await homes.save(
-      entryID: home.id, expectedRevision: home.revision, title: home.title, body: "",
-      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
-      occurredTimezone: "America/Los_Angeles", placeID: nil, placeName: "", address: "",
-      city: "", region: "", country: "", latitude: nil, longitude: nil, placeNotes: "",
-      moveInReason: "Closer to the water", moveOutReason: "", collectionNames: [], tagNames: [],
-      originalEntry: home)
-    XCTAssertEqual(edited.status, .saved, edited.message)
-    XCTAssertEqual(edited.message, "Home saved.")
-    await homes.load()
-    XCTAssertEqual(homes.entry(id: home.id)?.moveInReason, "Closer to the water")
-  }
-
-  func testMapReadsCurrentOwnedLocationsAndExcludesTrashedRecords() async throws {
-    let (client, ownerID) = try await client()
-    let homes = ResidenceController(client: client, ownerID: ownerID)
-    let result = await homes.save(
-      entryID: nil, expectedRevision: nil, title: "Native Map \(UUID().uuidString)", body: "",
-      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
-      occurredTimezone: "UTC", placeID: nil, placeName: "Austin", address: "Austin, Texas",
-      city: "Austin", region: "Texas", country: "US", latitude: 30.2672, longitude: -97.7431,
-      placeNotes: "", moveInReason: "", moveOutReason: "", collectionNames: [], tagNames: [])
-    XCTAssertEqual(result.status, .created, result.message)
-    let identity = try XCTUnwrap(result.identity)
-    let snapshot = try await LocationMapRepository(client: client, ownerID: ownerID).load()
-    let item = try XCTUnwrap(snapshot.items.first { $0.entryID == identity.id })
-    XCTAssertEqual(item.kind, .entity)
-    XCTAssertEqual(item.subtype, "home")
-    XCTAssertEqual(item.latitude, 30.2672, accuracy: 0.000001)
-    XCTAssertEqual(item.city, "Austin")
-    XCTAssertFalse(snapshot.truncated)
-    await homes.load()
-    let home = try XCTUnwrap(homes.entries.first { $0.id == identity.id })
-    let removed = await homes.moveToTrash(entryID: home.id, expectedRevision: home.revision)
-    XCTAssertEqual(removed.status, .trashed, removed.message)
-    XCTAssertEqual(removed.message, "Home moved to Trash.")
-    let afterTrash = try await LocationMapRepository(client: client, ownerID: ownerID).load()
-    XCTAssertFalse(afterTrash.items.contains { $0.entryID == home.id })
-  }
-
-  func testVehicleLoadsItsLocationAndRemovesItWithTheSave() async throws {
-    let (client, ownerID) = try await client()
-    let vehicles = VehicleController(client: client, ownerID: ownerID)
-    let created = await vehicles.save(
-      entryID: nil, expectedRevision: nil, title: "Native Location Vehicle", body: "",
-      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
-      occurredTimezone: "UTC", make: "Honda", model: "Civic", modelYear: 2018, color: "",
-      collectionNames: [], tagNames: [])
-    XCTAssertEqual(created.status, .created, created.message)
-    let identity = try XCTUnwrap(created.identity)
-
-    // Web's address search saves a provider Location through the same RPC.
-    let located: [SavedVehicleEntry] =
-      try await client.rpc(
-        "save_vehicle_with_location",
-        params: SyntheticVehicleLocation(entryID: identity.id, revision: identity.revision)
-      )
-      .execute().value
-    XCTAssertEqual(located.first?.entryID, identity.id)
-    await vehicles.load()
-    XCTAssertNil(vehicles.loadErrorMessage)
-    let vehicle = try XCTUnwrap(vehicles.entry(id: identity.id))
-    let location = try XCTUnwrap(vehicle.location)
-    XCTAssertEqual(location.label, "Pier 39, San Francisco, CA 94133, United States")
-    XCTAssertEqual(try XCTUnwrap(location.latitude), 37.8087, accuracy: 0.000001)
-
-    let removed = await vehicles.save(
-      entryID: vehicle.id, expectedRevision: vehicle.revision, title: vehicle.title,
-      body: "Kept without a Location.", occurredStart: nil, occurredEnd: nil,
-      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC", make: "Honda",
-      model: "Civic", modelYear: 2018, color: "", collectionNames: [], tagNames: [],
-      originalEntry: vehicle, removingLocation: true)
-    XCTAssertEqual(removed.status, .saved, removed.message)
-    XCTAssertEqual(removed.message, "Vehicle saved.")
-    await vehicles.load()
-    let saved = try XCTUnwrap(vehicles.entry(id: identity.id))
-    XCTAssertNil(saved.location)
-    XCTAssertEqual(saved.body, "Kept without a Location.")
-
-    let trashed = await vehicles.moveToTrash(entryID: saved.id, expectedRevision: saved.revision)
-    XCTAssertEqual(trashed.status, .trashed, trashed.message)
-    XCTAssertEqual(trashed.message, "Vehicle moved to Trash.")
-    XCTAssertNil(vehicles.entry(id: identity.id))
-  }
-
-  func testFirstTimeLoadsItsLocationAndRemovesItWithTheSave() async throws {
-    let (client, ownerID) = try await client()
-    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
-    let created = await firstTimes.save(
-      entryID: nil, expectedRevision: nil, title: "Native Location First Time", body: "",
-      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
-      collectionNames: [], tagNames: [])
-    XCTAssertEqual(created.status, .created, created.message)
-    XCTAssertEqual(created.message, "First Time added.")
-    let identity = try XCTUnwrap(created.identity)
-
-    // Web's address search saves a provider Location through the same RPC.
-    let located: [SavedFirstTimeEntry] =
-      try await client.rpc(
-        "save_first_time_with_location",
-        params: SyntheticFirstTimeLocation(entryID: identity.id, revision: identity.revision)
-      )
-      .execute().value
-    XCTAssertEqual(located.first?.entryID, identity.id)
-    await firstTimes.load()
-    XCTAssertNil(firstTimes.loadErrorMessage)
-    let firstTime = try XCTUnwrap(firstTimes.entry(id: identity.id))
-    let location = try XCTUnwrap(firstTime.location)
-    XCTAssertEqual(location.label, "Ferry Building, San Francisco, CA 94111, United States")
-    XCTAssertEqual(try XCTUnwrap(location.longitude), -122.3937, accuracy: 0.000001)
-
-    let removed = await firstTimes.save(
-      entryID: firstTime.id, expectedRevision: firstTime.revision, title: firstTime.title,
-      body: "Kept without a Location.", occurredStart: nil, datePrecision: .unknown,
-      occurredLabel: "", occurredTimezone: nil, collectionNames: [], tagNames: [],
-      original: firstTime, removingLocation: true)
-    XCTAssertEqual(removed.status, .saved, removed.message)
-    XCTAssertEqual(removed.message, "First Time saved.")
-    await firstTimes.load()
-    let saved = try XCTUnwrap(firstTimes.entry(id: identity.id))
-    XCTAssertNil(saved.location)
-    XCTAssertEqual(saved.body, "Kept without a Location.")
-
-    let trashed = await firstTimes.moveToTrash(
-      entryID: saved.id, expectedRevision: saved.revision)
-    XCTAssertEqual(trashed.status, .trashed, trashed.message)
-    XCTAssertEqual(trashed.message, "First Time moved to Trash.")
-    XCTAssertNil(firstTimes.entry(id: identity.id))
-  }
-
-  func testBucketListGoalAchievementCreatesALinkedFirstTime() async throws {
-    let (client, ownerID) = try await client()
-    let goals = GoalController(client: client, ownerID: ownerID)
-    let created = await goals.save(
-      entryID: nil, expectedRevision: nil, title: "Native Bucket List Goal",
-      body: "A private reflection.", horizon: .someday, status: .considering,
-      targetDate: "2027-05-01", collectionNames: ["Bucket List"], tagNames: [],
-      relatedEntryIDs: [])
-    XCTAssertEqual(created.status, .created, created.message)
-    XCTAssertEqual(created.message, "Goal added.")
-    let identity = try XCTUnwrap(created.identity)
-    await goals.load(including: identity.id)
-    XCTAssertNil(goals.loadErrorMessage)
-    let goal = try XCTUnwrap(goals.entry(id: identity.id))
-    XCTAssertTrue(goal.isBucketList)
-    XCTAssertEqual(goal.targetLabel, "Target May 1, 2027")
-
-    let achieved = await goals.markAchieved(
-      entryID: goal.id, expectedRevision: goal.revision, occurredStart: nil,
-      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC")
-    XCTAssertEqual(achieved.status, .achieved, achieved.message)
-    XCTAssertEqual(achieved.message, "Achievement saved, with a linked First Time.")
-    let firstTimeID = try XCTUnwrap(achieved.identity?.relatedID)
-    await goals.load()
-    let saved = try XCTUnwrap(goals.entry(id: identity.id))
-    XCTAssertEqual(saved.status, .achieved)
-    XCTAssertEqual(saved.achievementEntries.map(\.id), [firstTimeID])
-    XCTAssertEqual(saved.achievementEntries.first?.itemSubtype, "first_time")
-    XCTAssertTrue(saved.editableRelatedEntries.isEmpty)
-
-    // A stale revision cannot record the achievement twice.
-    let repeated = await goals.markAchieved(
-      entryID: goal.id, expectedRevision: goal.revision, occurredStart: nil,
-      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC")
-    XCTAssertEqual(repeated.status, .conflict, repeated.message)
-
-    let trashed = await goals.moveToTrash(entryID: saved.id, expectedRevision: saved.revision)
-    XCTAssertEqual(trashed.status, .trashed, trashed.message)
-    XCTAssertEqual(trashed.message, "Goal moved to Trash.")
-    XCTAssertNil(goals.entry(id: identity.id))
-  }
-
-  // Each editor keeps the revision it opened with, while removing a photo creates a revision.
-  func testFocusedEditorsMoveToTrashAfterRemovingAPhotoAtTheOpenedRevision() async throws {
-    let (client, ownerID) = try await client()
-
-    let goals = GoalController(client: client, ownerID: ownerID)
-    let createdGoal = await goals.save(
-      entryID: nil, expectedRevision: nil, title: "Native Photo Goal", body: "",
-      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [],
-      tagNames: [], relatedEntryIDs: [])
-    let goalID = try XCTUnwrap(createdGoal.identity?.id, createdGoal.message)
-    let goalUpload = try await goals.upload(photoDraft(), entryID: goalID)
-    XCTAssertEqual(goalUpload.status, .saved, goalUpload.message)
-    await goals.load(including: goalID)
-    let goal = try XCTUnwrap(goals.entry(id: goalID))
-    let goalPhoto = try await goals.removeAttachment(XCTUnwrap(goal.attachments.first))
-    XCTAssertEqual(goalPhoto.status, .trashed, goalPhoto.message)
-    await goals.reloadAfterMutation()
-    XCTAssertEqual(goals.entry(id: goalID)?.revision, goal.revision + 1)
-    let trashedGoal = await goals.moveToTrash(entryID: goal.id, expectedRevision: goal.revision)
-    XCTAssertEqual(trashedGoal.status, .trashed, trashedGoal.message)
-
-    let homes = ResidenceController(client: client, ownerID: ownerID)
-    let createdHome = await homes.save(
-      entryID: nil, expectedRevision: nil, title: "Native Photo Home", body: "",
-      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
-      occurredTimezone: "UTC", placeID: nil, placeName: "", address: "", city: "", region: "",
-      country: "", latitude: nil, longitude: nil, placeNotes: "", moveInReason: "",
-      moveOutReason: "", collectionNames: [], tagNames: [])
-    let homeID = try XCTUnwrap(createdHome.identity?.id, createdHome.message)
-    let homeUpload = try await homes.upload(photoDraft(), entryID: homeID)
-    XCTAssertEqual(homeUpload.status, .saved, homeUpload.message)
-    await homes.load()
-    let home = try XCTUnwrap(homes.entry(id: homeID))
-    let homePhoto = try await homes.removeAttachment(XCTUnwrap(home.attachments.first))
-    XCTAssertEqual(homePhoto.status, .trashed, homePhoto.message)
-    let trashedHome = await homes.moveToTrash(entryID: home.id, expectedRevision: home.revision)
-    XCTAssertEqual(trashedHome.status, .trashed, trashedHome.message)
-
-    let vehicles = VehicleController(client: client, ownerID: ownerID)
-    let createdVehicle = await vehicles.save(
-      entryID: nil, expectedRevision: nil, title: "Native Photo Vehicle", body: "",
-      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
-      occurredTimezone: "UTC", make: "Honda", model: "Civic", modelYear: 2018, color: "",
-      collectionNames: [], tagNames: [])
-    let vehicleID = try XCTUnwrap(createdVehicle.identity?.id, createdVehicle.message)
-    let vehicleUpload = try await vehicles.upload(photoDraft(), entryID: vehicleID)
-    XCTAssertEqual(vehicleUpload.status, .saved, vehicleUpload.message)
-    await vehicles.load()
-    let vehicle = try XCTUnwrap(vehicles.entry(id: vehicleID))
-    let vehiclePhoto = try await vehicles.removeAttachment(XCTUnwrap(vehicle.attachments.first))
-    XCTAssertEqual(vehiclePhoto.status, .trashed, vehiclePhoto.message)
-    let trashedVehicle = await vehicles.moveToTrash(
-      entryID: vehicle.id, expectedRevision: vehicle.revision)
-    XCTAssertEqual(trashedVehicle.status, .trashed, trashedVehicle.message)
-
-    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
-    let createdFirstTime = await firstTimes.save(
-      entryID: nil, expectedRevision: nil, title: "Native Photo First Time", body: "",
-      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
-      collectionNames: [], tagNames: [])
-    let firstTimeID = try XCTUnwrap(createdFirstTime.identity?.id, createdFirstTime.message)
-    let firstTimeUpload = try await firstTimes.upload(photoDraft(), entryID: firstTimeID)
-    XCTAssertEqual(firstTimeUpload.status, .saved, firstTimeUpload.message)
-    await firstTimes.load()
-    let firstTime = try XCTUnwrap(firstTimes.entry(id: firstTimeID))
-    let firstTimePhoto = try await firstTimes.removeAttachment(
-      XCTUnwrap(firstTime.attachments.first))
-    XCTAssertEqual(firstTimePhoto.status, .trashed, firstTimePhoto.message)
-    let trashedFirstTime = await firstTimes.moveToTrash(
-      entryID: firstTime.id, expectedRevision: firstTime.revision)
-    XCTAssertEqual(trashedFirstTime.status, .trashed, trashedFirstTime.message)
-
-    // Writing from another device is still never adopted.
-    let createdConflict = await goals.save(
-      entryID: nil, expectedRevision: nil, title: "Native Photo Conflict", body: "",
-      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [],
-      tagNames: [], relatedEntryIDs: [])
-    let conflictID = try XCTUnwrap(createdConflict.identity?.id, createdConflict.message)
-    let conflictUpload = try await goals.upload(photoDraft(), entryID: conflictID)
-    XCTAssertEqual(conflictUpload.status, .saved, conflictUpload.message)
-    await goals.load(including: conflictID)
-    let conflict = try XCTUnwrap(goals.entry(id: conflictID))
-    let conflictPhoto = try await goals.removeAttachment(XCTUnwrap(conflict.attachments.first))
-    XCTAssertEqual(conflictPhoto.status, .trashed, conflictPhoto.message)
-    try await client.from("entries").update(["body": "Other device writing"])
-      .eq("id", value: conflictID.uuidString).execute()
-    let refused = await goals.moveToTrash(entryID: conflict.id, expectedRevision: conflict.revision)
-    XCTAssertEqual(refused.status, .conflict, refused.message)
+    // The `entries` Move to Trash update, trash_workspace, restore_trash_item,
+    // prepare_empty_trash, delete_trash_item_forever, pending_media_purge_paths, and
+    // complete_media_purges.
+    let current = try await XCTUnwrapAsync(try await api.editable(entryID))
+    try await api.moveToTrash(id: entryID, revision: current.revision)
+    let trash = TrashController(client: client, ownerID: ownerID)
+    await trash.load()
+    XCTAssertNil(trash.loadErrorMessage)
+    let trashed = try XCTUnwrap(trash.items.first { $0.kind == .entry && $0.itemID == entryID })
+    XCTAssertEqual(trashed.title, "Monday, May 10, 2021")
+    let restored = await trash.restore(trashed)
+    XCTAssertEqual(restored, TrashController.Notice(message: "Item restored.", tone: .success))
+    let again = try await XCTUnwrapAsync(try await api.editable(entryID))
+    try await api.moveToTrash(id: entryID, revision: again.revision)
+    await trash.load()
+    let prepared = await trash.prepareEmptyTrash()
+    XCTAssertNil(prepared)
+    XCTAssertTrue(trash.emptySnapshot?.contains { $0.itemID == entryID } == true)
+    trash.cancelEmptyTrash()
+    let item = try XCTUnwrap(trash.items.first { $0.kind == .entry && $0.itemID == entryID })
+    let deleted = await trash.deleteForever(item)
     XCTAssertEqual(
-      refused.message, "This Goal changed on another device. Close it, refresh, and try again.")
-    await goals.load(including: conflictID)
-    XCTAssertEqual(goals.entry(id: conflictID)?.body, "Other device writing")
+      deleted, TrashController.Notice(message: "Item permanently deleted.", tone: .success))
+    let gone = try await api.detail(entryID)
+    XCTAssertNil(gone)
+
+    // The capture insert and its `entries` lookup.
+    let (capture, _) = try await isolatedCapture(client: client, ownerID: ownerID)
+    let note = "Smoke capture \(marker)"
+    let saved = await capture.save(title: "", body: note)
+    XCTAssertTrue(saved)
+    let deadline = Date().addingTimeInterval(15)
+    while Date() < deadline, capture.isSyncing || !capture.pendingEntries.isEmpty {
+      try await Task.sleep(for: .milliseconds(100))
+    }
+    XCTAssertNil(capture.captureError)
+    XCTAssertTrue(capture.pendingEntries.isEmpty)
+    let captured: [ExistingRow] =
+      try await client.from("entries").select("id").eq("body", value: note).execute().value
+    XCTAssertEqual(captured.count, 1)
   }
 
-  func testBucketListGoalIsAchievedAfterRemovingAPhotoAtTheOpenedRevision() async throws {
+  /// `save_entry` changes the marks of one Entry in place: the same identity becomes a Chapter
+  /// with an end and back, keeping its tags, its Location, and its photo; a Chapter without a
+  /// title is refused by the server too.
+  func testSaveEntryTurnsAnEntryIntoAChapterAndBackKeepingTagsLocationAndPhotos() async throws {
     let (client, ownerID) = try await client()
-    let goals = GoalController(client: client, ownerID: ownerID)
-    let created = await goals.save(
-      entryID: nil, expectedRevision: nil, title: "Native Photo Bucket List Goal", body: "",
-      horizon: .someday, status: .considering, targetDate: nil,
-      collectionNames: ["Bucket List"], tagNames: [], relatedEntryIDs: [])
-    let goalID = try XCTUnwrap(created.identity?.id, created.message)
-    let upload = try await goals.upload(photoDraft(), entryID: goalID)
-    XCTAssertEqual(upload.status, .saved, upload.message)
-    await goals.load(including: goalID)
-    let goal = try XCTUnwrap(goals.entry(id: goalID))
-    XCTAssertTrue(goal.isBucketList)
-    let removed = try await goals.removeAttachment(XCTUnwrap(goal.attachments.first))
-    XCTAssertEqual(removed.status, .trashed, removed.message)
+    let api = EntryAPI(client: client, ownerID: ownerID)
+    let marker = String(UUID().uuidString.prefix(8)).lowercased()
+    let tags = ["lisbon \(marker)", "moves \(marker)"]
+    let id = UUID()
+    let lisbon = "Europe/Lisbon"
+    let start = try XCTUnwrap(EntryTimestamp.date(from: "2022-02-01T12:00:00Z"))
+    let end = try XCTUnwrap(EntryTimestamp.date(from: "2022-11-01T12:00:00Z"))
+    let month = EntryOccurrence(precision: .month, start: start, end: nil, label: nil, timezone: lisbon)
 
-    let achieved = await goals.markAchieved(
-      entryID: goal.id, expectedRevision: goal.revision, occurredStart: nil,
-      datePrecision: .unknown, occurredLabel: "", occurredTimezone: "UTC")
-    XCTAssertEqual(achieved.status, .achieved, achieved.message)
-    let firstTimeID = try XCTUnwrap(achieved.identity?.relatedID)
-    await goals.load(including: goalID)
-    let saved = try XCTUnwrap(goals.entry(id: goalID))
-    XCTAssertEqual(saved.status, .achieved)
-    XCTAssertEqual(saved.achievementEntries.map(\.id), [firstTimeID])
-    XCTAssertTrue(saved.attachments.isEmpty)
+    // A First Time with an address typed by hand, which `save_entry` stores as its Location.
+    var created = try parameters(
+      SaveEntryParameters(
+        entryID: id, expectedRevision: nil, title: "Moving to Lisbon",
+        body: "Boxes everywhere.", richText: nil, occurrence: month, tagNames: tags,
+        location: nil, marks: .firstTime))
+    created["p_primary_location"] = .object([
+      "kind": .string("manual"), "address": .string("Rua Augusta 1"), "city": .string("Lisbon"),
+      "region": .null, "country": .string("Portugal"),
+    ])
+    let createdRows: [SavedEntry] =
+      try await client.rpc("save_entry", params: created).execute().value
+    XCTAssertEqual(createdRows, [SavedEntry(entryID: id, revision: 1)])
+    let photo = try photoDraft()
+    let attached = try await api.attachPhoto(photo, entryID: id)
+    XCTAssertTrue(attached)
+
+    let entry = try await XCTUnwrapAsync(try await api.editable(id))
+    XCTAssertEqual(entry.marks, .firstTime)
+    XCTAssertEqual(Set(entry.tagNames), Set(tags))
+    // Registering a photo never changes the Entry's revision.
+    XCTAssertEqual(entry.revision, 1)
+    let location = try XCTUnwrap(entry.primaryLocation)
+    XCTAssertEqual(location.address, "Rua Augusta 1")
+    XCTAssertEqual(location.label, "Rua Augusta 1, Lisbon, Portugal")
+
+    // The same Entry becomes a closed Chapter, resending its Location untouched.
+    var chapterSpan = month
+    chapterSpan.end = end
+    let toChapter = try await api.save(
+      SaveEntryParameters(
+        entryID: id, expectedRevision: entry.revision, title: entry.title, body: entry.body,
+        richText: entry.richText, occurrence: chapterSpan, tagNames: entry.tagNames,
+        location: entry.primaryLocation, marks: EntryMarks(isChapter: true, isFirstTime: true)))
+    XCTAssertEqual(toChapter, SavedEntry(entryID: id, revision: 2))
+    let chapter = try await XCTUnwrapAsync(try await api.editable(id))
+    XCTAssertEqual(chapter.subtype, .chapter)
+    XCTAssertTrue(chapter.isFirstTime)
+    XCTAssertEqual(chapter.occurredEnd, end)
+    XCTAssertEqual(chapter.datePrecision, .month)
+    XCTAssertEqual(Set(chapter.tagNames), Set(tags))
+    XCTAssertEqual(chapter.primaryLocation?.id, location.id)
+    let photosAsChapter = try await livePhotoCount(entryID: id, client: client)
+    XCTAssertEqual(photosAsChapter, 1)
+    let detail = try await XCTUnwrapAsync(try await api.detail(id))
+    XCTAssertEqual(detail.marks.identityLabel, "Chapter · First Time")
+    XCTAssertEqual(detail.primaryLocation?.locationID, location.id)
+    XCTAssertEqual(detail.chapterDateFacts(now: end).span, "Feb 2022 - Nov 2022")
+
+    // The server refuses a Chapter without a title, which iOS reports in Web's words.
+    var untitled = try parameters(
+      SaveEntryParameters(
+        entryID: id, expectedRevision: chapter.revision, title: "Untitled for now",
+        body: chapter.body, richText: nil, occurrence: chapterSpan, tagNames: chapter.tagNames,
+        location: chapter.primaryLocation, marks: .chapter))
+    untitled["p_title"] = .null
+    do {
+      let _: [SavedEntry] = try await client.rpc("save_entry", params: untitled).execute().value
+      XCTFail("A Chapter without a title must be refused.")
+    } catch {
+      XCTAssertEqual((error as? PostgrestError)?.message, "chapter_requires_title")
+      XCTAssertEqual(SaveEntryError.classify(error), .invalid("Give this Chapter a title."))
+    }
+
+    // And back to an Entry: an ordinary Entry dated by month has no end.
+    let toEntry = try await api.save(
+      SaveEntryParameters(
+        entryID: id, expectedRevision: chapter.revision, title: chapter.title,
+        body: chapter.body, richText: chapter.richText, occurrence: month,
+        tagNames: chapter.tagNames, location: chapter.primaryLocation, marks: .firstTime))
+    XCTAssertEqual(toEntry, SavedEntry(entryID: id, revision: 3))
+    let back = try await XCTUnwrapAsync(try await api.editable(id))
+    XCTAssertEqual(back.marks, .firstTime)
+    XCTAssertNil(back.occurredEnd)
+    XCTAssertEqual(Set(back.tagNames), Set(tags))
+    XCTAssertEqual(back.primaryLocation?.id, location.id)
+    let photosBack = try await livePhotoCount(entryID: id, client: client)
+    XCTAssertEqual(photosBack, 1)
   }
 
-  private func photoDraft() throws -> PhotoDraft {
+  // MARK: Shared helpers
+
+  /// A small PNG photo the contract account can attach.
+  func photoDraft(color: UIColor = .systemGreen) throws -> PhotoDraft {
     let format = UIGraphicsImageRendererFormat()
     format.scale = 1
     let data = UIGraphicsImageRenderer(size: CGSize(width: 4, height: 4), format: format)
       .pngData { context in
-        UIColor.systemGreen.setFill()
+        color.setFill()
         context.fill(CGRect(x: 0, y: 0, width: 4, height: 4))
       }
     return try PhotoDraft.validate(
       data: data, mimeType: .png, originalFilename: "kept.png", pixelWidth: 4, pixelHeight: 4)
   }
 
-  func testPersonLinksItemsAndMovesToTrashOnlyOnceUnlinked() async throws {
-    let (client, ownerID) = try await client()
-    let goals = GoalController(client: client, ownerID: ownerID)
-    let goal = await goals.save(
-      entryID: nil, expectedRevision: nil, title: "Native Person link", body: "",
-      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [],
-      tagNames: [], relatedEntryIDs: [])
-    let goalID = try XCTUnwrap(goal.identity?.id)
-
-    let people = PeopleController(client: client, ownerID: ownerID)
-    await people.load()
-    XCTAssertNil(people.loadErrorMessage)
-    XCTAssertTrue(people.linkOptions.contains { $0.id == goalID })
-    let created = await people.save(
-      PersonSaveInput(
-        personID: nil, expectedRevision: nil, name: "Native Friend", relationshipLabel: "Mentor",
-        notes: "Met on a synthetic trail.", relatedEntryIDs: [goalID]))
-    XCTAssertEqual(created.status, .created, created.message)
-    XCTAssertEqual(created.message, "Person created.")
-    let personID = try XCTUnwrap(created.personID)
-    let person = try XCTUnwrap(people.person(id: personID))
-    XCTAssertEqual(person.linkedEntries.map(\.id), [goalID])
-    XCTAssertEqual(person.linkedEntries.first?.itemKind, .goal)
-    XCTAssertEqual(people.people.first?.id, personID)
-
-    // Like Web, a Person keeps out of Trash while Items are linked.
-    let blocked = await people.moveToTrash(person)
-    XCTAssertEqual(blocked.status, .conflict, blocked.message)
-
-    // A Person's own page loads them by ID, whatever pages have loaded.
-    let focused = PeopleController(client: client, ownerID: ownerID)
-    let opened = await focused.loadPerson(id: personID)
-    XCTAssertEqual(opened, .loaded)
-    XCTAssertEqual(focused.person(id: personID)?.relationshipLabel, "Mentor")
-
-    let unlinked = await people.save(
-      PersonSaveInput(
-        personID: personID, expectedRevision: person.revision, name: "Native Friend",
-        relationshipLabel: " ", notes: "", relatedEntryIDs: []))
-    XCTAssertEqual(unlinked.status, .saved, unlinked.message)
-    XCTAssertEqual(unlinked.message, "Person saved.")
-    let saved = try XCTUnwrap(people.person(id: personID))
-    XCTAssertTrue(saved.linkedEntries.isEmpty)
-    XCTAssertNil(saved.relationshipLabel)
-
-    // A stale revision cannot overwrite the newer save.
-    let stale = await people.save(
-      PersonSaveInput(
-        personID: personID, expectedRevision: person.revision, name: "Stale Friend",
-        relationshipLabel: "", notes: "", relatedEntryIDs: []))
-    XCTAssertEqual(stale.status, .conflict, stale.message)
-
-    let trashed = await people.moveToTrash(saved)
-    XCTAssertEqual(trashed.status, .trashed, trashed.message)
-    XCTAssertEqual(trashed.message, "Person moved to Trash.")
-    XCTAssertNil(people.person(id: personID))
-    XCTAssertFalse(people.people.contains { $0.id == personID })
-    let reopened = await focused.loadPerson(id: personID)
-    XCTAssertEqual(reopened, .unavailable)
+  /// `save_entry` arguments as JSON values, so a test can send what the app never would.
+  func parameters(_ parameters: SaveEntryParameters) throws -> [String: AnyJSON] {
+    try JSONDecoder().decode([String: AnyJSON].self, from: JSONEncoder().encode(parameters))
   }
 
-  func testItemHistoryRestoresLinksCreatesALinkedGoalAndMovesToTrash() async throws {
-    let (client, ownerID) = try await client()
-    let inbox = CaptureController(client: client, ownerID: ownerID)
-    var ids: [UUID] = []
-    for body in ["Native item source", "Native item target"] {
-      let id = UUID()
-      try await client.from("entries").insert(
-        InboxEntryInsert(
-          id: id, ownerID: ownerID, title: nil, body: body, occurredStart: nil,
-          occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
-      ).execute()
-      await inbox.load()
-      let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
-      let saved = await inbox.review(
-        entry: capture,
-        draft: EntryReviewDraft(
-          title: "", body: body, bodyRich: nil, collectionNames: [], tagNames: [],
-          occurrence: capture.occurrence),
-        intent: .done)
-      XCTAssertEqual(saved.status, .done, saved.message)
-      ids.append(id)
-    }
-    let (sourceID, targetID) = (ids[0], ids[1])
-
-    // The Item page loads the current snapshot and the version from before its review.
-    let item = EntryHistoryController(client: client, ownerID: ownerID, entryID: sourceID)
-    await item.load()
-    XCTAssertFalse(item.loadFailed)
-    let loaded = try XCTUnwrap(item.record)
-    XCTAssertEqual(loaded.title, "Native item source")
-    XCTAssertEqual(loaded.identityLabel, "Entry")
-    XCTAssertFalse(loaded.isDeleted)
-    XCTAssertFalse(loaded.versions.isEmpty)
-    let editable = await item.editableEntry()
-    XCTAssertEqual(editable?.id, sourceID)
-
-    // Linking another Item saves a revision whose earlier version lacks the link.
-    let linked: Int? = try await client.rpc(
-      "set_entry_relation",
-      params: EntryRelationChange(
-        entryID: sourceID, targetID: targetID, expectedRevision: loaded.revision, linked: true)
-    ).execute().value
-    XCTAssertEqual(linked, loaded.revision + 1)
-    await item.reload()
-    let withLink = try XCTUnwrap(item.record)
-    XCTAssertEqual(withLink.current["links"]?.array?.count, 1)
-    let beforeLink = try XCTUnwrap(withLink.versions.first)
-    // The server still archives the schema this client restores.
-    XCTAssertTrue(HistoryPresentation.canRestore(beforeLink.snapshot))
-    XCTAssertEqual(
-      HistoryPresentation.differences(current: withLink.current, previous: beforeLink.snapshot),
-      ["Entry links"])
-
-    // Restoring that version removes the link; a page still showing the old revision cannot.
-    let stale = EntryHistoryController(client: client, ownerID: ownerID, entryID: sourceID)
-    await stale.load()
-    let restored = await item.restore(version: beforeLink.version)
-    XCTAssertNil(restored)
-    XCTAssertEqual(item.record?.current["links"]?.array?.count, 0)
-    let conflict = await stale.restore(version: beforeLink.version)
-    XCTAssertEqual(
-      conflict,
-      "This Entry changed on another device or is in Trash. Refresh or restore it from Trash first."
-    )
-
-    // A linked Goal starts from a valid title and links both ways.
-    let invalid = await item.extractGoal(
-      goalID: UUID(), title: " ", horizon: .someday, status: .considering, targetDate: nil)
-    XCTAssertEqual(
-      invalid,
-      .failure(
-        GoalExtractionFailure(
-          message: "Add a Goal title up to 200 characters and a valid optional target date.")))
-    let goalID = UUID()
-    let extracted = await item.extractGoal(
-      goalID: goalID, title: "Native linked Goal", horizon: .shortTerm, status: .active,
-      targetDate: nil)
-    XCTAssertEqual(extracted, .success(goalID))
-    await item.reload()
-    XCTAssertTrue(
-      item.record?.provenanceLinks.contains {
-        $0.targetID == goalID && $0.title == "Open extracted item"
-      } == true)
-    let goal = EntryHistoryController(client: client, ownerID: ownerID, entryID: goalID)
-    await goal.load()
-    XCTAssertEqual(goal.record?.itemKind, .goal)
-    XCTAssertTrue(
-      goal.record?.provenanceLinks.contains {
-        $0.targetID == sourceID && $0.title == "Open source item"
-      } == true)
-
-    // Like Web `trashWikiItem`, Move to Trash applies only at the revision shown.
-    let staleTrash = await stale.moveToTrash()
-    XCTAssertEqual(
-      staleTrash,
-      "This item changed on another device or is already in Trash. Refresh and try again.")
-    let trashed = await item.moveToTrash()
-    XCTAssertNil(trashed)
-    await item.reload()
-    XCTAssertEqual(item.record?.isDeleted, true)
-  }
-
-  func testItemHistoryKeepsARestoreWhenAnEarlierRefreshReturnsLast() async throws {
-    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
-    let sourceID = try await reviewedEntry(
-      "Native refresh source", client: client, ownerID: ownerID)
-    let targetID = try await reviewedEntry(
-      "Native refresh target", client: client, ownerID: ownerID)
-    let item = EntryHistoryController(client: client, ownerID: ownerID, entryID: sourceID)
-    await item.load()
-    let loaded = try XCTUnwrap(item.record)
-    let linked: Int? = try await client.rpc(
-      "set_entry_relation",
-      params: EntryRelationChange(
-        entryID: sourceID, targetID: targetID, expectedRevision: loaded.revision, linked: true)
-    ).execute().value
-    XCTAssertEqual(linked, loaded.revision + 1)
-    await item.reload()
-    let withLink = try XCTUnwrap(item.record)
-    XCTAssertEqual(withLink.current["links"]?.array?.count, 1)
-    let beforeLink = try XCTUnwrap(withLink.versions.first)
-
-    // Pull to refresh reads the linked revision, but its response arrives last.
-    HeldResponseProtocol.gate.holdNextResponse(toRPC: "entry_history")
-    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
-    let refresh = Task { await item.load(page: item.page) }
-    try await waitForHeldResponse()
-
-    // The restore reloads first, and the slower refresh must not bring the link back.
-    let restored = await item.restore(version: beforeLink.version)
-    XCTAssertNil(restored)
-    XCTAssertEqual(item.record?.current["links"]?.array?.count, 0)
-    HeldResponseProtocol.gate.releaseHeldResponse()
-    await refresh.value
-    XCTAssertEqual(item.record?.current["links"]?.array?.count, 0)
-    XCTAssertGreaterThan(item.record?.revision ?? 0, withLink.revision)
-    XCTAssertFalse(item.isLoading)
-    XCTAssertFalse(item.loadFailed)
-  }
-
-  func testTimelineKeepsASavedMomentWhenAnEarlierRefreshReturnsLast() async throws {
-    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
-    let timeline = TimelineController(client: client, ownerID: ownerID)
-    await timeline.load()
-    XCTAssertNil(timeline.loadErrorMessage)
-    let track = try XCTUnwrap(timeline.tracks.first { $0.systemKey == "other_events" })
-
-    // Pull to refresh reads the Timeline before the save, but its response arrives last.
-    HeldResponseProtocol.gate.holdNextResponse(toRPC: "timeline_workspace_with_organization")
-    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
-    let refresh = Task { await timeline.load() }
-    try await waitForHeldResponse()
-
-    let title = "Native refresh moment \(UUID().uuidString)"
-    let start = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-02-01T12:00:00Z"))
-    let created = await timeline.save(
-      entry: nil, trackID: track.id, kind: .event, title: title, body: "Synthetic Timeline record.",
-      occurrence: EntryOccurrence(
-        precision: .day, start: start, end: nil, label: nil, timezone: "UTC"),
-      collectionNames: [], tagNames: [])
-    XCTAssertEqual(created, .init(message: "Moment created.", status: .created))
-    XCTAssertTrue(timeline.entries.contains { $0.title == title })
-    HeldResponseProtocol.gate.releaseHeldResponse()
-    await refresh.value
-    XCTAssertTrue(timeline.entries.contains { $0.title == title })
-    XCTAssertFalse(timeline.isLoading)
-    XCTAssertNil(timeline.loadErrorMessage)
-  }
-
-  func testPeopleListIncludesAPersonSavedWhileTheFirstLoadRuns() async throws {
-    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
-    let people = PeopleController(client: client, ownerID: ownerID)
-
-    // The first load reads People before the save, but its response arrives last.
-    HeldResponseProtocol.gate.holdNextResponse(toRPC: "people_workspace")
-    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
-    let firstLoad = Task { await people.load() }
-    try await waitForHeldResponse()
-
-    let created = await people.save(
-      PersonSaveInput(
-        personID: nil, expectedRevision: nil, name: "Native Refresh Friend",
-        relationshipLabel: "", notes: "", relatedEntryIDs: []))
-    XCTAssertEqual(created.status, .created, created.message)
-    let personID = try XCTUnwrap(created.personID)
-    XCTAssertTrue(people.people.contains { $0.id == personID })
-    HeldResponseProtocol.gate.releaseHeldResponse()
-    await firstLoad.value
-    XCTAssertTrue(people.people.contains { $0.id == personID })
-    XCTAssertTrue(people.hasLoaded)
-    XCTAssertFalse(people.isLoading)
-    XCTAssertNil(people.loadErrorMessage)
-  }
-
-  func testTrashKeepsARestoreWhenAnEarlierRefreshReturnsLast() async throws {
-    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
-    let entryID = try await reviewedEntry("Native refresh Trash", client: client, ownerID: ownerID)
-    let item = EntryHistoryController(client: client, ownerID: ownerID, entryID: entryID)
-    await item.load()
-    let movedToTrash = await item.moveToTrash()
-    XCTAssertNil(movedToTrash)
-    let trash = TrashController(client: client, ownerID: ownerID)
-    await trash.load()
-    let trashed = try XCTUnwrap(trash.items.first { $0.itemID == entryID })
-
-    // Pull to refresh reads Trash before the restore, but its response arrives last.
-    HeldResponseProtocol.gate.holdNextResponse(toRPC: "trash_workspace")
-    defer { HeldResponseProtocol.gate.releaseHeldResponse() }
-    let refresh = Task { await trash.load() }
-    try await waitForHeldResponse()
-
-    let restored = await trash.restore(trashed)
-    XCTAssertEqual(restored, .init(message: "Item restored.", tone: .success))
-    XCTAssertFalse(trash.items.contains { $0.itemID == entryID })
-    HeldResponseProtocol.gate.releaseHeldResponse()
-    await refresh.value
-    XCTAssertFalse(trash.items.contains { $0.itemID == entryID })
-    XCTAssertFalse(trash.isLoading)
-    XCTAssertNil(trash.loadErrorMessage)
-  }
-
-  // Delete forever removes the record first; a file removal it could not finish is finished
-  // the next time Trash opens, and nothing deleted can be restored in between.
-  func testTrashDeletesTheRecordBeforeItsPhotoFilesAndFinishesAnInterruptedRemoval() async throws {
-    let (client, ownerID) = try await client(session: HeldResponseProtocol.session)
-    let (entryID, path) = try await trashedPhotoEntry(
-      "Native Delete Forever Photo", client: client, ownerID: ownerID)
-    let folder = (path as NSString).deletingLastPathComponent
-    let file = (path as NSString).lastPathComponent
-    let trash = TrashController(client: client, ownerID: ownerID)
-    await trash.load()
-    let item = try XCTUnwrap(trash.items.first { $0.itemID == entryID })
-    let parameters = TrashItemMutationParameters(item: item)
-
-    // A deployed client's removal manifest is empty, and Storage keeps a restorable original.
-    let manifest: [TrashStoragePath] = try await client.rpc(
-      "trash_item_storage_paths", params: parameters
-    ).execute().value
-    XCTAssertEqual(manifest, [])
-    let early = try await client.storage.from("entry-media").remove(paths: [path])
-    XCTAssertTrue(early.isEmpty)
-    let kept = try await storedNames(in: folder, client: client)
-    XCTAssertTrue(kept.contains(file))
-
-    HeldResponseProtocol.gate.failNextStorageRemoval()
-    defer { HeldResponseProtocol.gate.failNextStorageRemoval(false) }
-    let deleted = await trash.deleteForever(item)
-    XCTAssertEqual(
-      deleted,
-      .init(message: "Item permanently deleted. \(MediaPurge.pendingMessage)", tone: .success))
-    XCTAssertFalse(trash.items.contains { $0.itemID == entryID })
-    let restored: [RestoredTrashItem] = try await client.rpc(
-      "restore_trash_item", params: parameters
-    ).execute().value
-    XCTAssertEqual(restored, [])
-    let recorded = try await storedNames(in: folder, client: client)
-    XCTAssertTrue(recorded.contains(file))
-    let pending: [TrashStoragePath] = try await client.rpc(
-      "pending_media_purge_paths", params: MediaPurge.Request(limit: MediaPurge.batchSize)
-    ).execute().value
-    XCTAssertTrue(pending.contains(TrashStoragePath(objectPath: path)))
-
-    let finished = await trash.finishPendingMediaRemoval()
-    XCTAssertTrue(finished)
-    let removed = try await storedNames(in: folder, client: client)
-    XCTAssertFalse(removed.contains(file))
-    let finishedAgain = await trash.finishPendingMediaRemoval()
-    XCTAssertTrue(finishedAgain)
-  }
-
-  func testEmptyTrashRemovesPhotoFilesOnceAfterItsRecords() async throws {
-    let (client, ownerID) = try await client()
-    let (entryID, path) = try await trashedPhotoEntry(
-      "Native Empty Trash Photo", client: client, ownerID: ownerID)
-    let folder = (path as NSString).deletingLastPathComponent
-    let trash = TrashController(client: client, ownerID: ownerID)
-    await trash.load()
-    let prepared = await trash.prepareEmptyTrash()
-    XCTAssertNil(prepared)
-    XCTAssertTrue(trash.emptySnapshot?.contains { $0.itemID == entryID } == true)
-    let emptied = await trash.emptyTrash()
-    let notice = try XCTUnwrap(emptied)
-    XCTAssertEqual(notice.tone, .success, notice.message)
-    XCTAssertTrue(
-      notice.message.hasSuffix("Anything added to Trash later was not included."), notice.message)
-    let remaining = try await storedNames(in: folder, client: client)
-    XCTAssertFalse(remaining.contains((path as NSString).lastPathComponent))
-    let pending: [TrashStoragePath] = try await client.rpc(
-      "pending_media_purge_paths", params: MediaPurge.Request(limit: MediaPurge.batchSize)
-    ).execute().value
-    XCTAssertEqual(pending, [])
+  /// A plain untitled Entry saved through `save_entry`.
+  func savedEntry(_ body: String, client: SupabaseClient, ownerID: UUID) async throws
+    -> SavedEntry
+  {
+    try await EntryAPI(client: client, ownerID: ownerID).save(
+      SaveEntryParameters(
+        entryID: UUID(), expectedRevision: nil, title: nil, body: body, richText: nil,
+        occurrence: EntryOccurrence(precision: .unknown, timezone: "UTC"), tagNames: [],
+        location: nil, marks: .none))
   }
 
   /// A synthetic First Time with one photo, moved to Trash. Returns its id and original path.
-  private func trashedPhotoEntry(
-    _ title: String, client: SupabaseClient, ownerID: UUID
-  ) async throws -> (UUID, String) {
-    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
-    let created = await firstTimes.save(
-      entryID: nil, expectedRevision: nil, title: title, body: "",
-      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
-      collectionNames: [], tagNames: [])
-    let entryID = try XCTUnwrap(created.identity?.id, created.message)
-    let upload = try await firstTimes.upload(photoDraft(), entryID: entryID)
-    XCTAssertEqual(upload.status, .saved, upload.message)
-    await firstTimes.load()
-    let entry = try XCTUnwrap(firstTimes.entry(id: entryID))
-    let original = try XCTUnwrap(entry.attachments.first { $0.variant == .original })
-    let trashed = await firstTimes.moveToTrash(entryID: entry.id, expectedRevision: entry.revision)
-    XCTAssertEqual(trashed.status, .trashed, trashed.message)
-    return (entryID, original.objectPath)
+  func trashedPhotoEntry(_ title: String, client: SupabaseClient, ownerID: UUID) async throws
+    -> (UUID, String)
+  {
+    let api = EntryAPI(client: client, ownerID: ownerID)
+    let id = UUID()
+    let saved = try await api.save(
+      SaveEntryParameters(
+        entryID: id, expectedRevision: nil, title: title, body: "", richText: nil,
+        occurrence: EntryOccurrence(precision: .unknown, timezone: "UTC"), tagNames: [],
+        location: nil, marks: .firstTime))
+    let photo = try photoDraft()
+    let attached = try await api.attachPhoto(photo, entryID: id)
+    XCTAssertTrue(attached)
+    try await api.moveToTrash(id: id, revision: saved.revision)
+    return (id, photo.objectPath(ownerID: ownerID, entryID: id))
   }
 
-  private func storedNames(in folder: String, client: SupabaseClient) async throws -> [String] {
+  /// Photos on an Entry that are not in Trash.
+  func livePhotoCount(entryID: UUID, client: SupabaseClient) async throws -> Int {
+    let rows: [ExistingRow] =
+      try await client.from("attachments").select("id")
+      .eq("entry_id", value: entryID.uuidString)
+      .is("deleted_at", value: nil)
+      .execute().value
+    return rows.count
+  }
+
+  /// Every photo row of these Entries, in Trash or not.
+  func attachmentCount(entryIDs: [UUID], client: SupabaseClient) async throws -> Int {
+    let rows: [ExistingRow] =
+      try await client.from("attachments").select("id")
+      .in("entry_id", values: entryIDs.map(\.uuidString))
+      .execute().value
+    return rows.count
+  }
+
+  func storedNames(in folder: String, client: SupabaseClient) async throws -> [String] {
     try await client.storage.from("entry-media").list(path: folder).map(\.name)
   }
 
-  /// A synthetic capture saved to the Library through Inbox review.
-  private func reviewedEntry(
-    _ body: String, client: SupabaseClient, ownerID: UUID
-  ) async throws -> UUID {
-    let id = UUID()
-    try await client.from("entries").insert(
-      InboxEntryInsert(
-        id: id, ownerID: ownerID, title: nil, body: body, occurredStart: nil,
-        occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
-    ).execute()
-    let inbox = CaptureController(client: client, ownerID: ownerID)
-    await inbox.load()
-    let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
-    let saved = await inbox.review(
-      entry: capture,
-      draft: EntryReviewDraft(
-        title: "", body: body, bodyRich: nil, collectionNames: [], tagNames: [],
-        occurrence: capture.occurrence),
-      intent: .done)
-    XCTAssertEqual(saved.status, .done, saved.message)
-    return id
+  /// Moves an Entry to Trash the way another device does.
+  func moveToTrashElsewhere(_ entryID: UUID, client: SupabaseClient) async throws {
+    try await client.from("entries")
+      .update(["deleted_at": ISO8601DateFormatter().string(from: Date())])
+      .eq("id", value: entryID.uuidString)
+      .execute()
+  }
+
+  /// A capture queue with its own storage and photo files, past its first connectivity update
+  /// so each save starts its own sync.
+  func isolatedCapture(client: SupabaseClient, ownerID: UUID) async throws
+    -> (CaptureController, CapturePhotoStore)
+  {
+    let suiteName = "NativeContractTests.\(UUID().uuidString)"
+    let photoRoot = FileManager.default.temporaryDirectory.appending(
+      path: "NativeContractTests.\(UUID().uuidString)", directoryHint: .isDirectory)
+    addTeardownBlock {
+      UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+      try? FileManager.default.removeItem(at: photoRoot)
+    }
+    let queueStore = CaptureQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
+    let photoStore = CapturePhotoStore(rootURL: photoRoot)
+    let capture = CaptureController(
+      client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
+    try await Task.sleep(for: .milliseconds(500))
+    return (capture, photoStore)
+  }
+
+  /// Waits for the sync a save starts, then returns the toasts shown since `shown`.
+  func toasts(after shown: Set<UUID>, from capture: CaptureController) async throws -> [MTToast] {
+    let deadline = Date().addingTimeInterval(15)
+    while Date() < deadline,
+      capture.isSyncing || MTToastCenter.shared.toasts.allSatisfy({ shown.contains($0.id) })
+    {
+      try await Task.sleep(for: .milliseconds(100))
+    }
+    return MTToastCenter.shared.toasts.filter { !shown.contains($0.id) }
   }
 
   /// Waits until the server has answered the held call, so it read the data before what follows.
-  private func waitForHeldResponse() async throws {
+  func waitForHeldResponse() async throws {
     for _ in 0..<1_000 {
       if HeldResponseProtocol.gate.hasHeldResponse { return }
       try await Task.sleep(for: .milliseconds(10))
@@ -1401,126 +466,12 @@ final class NativeContractTests: XCTestCase {
     throw URLError(.timedOut)
   }
 
-  func testFocusedRecordsDecodeInLibraryCollectionsAndHome() async throws {
-    let (client, ownerID) = try await client()
-    let collectionName = "Native focused \(UUID().uuidString)"
-    let firstTimes = FirstTimesController(client: client, ownerID: ownerID)
-    let first = await firstTimes.save(
-      entryID: nil, expectedRevision: nil, title: "Native First Time", body: "Synthetic record.",
-      occurredStart: nil, datePrecision: .unknown, occurredLabel: "", occurredTimezone: nil,
-      collectionNames: [collectionName], tagNames: [])
-    XCTAssertEqual(first.status, .created, first.message)
-    let firstID = try XCTUnwrap(first.identity?.id)
-    await firstTimes.load()
-    XCTAssertNil(firstTimes.loadErrorMessage)
-    XCTAssertTrue(firstTimes.entries.contains { $0.id == firstID })
-
-    let vehicles = VehicleController(client: client, ownerID: ownerID)
-    let vehicle = await vehicles.save(
-      entryID: nil, expectedRevision: nil, title: "Native Vehicle", body: "Synthetic record.",
-      occurredStart: nil, occurredEnd: nil, datePrecision: .unknown, occurredLabel: "",
-      occurredTimezone: "UTC", make: "Native", model: "Fixture", modelYear: nil, color: "",
-      collectionNames: [collectionName], tagNames: [])
-    XCTAssertEqual(vehicle.status, .created, vehicle.message)
-    let vehicleID = try XCTUnwrap(vehicle.identity?.id)
-    await vehicles.load()
-    XCTAssertNil(vehicles.loadErrorMessage)
-    XCTAssertTrue(vehicles.entries.contains { $0.id == vehicleID })
-
-    let goals = GoalController(client: client, ownerID: ownerID)
-    let goal = await goals.save(
-      entryID: nil, expectedRevision: nil, title: "Native Goal", body: "Synthetic record.",
-      horizon: .someday, status: .considering, targetDate: nil, collectionNames: [collectionName],
-      tagNames: [], relatedEntryIDs: [firstID])
-    XCTAssertEqual(goal.status, .created, goal.message)
-    let goalID = try XCTUnwrap(goal.identity?.id)
-    await goals.load()
-    XCTAssertNil(goals.loadErrorMessage)
-    XCTAssertTrue(goals.entries.contains { $0.id == goalID })
-
-    let library = LibraryController(client: client, ownerID: ownerID)
-    await library.load()
-    XCTAssertNil(library.errorMessage)
-    XCTAssertEqual(library.items.first { $0.id == firstID }?.itemKind, .entry)
-    XCTAssertEqual(library.items.first { $0.id == vehicleID }?.itemKind, .entity)
-    XCTAssertEqual(library.items.first { $0.id == goalID }?.itemKind, .goal)
-
-    let collections = CollectionsController(client: client, ownerID: ownerID)
-    await collections.load()
-    XCTAssertNil(collections.loadErrorMessage)
-    let collection = try XCTUnwrap(collections.collections.first { $0.name == collectionName })
-    let detail = CollectionDetailController(
-      client: client, ownerID: ownerID, collectionID: collection.id)
-    await detail.load()
-    XCTAssertNil(detail.loadErrorMessage)
-    XCTAssertEqual(Set(detail.entries.map(\.id)), Set([firstID, vehicleID, goalID]))
-
-    let home = HomeController(client: client, ownerID: ownerID)
-    await home.load()
-    XCTAssertNil(home.loadErrorMessage)
-    XCTAssertNotNil(home.snapshot)
-  }
-}
-
-/// A provider Location as Web address search submits it, for a synthetic local Vehicle.
-private struct SyntheticVehicleLocation: Encodable {
-  let entryID: UUID
-  let revision: Int
-
-  private enum CodingKeys: String, CodingKey {
-    case input = "p_input"
-    case source = "p_source"
-    case location = "p_location"
-  }
-
-  func encode(to encoder: Encoder) throws {
-    var values = encoder.container(keyedBy: CodingKeys.self)
-    try values.encode(
-      [
-        "id": AnyJSON.string(entryID.uuidString), "revision": .integer(revision),
-        "title": "Native Location Vehicle", "body": "", "datePrecision": "unknown",
-        "occurredTimezone": "UTC", "make": "Honda", "model": "Civic", "modelYear": .integer(2018),
-        "collectionNames": [], "tagNames": [],
-      ] as [String: AnyJSON], forKey: .input)
-    try values.encodeNil(forKey: .source)
-    try values.encode(
-      [
-        "kind": "provider", "provider": "geoapify",
-        "providerLocationId": "native-contract-pier-39",
-        "formattedAddress": "Pier 39, San Francisco, CA 94133, United States",
-        "address": "Beach Street", "city": "San Francisco", "region": "CA",
-        "country": "United States", "countryCode": "us",
-        "latitude": .double(37.8087), "longitude": .double(-122.4098),
-      ] as [String: AnyJSON], forKey: .location)
-  }
-}
-
-/// A provider Location as Web address search submits it, for a synthetic local First Time.
-private struct SyntheticFirstTimeLocation: Encodable {
-  let entryID: UUID
-  let revision: Int
-
-  private enum CodingKeys: String, CodingKey {
-    case input = "p_input"
-    case location = "p_location"
-  }
-
-  func encode(to encoder: Encoder) throws {
-    var values = encoder.container(keyedBy: CodingKeys.self)
-    try values.encode(
-      [
-        "id": AnyJSON.string(entryID.uuidString), "revision": .integer(revision),
-        "title": "Native Location First Time", "body": "", "datePrecision": "unknown",
-        "collectionNames": [], "tagNames": [],
-      ] as [String: AnyJSON], forKey: .input)
-    try values.encode(
-      [
-        "kind": "provider", "provider": "geoapify",
-        "providerLocationId": "native-contract-ferry-building",
-        "formattedAddress": "Ferry Building, San Francisco, CA 94111, United States",
-        "city": "San Francisco", "region": "CA", "country": "United States",
-        "countryCode": "us", "latitude": .double(37.7955), "longitude": .double(-122.3937),
-      ] as [String: AnyJSON], forKey: .location)
+  /// `XCTUnwrap` for a value an `async` call returns.
+  func XCTUnwrapAsync<T>(
+    _ value: @autoclosure () async throws -> T?, file: StaticString = #filePath, line: UInt = #line
+  ) async throws -> T {
+    let result = try await value()
+    return try XCTUnwrap(result, file: file, line: line)
   }
 }
 
@@ -1528,7 +479,7 @@ private struct SyntheticFirstTimeLocation: Encodable {
 /// until the test releases it, so an earlier load can return after a later one. It can also
 /// fail one Storage removal, like a connection lost between two steps, and answer one capture
 /// photo upload as `UploadAnswer` describes.
-private final class HeldResponseProtocol: URLProtocol {
+final class HeldResponseProtocol: URLProtocol {
   static let gate = ResponseGate()
   /// A session whose requests pass through this protocol.
   static let session: URLSession = {
@@ -1601,12 +552,12 @@ private final class HeldResponseProtocol: URLProtocol {
 }
 
 /// A row whose identity is all a check needs.
-private struct ExistingRow: Decodable {
+struct ExistingRow: Decodable {
   let id: UUID
 }
 
 /// How the next capture photo upload is answered.
-private enum UploadAnswer: Equatable, Sendable {
+enum UploadAnswer: Equatable, Sendable {
   /// Storage refuses it with this status in its error body, beside HTTP 400 like the real one.
   case refuse(statusCode: String)
   /// It reaches Storage, but the answer is lost on the way back.
@@ -1621,7 +572,7 @@ private struct LoaderReference: @unchecked Sendable {
 }
 
 /// The RPC whose next response waits, and that response once the server has answered.
-private final class ResponseGate: @unchecked Sendable {
+final class ResponseGate: @unchecked Sendable {
   private let lock = NSLock()
   private var rpc: String?
   private var heldDelivery: (@Sendable () -> Void)?

@@ -488,8 +488,9 @@ protocol CaptureStorage: Sendable {
   func remove(forKey key: String) throws
 }
 
-/// The standard storage: this app's user defaults.
-struct UserDefaultsCaptureStorage: CaptureStorage {
+/// The standard storage: this app's user defaults. `UserDefaults` is safe to use from any
+/// thread, though the SDK does not mark it `Sendable`.
+struct UserDefaultsCaptureStorage: CaptureStorage, @unchecked Sendable {
   let defaults: UserDefaults
 
   /// A value stored in any other form still comes back, so it can be set aside, not lost.

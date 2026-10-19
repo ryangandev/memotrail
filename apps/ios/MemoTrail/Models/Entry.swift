@@ -141,9 +141,9 @@ enum EntryTimestamp {
     if text.range(of: #"[+-]\d{2}$"#, options: .regularExpression) != nil { text += ":00" }
     // Postgres keeps microseconds; the formatter reads milliseconds.
     if let fraction = text.range(of: #"\.\d+"#, options: .regularExpression) {
-      let digits = String(text[fraction].dropFirst().prefix(3))
-      text.replaceSubrange(
-        fraction, with: "." + digits.padding(toLength: 3, withPad: "0", startingAt: 0))
+      // Pad short fractions with zeros, then keep the first three digits.
+      let milliseconds = String((text[fraction].dropFirst() + "000").prefix(3))
+      text.replaceSubrange(fraction, with: "." + milliseconds)
     }
     let formatter = ISO8601DateFormatter()
     formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
