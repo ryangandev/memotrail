@@ -35,14 +35,14 @@ struct ItemPageView: View {
         MTPage(width: .compact) {
           HStack(spacing: MTSpacing.s3) {
             ProgressView().tint(MTColor.accent)
-            Text("Loading this item...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
+            Text("Loading this Entry...").font(MTFont.body).foregroundStyle(MTColor.inkMuted)
           }
           .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.page)
         }
       } else if controller.loadFailed {
         MTPage(width: .compact) {
           MTEmptyState(
-            title: "Item unavailable", message: "This item could not load. Refresh to try again.",
+            title: "Entry unavailable", message: "This Entry could not load. Refresh to try again.",
             icon: .warning
           ) {
             Button("Try again") { Task { await controller.load() } }
@@ -52,8 +52,8 @@ struct ItemPageView: View {
       } else {
         MTPage(width: .compact, spacing: MTSpacing.s6) {
           MTPageHeader(
-            eyebrow: "Life Wiki", title: "Item unavailable",
-            description: "It may have moved to Trash or no longer be accessible.")
+            eyebrow: "Library", title: "Entry unavailable",
+            description: "It may have moved to Trash, or it no longer exists.")
           Button("Back") { dismiss() }
             .mtButtonStyle(.secondary)
         }

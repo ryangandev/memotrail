@@ -30,8 +30,8 @@ struct LibraryView: View {
     NavigationStack(path: $path) {
       MTPage(width: .standard) {
         MTPageHeader(
-          eyebrow: "Your Life Wiki", title: "Library",
-          description: "Browse everything you have saved, or search across your Life Wiki.")
+          eyebrow: "Your trail", title: "Library",
+          description: "Every Entry you write or import, newest first by the date it happened.")
         searchSurface
         // The next-page trigger is its own page row, so the lazy page creates it only when the
         // end of the list scrolls near.
@@ -108,8 +108,8 @@ struct LibraryView: View {
   private var searchSurface: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       MTSearchField(
-        "Search your Life Wiki", text: $controller.query,
-        prompt: "A phrase, date, or question about your life...", size: .large, hidesLabel: true,
+        "Search Library", text: $controller.query,
+        prompt: "Search by words, a name, or a date", size: .large, hidesLabel: true,
         maxLength: EntrySearchRequest.queryLimit, focusRequest: searchFocus
       )
       .onSubmit(searchNow)
@@ -225,26 +225,26 @@ private struct LibraryBrowse: View {
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       MTSectionHeader(
-        "All items", variant: .list,
+        "All Entries", variant: .list,
         detail: controller.hasLoaded
-          ? countLabel(controller.totalCount, "item") : nil,
+          ? countLabel(controller.totalCount, "Entry") : nil,
         detailAlign: .end)
       if !controller.hasLoaded {
-        ProgressView("Loading your Life Wiki...")
+        ProgressView("Loading Library...")
           .font(MTFont.caption)
           .tint(MTColor.accent)
           .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.list)
       } else if let message = controller.errorMessage, controller.items.isEmpty {
-        LibraryMessage(title: "Life Wiki unavailable", message: message) {
+        LibraryMessage(title: "Library could not load", message: message) {
           Button("Try again") { Task { await controller.loadItems() } }
             .mtButtonStyle(.secondary, size: .small)
         }
       } else if controller.items.isEmpty {
         VStack(spacing: MTSpacing.s2) {
-          Text("No matching items")
+          Text("No Entries match")
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
-          Text("Try another phrase or category, or capture something new.")
+          Text("Try another filter or a wider range of dates.")
             .font(MTFont.body)
             .foregroundStyle(MTColor.inkMuted)
         }
@@ -322,7 +322,7 @@ private struct LibraryItemRow: View {
     .buttonStyle(MTListRowButtonStyle())
     .accessibilityElement(children: .ignore)
     .accessibilityLabel(item.accessibilityLabel)
-    .accessibilityHint("Opens this item")
+    .accessibilityHint("Opens this Entry")
     .accessibilityAddTraits(.isButton)
   }
 }
@@ -337,20 +337,20 @@ private struct LibraryResults: View {
       LibraryMessage(title: "Search unavailable", message: message)
     } else if controller.results.isEmpty {
       if controller.isSearching {
-        ProgressView("Searching your Life Wiki...")
+        ProgressView("Searching Library...")
           .font(MTFont.caption)
           .tint(MTColor.accent)
           .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.list)
       } else {
         LibraryMessage(
-          title: "No matching items",
-          message: "Try fewer words, remove a filter, or search for a broader date.")
+          title: "No Entries match",
+          message: "Try fewer words, another spelling, or remove a filter.")
       }
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
         MTSectionHeader(
           "Results", variant: .list,
-          detail: countLabel(controller.resultCount, "item")
+          detail: countLabel(controller.resultCount, "Entry")
         ) {
           if controller.isSearching {
             ProgressView().controlSize(.small).tint(MTColor.accent)
@@ -401,7 +401,7 @@ private struct LibraryResultCard: View {
       .buttonStyle(.plain)
       .accessibilityElement(children: .ignore)
       .accessibilityLabel(entry.accessibilityLabel)
-      .accessibilityHint("Opens this item")
+      .accessibilityHint("Opens this Entry")
       .accessibilityAddTraits(.isButton)
 
       if !entry.note.isEmpty {

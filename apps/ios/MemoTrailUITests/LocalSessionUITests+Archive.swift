@@ -161,7 +161,7 @@ extension LocalSessionUITests {
     merged.tap()
     reveal(app.buttons["view-tag-entries"], in: app, above: app.buttons["save-organization"]).tap()
     XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
-    XCTAssertTrue(app.staticTexts["5 items"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["5 Entries"].waitForExistence(timeout: 10))
     XCTAssertTrue(text("Filters · 1 active", in: app).exists)
     attach(app, "Library filtered to a tag")
   }

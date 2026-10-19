@@ -1,18 +1,18 @@
 import XCTest
 
 // Library browse and search, and First Times, signed in as the seeded account. The seed has four
-// Chapters (one also a First Time), three First Times, and 21 items in all.
+// Chapters (one also a First Time), three First Times, and 21 Entries in all.
 extension LocalSessionUITests {
   func testLibrarySearchFiltersChaptersAndFirstTimes() throws {
     let app = try launchLocalSession()
     // The Dashboard search action opens Library ready to type, over the browse list.
     XCTAssertTrue(app.buttons["workspace-search"].waitForExistence(timeout: 20))
     app.buttons["workspace-search"].tap()
-    let field = app.textFields["Search your Life Wiki"]
+    let field = app.textFields["Search Library"]
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     XCTAssertTrue(element("library-items", in: app).waitForExistence(timeout: 15))
     XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["21 items"].exists)
+    XCTAssertTrue(app.staticTexts["21 Entries"].exists)
     attach(app, "Library browse")
 
     // Browse labels Chapters and First Times and leaves a plain Entry unlabeled.
@@ -40,7 +40,7 @@ extension LocalSessionUITests {
     field.tap()
     field.typeText("coast\n")
     XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
-    XCTAssertTrue(app.staticTexts["3 items"].exists)
+    XCTAssertTrue(app.staticTexts["3 Entries"].exists)
     XCTAssertTrue(text("Matched in Title", in: app).exists)
     attach(app, "Library results")
     reveal(app.buttons["Read full note"], in: app).tap()
@@ -52,7 +52,7 @@ extension LocalSessionUITests {
     reveal(app.buttons["Record"], in: app).tap()
     app.buttons["Entries"].tap()
     XCTAssertTrue(app.staticTexts["Filters · 1 active"].waitForExistence(timeout: 10))
-    XCTAssertTrue(app.staticTexts["3 items"].exists)
+    XCTAssertTrue(app.staticTexts["3 Entries"].exists)
     attach(app, "Library filtered results")
 
     // A result opens its Item page, and Clear all returns to browsing.
@@ -68,7 +68,7 @@ extension LocalSessionUITests {
     reveal(app.buttons["library-filters"], in: app).tap()
     reveal(recordMenu(in: app), in: app).tap()
     app.buttons["Chapters"].tap()
-    XCTAssertTrue(app.staticTexts["4 items"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["4 Entries"].waitForExistence(timeout: 10))
     XCTAssertTrue(
       reveal(
         app.buttons.matching(
@@ -80,7 +80,7 @@ extension LocalSessionUITests {
     attach(app, "Library chapters only")
     reveal(recordMenu(in: app), in: app).tap()
     app.buttons["First Times"].tap()
-    XCTAssertTrue(app.staticTexts["3 items"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["3 Entries"].waitForExistence(timeout: 10))
     XCTAssertTrue(
       reveal(
         app.buttons.matching(

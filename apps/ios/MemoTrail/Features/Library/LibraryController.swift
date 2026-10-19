@@ -105,7 +105,7 @@ final class LibraryController {
       guard browseGeneration == generation, !(error is CancellationError) else { return }
       items = []
       totalCount = 0
-      errorMessage = "Your Life Wiki could not load. Pull to refresh or try again."
+      errorMessage = "Library could not load. Pull to refresh or try again."
     }
   }
 
@@ -123,7 +123,7 @@ final class LibraryController {
       totalCount = page.first?.totalCount ?? items.count
     } catch {
       guard browseGeneration == generation, !(error is CancellationError) else { return }
-      moreItemsErrorMessage = "More Life Wiki items could not load."
+      moreItemsErrorMessage = "More Entries could not load."
     }
   }
 
@@ -233,7 +233,7 @@ final class LibraryController {
       filtersErrorMessage = nil
     } catch {
       guard !(error is CancellationError) else { return }
-      filtersErrorMessage = "Tag filters are temporarily unavailable. Keyword search still works."
+      filtersErrorMessage = "Tags could not load, so Library cannot filter by them right now. Search still works."
     }
   }
 

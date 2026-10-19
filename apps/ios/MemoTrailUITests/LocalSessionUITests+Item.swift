@@ -148,7 +148,7 @@ extension LocalSessionUITests {
   ) throws {
     XCTAssertTrue(app.buttons["workspace-search"].waitForExistence(timeout: 20))
     app.buttons["workspace-search"].tap()
-    let field = app.textFields["Search your Life Wiki"]
+    let field = app.textFields["Search Library"]
     XCTAssertTrue(field.waitForExistence(timeout: 10))
     field.typeText("\(query)\n")
     XCTAssertTrue(element("library-results", in: app).waitForExistence(timeout: 15))
