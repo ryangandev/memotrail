@@ -605,14 +605,16 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   Enable extraction when native shortcuts are introduced.
 - Authenticated Web routes use `components/page-frame.tsx` for outer width, the fixed left edge, responsive gutters, and vertical page rhythm.
 - Web page frame widths are semantic: `reading` is 720px for an Entry page, a review, Settings, Import, and Export; `list` is 960px for Dashboard, Library, First Times, Tags, Trash, and Reviews; and `full` fills the workspace for Timeline.
-  Every frame starts at `--frame-start` from the sidebar, so a title never moves sideways between pages; the frame, page title, and section title sizes are Web layout variables in `app/globals.css` until shared tokens replace them.
+  Every frame starts at `--frame-start` from the sidebar, so a title never moves sideways between pages; the frame widths are Web layout variables in `app/globals.css`, and its page and section title variables read the shared `display`, `displayDetail`, `displayCompact`, and `sectionTitle` type roles.
   iOS keeps the `compact`, `standard`, `wide`, and `canvas` `MTPageWidth` variants until its rewrite.
 - `components/page-header.tsx` is a title, one optional muted `meta` line, at most one `action`, and on a detail page a `back` link; it has no eyebrow or description.
   `components/route-fallback.tsx` gives not found, route errors, and an unavailable Entry one reading-width layout with the same header.
 - New route pages choose the width by how they read; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
-- Chapter and First Time result layouts reuse `components/record-card.tsx`; mark modules own only their visual, metadata, and responsive content rules.
-  Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
+- Lists of Entries on the Dashboard, Library, a Chapter's page, reviews, and Chapter suggestions use `EntryRowList`, `EntryRowGroup`, and `EntryRow` from `components/entry-row.tsx`, with `entryRowLabels()` from `lib/data/entry-row.ts` for the title and date.
+  `ChapterMark` and `FirstTimeMark` there draw an Entry's kind beside its title from the `chapter` and `firstTime` icons, and First Times reuses `ChapterMark` in its own rows.
+  `components/record-card.tsx` has no Web page left; it stays as the counterpart of the native First Times grid's `MTRecordCard` and as a gallery specimen.
+  Noninteractive history and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
 - Entry editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture renders the shared draft from `CaptureProvider`, so its editor is ready before the dialog first opens and photo drafts load without moving it; its loading and editor geometries stay equal.

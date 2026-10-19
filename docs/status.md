@@ -1,6 +1,6 @@
 # MemoTrail Status
 
-Last reviewed: 2026-10-18.
+Last reviewed: 2026-10-19.
 
 ## Where things stand
 
@@ -21,6 +21,7 @@ Production runs the Web from before this branch, which calls functions this bran
 - Chapter and year reviews and Chapter suggestions in code and migrations, off for every person until they turn them on and accept the disclosure; the server refuses to call a provider unless `AI_PROVIDER` is `anthropic`.
 - Import of a Markdown folder (which also reads Apple Notes Markdown exports), Apple Journal, Notion, and Day One into ordinary Entries, with a preview, undo, and no duplicates on a second import.
 - A design system whose values all come from shared tokens.
+- The Quiet ledger redesign on every Web page: writing in serif ink straight on the canvas, rules instead of cards, one shared `EntryRow` for every list of Entries, a sidebar without a top bar on desktop, a phone top bar and tab bar with More, and a glass dock holding New Entry and Search.
 
 All of it is verified against local Supabase only.
 No real AI provider, deployed embedding service, hosted project, or Production deployment has been exercised.
@@ -49,7 +50,7 @@ Every step needs Ryan's explicit go-ahead before it starts.
 Do the steps in this order.
 
 1. **Back up** the hosted database, schema and data, to a destination Ryan names.
-2. **Apply the migrations** in filename order: `202610190001` and `202610190002`; `202610190010` through `202610190017`; `202610190020` through `202610190023`; `202610190030` through `202610190038`; `202610190040` through `202610190045`.
+2. **Apply the migrations** in filename order: `202610190001` and `202610190002`; `202610190010` through `202610190017`; `202610190020` through `202610190023`; `202610190030` through `202610190038`; `202610190040` through `202610190046`.
    `202610190011` converts every Home, Vehicle, and Period and checks its own result before committing.
    Apply them before deploying this Web, because the Web in Production calls RPCs these migrations drop.
    A migration `202610190024` that drops dead columns does not exist yet, and the follow-up migration for [issue #101](https://github.com/ryangandev/memotrail/issues/101) is still pending; neither belongs in this rollout.
@@ -96,15 +97,16 @@ These are also listed in [product.md](./product.md#product-boundaries), and none
 
 Review the native rewrite and run it on a real iPhone, including Command-Return on a hardware keyboard.
 
-### 4. Redesign the UI on the finished design system
+### 4. Bring the Quiet ledger to native iOS
 
-The design system the redesign builds on is complete.
-Web and iOS draw every visual value from the DTCG tokens in `packages/design-system/tokens`, and `pnpm lint` and `pnpm design-system:check` reject hardcoded values.
-A full redesign is deferred while the work above comes first.
+Web follows the Quiet ledger design, and both platforms read the same tokens, including the danger color, the 11px type floor, and the page, reading, and row type roles.
+iOS still draws the earlier layouts, so its pages, its tiled More tab, and its warm error text follow Web when the native redesign starts.
 These open design decisions feed it:
 
+- Breakpoints are 560, 720, and 900 px; 900 stays because the sidebar, the page frame, and the Timeline's vertical list change there, so the proposed 1024 and 1280 are not used.
+- Badge `micro` and `small` are both 11px now that nothing is smaller, so one of them can go.
 - The type, spacing, and radius scales are named by value, so a retuned scale renames tokens.
-- Six contrast exceptions remain until a palette change: inkFaint metadata in each theme, muted text on subtle panels, and warm, danger, and warning text in light.
+- Five contrast exceptions remain until a palette change: inkFaint metadata in each theme, muted text on subtle panels, and warm and warning text in light.
 - The brand mark's outer ring and arc use themed colors on iOS and fixed colors on Web, so the platforms differ in dark mode.
 - Web `textSpace` is relative to the text size, so the paragraph gap is shared with iOS only once the Swift generator supports relative units.
 
