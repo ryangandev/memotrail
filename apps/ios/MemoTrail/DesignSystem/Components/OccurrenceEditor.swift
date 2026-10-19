@@ -93,7 +93,7 @@ struct OccurrenceEditor: View {
 
   /// Web wraps the date toggles in one row where they fit.
   @ViewBuilder private var toggles: some View {
-    MTFlowLayout(spacing: MTSpacing.s5, lineSpacing: MTSpacing.s1) {
+    TopAlignedFlowLayout(spacing: MTSpacing.s5, lineSpacing: MTSpacing.s1) {
       Group {
         if timeToggleShown {
           MTCheckbox(
@@ -142,8 +142,8 @@ struct OccurrenceEditor: View {
           isChangingTimezone = true
           opensTimezoneList = true
         }
-          .mtButtonStyle(.secondary, size: .small)
-          .accessibilityLabel("Change time zone")
+        .mtButtonStyle(.secondary, size: .small)
+        .accessibilityLabel("Change time zone")
       }
       .frame(minHeight: MTSize.Field.medium)
     }
@@ -199,6 +199,46 @@ struct OccurrenceEditor: View {
     case .age: "e.g. age 17 or ages 17 to 19"
     case .range: "Context, e.g. my years in Philadelphia"
     default: "Context, e.g. my first day at the new job"
+    }
+  }
+}
+
+/// `MTFlowLayout` line breaking with each child at the top of its line, like Web flex rows
+/// whose checkboxes stretch to the line, so "Present" and its detail keep its box level with
+/// the one-line toggles beside it.
+private struct TopAlignedFlowLayout: Layout {
+  var spacing: CGFloat
+  var lineSpacing: CGFloat
+
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    let width = proposal.width ?? .infinity
+    let lines = MTFlowLayout.lines(
+      for: items(subviews, width: width), width: width, spacing: spacing)
+    let height =
+      lines.map(\.height).reduce(0, +) + CGFloat(max(lines.count - 1, 0)) * lineSpacing
+    return CGSize(width: proposal.width ?? lines.map(\.width).max() ?? 0, height: height)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
+  ) {
+    let items = items(subviews, width: bounds.width)
+    var y = bounds.minY
+    for line in MTFlowLayout.lines(for: items, width: bounds.width, spacing: spacing) {
+      var x = bounds.minX
+      for index in line.indices {
+        let size = CGSize(
+          width: min(items[index].size.width, bounds.width), height: items[index].size.height)
+        subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+        x += size.width + spacing
+      }
+      y += line.height + lineSpacing
+    }
+  }
+
+  private func items(_ subviews: Subviews, width: CGFloat) -> [MTFlowLayout.Item] {
+    subviews.map {
+      MTFlowLayout.Item(size: $0.sizeThatFits(ProposedViewSize(width: width, height: nil)))
     }
   }
 }
