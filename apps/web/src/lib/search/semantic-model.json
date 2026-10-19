@@ -1,0 +1,8 @@
+{
+  "huggingFaceId": "Qwen/Qwen3-Embedding-0.6B",
+  "revision": "97b0c614be4d77ee51c0cef4e5f07c00f9eb65b3",
+  "dimensions": 1024,
+  "minSimilarity": 0.5,
+  "queryInstruction": "Given a short or vague description, a name, or keywords, retrieve the personal journal entry the user is trying to find",
+  "queryTemplate": "Instruct: {instruction}\nQuery:{query}"
+}
