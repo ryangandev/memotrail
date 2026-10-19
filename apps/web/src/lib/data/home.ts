@@ -17,25 +17,21 @@ import {
   type HomeResurfacedMemory,
 } from "./home-resurfacing";
 import { getAuthenticatedContext, type Viewer } from "./inbox";
-import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
-import { isTimelineLane, type TimelineLane } from "./milestone";
+import {
+  entryDisplayTitle,
+  storedOccurrence,
+  type Occurrence,
+} from "./occurrence";
 
 export type { HomeAttachment, HomeEntry } from "./home-entry";
 export type { HomeResurfacedMemory } from "./home-resurfacing";
 
-/** A Home, Vehicle, or Period that has started and has no end yet. */
+/** A Chapter that has started and has no end yet. */
 export type HomeNowItem = {
-  datePrecision: string;
-  entryId: string;
+  id: string;
   isFirstTime: boolean;
-  itemKind: WikiItemKind;
-  itemSubtype: string;
-  lane: TimelineLane;
-  occurredEnd: string | null;
-  occurredLabel: string | null;
-  occurredStart: string;
-  occurredTimezone: string | null;
-  /** The stored title, blank when the Entry has none. */
+  occurrence: Occurrence;
+  /** Its title, or its date when it has none. */
   title: string;
 };
 
@@ -155,7 +151,7 @@ function parseHomeRow(value: unknown): HomeSnapshot | null {
   };
 }
 
-function parseNowItems(value: unknown): HomeNowItem[] | null {
+export function parseNowItems(value: unknown): HomeNowItem[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
@@ -167,9 +163,7 @@ function parseNowItems(value: unknown): HomeNowItem[] | null {
       !isRecord(item) ||
       typeof item.entry_id !== "string" ||
       typeof item.title !== "string" ||
-      !isWikiItemKind(item.item_kind) ||
-      typeof item.item_subtype !== "string" ||
-      !isTimelineLane(item.lane) ||
+      Object.keys(item).length !== 8 ||
       typeof item.is_first_time !== "boolean" ||
       typeof item.occurred_start !== "string" ||
       !nullableString(item.occurred_end) ||
@@ -180,18 +174,18 @@ function parseNowItems(value: unknown): HomeNowItem[] | null {
       return null;
     }
 
-    items.push({
+    const occurrence = storedOccurrence({
       datePrecision: item.date_precision,
-      entryId: item.entry_id,
-      isFirstTime: item.is_first_time,
-      itemKind: item.item_kind,
-      itemSubtype: item.item_subtype,
-      lane: item.lane,
       occurredEnd: item.occurred_end,
       occurredLabel: item.occurred_label,
       occurredStart: item.occurred_start,
       occurredTimezone: item.occurred_timezone,
-      title: item.title,
+    });
+    items.push({
+      id: item.entry_id,
+      isFirstTime: item.is_first_time,
+      occurrence,
+      title: entryDisplayTitle(item.title, occurrence),
     });
   }
 

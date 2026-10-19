@@ -39,6 +39,25 @@ describe("parseSearchRequest", () => {
     });
   });
 
+  it("reads older record types as Chapters and First Times", () => {
+    const types = (type: string | string[]) =>
+      parseSearchRequest({ type }).request.itemClassifications;
+
+    expect(types("home")).toEqual(["chapter"]);
+    expect(types("vehicle")).toEqual(["chapter"]);
+    expect(types("entity")).toEqual(["chapter"]);
+    expect(types("milestone")).toEqual(["chapter", "first_time"]);
+    expect(types(["home", "Vehicle", "milestone", "first_time"])).toEqual([
+      "chapter",
+      "first_time",
+    ]);
+    expect(types(["entry", "milestone"])).toEqual([
+      "entry",
+      "chapter",
+      "first_time",
+    ]);
+  });
+
   it("reads older Collection links as tag filters", () => {
     const parsed = parseSearchRequest({
       collection: [" Travel ", "snow"],

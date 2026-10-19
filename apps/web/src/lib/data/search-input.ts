@@ -80,7 +80,9 @@ export function parseSearchRequest(
   parameters: RawSearchParams,
 ): ParsedSearchRequest {
   const query = firstValue(parameters.q).trim();
-  const itemClassifications = normalizedValues(parameters.type);
+  const itemClassifications = currentClassifications(
+    normalizedValues(parameters.type),
+  );
   // Collections became tags with the same names, so older links still filter.
   const tagNames = normalizedValues([
     ...listValues(parameters.tag),
@@ -188,6 +190,33 @@ function normalizedValues(value: string | string[] | undefined) {
   }
 
   return normalized;
+}
+
+// Homes, Vehicles, and Timeline milestones became Chapters and First Times, so links that filter
+// by the older types keep working. A milestone was either, so it stands for both.
+const olderClassifications: Record<string, readonly string[]> = {
+  entity: ["chapter"],
+  home: ["chapter"],
+  milestone: ["chapter", "first_time"],
+  vehicle: ["chapter"],
+};
+
+function currentClassifications(values: string[]) {
+  const seen = new Set<string>();
+  const current: string[] = [];
+
+  for (const value of values) {
+    for (const mapped of olderClassifications[value.toLocaleLowerCase()] ?? [
+      value,
+    ]) {
+      const key = mapped.toLocaleLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      current.push(mapped);
+    }
+  }
+
+  return current;
 }
 
 function validNames(

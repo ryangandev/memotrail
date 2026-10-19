@@ -28,7 +28,6 @@ import {
   type WikiItemKind,
 } from "@/lib/data/wiki-item";
 
-import { isMilestoneShape, type MilestoneShape } from "@/lib/data/milestone";
 import {
   matchPassage,
   matchedByFromReasons,
@@ -50,7 +49,6 @@ export type SearchEntry = {
   matchReasons: string[];
   /** The closest passage of a long Entry that matched by meaning. */
   meaningPassage: string | null;
-  milestoneShape: MilestoneShape | null;
   occurredAt: string | null;
   occurredEnd: string | null;
   datePrecision: OccurrencePrecision;
@@ -79,7 +77,6 @@ type SearchRow = {
   item_subtype: string;
   is_first_time: boolean;
   match_reasons: string[] | null;
-  milestone_shape: MilestoneShape | null;
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_end: string | null;
@@ -104,7 +101,6 @@ type ItemIdentity = {
   isFirstTime: boolean;
   itemKind: WikiItemKind;
   itemSubtype: string;
-  milestoneShape: MilestoneShape | null;
 };
 
 export async function getSearchWorkspace(
@@ -264,10 +260,7 @@ function quickEntryItem(
   // A long Entry that matched only by meaning shows the passage that did.
   const passage = matchedBy === "meaning" ? rowPassage(row) : null;
   return {
-    href: wikiEntryHref({
-      id: row.entry_id,
-      ...identity,
-    }),
+    href: wikiEntryHref({ id: row.entry_id }),
     id: row.entry_id,
     label: identityLabel(identity),
     matchedBy,
@@ -292,10 +285,7 @@ function tagEntryPreview(
   return {
     // An untitled Entry is already named by its date.
     date: stringValue(row.title) ? occurrenceLabel(rowOccurrence(row)) : null,
-    href: wikiEntryHref({
-      id: row.entry_id,
-      ...identity,
-    }),
+    href: wikiEntryHref({ id: row.entry_id }),
     id: row.entry_id,
     title: rowTitle(row),
     type: identityLabel(identity),
@@ -337,7 +327,6 @@ function entryFromRow(
     meaningPassage: strings(row.match_reasons).includes(MEANING_REASON)
       ? rowPassage(row)
       : null,
-    milestoneShape: identity.milestoneShape,
     occurredAt: stringValue(row.occurred_start),
     occurredEnd: stringValue(row.occurred_end),
     datePrecision: row.date_precision,
@@ -354,18 +343,11 @@ function identityFromSearchRow(row: SearchRow): ItemIdentity {
     isFirstTime: row.is_first_time,
     itemKind: row.item_kind,
     itemSubtype: row.item_subtype,
-    milestoneShape: row.milestone_shape,
   };
 }
 
 function identityLabel(identity: ItemIdentity) {
-  return wikiItemIdentityLabel(
-    identity.itemKind,
-    identity.itemSubtype,
-    identity.milestoneShape
-      ? { isFirstTime: identity.isFirstTime, shape: identity.milestoneShape }
-      : null,
-  );
+  return wikiItemIdentityLabel(identity.itemSubtype, identity.isFirstTime);
 }
 
 function countFromRows(rows: SearchRow[]) {
@@ -402,8 +384,6 @@ function isSearchRow(value: unknown): value is SearchRow {
     typeof value.entry_id === "string" &&
     isWikiItemKind(value.item_kind) &&
     typeof value.item_subtype === "string" &&
-    (value.milestone_shape === null ||
-      isMilestoneShape(value.milestone_shape)) &&
     typeof value.is_first_time === "boolean" &&
     typeof value.updated_at === "string" &&
     nullableString(value.title) &&

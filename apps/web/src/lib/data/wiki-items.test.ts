@@ -14,6 +14,7 @@ import {
 const item = {
   canonical_item_id: "40000000-0000-4000-8000-000000000001",
   excerpt: "A reflection",
+  is_first_time: false,
   item_id: "40000000-0000-4000-8000-000000000001",
   date_precision: "day",
   item_kind: "entry",
@@ -32,6 +33,7 @@ describe("Life Wiki workspace data", () => {
     expect(parseWikiItemRows([item])).toEqual([
       expect.objectContaining({
         datePrecision: "day",
+        isFirstTime: false,
         itemKind: "entry",
         itemSubtype: "entry",
         occurredStart: "2026-09-15T19:00:00Z",
@@ -46,20 +48,20 @@ describe("Life Wiki workspace data", () => {
       parseWikiItemRows([{ ...item, canonical_item_id: null }]),
     ).toBeNull();
     expect(parseWikiItemRows([{ ...item, item_kind: "writing" }])).toBeNull();
+    expect(parseWikiItemRows([{ ...item, item_kind: "entity" }])).toBeNull();
+    expect(parseWikiItemRows([{ ...item, is_first_time: null }])).toBeNull();
     expect(parseWikiItemRows([{ ...item, total_count: "many" }])).toBeNull();
     expect(parseWikiItemRows([{ ...item, date_precision: null }])).toBeNull();
   });
 
-  it("routes specialized and registry Entities to their editors", () => {
-    const parsed = parseWikiItemRows([item])![0];
-    expect(wikiItemHref(parsed)).toBe(`/items/${parsed.id}`);
-    expect(
-      wikiItemHref({
-        ...parsed,
-        itemKind: "entity",
-        itemSubtype: "vehicle",
-      }),
-    ).toBe(`/vehicles/${parsed.id}`);
+  it("opens every item on its Item page", () => {
+    const [entry, chapter] = parseWikiItemRows([
+      item,
+      { ...item, item_subtype: "chapter", is_first_time: true },
+    ])!;
+    expect(wikiItemHref(entry!)).toBe(`/items/${entry!.id}`);
+    expect(chapter).toMatchObject({ isFirstTime: true, itemSubtype: "chapter" });
+    expect(wikiItemHref(chapter!)).toBe(`/items/${chapter!.id}`);
   });
 
   it("loads one page of the full list", async () => {
