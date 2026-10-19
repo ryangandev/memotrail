@@ -1,80 +1,100 @@
+/* A suggested Chapter reads like the top of a Chapter's page, held between hairlines instead of
+   in a tinted card: the green Chapter mark and "Suggested Chapter", the "Suggested by AI" badge,
+   a serif name, its span, Claude's reason, and the Entries it came from as ordinary rows. */
+
 .card {
   display: grid;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-5);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-inline-start: var(--mt-size-stroke-thick) solid var(--mt-color-warm);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-warm-wash);
+  justify-items: start;
+  max-width: var(--frame-reading);
+  padding: var(--mt-space-4) 0 var(--mt-space-5);
+  border-block: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
-.eyebrow {
+.kind {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--mt-space-2);
+  gap: var(--mt-space-1-5) var(--mt-space-2);
+  color: var(--mt-color-accent);
 }
 
-.card .eyebrow p {
+.mark {
+  width: var(--mt-size-icon-15);
+  height: var(--mt-size-icon-15);
+  flex: none;
+}
+
+.card .kind p {
   margin: 0;
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-  font-weight: var(--mt-font-weight-medium);
+  color: var(--mt-color-accent);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: var(--mt-space-1);
 }
 
 .card h2 {
-  margin: 0;
+  margin: var(--mt-space-2) 0 0;
   color: var(--mt-color-ink);
   font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title);
+  font-size: var(--section-title-size);
   font-weight: var(--mt-font-weight-medium);
+  line-height: var(--mt-line-height-tight);
   overflow-wrap: anywhere;
 }
 
 .card .facts {
-  margin: 0;
+  margin: var(--mt-space-1-5) 0 0;
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
 }
 
-.rationale {
-  display: grid;
-  justify-items: start;
-  gap: var(--mt-space-2);
-}
-
-.card .rationale > p {
-  margin: 0;
+.card .rationale {
+  max-width: 40rem;
+  margin: var(--mt-space-3) 0 0;
   color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-body);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
   line-height: var(--mt-line-height-paragraph);
   overflow-wrap: anywhere;
+  text-wrap: pretty;
 }
 
-.rationale ul {
+.entries {
   display: grid;
-  gap: var(--mt-space-1-5);
-  margin: 0;
+  justify-items: start;
+  width: 100%;
+  margin-top: var(--mt-space-4);
+}
+
+.entries > ul {
+  width: 100%;
+}
+
+.more {
+  margin-top: var(--mt-space-2);
   padding: 0;
-  list-style: none;
-}
-
-.card .rationale a {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--mt-space-1) var(--mt-space-2);
+  border: 0;
+  border-radius: var(--mt-radius-xxsmall);
   color: var(--mt-color-accent);
-  font-size: var(--mt-font-size-caption);
-  text-decoration: none;
+  background: none;
+  font: inherit;
+  font-size: var(--mt-font-size-body-small);
+  cursor: pointer;
 }
 
-.card .rationale a span:first-child {
-  color: var(--mt-color-ink-faint);
-}
-
-.card .rationale a:hover span:last-child {
+.more:hover {
   text-decoration: underline;
+}
+
+.more:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset);
 }
 
 .actions {
@@ -82,5 +102,5 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--mt-space-2);
-  margin-top: var(--mt-space-1);
+  margin-top: var(--mt-space-5);
 }

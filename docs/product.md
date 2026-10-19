@@ -236,13 +236,17 @@ When a Chapter ends or a year passes, a review shows what that period held.
 - A review shows how the user's feelings changed over the period, which themes kept returning, and the user's own words from that time.
 - Every quote links to the Entry it came from.
 - A review is separate from the Entries it draws on, and the original Entries are never changed.
-- A Chapter's review appears on its Entry page.
-- Reviews is a destination that lists each ended year with at least 5 dated Entries; each year's page holds its review and links back to Reviews.
+- A Chapter's review appears on its Entry page under "Looking back".
+- Reviews is a destination that lists, newest first, each ended year with at least 5 dated Entries and each Chapter whose review has been made.
+- Each year's page is titled "2025 in review", links back to Reviews, and switches between the years Reviews lists.
+- A Chapter's review and a year's review read the same way: how it felt as serif prose, what kept coming up as rows with how many Entries each came from, the user's own words as quotes with a link to their date, and facts from the user's records.
+- A finished review says once, beside its title, that it was written by AI, how many Entries it read, and when; it ends with Write again and Delete review.
 
 ### Chapter suggestions
 
 - Chapter suggestions are off until the user turns them on.
 - A suggestion proposes a name and a span from what the user has been writing about.
+- A suggestion appears on Timeline, marked as suggested by AI, with Claude's reason and the Entries it is based on.
 - A suggestion becomes a Chapter only after the user confirms it, and the user may edit its name and dates first.
 - Suggestions never count, badge, or nag; dismissing one does not bring it back.
 

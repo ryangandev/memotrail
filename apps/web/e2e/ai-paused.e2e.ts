@@ -131,7 +131,8 @@ test("Paused AI has no setting or entry point and blocks old clients without cha
       page.getByRole("link", { name: "Explore with AI" }),
     ).toHaveCount(0);
     await page.goto(`/explore?entry=${entry}`);
-    await expect(page).toHaveURL(/\/library$/);
+    // The retired exploration page sends old bookmarks to Library, query and all.
+    await expect(page).toHaveURL(new RegExp(`/library\\?entry=${entry}$`));
     await expect(page.getByRole("button", { name: "Ask AI" })).toHaveCount(0);
     await page.goto(`/items/${entry}`);
     await expect(page.getByRole("main")).toContainText("A quiet afternoon.");

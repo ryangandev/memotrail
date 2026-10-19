@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import {
@@ -12,15 +11,12 @@ import { notify } from "@/components/app-toast";
 import { Badge } from "@/components/badge";
 import { Button } from "@/components/button";
 import styles from "@/components/chapter-suggestion-card.module.css";
+import { EntryRow, EntryRowList } from "@/components/entry-row";
 import { SeparatedList } from "@/components/separated-list";
-import {
-  entryDisplayTitle,
-  occurrenceLabel,
-  validTimezone,
-} from "@/lib/data/occurrence";
+import { entryRowDate, entryRowLabels } from "@/lib/data/entry-row";
+import { validTimezone } from "@/lib/data/occurrence";
 import {
   suggestionOccurrenceDraft,
-  suggestionSpanLabel,
   type ChapterSuggestion,
 } from "@/lib/data/review-input";
 
@@ -34,10 +30,27 @@ const NewEntryDialog = dynamic(
 
 const PREVIEW_COUNT = 3;
 
+/** The suggested span the way a Chapter row reads it, such as "Jun 2026 - now". */
+function suggestionSpan(suggestion: ChapterSuggestion) {
+  return entryRowDate(
+    {
+      datePrecision: suggestion.startPrecision,
+      occurredAt: `${suggestion.startDate}T12:00:00Z`,
+      occurredEnd: suggestion.endDate
+        ? `${suggestion.endDate}T12:00:00Z`
+        : null,
+      occurredLabel: null,
+      occurredTimezone: "UTC",
+    },
+    { isChapter: true },
+  );
+}
+
 /**
  * A quiet suggestion that a stretch of writing may be a Chapter. Nothing is created until the
  * person reviews the proposed Chapter and saves it; dismissing keeps only its dates, so the same
- * stretch is not suggested again.
+ * stretch is not suggested again. It sits between hairlines like any other row of the page, with
+ * the "Suggested by AI" badge marking what Claude proposed.
  */
 export function ChapterSuggestionCard({
   ownerId,
@@ -70,6 +83,7 @@ export function ChapterSuggestionCard({
   const shown = expanded
     ? suggestion.entries
     : suggestion.entries.slice(0, PREVIEW_COUNT);
+  const more = suggestion.entries.length - shown.length;
 
   async function dismiss() {
     if (busy) return;
@@ -88,62 +102,77 @@ export function ChapterSuggestionCard({
 
   return (
     <section aria-labelledby="chapter-suggestion-title" className={styles.card}>
-      <div className={styles.eyebrow}>
+      <div className={styles.kind}>
+        <svg aria-hidden="true" className={styles.mark} viewBox="0 0 24 24">
+          <path
+            d="M5 6v12M19 6v12M5 12h14"
+            fill="none"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeWidth="1.8"
+          />
+        </svg>
         <p>Suggested Chapter</p>
-        <Badge tone="warm">Suggested by AI</Badge>
+        <Badge className={styles.badge} size="medium" tone="neutral">
+          Suggested by AI
+        </Badge>
       </div>
       <h2 id="chapter-suggestion-title">{suggestion.name}</h2>
       <p className={styles.facts}>
         <SeparatedList>
-          <span>{suggestionSpanLabel(suggestion)}</span>
+          <span>{suggestionSpan(suggestion)}</span>
           <span>
             Based on {suggestion.entryCount}{" "}
             {suggestion.entryCount === 1 ? "Entry" : "Entries"}
           </span>
         </SeparatedList>
       </p>
-      <div className={styles.rationale}>
-        <p>{suggestion.rationale}</p>
-        {shown.length > 0 ? (
-          <ul aria-label="Entries this suggestion is based on">
+      <p className={styles.rationale}>{suggestion.rationale}</p>
+      {shown.length > 0 ? (
+        <div className={styles.entries}>
+          <EntryRowList label="Entries this suggestion is based on">
             {shown.map((entry) => {
-              const occurrence = {
-                datePrecision: entry.datePrecision,
-                occurredAt: entry.occurredStart,
-                occurredEnd: entry.occurredEnd,
-                occurredLabel: entry.occurredLabel,
-                occurredTimezone: validTimezone(entry.occurredTimezone)
-                  ? entry.occurredTimezone
-                  : "UTC",
-              };
+              const labels = entryRowLabels({
+                occurrence: {
+                  datePrecision: entry.datePrecision,
+                  occurredAt: entry.occurredStart,
+                  occurredEnd: entry.occurredEnd,
+                  occurredLabel: entry.occurredLabel,
+                  occurredTimezone: validTimezone(entry.occurredTimezone)
+                    ? entry.occurredTimezone
+                    : "UTC",
+                },
+                title: entry.title,
+                year: "show",
+              });
               return (
-                <li key={entry.id}>
-                  <Link href={`/items/${entry.id}`}>
-                    <span>{occurrenceLabel(occurrence)}</span>
-                    {entry.title.trim() ? (
-                      <span>{entryDisplayTitle(entry.title, occurrence)}</span>
-                    ) : null}
-                  </Link>
-                </li>
+                <EntryRow
+                  date={labels.date}
+                  dateTime={labels.dateTime}
+                  href={`/items/${entry.id}`}
+                  key={entry.id}
+                  title={labels.title}
+                  variant="compact"
+                />
               );
             })}
-          </ul>
-        ) : null}
-        {!expanded && suggestion.entries.length > PREVIEW_COUNT ? (
-          <Button
-            onClick={() => setExpanded(true)}
-            size="small"
-            variant="ghost"
-          >
-            Show all {suggestion.entries.length}
-          </Button>
-        ) : null}
-      </div>
+          </EntryRowList>
+          {more > 0 ? (
+            <button
+              className={styles.more}
+              onClick={() => setExpanded(true)}
+              type="button"
+            >
+              Show all {suggestion.entries.length}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
       <div className={styles.actions}>
         <Button
           disabled={busy}
           onClick={() => setEditing(true)}
-          variant="primary"
+          variant="secondary"
         >
           Review and add
         </Button>

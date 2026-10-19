@@ -1,9 +1,12 @@
+/* The disclosure leads with its summary in serif, then each part under a quiet heading and a
+   hairline, so the long detail reads as reference rather than as a wall of bullets. */
+
 .copy {
   display: grid;
   gap: var(--mt-space-5);
   color: var(--mt-color-ink);
   font-size: var(--mt-font-size-body-small);
-  line-height: var(--mt-line-height-body);
+  line-height: var(--mt-line-height-message);
 }
 
 .copy p,
@@ -12,31 +15,44 @@
   margin: 0;
 }
 
-.intro {
-  display: grid;
-  gap: var(--mt-space-2);
+.copy .intro {
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-paragraph);
+  text-wrap: pretty;
 }
 
 .copy section {
   display: grid;
   gap: var(--mt-space-2);
+  padding-top: var(--mt-space-4);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
 }
 
 .copy h3 {
   color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-body);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-body-small);
   font-weight: var(--mt-font-weight-semibold);
+  line-height: var(--mt-line-height-title);
 }
 
 .copy ul {
   display: grid;
-  gap: var(--mt-space-2);
-  padding-inline-start: var(--mt-space-5);
+  gap: var(--mt-space-1-5);
+  padding-inline-start: var(--mt-space-4-5);
+  color: var(--mt-color-ink);
+}
+
+.copy li::marker {
+  color: var(--mt-color-ink-faint);
 }
 
 .sources {
+  padding-top: var(--mt-space-4);
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
 }
 
 .sources a {
