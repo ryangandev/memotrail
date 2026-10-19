@@ -1,16 +1,16 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { writeFile } from "node:fs/promises";
-import { test, expect } from "@playwright/test";
-import { createClient } from "@supabase/supabase-js";
+import { test, expect, type BrowserContext } from "@playwright/test";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { buildZip, tinyPng } from "../src/lib/import/test-zip";
 
-test("A Markdown ZIP previews, imports with its photo and dates, and a second import adds nothing", async ({
-  context,
-  page,
-}, testInfo) => {
-  test.setTimeout(180_000);
+/** Runs a scenario as its own disposable, signed-in account and cleans up what it made. */
+async function asNewUser(
+  context: BrowserContext,
+  scenario: (admin: SupabaseClient, owner: string) => Promise<void>,
+) {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",
@@ -58,7 +58,31 @@ test("A Markdown ZIP previews, imports with its photo and dates, and a second im
         sameSite: "Lax",
       })),
     );
+    await scenario(admin, owner);
+  } finally {
+    const files = await admin
+      .from("attachments")
+      .select("object_path")
+      .eq("owner_id", owner);
+    if (files.data?.length)
+      await admin.storage
+        .from("entry-media")
+        .remove(files.data.map((file) => file.object_path));
+    const staged = await admin.storage.from("import-staging").list(owner);
+    if (staged.data?.length)
+      await admin.storage
+        .from("import-staging")
+        .remove(staged.data.map((file) => `${owner}/${file.name}`));
+    expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
+  }
+}
 
+test("A Markdown ZIP previews, imports with its photo and dates, and a second import adds nothing", async ({
+  context,
+  page,
+}, testInfo) => {
+  test.setTimeout(180_000);
+  await asNewUser(context, async (admin, owner) => {
     const zipPath = testInfo.outputPath("notes.zip");
     await writeFile(
       zipPath,
@@ -151,20 +175,91 @@ test("A Markdown ZIP previews, imports with its photo and dates, and a second im
       .select("id", { count: "exact", head: true })
       .eq("owner_id", owner);
     expect(again.count).toBe(3);
-  } finally {
-    const files = await admin
+  });
+});
+
+test("A Day One export keeps exact times, zones, tags, and places, and can be undone", async ({
+  context,
+  page,
+}, testInfo) => {
+  test.setTimeout(180_000);
+  await asNewUser(context, async (admin, owner) => {
+    const zipPath = testInfo.outputPath("dayone.zip");
+    await writeFile(
+      zipPath,
+      await buildZip({
+        "Journal.json": JSON.stringify({
+          entries: [
+            {
+              creationDate: "2024-05-12T14:03:00Z",
+              location: { localityName: "Lisbon", country: "Portugal" },
+              photos: [{ identifier: "P1", md5: "abc123", type: "png" }],
+              tags: ["travel"],
+              text: "# Lisbon day\n\nCustard tarts\\.\n\n![](dayone-moment://P1)",
+              timeZone: "Europe/Lisbon",
+              uuid: "DAYONE-1",
+            },
+            {
+              creationDate: "2024-05-13T09:00:00Z",
+              text: "Rain all day.",
+              timeZone: "Europe/Lisbon",
+              uuid: "DAYONE-2",
+            },
+          ],
+          metadata: { version: "1.0" },
+        }),
+        "photos/abc123.png": tinyPng,
+      }),
+    );
+
+    await page.goto("/settings/import");
+    await page.getByRole("button", { name: "Day One" }).click();
+    await page.setInputFiles('input[type="file"]', zipPath);
+    await expect(
+      page.getByRole("heading", { name: /Found 2 Entries in dayone\.zip/ }),
+    ).toBeVisible({ timeout: 60_000 });
+    await page.getByRole("button", { name: "Import 2 Entries" }).click();
+    await expect(
+      page.getByRole("heading", { name: "Import finished" }),
+    ).toBeVisible({ timeout: 120_000 });
+
+    const entries = await admin
+      .from("entries")
+      .select(
+        "id,title,date_precision,occurred_start,occurred_timezone,deleted_at",
+      )
+      .eq("owner_id", owner)
+      .order("occurred_start");
+    expect(entries.data).toHaveLength(2);
+    expect(entries.data![0]).toMatchObject({
+      date_precision: "exact",
+      occurred_timezone: "Europe/Lisbon",
+      title: "Lisbon day",
+    });
+    expect(new Date(entries.data![0].occurred_start).toISOString()).toBe(
+      "2024-05-12T14:03:00.000Z",
+    );
+    const tags = await admin
+      .from("entry_tags")
+      .select("tag_id, tags(name)")
+      .eq("entry_id", entries.data![0].id);
+    expect(JSON.stringify(tags.data)).toContain("travel");
+    const attachments = await admin
       .from("attachments")
-      .select("object_path")
+      .select("id")
       .eq("owner_id", owner);
-    if (files.data?.length)
-      await admin.storage
-        .from("entry-media")
-        .remove(files.data.map((file) => file.object_path));
-    const staged = await admin.storage.from("import-staging").list(owner);
-    if (staged.data?.length)
-      await admin.storage
-        .from("import-staging")
-        .remove(staged.data.map((file) => `${owner}/${file.name}`));
-    expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
-  }
+    expect(attachments.data).toHaveLength(1);
+
+    // Undo moves the Entries to Trash.
+    await page.getByRole("button", { name: "Undo this import" }).click();
+    await page.getByRole("button", { name: "Move to Trash" }).click();
+    await expect(async () => {
+      const trashed = await admin
+        .from("entries")
+        .select("id")
+        .eq("owner_id", owner)
+        .not("deleted_at", "is", null);
+      expect(trashed.data).toHaveLength(2);
+    }).toPass({ timeout: 30_000 });
+  });
 });
