@@ -25,8 +25,9 @@ create function pg_temp.page(p_after bigint default 0,p_limit integer default 10
 select set_eq($$select unnest(public.export_dataset_names()) except select 'media_objects'$$,
  -- Pending Storage removals belong to permanently deleted media, never to the archive,
  -- tombstones only keep permanently deleted Entries from being created again, and the
- -- search index is derived data that is rebuilt from the Entries.
- $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_places','location_provider_usage','media_purges','entry_tombstones','entry_search_index_state','entry_search_chunks')
+ -- search index is derived data that is rebuilt from the Entries, and import jobs, items, and
+ -- origins record how a file was read, not what the person wrote.
+ $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_places','location_provider_usage','media_purges','entry_tombstones','entry_search_index_state','entry_search_chunks','import_jobs','import_items','entry_import_origins')
    union all select 'entry_locations'$$,
  'Explicit export inventory covers every canonical table and requires updates for new tables');
 set local role authenticated;
