@@ -34,13 +34,13 @@ export function SearchShortcutButton({
     <button
       aria-keyshortcuts="Meta+K Control+K"
       aria-haspopup="dialog"
-      aria-label="Search your trail"
       className={className}
       onClick={onOpen}
-      title="Search your trail (⌘ K / Ctrl+K)"
+      title="Search everything (⌘ K / Ctrl+K)"
       type="button"
     >
       <Icon name="search" />
+      <span data-dock-label>Search everything</span>
       <kbd aria-hidden="true">⌘ K</kbd>
     </button>
   );

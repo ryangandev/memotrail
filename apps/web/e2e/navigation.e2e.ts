@@ -183,15 +183,12 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "Quick capture",
       exact: true,
     });
-    const homeCaptureHeading = homeCapture.getByRole("heading", {
-      name: "What’s on your mind?",
-      exact: true,
-    });
     const homeEntryText = homeCapture.getByRole("textbox", {
       name: "Entry text",
       exact: true,
     });
-    await expect(homeCaptureHeading).toBeVisible();
+    // The composer is one quiet card: no heading, and the placeholder asks the question.
+    await expect(homeCapture.getByRole("heading")).toHaveCount(0);
     await expect(homeEntryText).toBeVisible();
     await expect(
       homeCapture.locator('[data-rich-text-editor="true"]'),
@@ -202,11 +199,16 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeEntryTextLeft = await homeEntryText.evaluate(
       (element) => element.getBoundingClientRect().left,
     );
-    expect(Math.round(homeEntryTextLeft - homeCaptureLeft)).toBe(25);
+    // The card's 1px border plus its 20px padding.
+    expect(Math.round(homeEntryTextLeft - homeCaptureLeft)).toBe(21);
     const homeFormatting = homeCapture.getByRole("toolbar", {
       name: "Text formatting",
       exact: true,
     });
+    // The formatting toolbar waits until the writer engages the editor.
+    await expect(homeFormatting).toBeHidden();
+    await homeEntryText.click();
+    await expect(homeFormatting).toBeVisible();
     const homeBoldIconLeft = await homeFormatting
       .getByRole("button", { name: "Bold", exact: true })
       .locator("svg")
@@ -298,26 +300,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     // The account row at the sidebar's foot says the workspace is synced.
     await expect(shell.getByText("Synced", { exact: true })).toBeVisible();
     await expect(page.getByText("Saved", { exact: true })).toHaveCount(0);
+    // The Dashboard already holds the composer, so its dock is search only.
     const searchShortcut = page.getByRole("button", {
-      name: "Search your trail",
-      exact: true,
+      name: /^Search everything/,
     });
-    const newEntryShortcut = page.getByRole("button", {
-      name: "New entry",
-      exact: true,
-    });
+    await expect(searchShortcut).toContainText("Search everything");
     await expect(searchShortcut).toContainText("⌘ K");
-    await expect(searchShortcut).not.toContainText("Search your trail");
-    await expect(newEntryShortcut).toContainText("⌘ J");
-    await expect(newEntryShortcut).toContainText("What’s on your mind?");
+    await expect(page.getByRole("button", { name: "New entry" })).toHaveCount(
+      0,
+    );
     await expect(page.getByRole("link", { name: /Inbox/ })).toHaveCount(0);
-    const [dockBox, searchBox] = await Promise.all([
-      newEntryShortcut.boundingBox(),
-      searchShortcut.boundingBox(),
-    ]);
-    expect(dockBox!.x + dockBox!.width).toBeLessThan(searchBox!.x);
-    expect(dockBox!.y).toBeCloseTo(searchBox!.y, 0);
-    await expect(newEntryShortcut).toHaveCSS("backdrop-filter", /blur/);
+    await expect(searchShortcut).toHaveCSS("backdrop-filter", /blur/);
     await expect(shell.getByText(email, { exact: true })).toHaveCount(0);
     await expect(
       workspaceTools.getByRole("link", { name: "Settings", exact: true }),
@@ -344,7 +337,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const homeLink = shell
       .getByRole("navigation", { name: "Primary navigation" })
       .getByRole("link", { name: "Dashboard", exact: true });
-    const capture = newEntryShortcut;
+    const capture = searchShortcut;
     const brandBottom = await brand.evaluate(
       (element) => element.getBoundingClientRect().bottom,
     );
@@ -426,7 +419,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
         (collapsedRailBox?.width ?? 0) -
         ((activeHomeBox?.x ?? 0) + (activeHomeBox?.width ?? 0)),
     ).toBeGreaterThanOrEqual(7);
-    await expect(homeCaptureHeading).toBeVisible();
+    await expect(homeEntryText).toBeVisible();
     // Collapsed, the logo is the toggle's resting face: only the toggle is reachable, and it
     // shows itself over the logo on focus.
     const expandSidebar = shell.getByRole("button", {
@@ -732,12 +725,12 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     ).toBeLessThanOrEqual(1);
     const dialogHeader = quickCapture.locator("header");
     await expect(dialogHeader).toHaveCSS("border-bottom-width", "0px");
-    await expect(dialogHeader.locator("svg")).toHaveCount(2);
+    await expect(dialogHeader.locator("svg")).toHaveCount(1);
     expect(
       await dialogHeader.evaluate(
         (element) => element.getBoundingClientRect().height,
       ),
-    ).toBeGreaterThanOrEqual(62);
+    ).toBeGreaterThanOrEqual(52);
     expect(
       await dialogHeader.evaluate(
         (element) => element.getBoundingClientRect().height,
@@ -793,9 +786,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(linkEditor).not.toBeVisible();
     await expect(quickCapture).toBeVisible();
 
-    await quickCapture
-      .getByRole("button", { name: "Date", exact: true })
-      .click();
+    await quickCapture.locator("[data-capture-date-toggle]").click();
     await quickCapture
       .getByRole("button", { name: "Choose date", exact: true })
       .click();
@@ -811,9 +802,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Escape");
     await expect(captureCalendar).not.toBeVisible();
     await expect(quickCapture).toBeVisible();
-    await quickCapture
-      .getByRole("button", { name: "Date", exact: true })
-      .click();
+    await quickCapture.locator("[data-capture-date-toggle]").click();
 
     await page.keyboard.press("Escape");
     await expect(quickCapture).not.toBeVisible();
@@ -828,14 +817,13 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       (element) => element.getBoundingClientRect().left,
     );
     expect(Math.round(entryTextLeft - dialogLeft)).toBe(21);
-    const dialogMarkLeft = await dialogHeader
-      .locator("span")
-      .first()
+    const dialogHeadingLeft = await dialogHeader
+      .getByRole("heading")
       .evaluate((element) => element.getBoundingClientRect().left);
     const dateActionLeft = await quickCapture
-      .getByRole("button", { name: "Date", exact: true })
+      .locator("[data-capture-date-toggle]")
       .evaluate((element) => element.getBoundingClientRect().left);
-    expect(Math.round(dialogMarkLeft)).toBe(Math.round(entryTextLeft));
+    expect(Math.round(dialogHeadingLeft)).toBe(Math.round(entryTextLeft));
     expect(Math.round(dateActionLeft)).toBe(Math.round(entryTextLeft));
     const dialogRight = await quickCapture.evaluate(
       (element) => element.getBoundingClientRect().right,
@@ -846,7 +834,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const saveRight = await quickCapture
       .getByRole("button", { name: "Save", exact: true })
       .evaluate((element) => element.getBoundingClientRect().right);
-    expect(Math.round(dialogRight - closeRight)).toBe(21);
+    expect(Math.round(dialogRight - closeRight)).toBe(13);
     expect(Math.round(dialogRight - saveRight)).toBe(21);
     const entryTextStyle = await entryText.evaluate((element) => {
       const style = getComputedStyle(element);

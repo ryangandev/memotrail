@@ -1,6 +1,7 @@
 import type { Locator, Page } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import sharp from "sharp";
+import { openQuickCaptureByShortcut } from "./helpers/quick-capture";
 import { test, expect } from "./helpers/workspace-test";
 import { lineEnd } from "./helpers/keys";
 import { hearOtherTabsLate } from "./helpers/tab-timing";
@@ -80,7 +81,7 @@ test("typing in either composer shows in the other without moving the caret", as
   await expect(dialogEditor.locator("strong")).toHaveText(
     "Hello big world and so much more",
   );
-  await dialog.getByRole("button", { name: "Date", exact: true }).click();
+  await dialog.locator("[data-capture-date-toggle]").click();
   await expect(
     dialog.getByRole("group", { name: "Date", exact: true }),
   ).toBeVisible();
@@ -94,9 +95,10 @@ test("typing in either composer shows in the other without moving the caret", as
   await expect(
     dashboard.getByRole("group", { name: "Date", exact: true }),
   ).toBeVisible();
-  await expect(
-    dashboard.getByRole("button", { name: "Date", exact: true }),
-  ).toHaveAttribute("aria-pressed", "true");
+  await expect(dashboard.locator("[data-capture-date-toggle]")).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
   await expect
     .poll(() => storedDraft(page, workspace.owner))
     .toMatchObject({
@@ -114,7 +116,7 @@ test("discarding a draft in one composer clears it in the other", async ({
     await openDashboard(page);
 
   await dashboardEditor.fill("A thought to let go");
-  await dashboard.getByRole("button", { name: "Date", exact: true }).click();
+  await dashboard.locator("[data-capture-date-toggle]").click();
   await expect(
     dashboard.getByRole("group", { name: "Date", exact: true }),
   ).toBeVisible();
@@ -126,7 +128,7 @@ test("discarding a draft in one composer clears it in the other", async ({
 
   await dialogEditor.press("ControlOrMeta+a");
   await dialogEditor.press("Backspace");
-  await dialog.getByRole("button", { name: "Date", exact: true }).click();
+  await dialog.locator("[data-capture-date-toggle]").click();
   await expect(dialogEditor).toBeEmpty();
   await expect(dialog).not.toContainText("Draft saved on this device.");
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
@@ -357,7 +359,7 @@ test("voice capture follows the draft into Quick Capture and stops when it close
   );
   // The save finishes once the Dashboard shows the new Entry.
   await expect(
-    page.getByRole("region", { name: "Recent Entries", exact: true }),
+    page.getByRole("region", { name: "Recent", exact: true }),
   ).toContainText("Before speaking.");
 });
 
@@ -375,7 +377,8 @@ async function openDashboard(page: Page) {
     name: "Entry text",
     exact: true,
   });
-  const trigger = page.getByRole("button", { name: "New entry", exact: true });
+  // The Dashboard's dock is search only, so Quick Capture opens from the keyboard here.
+  const trigger = { click: () => openQuickCaptureByShortcut(page) };
   await expect(dashboardEditor).toBeVisible();
   await expect(
     dashboard.getByRole("button", { name: "Add photos", exact: true }),

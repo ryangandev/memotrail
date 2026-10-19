@@ -114,12 +114,12 @@ test("untitled Entries are named by their date and never wait to be organized", 
   ).toHaveCount(0);
   await expect(page.getByRole("link", { name: /To organize/ })).toHaveCount(0);
   const recent = page.getByRole("region", {
-    name: "Recent Entries",
+    name: "Recent",
     exact: true,
   });
   for (const [title, note] of named.slice(0, 5)) {
     const row = recent.getByRole("link").filter({ hasText: note });
-    await expect(row.getByRole("heading")).toHaveText(title);
+    await expect(row).toHaveAccessibleName(title);
     // The date already names it, so it is not repeated beside the title.
     await expect(row.getByText(title)).toHaveCount(1);
   }

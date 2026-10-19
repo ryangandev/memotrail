@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { clickUnlessSynced } from "./helpers/capture-sync";
 import { hearOtherTabsLate } from "./helpers/tab-timing";
 import { test, expect } from "./helpers/workspace-test";
+import { openQuickCaptureByShortcut } from "./helpers/quick-capture";
 
 // Pending captures belong to the signed-in workspace, not to whichever composer
 // happens to be mounted: they sync from any page, once per tab, and once across tabs.
@@ -208,7 +209,7 @@ test("the Dashboard composer and Quick Capture send each queued capture once", a
     .fill("Once from the Dashboard");
   await composer.getByRole("button", { name: "Save", exact: true }).click();
   await expect(pendingIndicator(page)).toHaveText("1 pending");
-  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  await openQuickCaptureByShortcut(page);
   const dialog = page.getByRole("dialog", { name: "What’s on your mind?" });
   await dialog
     .getByRole("textbox", { name: "Entry text", exact: true })
@@ -289,7 +290,7 @@ for (const late of [false, true])
     ).toBeVisible();
     await expect(
       other
-        .getByRole("region", { name: "Recent Entries", exact: true })
+        .getByRole("region", { name: "Recent", exact: true })
         .getByText("Once across tabs", { exact: true }),
     ).toBeVisible();
     await page.waitForLoadState("networkidle");

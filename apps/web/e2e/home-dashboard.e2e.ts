@@ -4,7 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Home uses the signed-in archive and support capture, navigation, and narrow screens", async ({
+test("The Dashboard greets the signed-in person and supports capture, navigation, and narrow screens", async ({
   context,
   page,
 }) => {
@@ -82,8 +82,18 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
           body: "A quiet afternoon worth returning to.",
           item_kind: "entry",
           item_subtype: "entry",
+          is_first_time: true,
           date_precision: "day",
           occurred_start: "2020-05-12T12:00:00Z",
+        },
+        {
+          owner_id: owner,
+          title: "A Chapter underway",
+          body: "Still going.",
+          item_kind: "entry",
+          item_subtype: "chapter",
+          date_precision: "month",
+          occurred_start: "2025-01-01T12:00:00Z",
         },
         {
           owner_id: owner,
@@ -130,29 +140,31 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
       await expect(
         nav.getByRole("link", { name: "Dashboard", exact: true }),
       ).toHaveAttribute("aria-current", "page");
-      await expect(page.getByRole("heading", { level: 1 })).toContainText(
-        "Preview",
+      // A serif greeting with no trailing period.
+      await expect(page.getByRole("heading", { level: 1 })).toHaveText(
+        /^Good (morning|afternoon|evening), Preview$/,
       );
-      await expect(
-        page.getByRole("region", { name: "Recent Entries", exact: true }),
-      ).toContainText("A kept memory");
-      // An untitled capture is simply kept, named by its date, never queued for review.
-      const untitledRow = page
-        .getByRole("region", { name: "Recent Entries", exact: true })
-        .getByRole("link")
-        .filter({ hasText: "Waiting for a little context" });
-      await expect(untitledRow.getByRole("heading")).toHaveText(
-        "Undated entry",
-      );
+      const recent = page.getByRole("region", { name: "Recent", exact: true });
+      await expect(recent).toContainText("A kept memory");
+      // An untitled capture is simply kept, titled by its date, never queued for review.
+      const untitledRow = recent.getByRole("link", { name: "Undated entry" });
+      await expect(untitledRow).toContainText("Waiting for a little context");
       await expect(
         page.getByRole("region", { name: "Needs organizing" }),
       ).toHaveCount(0);
       await expect(page.getByRole("link", { name: /To organize/ })).toHaveCount(
         0,
       );
+      const now = page.getByRole("region", { name: "Now", exact: true });
+      await expect(now).toContainText("A Chapter underway");
       await expect(
-        page.getByRole("region", { name: "A memory for today", exact: true }),
-      ).toContainText("A kept memory");
+        now.getByRole("link", { name: /A Chapter underway/ }),
+      ).toHaveAttribute("href", /^\/items\//);
+      const past = page.getByRole("region", {
+        name: "From your past",
+        exact: true,
+      });
+      await expect(past).toContainText("A kept memory");
       await expect(page.getByText("Other owner private memory")).toHaveCount(0);
       await expect(
         page.getByRole("textbox", { name: "Entry text", exact: true }),
@@ -162,10 +174,29 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
       await expect(
         page.getByRole("navigation", { name: "Home design previews" }),
       ).toHaveCount(0);
+      // The dock holds Search alone here, since the composer is already on the page.
+      await expect(
+        page.getByRole("button", { name: "Search everything", exact: true }),
+      ).toBeVisible();
+      await expect(page.getByRole("button", { name: "New entry" })).toHaveCount(
+        0,
+      );
       const hero = page.locator("[data-ui-page-header]:visible");
-      const metrics = page.getByRole("navigation", {
-        name: "Your archive at a glance",
+      const glance = page.getByRole("navigation", {
+        name: "Your Library at a glance",
       });
+      // The counts lead to their places; zero counts are left out.
+      await expect(glance.getByRole("link")).toHaveText([
+        "4 Entries",
+        "1 Chapter now",
+        "1 First Time",
+      ]);
+      await expect(
+        glance.getByRole("link", { name: "4 Entries" }),
+      ).toHaveAttribute("href", "/library");
+      await expect(
+        glance.getByRole("link", { name: "1 First Time" }),
+      ).toHaveAttribute("href", "/first-times");
       const capture = page.getByRole("form", {
         name: "Quick capture",
         exact: true,
@@ -173,92 +204,48 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
       for (const width of [1440, 989]) {
         await page.setViewportSize({ width, height: 1000 });
         await settleLayout(page);
-        // Quick Capture takes the whole row.
+        // The composer and Recent share one column.
         await expect
           .poll(async () => {
-            const [captureBox, metricsBox] = await Promise.all([
+            const [captureBox, recentBox] = await Promise.all([
               capture.boundingBox(),
-              metrics.boundingBox(),
+              recent.boundingBox(),
             ]);
             return (
-              Math.abs(captureBox!.x - metricsBox!.x) +
-              Math.abs(captureBox!.width - metricsBox!.width)
+              Math.abs(captureBox!.x - recentBox!.x) +
+              Math.abs(captureBox!.width - recentBox!.width)
             );
           })
           .toBeLessThan(1);
-        const [heroBox, metricsBox, captureBox] = await Promise.all([
-          hero.boundingBox(),
-          metrics.boundingBox(),
-          capture.boundingBox(),
-        ]);
-        expect(metricsBox!.y).toBeGreaterThanOrEqual(
+        const [heroBox, captureBox, nowBox, pastBox, recentBox] =
+          await Promise.all([
+            hero.boundingBox(),
+            capture.boundingBox(),
+            now.boundingBox(),
+            past.boundingBox(),
+            recent.boundingBox(),
+          ]);
+        expect(captureBox!.y).toBeGreaterThanOrEqual(
           heroBox!.y + heroBox!.height,
         );
-        expect(captureBox!.y).toBeGreaterThanOrEqual(
-          metricsBox!.y + metricsBox!.height,
+        // Now and the memory sit side by side below the composer, equal in width.
+        expect(nowBox!.y).toBeGreaterThanOrEqual(
+          captureBox!.y + captureBox!.height,
         );
-        const [memoryBox, nowBox, recentBox] = await Promise.all([
-          page
-            .getByRole("region", { name: "A memory for today", exact: true })
-            .boundingBox(),
-          page.getByRole("region", { name: "Now", exact: true }).boundingBox(),
-          page
-            .getByRole("region", { name: "Recent Entries", exact: true })
-            .boundingBox(),
-        ]);
-        expect(Math.abs(memoryBox!.height - nowBox!.height)).toBeLessThan(1);
-        expect(Math.abs(memoryBox!.y - nowBox!.y)).toBeLessThan(1);
-        expect(Math.abs(recentBox!.width - metricsBox!.width)).toBeLessThan(1);
+        expect(Math.abs(pastBox!.y - nowBox!.y)).toBeLessThan(1);
+        expect(nowBox!.x + nowBox!.width).toBeLessThanOrEqual(pastBox!.x);
+        expect(Math.abs(pastBox!.width - nowBox!.width)).toBeLessThan(1);
         expect(recentBox!.y).toBeGreaterThanOrEqual(
-          memoryBox!.y + memoryBox!.height,
+          Math.max(nowBox!.y + nowBox!.height, pastBox!.y + pastBox!.height),
         );
-        const rowHeights = await page
-          .getByRole("region", { name: "Recent Entries", exact: true })
-          .locator("a:has(article)")
+        // A long title and excerpt stay on one line each, so no row grows.
+        const rowHeights = await recent
+          .locator("[data-ui-entry-row]")
           .evaluateAll((rows) =>
             rows.map((row) => row.getBoundingClientRect().height),
           );
         expect(rowHeights.length).toBeGreaterThan(1);
-        expect(Math.max(...rowHeights) - Math.min(...rowHeights)).toBeLessThan(
-          1,
-        );
-
-        expect(
-          await metrics.getByRole("link").evaluateAll((links) =>
-            links.every((link) => {
-              const value = link
-                .querySelector("strong")!
-                .getBoundingClientRect();
-              const label = link.querySelector("span")!.getBoundingClientRect();
-              return (
-                label.left >= value.right &&
-                label.top < value.bottom &&
-                label.bottom > value.top
-              );
-            }),
-          ),
-        ).toBe(true);
-        const metricRows = await metrics
-          .getByRole("link")
-          .evaluateAll((links) =>
-            links.map((link) => Math.round(link.getBoundingClientRect().top)),
-          );
-        const metricLayout = await metrics.evaluate((element) => {
-          const [first, second] = Array.from(element.querySelectorAll("a"));
-          return {
-            borderRadius: getComputedStyle(element).borderRadius,
-            cellBorderRadius: getComputedStyle(first).borderRadius,
-            firstCellRight: first.getBoundingClientRect().right,
-            secondCellLeft: second.getBoundingClientRect().left,
-          };
-        });
-        expect(metricLayout.borderRadius).not.toBe("0px");
-        expect(metricLayout.cellBorderRadius).toBe("0px");
-        expect(
-          Math.abs(metricLayout.firstCellRight - metricLayout.secondCellLeft),
-        ).toBeLessThan(1);
-        // The four counts share one row on wide screens.
-        expect(metricRows).toEqual(Array(4).fill(metricRows[0]));
+        expect(Math.max(...rowHeights)).toBeLessThan(120);
         if (width === 989) {
           await page.screenshot({
             path: test.info().outputPath("memotrail-home-dashboard-medium.png"),
@@ -288,24 +275,16 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
             ),
           )
           .toBe(true);
-        const [captureBox, memoryBox] = await Promise.all([
+        // One column: Now, then the memory, each below the composer.
+        const [captureBox, nowBox, pastBox] = await Promise.all([
           capture.boundingBox(),
-          page
-            .getByRole("region", { name: "A memory for today", exact: true })
-            .boundingBox(),
+          now.boundingBox(),
+          past.boundingBox(),
         ]);
-        expect(memoryBox!.y).toBeGreaterThanOrEqual(
+        expect(nowBox!.y).toBeGreaterThanOrEqual(
           captureBox!.y + captureBox!.height,
         );
-        // The four counts sit in two rows of two.
-        const narrowRows = await metrics
-          .getByRole("link")
-          .evaluateAll((links) =>
-            links.map((link) => Math.round(link.getBoundingClientRect().top)),
-          );
-        expect(narrowRows[1]).toBe(narrowRows[0]);
-        expect(narrowRows[2]).toBeGreaterThan(narrowRows[0]);
-        expect(narrowRows[3]).toBe(narrowRows[2]);
+        expect(pastBox!.y).toBeGreaterThanOrEqual(nowBox!.y + nowBox!.height);
         const save = page.getByRole("button", {
           name: "Save",
           exact: true,
@@ -314,16 +293,35 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         const box = await save.boundingBox();
         expect(box!.x).toBeGreaterThanOrEqual(0);
         expect(box!.x + box!.width).toBeLessThanOrEqual(width);
-        if (width === 390)
+        if (width === 390) {
+          // Search rests a gap above the phone tab bar rather than behind it.
+          const [searchBox, tabBarBox] = await Promise.all([
+            page
+              .getByRole("button", { name: "Search everything", exact: true })
+              .boundingBox(),
+            page
+              .getByRole("navigation", { name: "Mobile navigation" })
+              .boundingBox(),
+          ]);
+          expect(tabBarBox!.y - (searchBox!.y + searchBox!.height)).toBeCloseTo(
+            12,
+            0,
+          );
           await page.screenshot({
             path: test.info().outputPath(`memotrail-home-dashboard-mobile.png`),
             animations: "disabled",
           });
+        }
       }
       await page.setViewportSize({ width: 320, height: 700 });
+      // The formatting toolbar appears once the writer starts, and must still fit.
+      await page
+        .getByRole("textbox", { name: "Entry text", exact: true })
+        .click();
       const formattingToolbar = page.getByRole("toolbar", {
         name: "Text formatting",
       });
+      await expect(formattingToolbar).toBeVisible();
       await expect
         .poll(() =>
           formattingToolbar.evaluate((element) =>
@@ -350,13 +348,12 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
         .first(),
     ).toBeVisible();
     await expect(
-      page.getByRole("region", { name: "Recent Entries", exact: true }),
+      page.getByRole("region", { name: "Recent", exact: true }),
     ).toContainText("Captured from Home");
 
     await page
-      .getByRole("region", { name: "Recent Entries", exact: true })
-      .getByRole("link")
-      .filter({ hasText: "Waiting for a little context" })
+      .getByRole("region", { name: "Recent", exact: true })
+      .getByRole("link", { name: "Undated entry" })
       .click();
     await expect(page).toHaveURL(`/items/${pendingId}`);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(
@@ -367,9 +364,8 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
     ).toBeVisible();
     await page.goto("/");
     await page
-      .getByRole("region", { name: "Recent Entries", exact: true })
-      .getByRole("link")
-      .filter({ hasText: "A kept memory" })
+      .getByRole("region", { name: "Recent", exact: true })
+      .getByRole("link", { name: "A kept memory" })
       .click();
     await expect(page).toHaveURL(`/items/${keptId}`);
     await expect(

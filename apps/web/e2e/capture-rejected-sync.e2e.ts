@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { clickUnlessSynced } from "./helpers/capture-sync";
 import { isTopmostAtCenter } from "./helpers/hit-test";
 import { test, expect } from "./helpers/workspace-test";
+import { openQuickCaptureByShortcut } from "./helpers/quick-capture";
 
 // A capture MemoTrail will never accept is not an offline capture: it is kept
 // with its content for the person, never retried, and never holds back the
@@ -76,7 +77,7 @@ test("a rejected capture can be copied and discarded while later captures sync",
 
   // Quick Capture is a native modal dialog in the top layer, so the shared
   // confirmation it asks for must stack above it and stay interactive.
-  await page.getByRole("button", { name: "New entry", exact: true }).click();
+  await openQuickCaptureByShortcut(page);
   const quickCapture = page.getByRole("dialog", {
     name: "What’s on your mind?",
     exact: true,

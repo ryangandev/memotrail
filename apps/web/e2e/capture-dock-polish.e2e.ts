@@ -1,3 +1,4 @@
+import { openQuickCaptureByShortcut } from "./helpers/quick-capture";
 import { test, expect } from "./helpers/workspace-test";
 
 test("capture dock keeps focus tight and reopens without rebuilding the editor", async ({
@@ -82,7 +83,6 @@ test("a retained composer picks up dashboard edits and can interrupt collapse", 
     name: "Entry text",
     exact: true,
   });
-  const trigger = page.getByRole("button", { name: "New entry", exact: true });
   const dialog = page.getByRole("dialog", {
     name: "What’s on your mind?",
     exact: true,
@@ -92,15 +92,15 @@ test("a retained composer picks up dashboard edits and can interrupt collapse", 
     exact: true,
   });
   await dashboardEditor.fill("First draft from the dashboard.");
-  await trigger.click();
+  await openQuickCaptureByShortcut(page);
   await expect(editor).toHaveText("First draft from the dashboard.");
   await editor.press("Escape");
   await expect(dialog).not.toBeVisible();
   await dashboardEditor.fill("Latest draft from the dashboard.");
-  await trigger.click();
+  await openQuickCaptureByShortcut(page);
   await expect(editor).toHaveText("Latest draft from the dashboard.");
   await dialog.getByRole("button", { name: "Close quick capture" }).click();
-  await page.keyboard.press("ControlOrMeta+j");
+  await openQuickCaptureByShortcut(page);
   await expect(editor).toBeFocused();
   await expect(editor).toHaveText("Latest draft from the dashboard.");
   // A click waits for the reopened surface to settle and catches any stale
@@ -111,6 +111,6 @@ test("a retained composer picks up dashboard edits and can interrupt collapse", 
   await expect(editor).toBeEmpty();
   await editor.press("Escape");
   await expect(dialog).not.toBeVisible();
-  await trigger.click();
+  await openQuickCaptureByShortcut(page);
   await expect(editor).toBeEmpty();
 });

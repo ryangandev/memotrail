@@ -333,7 +333,8 @@ async function openCapture(page: Page) {
   return {
     capture,
     date,
-    dateToggle: capture.getByRole("button", { name: "Date", exact: true }),
+    // The chip says Today or the chosen day, so it is found by its marker.
+    dateToggle: capture.locator("[data-capture-date-toggle]"),
     day: date.getByRole("textbox", { name: "Date", exact: true }),
     open,
     save: capture.getByRole("button", { name: "Save", exact: true }),

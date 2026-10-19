@@ -9,6 +9,7 @@ import {
 
 import {
   type ChangeEvent,
+  type FocusEvent,
   useEffect,
   useRef,
   useState,
@@ -32,6 +33,7 @@ import {
   resolveCaptureDate,
   todayCaptureDate,
 } from "@/lib/data/inbox-capture-date";
+import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import { entryBodyLimit, parseInboxEntryValues } from "@/lib/data/inbox-input";
 import { countLabel } from "@/lib/count-label";
 import type { QueuedInboxEntry } from "@/lib/data/inbox-queue";
@@ -103,6 +105,44 @@ export function CaptureComposer({
   const isPhotoStorageAvailable = draft.photoState !== "unavailable";
   const photoInputRef = useRef<HTMLInputElement>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
+  // The formatting toolbar appears once the composer is in use, so the resting card reads as a
+  // single quiet field. Quick Capture opens already in use.
+  const [isEngaged, setIsEngaged] = useState(variant === "dialog");
+  const isPointerDown = useRef(false);
+  const showToolbar =
+    variant === "dialog" || isEngaged || body.trim().length > 0;
+
+  // Only writing, not pressing a tool, brings the toolbar in: it would move the tool under the
+  // pointer before the press finishes.
+  function handleFocus(event: FocusEvent<HTMLFormElement>) {
+    if (
+      event.target instanceof Element &&
+      event.target.closest("[data-rich-text-editor]")
+    )
+      setIsEngaged(true);
+  }
+
+  function handleBlur(event: FocusEvent<HTMLFormElement>) {
+    // Pressing a tool moves focus off the writing field for a moment; keep the toolbar so the
+    // layout does not shift under the press.
+    if (
+      isPointerDown.current ||
+      event.currentTarget.contains(event.relatedTarget as Node | null)
+    )
+      return;
+    setIsEngaged(false);
+  }
+
+  function handlePointerDown() {
+    isPointerDown.current = true;
+    window.addEventListener(
+      "pointerup",
+      () => {
+        isPointerDown.current = false;
+      },
+      { once: true },
+    );
+  }
 
   useEffect(() => {
     const input = photoInputRef.current;
@@ -274,8 +314,12 @@ export function CaptureComposer({
       <form
         className={`${captureComposerStyles.captureCard} ${variant === "dialog" ? captureComposerStyles.dialogCaptureCard : ""} ${embedded ? captureComposerStyles.embeddedCaptureCard : ""}`}
         aria-label="Quick capture"
+        data-toolbar={showToolbar ? "shown" : "hidden"}
         data-ui-capture-composer
         data-variant={variant}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onPointerDownCapture={handlePointerDown}
         onKeyDownCapture={(event) => {
           if (
             !active ||
@@ -301,17 +345,6 @@ export function CaptureComposer({
         }}
         onSubmit={handleSubmit}
       >
-        {variant === "page" ? (
-          <header className={captureComposerStyles.captureComposerHeader}>
-            <span
-              className={captureComposerStyles.captureSpark}
-              aria-hidden="true"
-            >
-              <Icon name="sparkle" size={17} />
-            </span>
-            <h2>What’s on your mind?</h2>
-          </header>
-        ) : null}
         <div className={captureComposerStyles.captureIntro}>
           <div className={captureComposerStyles.captureFields}>
             {draft.isReady ? (
@@ -323,7 +356,7 @@ export function CaptureComposer({
                 onChange={(value) =>
                   draft.update({ body: value.text, bodyRich: value })
                 }
-                placeholder="What is on your mind?"
+                placeholder="What’s on your mind?"
                 richText={bodyRich}
                 text={body}
                 variant="embedded"
@@ -387,16 +420,17 @@ export function CaptureComposer({
           className={captureComposerStyles.captureActions}
           data-capture-actions
         >
-          <div>
+          <div className={captureComposerStyles.captureTools}>
             <button
               aria-pressed={Boolean(occurrence)}
-              className={`${captureComposerStyles.quietButton} ${occurrence ? captureComposerStyles.activeQuietButton : ""}`}
+              className={`${captureComposerStyles.chip} ${occurrence ? captureComposerStyles.activeChip : ""}`}
+              data-capture-date-toggle
               disabled={isSaving || !draft.isReady || voiceState !== "idle"}
               onClick={toggleDate}
               type="button"
             >
-              <Icon name="calendar" />
-              <span>Date</span>
+              <Icon name="calendar" size={15} />
+              <span>{dateChipLabel(occurrence)}</span>
             </button>
             <button
               aria-label={
@@ -407,7 +441,7 @@ export function CaptureComposer({
                     : "Start voice capture"
               }
               aria-pressed={voiceState === "listening"}
-              className={`${captureComposerStyles.quietButton} ${voiceState === "listening" ? captureComposerStyles.listeningQuietButton : ""}`}
+              className={`${captureComposerStyles.chip} ${captureComposerStyles.voiceChip} ${voiceState === "listening" ? captureComposerStyles.listeningChip : ""}`}
               disabled={
                 isSaving ||
                 !draft.isReady ||
@@ -424,13 +458,16 @@ export function CaptureComposer({
               }
               type="button"
             >
-              <Icon name={voiceState === "listening" ? "stop" : "mic"} />
-              {voiceState === "listening" ? "Stop" : "Voice"}
+              <Icon
+                name={voiceState === "listening" ? "stop" : "mic"}
+                size={15}
+              />
+              <span>{voiceState === "listening" ? "Stop" : "Voice"}</span>
             </button>
             <button
               aria-label="Add photos"
               aria-pressed={photos.length > 0}
-              className={`${captureComposerStyles.quietButton} ${photos.length > 0 ? captureComposerStyles.activeQuietButton : ""}`}
+              className={`${captureComposerStyles.chip} ${photos.length > 0 ? captureComposerStyles.activeChip : ""}`}
               disabled={
                 isSaving ||
                 !draft.isReady ||
@@ -444,9 +481,9 @@ export function CaptureComposer({
               }}
               type="button"
             >
-              <Icon name="photo" />
+              <Icon name="photo" size={15} />
               <span>
-                {photos.length > 0 ? `Photo · ${photos.length}` : "Photo"}
+                {photos.length > 0 ? `Photos · ${photos.length}` : "Photos"}
               </span>
             </button>
             <input
@@ -471,16 +508,14 @@ export function CaptureComposer({
                 progress={captureQueue.photoUploadProgress}
               />
             ) : null}
-            <p
-              className={
-                composerFeedback.isError
-                  ? captureComposerStyles.captureError
-                  : captureComposerStyles.captureStatus
-              }
-              aria-live="polite"
-            >
-              {composerFeedback.message}
-            </p>
+            {variant === "page" ? (
+              <span
+                className={captureComposerStyles.saveShortcutHint}
+                id={`${idPrefix}-save-shortcut`}
+              >
+                <kbd>⌘ Return</kbd>
+              </span>
+            ) : null}
             <span className={captureComposerStyles.saveButtonHelp}>
               <Button
                 aria-describedby={`${idPrefix}-save-shortcut`}
@@ -497,19 +532,30 @@ export function CaptureComposer({
                 type="submit"
               >
                 {isSaving || isSyncing ? "Saving…" : "Save"}
-                <Icon name="chevron" size={16} />
               </Button>
-              <span
-                className={captureComposerStyles.saveShortcutTooltip}
-                id={`${idPrefix}-save-shortcut`}
-                role="tooltip"
-              >
-                <span>Save</span>
-                <kbd>⌘ Return</kbd>
-              </span>
+              {variant === "dialog" ? (
+                <span
+                  className={captureComposerStyles.saveShortcutTooltip}
+                  id={`${idPrefix}-save-shortcut`}
+                  role="tooltip"
+                >
+                  <span>Save</span>
+                  <kbd>⌘ Return</kbd>
+                </span>
+              ) : null}
             </span>
           </div>
         </div>
+        <p
+          aria-live="polite"
+          className={
+            composerFeedback.isError
+              ? captureComposerStyles.captureError
+              : captureComposerStyles.captureStatus
+          }
+        >
+          {composerFeedback.message}
+        </p>
       </form>
 
       {hasWaitingCaptures(captureQueue) ? (
@@ -523,6 +569,7 @@ export function CaptureComposer({
               countPendingCaptures(captureQueue.items).waiting > 0 ? (
                 <Button
                   variant="secondary"
+                  size="small"
                   disabled={isSyncing}
                   onClick={() => void captureQueue.synchronize()}
                   type="button"
@@ -539,7 +586,7 @@ export function CaptureComposer({
             )}
             headingId={`${idPrefix}-pending-heading`}
             title="Pending sync"
-            variant="list"
+            variant={variant === "dialog" ? "list" : "section"}
           />
           <PendingCaptureList
             items={captureQueue.items}
@@ -549,6 +596,28 @@ export function CaptureComposer({
       ) : null}
     </>
   );
+}
+
+/** "Today" until a day is chosen, then that day, with its time when one is set. */
+function dateChipLabel(occurrence: OccurrenceDraft | null) {
+  const value = occurrence ? captureDateValue(occurrence) : "";
+  if (!value) return "Today";
+  const [day, time] = value.split("T");
+  const [year, month, date] = day.split("-").map(Number);
+  const label = new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+    year: year === new Date().getFullYear() ? undefined : "numeric",
+  }).format(new Date(Date.UTC(year, month - 1, date)));
+  if (!time) return label;
+  const [hours, minutes] = time.split(":").map(Number);
+  const clock = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(1970, 0, 1, hours, minutes)));
+  return `${label}, ${clock}`;
 }
 
 function browserTimezone() {

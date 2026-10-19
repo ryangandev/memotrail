@@ -6,12 +6,13 @@ platforms:
     path: apps/web/src/components/workspace-action-dock.tsx
     symbols: [WorkspaceActionDock]
   ios:
-    unavailable: Each primary tab's header already holds the same two actions, New entry and Search your trail, so a floating dock above the tab bar would only cover content.
+    unavailable: Each primary tab's header already holds the same two actions, New entry and Search, so a floating dock above the tab bar would only cover content.
 
-purpose: The floating glass dock at the bottom of every workspace page that holds Quick Capture and the search shortcut.
+purpose: The floating glass dock at the bottom of every workspace page that holds the search shortcut and, away from the Dashboard, the Quick Capture trigger.
 
 use:
   - The workspace shell, once, with the Quick Capture trigger as its child.
+  - On the Dashboard the dock is search only, since the page already holds the composer, and on a phone it rests at the trailing edge.
 
 avoid:
   - Page actions. Put them in the PageHeader.
@@ -20,7 +21,7 @@ avoid:
 anatomy:
   dock: The fixed row centered over the workspace, clear of the sidebar, which lets clicks between its controls through.
   control: A glass pill, shared by the Quick Capture trigger and the search shortcut.
-  search: The search shortcut, with its icon and the Command K hint.
+  search: The search shortcut, with its icon, the label Search everything, and the Command K hint.
   shortcutHint: The keycap that shows Command K, hidden on a phone.
 
 props: {}
@@ -58,20 +59,20 @@ content:
   lines: 1
   overflow: truncateTail
   casing: sentence
-  length: Controls are icons with at most a short label, such as Capture a memory, and the keycap ⌘ K.
+  length: Controls are icons with at most a short label, such as Search everything, and the keycap ⌘ K.
   notes:
     - The search shortcut hides while Quick Capture's composer is open, so the composer has the dock to itself.
 
 accessibility:
   role: A group of buttons. The search shortcut opens the CommandPalette and declares Meta+K and Control+K as its shortcuts.
-  label: The search shortcut reads Search your trail; the Quick Capture trigger names itself.
+  label: The search shortcut reads Search everything, even when a phone shows only its icon; the Quick Capture trigger names itself.
   focus: Each control draws an inset accent outline on keyboard focus. Command or Control K opens the palette from anywhere except a text field.
   minimumHitTarget: "{size.hitTarget}"
-  dynamicType: Web uses fixed pixel sizes that grow with browser zoom. Below 720 px the dock rises above the mobile navigation and the search shortcut becomes a round icon button.
+  dynamicType: Web uses fixed pixel sizes that grow with browser zoom. Up to 720 px the dock sits one gap above the mobile navigation and the search shortcut becomes a round icon button.
 
 platformDifferences:
   - difference: Web only. iOS has no floating dock.
-    reason: New entry and Search your trail sit in each primary tab's header, as Web's phone header keeps New entry, so a dock above the tab bar would only cover content.
+    reason: New entry and Search sit in each primary tab's header, as Web's phone header keeps New entry, so a dock above the tab bar would only cover content.
 
 specimens:
   - id: workspace-action-dock-search
