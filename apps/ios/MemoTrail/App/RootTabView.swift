@@ -7,16 +7,18 @@ struct RootTabView: View {
   let isAuthenticationBusy: Bool
   let signOut: @MainActor () async -> Void
 
-  private let draftStore: InboxDraftStore
-  private let photoStore: InboxPhotoStore
+  private let draftStore: CaptureDraftStore
+  private let photoStore: CapturePhotoStore
   @State private var homeController: HomeController
-  @State private var inboxController: InboxController
+  @State private var captureController: CaptureController
   @State private var captureTitle: String
   @State private var captureNote: NSAttributedString
   @State private var captureOccurrence: OccurrenceDraft?
-  @State private var capturePhotos: [FirstTimePhotoDraft]
+  @State private var capturePhotos: [PhotoDraft]
   @State private var hasLocalDraft: Bool
   @State private var hasLoadedCapturePhotos = false
+  /// Why the saved draft did not come back in full, shown once the composer is ready.
+  @State private var draftNotice: String?
   @State private var navigator = AppNavigator()
 
   init(
@@ -24,11 +26,12 @@ struct RootTabView: View {
     user: AuthenticatedUser,
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
-    draftStore: InboxDraftStore = InboxDraftStore(),
-    queueStore: InboxQueueStore = InboxQueueStore(),
-    photoStore: InboxPhotoStore = InboxPhotoStore()
+    draftStore: CaptureDraftStore = CaptureDraftStore(),
+    queueStore: CaptureQueueStore = CaptureQueueStore(),
+    photoStore: CapturePhotoStore = CapturePhotoStore()
   ) {
-    let draft = draftStore.load(ownerID: user.id)
+    let reading = draftStore.read(ownerID: user.id)
+    let draft = reading.draft
 
     self.client = client
     self.user = user
@@ -39,8 +42,8 @@ struct RootTabView: View {
     _homeController = State(
       initialValue: HomeController(client: client, ownerID: user.id)
     )
-    _inboxController = State(
-      initialValue: InboxController(
+    _captureController = State(
+      initialValue: CaptureController(
         client: client,
         ownerID: user.id,
         queueStore: queueStore,
@@ -52,6 +55,7 @@ struct RootTabView: View {
     _captureOccurrence = State(initialValue: draft?.captureOccurrence)
     _capturePhotos = State(initialValue: [])
     _hasLocalDraft = State(initialValue: draft != nil)
+    _draftNotice = State(initialValue: reading.notice)
   }
 
   var body: some View {
@@ -62,7 +66,7 @@ struct RootTabView: View {
         isAuthenticationBusy: isAuthenticationBusy,
         signOut: signOut,
         controller: homeController,
-        captureController: inboxController,
+        captureController: captureController,
         captureTitle: $captureTitle,
         captureNote: $captureNote,
         captureOccurrence: $captureOccurrence,
@@ -75,19 +79,6 @@ struct RootTabView: View {
         Label(RootTabDestination.home.title, systemImage: RootTabDestination.home.systemImage)
       }
       .tag(RootTabDestination.home)
-
-      InboxView(
-        client: client,
-        user: user,
-        isAuthenticationBusy: isAuthenticationBusy,
-        signOut: signOut,
-        controller: inboxController
-      )
-      .tabItem {
-        Label(RootTabDestination.inbox.title, systemImage: RootTabDestination.inbox.systemImage)
-      }
-      .tag(RootTabDestination.inbox)
-      .badge(inboxBadgeCount)
 
       TimelineView(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
@@ -116,9 +107,11 @@ struct RootTabView: View {
       .tag(RootTabDestination.more)
     }
     .environment(navigator)
+    // The workspace header counts this person's waiting captures from the same queue.
+    .environment(captureController)
     .fullScreenCover(isPresented: $navigator.isShowingQuickCapture) {
       QuickCaptureView(
-        controller: inboxController,
+        controller: captureController,
         title: $captureTitle,
         note: $captureNote,
         occurrence: $captureOccurrence,
@@ -137,29 +130,27 @@ struct RootTabView: View {
     .onChange(of: captureOccurrence) {
       persistDraft()
     }
-    .onChange(of: inboxController.pendingEntries.count) { previousCount, count in
-      guard count < previousCount else { return }
-      Task { await homeController.load() }
+    .sheet(isPresented: $navigator.isShowingPendingCaptures) {
+      PendingCapturesSheet(controller: captureController)
     }
-    // Organizing or trashing a capture changes the Dashboard counts and Ready to organize.
-    .onChange(of: inboxController.entries.count) { previousCount, count in
-      guard count < previousCount else { return }
-      Task { await homeController.load() }
-    }
+    // A capture that reached MemoTrail changes every list that shows Entries.
+    .onChange(of: captureController.entriesRevision) { navigator.entriesChanged() }
     .task {
+      captureController.showDraftNotice(draftNotice)
+      draftNotice = nil
       await loadCapturePhotosIfNeeded()
     }
   }
 
   private func persistDraft() {
-    if captureTitle.count > InboxCapture.titleLimit {
-      captureTitle = String(captureTitle.prefix(InboxCapture.titleLimit))
+    if captureTitle.count > CaptureInput.titleLimit {
+      captureTitle = String(captureTitle.prefix(CaptureInput.titleLimit))
     }
 
     // Web counts the note limit in UTF-16 code units, like NSAttributedString.
-    if captureNote.length > InboxCapture.bodyLimit {
+    if captureNote.length > CaptureInput.bodyLimit {
       captureNote = captureNote.attributedSubstring(
-        from: NSRange(location: 0, length: InboxCapture.bodyLimit))
+        from: NSRange(location: 0, length: CaptureInput.bodyLimit))
     }
 
     hasLocalDraft =
@@ -183,8 +174,10 @@ struct RootTabView: View {
       (try? await Task.detached {
         try photoStore.load(ownerID: ownerID)
       }.value) ?? []
+    // A queued or unreadable capture still owns its photos until it is sent or discarded.
     let queuedPhotoIDs = Set(
-      inboxController.pendingEntries.flatMap { $0.attachments.map(\.id) }
+      captureController.pendingEntries.flatMap { $0.attachments.map(\.id) }
+        + captureController.unreadableCaptures.flatMap(\.photoIDs)
     )
     capturePhotos = loadedPhotos.filter { !queuedPhotoIDs.contains($0.id) }
     hasLocalDraft =
@@ -192,7 +185,7 @@ struct RootTabView: View {
   }
 
   @MainActor
-  private func addCapturePhoto(_ draft: FirstTimePhotoDraft) async throws {
+  private func addCapturePhoto(_ draft: PhotoDraft) async throws {
     let photoStore = photoStore
     let ownerID = user.id
     try await Task.detached {
@@ -213,19 +206,10 @@ struct RootTabView: View {
     hasLocalDraft =
       draftStore.load(ownerID: ownerID) != nil || !capturePhotos.isEmpty
   }
-
-  private var inboxBadgeCount: Int {
-    let synchronizedCount =
-      inboxController.hasLoaded
-      ? inboxController.entries.count
-      : (homeController.snapshot?.inboxCount ?? 0)
-    return synchronizedCount + inboxController.pendingEntries.count
-  }
 }
 
 enum RootTabDestination: String, CaseIterable, Sendable {
   case home
-  case inbox
   case timeline
   case library
   case more
@@ -233,104 +217,19 @@ enum RootTabDestination: String, CaseIterable, Sendable {
   var title: String {
     switch self {
     case .home: "Dashboard"
-    case .inbox: "Inbox"
     case .timeline: "Timeline"
     case .library: "Library"
     case .more: "More"
     }
   }
 
-  /// The Web navigation icons: dashboard grid, inbox tray, timeline, archive box, and more.
+  /// The Web navigation icons: dashboard grid, timeline, archive box, and more.
   var systemImage: String {
     switch self {
     case .home: MTIcon.dashboard.systemName
-    case .inbox: MTIcon.inbox.systemName
     case .timeline: MTIcon.timeline.systemName
     case .library: MTIcon.archive.systemName
     case .more: MTIcon.more.systemName
-    }
-  }
-}
-
-private struct QuickCaptureView: View {
-  @Bindable var controller: InboxController
-  @Binding var title: String
-  @Binding var note: NSAttributedString
-  @Binding var occurrence: OccurrenceDraft?
-  @Binding var photos: [FirstTimePhotoDraft]
-  let addPhoto: @MainActor (FirstTimePhotoDraft) async throws -> Void
-  let removePhoto: @MainActor (UUID) async throws -> Void
-  @Binding var hasLocalDraft: Bool
-
-  @Environment(\.dismiss) private var dismiss
-
-  var body: some View {
-    // Web `QuickCaptureDialog` at phone width: a full-screen composer under its own header.
-    ScrollView {
-      VStack(alignment: .leading, spacing: 0) {
-        CaptureCard(
-          note: $note,
-          occurrence: $occurrence,
-          photos: $photos,
-          style: .dialog,
-          isSaving: controller.isSaving,
-          hasLocalDraft: hasLocalDraft,
-          error: controller.captureError,
-          focusRequest: 1,
-          addPhoto: addPhoto,
-          removePhoto: removePhoto,
-          save: save
-        )
-
-        if !controller.pendingEntries.isEmpty {
-          let hasRejected = controller.rejectedEntryCount > 0
-          Label(controller.pendingSummary, icon: hasRejected ? .warning : .history)
-            .font(MTFont.caption)
-            .foregroundStyle(hasRejected ? MTColor.warm : MTColor.inkMuted)
-            .padding(.horizontal, MTSpacing.s4)
-            .padding(.top, MTSpacing.s4)
-        }
-      }
-    }
-    .scrollBounceBehavior(.basedOnSize)
-    .scrollDismissesKeyboard(.interactively)
-    .safeAreaInset(edge: .top, spacing: 0) { header }
-    .background(MTColor.surfaceRaised.ignoresSafeArea())
-  }
-
-  /// Web `dialogHeader`: the composer's question beside a quiet close button.
-  private var header: some View {
-    HStack(spacing: MTSpacing.s4) {
-      HStack(spacing: MTSpacing.s3) {
-        CaptureSpark()
-        Text("What\u{2019}s on your mind?")
-          .font(MTFont.cardTitle)
-          .foregroundStyle(MTColor.ink)
-          .lineLimit(2)
-          .accessibilityAddTraits(.isHeader)
-      }
-      Spacer(minLength: 0)
-      MTIconButton(label: "Close quick capture", icon: .close, size: .small) { dismiss() }
-        .accessibilityIdentifier("close-quick-capture")
-    }
-    .padding(.horizontal, MTSpacing.s4)
-    .padding(.vertical, MTSpacing.s4)
-    .frame(minHeight: MTLayout.QuickCapture.barHeight)
-    .mtMaterial(MTMaterial.glassPanel)
-  }
-
-  @MainActor
-  private func save() async {
-    let didSave = await controller.save(
-      title: title, note: note, occurrenceDraft: occurrence, photos: photos)
-
-    if didSave {
-      title = ""
-      note = NSAttributedString()
-      occurrence = nil
-      photos = []
-      hasLocalDraft = false
-      dismiss()
     }
   }
 }

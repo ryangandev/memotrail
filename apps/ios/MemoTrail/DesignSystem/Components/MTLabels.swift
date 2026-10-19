@@ -105,15 +105,14 @@ struct MTBadge: View {
   }
 }
 
-/// Badges for a record's Collections and tags, with an overflow count for tags.
+/// Badges for a record's tags, with an overflow count.
 struct MTOrganizationBadges: View {
-  let collectionNames: [String]
   let tagNames: [String]
   var tagLimit = 3
   var tone: MTBadgeTone = .neutral
 
   var body: some View {
-    if !collectionNames.isEmpty || !tagNames.isEmpty {
+    if !tagNames.isEmpty {
       ViewThatFits(in: .horizontal) {
         badges(tagLimit: tagLimit)
         badges(tagLimit: min(tagLimit, 1))
@@ -126,7 +125,6 @@ struct MTOrganizationBadges: View {
 
   private func badges(tagLimit: Int) -> some View {
     HStack(spacing: MTSpacing.s1) {
-      ForEach(collectionNames, id: \.self) { MTBadge(title: $0, tone: tone) }
       ForEach(tagNames.prefix(tagLimit), id: \.self) { MTBadge(title: "#\($0)", tone: tone) }
       if tagNames.count > tagLimit {
         MTBadge(title: "+\(tagNames.count - tagLimit)", tone: tone)
@@ -135,6 +133,6 @@ struct MTOrganizationBadges: View {
   }
 
   private var accessibilityText: String {
-    (collectionNames + tagNames.map { "tag \($0)" }).joined(separator: ", ")
+    tagNames.map { "tag \($0)" }.joined(separator: ", ")
   }
 }

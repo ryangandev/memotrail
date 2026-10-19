@@ -89,13 +89,13 @@ Never put a Supabase secret key, Google client secret, Geoapify key, or AI provi
 
 Debug builds expose Design System from the signed-out screen and from More or Settings after sign-in.
 The gallery uses real native components and includes appearance and Dynamic Type preview controls.
-Existing screens keep their layouts pending component acceptance.
 
-Xcode launch arguments `--review-design-system`, `--review-map`, and `--review-navigation` open isolated review modes.
+Xcode launch arguments `--review-design-system`, `--review-sign-in`, and `--review-navigation` open isolated review modes.
 Add `--review-design-section foundations` (or another section name) after `--review-design-system` to open one gallery section directly.
-The Map review uses clearly synthetic records; these modes do not sign in or write to the backend and are excluded from Release builds.
-The normal Map is available under More and reads the signed-in user's current Locations using MapKit.
-No Geoapify key is needed on iOS.
+These modes do not sign in or write to the backend and are excluded from Release builds.
+The navigation mode has no backend, so First Times, Tags, and Trash show their unavailable states.
+Add `-native-appearance dark` to any mode to force dark mode.
+iOS shows a saved Location as a MapKit still and has no address search, so no Geoapify key is needed.
 
 Run Simulator UI interactions with the shared `MemoTrailUI` scheme:
 
@@ -241,7 +241,8 @@ python3 apps/ios/scripts/review-local-session.py --simulator-id YOUR_SIMULATOR_U
 ```
 
 The script seeds a small synthetic archive through the same database functions the apps use, opens the Debug `--review-local-session` mode, runs `LocalSessionUITests`, exports screenshots, and removes the account, its rows, and its media afterward.
-Add `--web` to serve the Web media API on `127.0.0.1:3100` for photo flows, and `--only-testing` to pick other UI tests.
+Add `--web` to serve the Web media API on `127.0.0.1` for photo flows, and `--only-testing` to pick other UI tests.
+The Web server uses `MEMOTRAIL_E2E_PORT` when it is set and otherwise a free port between 31000 and 31999, so concurrent runs do not collide.
 Both the stack and the Web API must answer on `127.0.0.1`; regular `MemoTrailUI` runs skip these tests.
 
 Green builds do not by themselves prove authenticated user flows, production configuration, private media delivery, or recovery.

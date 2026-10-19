@@ -262,9 +262,18 @@ enum MTSeparatedListAlign: String, CaseIterable, Sendable {
   case end
 }
 
+/// How children of different heights share a line. Center suits badges and buttons;
+/// firstTextBaseline lines up labels whose controls center themselves in a taller hit target, such
+/// as checkboxes where one has a detail line.
+enum MTSeparatedListRowAlignment: String, CaseIterable, Sendable {
+  case center
+  case firstTextBaseline
+}
+
 /// SeparatedList parameter defaults.
 enum MTSeparatedListDefaults {
   static let align = MTSeparatedListAlign.start
+  static let rowAlignment = MTSeparatedListRowAlignment.center
 }
 
 // Skeleton, from packages/design-system/components/skeleton.yaml.
@@ -358,7 +367,6 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
   case emptyStateWithAction = "empty-state-with-action"
   case emptyStateInformational = "empty-state-informational"
   case emptyStateButton = "empty-state-button"
-  case focusedRecordHome = "focused-record-home"
   case iconButtonVariants = "icon-button-variants"
   case iconButtonSizes = "icon-button-sizes"
   case iconButtonStates = "icon-button-states"
@@ -391,6 +399,7 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
   case skeletonShapes = "skeleton-shapes"
   case skeletonStill = "skeleton-still"
   case skeletonComposed = "skeleton-composed"
+  case syncStatusCounts = "sync-status-counts"
   case textFieldSizes = "text-field-sizes"
   case textFieldStates = "text-field-states"
   case timeZoneFieldOffsets = "time-zone-field-offsets"
@@ -427,7 +436,6 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .emptyStateWithAction: "EmptyState"
     case .emptyStateInformational: "EmptyState"
     case .emptyStateButton: "EmptyState"
-    case .focusedRecordHome: "FocusedRecord"
     case .iconButtonVariants: "IconButton"
     case .iconButtonSizes: "IconButton"
     case .iconButtonStates: "IconButton"
@@ -460,6 +468,7 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .skeletonShapes: "Skeleton"
     case .skeletonStill: "Skeleton"
     case .skeletonComposed: "Skeleton"
+    case .syncStatusCounts: "SyncStatus"
     case .textFieldSizes: "TextField"
     case .textFieldStates: "TextField"
     case .timeZoneFieldOffsets: "TimeZoneField"
@@ -525,8 +534,6 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .emptyStateInformational:
       "A title and a description without an icon or action, for a section that fills in on its own."
     case .emptyStateButton: "The whole state as one button that starts the missing record."
-    case .focusedRecordHome:
-      "A record page with its photos, facts, Story, and tags, and Edit beside the title."
     case .iconButtonVariants:
       "Every variant at the default medium size, with add, edit, more, and remove icons."
     case .iconButtonSizes:
@@ -593,6 +600,8 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
       "A block and two lines with the shimmer turned off, as reduced motion draws them."
     case .skeletonComposed:
       "A circle beside two lines and a block below them, the way a loading record row is built."
+    case .syncStatusCounts:
+      "Waiting captures, a refused capture beside waiting ones, and a sync in progress."
     case .textFieldSizes: "Every size, holding a nickname, a preferred name, and a full name."
     case .textFieldStates:
       "Empty with a placeholder, required, disabled, and invalid with its message."

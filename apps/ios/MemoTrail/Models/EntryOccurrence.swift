@@ -1,7 +1,38 @@
 import Foundation
 
-struct EntryOccurrence: Codable, Equatable, Sendable {
-  var precision: TimelineDatePrecision
+/// How precisely an Entry's date is known, like Web `occurrencePrecisions`.
+enum DatePrecision: String, CaseIterable, Codable, Equatable, Hashable, Sendable {
+  case exact
+  case day
+  case month
+  case year
+  case approximate
+  case age
+  case range
+  case unknown
+
+  /// A stored value; anything unrecognized reads as unknown, like Web `storedOccurrence`.
+  init(stored value: String?) {
+    self = value.flatMap(Self.init(rawValue:)) ?? .unknown
+  }
+
+  /// The Date type label shared with the Web occurrence editor.
+  var displayName: String {
+    switch self {
+    case .exact: "Exact date & time"
+    case .day: "Day"
+    case .month: "Month"
+    case .year: "Year"
+    case .approximate: "Approximate"
+    case .age: "Age"
+    case .range: "Date range"
+    case .unknown: "Unknown"
+    }
+  }
+}
+
+struct EntryOccurrence: Codable, Equatable, Hashable, Sendable {
+  var precision: DatePrecision
   var start: Date?
   var end: Date?
   var label: String?
@@ -49,27 +80,10 @@ struct EntryOccurrence: Codable, Equatable, Sendable {
     return approximate ? "About \(label)" : label
   }
 
+  /// Throws `SaveEntryError.invalid` with Web's message when this cannot be stored.
   func validate(span: Bool = false) throws {
-    guard timezone.count <= 100, TimeZone(identifier: timezone) != nil else {
-      throw OccurrenceError.invalidTimezone
-    }
-    guard (label?.count ?? 0) <= 200 else { throw OccurrenceError.invalidDescription }
-    if [.exact, .day, .month, .year, .range].contains(precision), start == nil {
-      throw OccurrenceError.missingDate
-    }
-    if precision == .unknown, start != nil || end != nil { throw OccurrenceError.invalidDate }
-    if [.age, .approximate].contains(precision),
-      label?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty != false
-    {
-      throw OccurrenceError.invalidDescription
-    }
-    for date in [start, end].compactMap({ $0 }) where !date.timeIntervalSince1970.isFinite {
-      throw OccurrenceError.invalidDate
-    }
-    if let end {
-      guard let start, end >= start, span || [.range, .approximate, .age].contains(precision) else {
-        throw OccurrenceError.invalidRange
-      }
+    if let message = OccurrenceRules.problem(self, span: span) {
+      throw SaveEntryError.invalid(message)
     }
   }
 
@@ -96,7 +110,7 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
     case date, present
   }
 
-  var precision: TimelineDatePrecision
+  var precision: DatePrecision
   var start: String
   var end: String
   var endMode: EndMode
@@ -126,7 +140,7 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
 
   init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
-    precision = try container.decode(TimelineDatePrecision.self, forKey: .precision)
+    precision = try container.decode(DatePrecision.self, forKey: .precision)
     start = try container.decode(String.self, forKey: .start)
     end = try container.decode(String.self, forKey: .end)
     // Capture drafts saved before the Present control have no end mode.
@@ -144,7 +158,7 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
   }
 
   /// Replaces the calendar interpretation when the Date type changes.
-  mutating func changePrecision(to precision: TimelineDatePrecision) {
+  mutating func changePrecision(to precision: DatePrecision) {
     guard precision != self.precision else { return }
     self.precision = precision
     start = ""
@@ -152,36 +166,57 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
     endMode = .date
   }
 
-  func resolve(original: EntryOccurrence? = nil, span: Bool = false) throws -> EntryOccurrence {
-    guard TimeZone(identifier: timezone) != nil else { throw OccurrenceError.invalidTimezone }
-    let previous = original.map { OccurrenceDraft($0) }
-    func convert(_ text: String, isEnd: Bool) throws -> Date? {
+  /// Web `resolveOccurrenceDraft`: the stored occurrence for this draft. An empty calendar date
+  /// is stored as Unknown and keeps its description; unchanged fields keep their original
+  /// instant. Throws `SaveEntryError.invalid` with Web's message.
+  func resolve(original: EntryOccurrence? = nil, span: Bool = false) throws
+    -> EntryOccurrence
+  {
+    guard OccurrenceRules.validTimezone(timezone) else {
+      throw SaveEntryError.invalid(OccurrenceRules.timezoneMessage)
+    }
+    var draft = self
+    // A calendar date left empty means the date is not known.
+    if draft.start.isEmpty, [.exact, .day, .month, .year, .range].contains(draft.precision) {
+      draft.precision = .unknown
+      draft.end = span && draft.endMode != .present ? draft.end : ""
+    }
+    let previous = original.map { Self($0) }
+    func convert(_ text: String, isEnd: Bool) -> Date? {
       guard !text.isEmpty else { return nil }
-      if let previous, previous.precision == precision, previous.timezone == timezone,
-        (isEnd ? previous.end : previous.start) == text
+      if let previous, previous.precision == draft.precision,
+        previous.timezone == draft.timezone, (isEnd ? previous.end : previous.start) == text
       {
         return isEnd ? original?.end : original?.start
       }
       let local =
-        precision == .exact
+        draft.precision == .exact
         ? text
-        : "\(text)\(precision == .year ? "-01-01" : precision == .month ? "-01" : "")T12:00:00"
-      guard let result = Self.wallTimeToDate(local, timezone: timezone) else {
-        throw OccurrenceError.invalidDate
-      }
-      return result
+        : "\(text)\(draft.precision == .year ? "-01-01" : draft.precision == .month ? "-01" : "")T12:00:00"
+      return Self.wallTimeToDate(local, timezone: draft.timezone)
     }
+    let start = draft.precision == .unknown ? nil : convert(draft.start, isEnd: false)
+    let bounded =
+      draft.precision != .unknown
+      && (span || [.range, .approximate, .age].contains(draft.precision))
+    let end = bounded && draft.endMode != .present ? convert(draft.end, isEnd: true) : nil
+    if (!draft.start.isEmpty && start == nil && draft.precision != .unknown)
+      || (!draft.end.isEmpty && end == nil && bounded)
+    {
+      throw SaveEntryError.invalid(
+        "Choose a valid calendar date and time. This time may not exist during a daylight-saving change."
+      )
+    }
+    if draft.start.isEmpty, !draft.end.isEmpty, draft.endMode != .present {
+      throw SaveEntryError.invalid("Add a start date before the end date.")
+    }
+    let label = draft.label.trimmed
     let value = EntryOccurrence(
-      precision: precision,
-      start: precision == .unknown ? nil : try convert(start, isEnd: false),
-      end: precision != .unknown && endMode != .present
-        && (span || [.range, .approximate, .age].contains(precision))
-        ? try convert(end, isEnd: true) : nil,
-      label: label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        ? nil : label.trimmingCharacters(in: .whitespacesAndNewlines),
-      timezone: timezone
-    )
-    try value.validate(span: span)
+      precision: draft.precision, start: start, end: end, label: label.isEmpty ? nil : label,
+      timezone: draft.timezone)
+    if let message = OccurrenceRules.problem(value, span: span) {
+      throw SaveEntryError.invalid(message)
+    }
     return value
   }
 
@@ -213,17 +248,39 @@ struct OccurrenceDraft: Codable, Equatable, Sendable {
   }
 }
 
-enum OccurrenceError: LocalizedError {
-  case invalidTimezone, invalidDate, missingDate, invalidDescription, invalidRange
-  var errorDescription: String? {
-    switch self {
-    case .invalidTimezone: "Choose a valid IANA time zone, for example America/Los_Angeles."
-    case .invalidDate:
-      "Choose a valid calendar date and time. This time may not exist during a daylight-saving change."
-    case .missingDate: "Add the known date, or choose Unknown."
-    case .invalidDescription: "Describe the age or approximate period in 200 characters or fewer."
-    case .invalidRange:
-      "The end date must follow the start and use Range, Approximate, or Age precision."
+/// Web `validTimezone` and `validateOccurrence`, with Web's messages.
+enum OccurrenceRules {
+  static let timezoneMessage = "Choose a valid IANA time zone, for example America/Los_Angeles."
+
+  static func validTimezone(_ value: String) -> Bool {
+    value.count <= 100
+      && value.range(of: #"^[A-Za-z][A-Za-z0-9_+./-]*$"#, options: .regularExpression) != nil
+      && TimeZone(identifier: value) != nil
+  }
+
+  /// Why this occurrence cannot be stored, or nil.
+  static func problem(_ value: EntryOccurrence, span: Bool = false) -> String? {
+    guard validTimezone(value.timezone) else { return timezoneMessage }
+    if let label = value.label, label.count > 200 {
+      return "Keep the date description under 200 characters."
     }
+    if [.exact, .day, .month, .year, .range].contains(value.precision), value.start == nil {
+      return "Add the known date, or choose Unknown."
+    }
+    if value.precision == .unknown, value.start != nil || value.end != nil {
+      return "Unknown dates cannot have calendar dates."
+    }
+    if [.age, .approximate].contains(value.precision), value.label?.trimmed.isEmpty != false {
+      return "Describe the age or approximate period you remember."
+    }
+    if let end = value.end {
+      guard let start = value.start, end >= start else {
+        return "The end date must be on or after the start date."
+      }
+      if !span, ![.range, .approximate, .age].contains(value.precision) {
+        return "Only ranges, ages, or approximate periods can have an end date."
+      }
+    }
+    return nil
   }
 }

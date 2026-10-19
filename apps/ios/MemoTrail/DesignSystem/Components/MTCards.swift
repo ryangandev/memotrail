@@ -18,7 +18,7 @@ struct MTCard<Content: View>: View {
   }
 }
 
-/// The bordered surface that holds list rows, like the Web Inbox and search result lists.
+/// The bordered surface that holds list rows, like the Web search result lists.
 /// Separate rows with `MTListDivider`.
 struct MTListSurface<Content: View>: View {
   private let content: Content
@@ -58,8 +58,8 @@ struct MTListRowButtonStyle: ButtonStyle {
   }
 }
 
-/// The interactive record surface shared by record cards and Collection cards. It works with
-/// `Button` and `NavigationLink`, and presses with the stronger border and raised shadow that
+/// The interactive record surface shared by record cards. It works with `Button` and
+/// `NavigationLink`, and presses with the stronger border and raised shadow that
 /// the Web card shows on hover.
 struct MTCardButtonStyle: ButtonStyle {
   var radius: CGFloat = MTRadius.large
@@ -135,70 +135,33 @@ struct MTRecordCardBody<Content: View>: View {
   }
 }
 
-/// The compact Web Collection card: Entry and Inbox counts, the latest update, and an optional
-/// separate management action in the corner.
-struct MTCollectionCard<Manage: View>: View {
-  let name: String
-  let entryCount: Int
-  var inboxCount = 0
-  var updatedLabel: String?
-  let action: () -> Void
-  @ViewBuilder var manage: Manage
+/// Web `RecordCard` footer: any status badges, then up to two tags, and the chevron. Phones
+/// show the first two badges, like Web below 480 px.
+struct MTRecordCardFooter: View {
+  var status: [(title: String, tone: MTBadgeTone)] = []
+  let tagNames: [String]
+  @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   var body: some View {
-    Button(action: action) {
-      VStack(alignment: .leading, spacing: 0) {
-        Label("Collection", icon: .archive)
-          .labelStyle(MTInlineIconLabelStyle())
-          .mtTextRole(.cardEyebrow)
-          .foregroundStyle(MTColor.warm)
-          .padding(.trailing, MTSpacing.s8)
-        Text(name)
-          .font(MTFont.cardTitle)
-          .foregroundStyle(MTColor.ink)
-          .lineLimit(2)
-          .multilineTextAlignment(.leading)
-          .padding(.top, MTSpacing.s3)
-        Spacer(minLength: MTSpacing.s3)
-        HStack(spacing: MTSpacing.s2) {
-          Text(countSummary).lineLimit(1)
-          Spacer(minLength: 0)
-          Image(.chevron).font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
+    let badges = status + tagNames.prefix(2).map { ("#\($0)", MTBadgeTone.neutral) }
+    HStack(alignment: .bottom, spacing: MTSpacing.s3) {
+      MTFlowLayout(spacing: MTSpacing.s1_25) {
+        ForEach(
+          Array(badges.prefix(horizontalSizeClass == .regular ? badges.count : 2).enumerated()),
+          id: \.offset
+        ) { _, badge in
+          MTBadge(title: badge.title, tone: badge.tone, size: .micro)
         }
-        .font(MTFont.detail)
-        .foregroundStyle(MTColor.inkMuted)
-        Text(updatedLabel ?? "Ready for its first Entry")
-          .font(MTFont.note)
-          .foregroundStyle(MTColor.inkFaint)
-          .lineLimit(1)
-          .padding(.top, MTSpacing.s0_5)
       }
-      .frame(
-        maxWidth: .infinity, minHeight: MTLayout.RecordCard.collectionMinHeight,
-        alignment: .topLeading
-      )
-      .padding(MTSpacing.s4)
+      Spacer(minLength: 0)
+      Image(.chevron)
+        .font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
+        .foregroundStyle(MTColor.inkFaint)
     }
-    .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
-    .accessibilityElement(children: .combine)
-    .overlay(alignment: .topTrailing) { manage.padding(MTSpacing.s2) }
-  }
-
-  private var countSummary: String {
-    let entries = countLabel(entryCount, "Entry")
-    return inboxCount > 0 ? "\(entries) · \(inboxCount) in Inbox" : entries
-  }
-}
-
-extension MTCollectionCard where Manage == EmptyView {
-  init(
-    name: String, entryCount: Int, inboxCount: Int = 0, updatedLabel: String? = nil,
-    action: @escaping () -> Void
-  ) {
-    self.init(
-      name: name, entryCount: entryCount, inboxCount: inboxCount, updatedLabel: updatedLabel,
-      action: action
-    ) { EmptyView() }
+    .frame(minHeight: MTSize.RecordCard.footerHeight - MTSpacing.s3, alignment: .bottom)
+    .padding(.top, MTSpacing.s3)
+    .overlay(alignment: .top) { MTListDivider() }
+    .padding(.top, MTSpacing.s2)
   }
 }
 

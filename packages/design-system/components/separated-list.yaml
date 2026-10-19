@@ -34,6 +34,11 @@ props:
     values: [default, word]
     default: default
     platforms: [web]
+  rowAlignment:
+    description: How children of different heights share a line. Center suits badges and buttons; firstTextBaseline lines up labels whose controls center themselves in a taller hit target, such as checkboxes where one has a detail line.
+    values: [center, firstTextBaseline]
+    default: center
+    platforms: [ios]
 
 states: [default]
 
@@ -58,6 +63,8 @@ accessibility:
   dynamicType: Items and separators scale with the surrounding text. Word spacing on iOS measures a word space at the current Dynamic Type size; Web grows with browser zoom and rewraps.
 
 platformDifferences:
+  - difference: iOS can line up a line's children on their first text baselines with rowAlignment; Web leaves that to the caller's align-items.
+    reason: A Web caller sets align-items on the flex row it already owns, while an iOS Layout places each child itself, so the choice has to be a parameter of MTFlowLayout.
   - difference: iOS chooses word spacing with a separate view, MTWordFlow, instead of a spacing parameter, and callers place an MTFlowSeparator between items where Web inserts the dot itself.
     reason: MTWordFlow measures a word space at a Dynamic Type text style, which needs a view's environment that a Layout such as MTFlowLayout cannot read; SwiftUI layouts cannot add children, so the separator is a child the caller writes.
 

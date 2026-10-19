@@ -27,9 +27,22 @@ No real AI provider, deployed embedding service, hosted project, or Production d
 
 ## Native iOS
 
-Native iOS is broken against the new schema and paused.
-It still calls functions and tables these migrations drop (Homes, Vehicles, Someday, milestones, the Map).
-It is rewritten to follow the finished Web behavior, and the database keeps no compatibility window for it.
+The native rewrite follows the current schema and the Web behavior in [product.md](./product.md), verified against local Supabase only.
+It has Capture with offline sync and the unreadable-capture quarantine from #24, the Entry editor, Library with keyword search, the Item page with a Chapter's Entries, overlapping Chapters, and a saved review shown read-only, Timeline, the Dashboard, First Times, Tags, Trash, Settings, and Export.
+Import, making reviews and Chapter suggestions, search by meaning, Location editing and address search, and the Command Palette stay Web-only.
+The Dashboard exposes `dashboard-counts`, `dashboard-memory`, `dashboard-now`, and `dashboard-recent` to UI tests.
+No native build has run against the hosted project or on a real iPhone.
+
+Open native gaps:
+
+- Command-Return saves a capture in a unit test, but it has not been tried on a hardware keyboard, because XCUITest does not deliver it on the Simulator.
+- The header's sync status draws the earlier Web look; it follows the Quiet ledger tokens once both branches merge.
+- The Today label can overlap a year label near the end of a year, as it does on Web.
+- The Timeline canvas draws its year labels at a fixed size, so they stay small at accessibility text sizes, and a point's label is clipped at the canvas edge when the point is scrolled out of view.
+- At accessibility text sizes the system shrinks a long search prompt, such as Library's, to fit its field.
+- Icons keep their token size at accessibility text sizes, so checkboxes, tag chip remove marks, and More tile icons look small beside the enlarged text.
+- Export shows "Downloading to disk…" instead of Web's received megabytes, and writes a plain space before AM or PM.
+- Web `getTagEntryPreviews` in `lib/data/search.ts` still rejects tag names over 60 characters, while saving allows 80, which iOS uses.
 
 ## Hosted rollout
 
@@ -80,10 +93,9 @@ These are also listed in [product.md](./product.md#product-boundaries), and none
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 3. Rewrite native iOS
+### 3. Accept native iOS
 
-Start once Web is accepted.
-The rewrite follows the Web behavior in [product.md](./product.md), including Chapters, Library search, reviews, and import.
+Review the native rewrite and run it on a real iPhone, including Command-Return on a hardware keyboard.
 
 ### 4. Redesign the UI on the finished design system
 

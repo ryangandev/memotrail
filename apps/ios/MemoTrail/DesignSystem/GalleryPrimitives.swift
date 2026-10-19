@@ -158,12 +158,12 @@
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             GalleryCase(.pageHeaderFull) {
               MTPageHeader(
-                eyebrow: "Your life, remembered", title: "Memories",
-                description: "The moments, people, and places that make up your story."
+                eyebrow: "Your trail", title: "Library",
+                description: "Every Entry, Chapter, and First Time, newest first."
               ) {
                 Button("Filter") { message = "Header filter activated." }
                   .mtButtonStyle(.secondary)
-                Button("Add memory", systemImage: MTIcon.plus.systemName) { sheet = .form }
+                Button("New entry", systemImage: MTIcon.plus.systemName) { sheet = .form }
                   .mtButtonStyle()
               }
             }
@@ -181,17 +181,17 @@
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             GalleryCase(.emptyStateWithAction) {
               MTEmptyState(
-                title: "Your Life Wiki is empty",
-                message: "Capture a memory to begin building your trail.", icon: .plus
+                title: "Your Library is empty",
+                message: "Capture an Entry to begin your trail.", icon: .plus
               ) {
-                Button("Add your first memory") { sheet = .form }.mtButtonStyle()
+                Button("Write your first Entry") { sheet = .form }.mtButtonStyle()
               }
             }
             GalleryCaseSeparator()
             GalleryCase(.emptyStateInformational) {
               MTEmptyState(
                 title: "No photos yet",
-                message: "Photos you add to this Home appear here.")
+                message: "Photos you add to this Entry appear here.")
             }
             GalleryCaseSeparator()
             GalleryCase(.emptyStateButton) {
@@ -221,8 +221,8 @@
           }
         case .compact:
           MTSheet(
-            eyebrow: "New entry", title: "What are you adding?",
-            closeLabel: "Close entry type chooser", size: .fitted
+            eyebrow: "Timeline", title: "Add to Timeline",
+            closeLabel: "Close the Add chooser", size: .fitted
           ) {
             VStack(spacing: MTSpacing.s3) {
               ForEach(GalleryChoice.allCases, id: \.self) { choice in
@@ -264,15 +264,16 @@
     }
   }
 
+  /// The Timeline's Add chooser.
   private enum GalleryChoice: CaseIterable {
-    case moment, home
+    case chapter, firstTime
 
-    var icon: MTIcon { self == .moment ? .timeline : .home }
-    var title: String { self == .moment ? "Moment" : "Home" }
+    var icon: MTIcon { self == .chapter ? .timeline : .star }
+    var title: String { self == .chapter ? "Chapter" : "First Time" }
     var detail: String {
-      self == .moment
-        ? "A flexible event or life stage on any Timeline track."
-        : "A place you called home, with its facts and memories."
+      self == .chapter
+        ? "A stretch of your life, like a home, a job, or a school year."
+        : "The first time you did something."
     }
   }
 

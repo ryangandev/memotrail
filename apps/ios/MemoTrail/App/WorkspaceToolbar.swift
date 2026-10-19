@@ -1,8 +1,8 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-/// The Web workspace header on each primary tab: the MemoTrail brand, New entry, search, and
-/// the account avatar that opens Settings.
+/// The Web workspace header on each primary tab: the MemoTrail brand, New entry, the pending
+/// capture count while captures wait, search, and the account avatar that opens Settings.
 private struct WorkspaceToolbar: ViewModifier {
   let client: SupabaseClient
   let user: AuthenticatedUser
@@ -10,6 +10,7 @@ private struct WorkspaceToolbar: ViewModifier {
   let signOut: @MainActor () async -> Void
   @State private var isShowingSettings = false
   @Environment(AppNavigator.self) private var navigator
+  @Environment(CaptureController.self) private var capture: CaptureController?
 
   func body(content: Content) -> some View {
     content
@@ -34,7 +35,25 @@ private struct WorkspaceToolbar: ViewModifier {
             navigator.startCapture()
           }
           .foregroundStyle(MTColor.accent)
+          // Web's Quick Capture shortcut on a hardware keyboard.
+          .keyboardShortcut("j", modifiers: .command)
           .accessibilityIdentifier("workspace-new-entry")
+        }
+        if let capture, capture.hasWaitingCaptures {
+          ToolbarItem(placement: .topBarTrailing) {
+            // Tapping syncs what still can and opens Pending sync, like Web.
+            MTSyncStatusButton(
+              label: capture.indicatorLabel, needsAttention: capture.needsAttention,
+              isSyncing: capture.isSyncing
+            ) {
+              Task { await capture.retryNow() }
+              navigator.showPendingCaptures()
+            }
+            .accessibilityIdentifier("workspace-pending-sync")
+          }
+          if #available(iOS 26, *) {
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+          }
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button("Search your trail", systemImage: MTIcon.search.systemName) {

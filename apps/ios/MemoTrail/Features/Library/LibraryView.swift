@@ -1,7 +1,7 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-/// Web `/library`: browse organized records, or search across the Life Wiki and Inbox.
+/// Web `/library`: browse everything saved, or search it by keyword.
 struct LibraryView: View {
   private let client: SupabaseClient
   private let user: AuthenticatedUser
@@ -9,7 +9,7 @@ struct LibraryView: View {
   private let signOut: @MainActor () async -> Void
   private var ownerID: UUID { user.id }
   @State private var controller: LibraryController
-  @State private var path: [LibraryRoute] = []
+  @State private var path: [ItemLink] = []
   @State private var showsFilters = false
   @State private var searchFocus = 0
   @State private var pendingSearch: Task<Void, Never>?
@@ -30,9 +30,8 @@ struct LibraryView: View {
     NavigationStack(path: $path) {
       MTPage(width: .standard) {
         MTPageHeader(
-          eyebrow: "Your Life Wiki", title: "Library",
-          description:
-            "Browse your organized records, or search across your Life Wiki and Inbox.")
+          eyebrow: "Your trail", title: "Library",
+          description: "Every Entry you write or import, newest first by the date it happened.")
         searchSurface
         // The next-page trigger is its own page row, so the lazy page creates it only when the
         // end of the list scrolls near.
@@ -57,7 +56,6 @@ struct LibraryView: View {
             ) { await controller.loadMoreItems() }
           }
         }
-        footer
       }
       .scrollDismissesKeyboard(.immediately)
       .refreshable { await controller.load() }
@@ -65,17 +63,11 @@ struct LibraryView: View {
       .workspaceToolbar(
         client: client, user: user, isAuthenticationBusy: isAuthenticationBusy, signOut: signOut
       )
-      .navigationDestination(for: LibraryRoute.self) { route in
-        switch route {
-        case .item(let link):
-          WikiItemDestinationView(client: client, ownerID: ownerID, link: link)
-        case .history:
-          EntryHistoryIndexView(client: client, ownerID: ownerID)
-        }
-      }
+      .itemDestination(client: client, ownerID: ownerID)
       .task {
         if !controller.hasLoaded { await controller.load() }
       }
+      .onChange(of: navigator.entriesRevision) { Task { await controller.load() } }
       .task(id: navigator.librarySearchRequested) {
         guard navigator.librarySearchRequested else { return }
         navigator.librarySearchRequested = false
@@ -91,8 +83,8 @@ struct LibraryView: View {
         // Like Web `/library?tag=`, the one filter replaces any search in progress.
         controller.clearAll()
         switch request {
-        case .collection(let name): controller.collectionName = name
         case .tag(let name): controller.tagName = name
+        case .record(let record): controller.record = record
         }
       }
       .onChange(of: controller.filterIdentity) {
@@ -100,8 +92,14 @@ struct LibraryView: View {
         searchSoon()
       }
       .onChange(of: controller.query) {
-        // Emptying the phrase with no filters returns to browsing, like "Clear all".
-        if !controller.hasCriteria, controller.isShowingResults { controller.clearAll() }
+        // Emptying the phrase with no filters returns to browsing, like "Clear all"; any other
+        // change searches once typing pauses.
+        if controller.hasCriteria {
+          searchSoon(after: LibraryView.typingPause)
+        } else if controller.isShowingResults {
+          pendingSearch?.cancel()
+          controller.clearAll()
+        }
       }
     }
   }
@@ -110,8 +108,8 @@ struct LibraryView: View {
   private var searchSurface: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       MTSearchField(
-        "Search your Life Wiki", text: $controller.query,
-        prompt: "A phrase, date, or question about your life...", size: .large, hidesLabel: true,
+        "Search Library", text: $controller.query,
+        prompt: "Search by words, a name, or a date", size: .large, hidesLabel: true,
         maxLength: EntrySearchRequest.queryLimit, focusRequest: searchFocus
       )
       .onSubmit(searchNow)
@@ -120,7 +118,7 @@ struct LibraryView: View {
         .accessibilityIdentifier("library-search")
       VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
         MTBadge(title: "Keyword search", size: .medium)
-        Text("Titles, notes, local dates, Collections, tags, and structured details")
+        Text("Titles, notes, local dates, tags, and structured details")
           .font(MTFont.detail)
           .foregroundStyle(MTColor.inkFaint)
         if controller.hasCriteria || controller.isShowingResults {
@@ -168,18 +166,9 @@ struct LibraryView: View {
       if showsFilters {
         MTFieldGrid(minimumColumnWidth: 220, spacing: MTSpacing.s3) {
           MTSelectField(
-            label: "Record", selection: $controller.classification,
-            groups: [MTSelectGroup(options: [nil])]
-              + WikiItemClassification.groups.map {
-                MTSelectGroup(title: $0.title, options: $0.options.map(Optional.some))
-              },
+            label: "Record", selection: $controller.record,
+            options: [nil] + EntryRecordFilter.allCases.map(Optional.some),
             title: { $0?.title ?? "All records" }, size: .small)
-          MTSelectField(
-            label: "Collection", selection: $controller.collectionName,
-            options: [nil] + controller.collectionOptions.map(Optional.some),
-            title: { $0 ?? "All Collections" }, size: .small
-          )
-          .disabled(controller.collectionOptions.isEmpty)
           MTSelectField(
             label: "Tag", selection: $controller.tagName,
             options: [nil] + controller.tagOptions.map(Optional.some),
@@ -197,30 +186,8 @@ struct LibraryView: View {
           .foregroundStyle(MTColor.warm)
       }
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.top, MTSpacing.s1)
-    .overlay(alignment: .top) { MTListDivider() }
-  }
-
-  private var footer: some View {
-    HStack {
-      Spacer()
-      Button {
-        path.append(.history)
-      } label: {
-        HStack(spacing: MTSpacing.s2) {
-          Image(.clock).font(.mtIcon(MTSize.Icon.s15))
-          Text("Version history")
-          Image(.chevron).font(.mtIcon(MTSize.Icon.s12, weight: .semibold))
-        }
-        .font(MTFont.caption)
-        .foregroundStyle(MTColor.accent)
-        .frame(minHeight: MTSize.hitTarget)
-        .contentShape(Rectangle())
-      }
-      .buttonStyle(.plain)
-      .accessibilityIdentifier("library-version-history")
-    }
-    .padding(.top, MTSpacing.s2)
     .overlay(alignment: .top) { MTListDivider() }
   }
 
@@ -231,56 +198,53 @@ struct LibraryView: View {
     pendingSearch = Task { await controller.search() }
   }
 
+  /// How long typing pauses before the phrase searches by itself; Search and Return search at once.
+  private static let typingPause = Duration.milliseconds(400)
+
   /// Filters apply as they change; a short pause lets date pickers settle first.
-  private func searchSoon() {
+  private func searchSoon(after delay: Duration = .milliseconds(300)) {
     pendingSearch?.cancel()
     pendingSearch = Task {
-      try? await Task.sleep(for: .milliseconds(300))
+      try? await Task.sleep(for: delay)
       guard !Task.isCancelled else { return }
       await controller.search()
     }
   }
 
-  /// Web `wikiEntryHref`: Inbox captures open their review, Moments and Periods open on the
-  /// Timeline, and other records open their focused page.
-  private func open(_ link: WikiItemLink) {
-    navigator.open(link) { path.append(.item($0)) }
+  /// Web `wikiEntryHref`: every row opens its Item page.
+  private func open(_ link: ItemLink) {
+    path.append(link)
   }
 }
 
-private enum LibraryRoute: Hashable {
-  case item(WikiItemLink)
-  case history
-}
-
-/// Web `LibraryBrowse`: every organized record, newest change first.
+/// Web `LibraryBrowse`: every Entry, newest change first.
 private struct LibraryBrowse: View {
   let controller: LibraryController
-  let open: (WikiItemLink) -> Void
+  let open: (ItemLink) -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
       MTSectionHeader(
-        "All items", variant: .list,
+        "All Entries", variant: .list,
         detail: controller.hasLoaded
-          ? countLabel(controller.totalCount, "item") : nil,
+          ? countLabel(controller.totalCount, "Entry") : nil,
         detailAlign: .end)
       if !controller.hasLoaded {
-        ProgressView("Loading your Life Wiki...")
+        ProgressView("Loading Library...")
           .font(MTFont.caption)
           .tint(MTColor.accent)
           .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.list)
       } else if let message = controller.errorMessage, controller.items.isEmpty {
-        LibraryMessage(title: "Life Wiki unavailable", message: message) {
+        LibraryMessage(title: "Library could not load", message: message) {
           Button("Try again") { Task { await controller.loadItems() } }
             .mtButtonStyle(.secondary, size: .small)
         }
       } else if controller.items.isEmpty {
         VStack(spacing: MTSpacing.s2) {
-          Text("No matching items")
+          Text("No Entries match")
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
-          Text("Try another phrase or category, or capture something new.")
+          Text("Try another filter or a wider range of dates.")
             .font(MTFont.body)
             .foregroundStyle(MTColor.inkMuted)
         }
@@ -298,7 +262,7 @@ private struct LibraryBrowse: View {
       } else {
         VStack(spacing: 0) {
           ForEach(controller.items) { item in
-            LibraryItemRow(item: item) { open(WikiItemLink(item)) }
+            LibraryItemRow(item: item) { open(item.link) }
             MTListDivider()
           }
         }
@@ -310,28 +274,36 @@ private struct LibraryBrowse: View {
   }
 }
 
-/// One Web `wikiList` row: Kind badges and date, then the serif title and a one-line excerpt.
+/// One Web `EntryList` row: a Chapter and First Time badge where they apply and the date, then
+/// the serif title and a one-line excerpt. An ordinary Entry carries no badge.
 private struct LibraryItemRow: View {
-  let item: WikiItemSummary
+  let item: LibraryRow
   let action: () -> Void
 
   var body: some View {
     Button(action: action) {
       VStack(alignment: .leading, spacing: MTSpacing.s1) {
-        HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s4) {
-          MTFlowLayout(spacing: MTSpacing.s2) {
-            MTBadge(title: item.itemKind.displayName, size: .micro, uppercase: true)
-            if item.subtypeLabel != item.itemKind.displayName {
-              MTBadge(title: item.subtypeLabel, tone: .neutral, size: .micro, uppercase: true)
+        if item.hasMeta {
+          HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s4) {
+            if item.marks.isChapter || item.marks.isFirstTime {
+              HStack(spacing: MTSpacing.s1_5) {
+                if item.marks.isChapter {
+                  MTBadge(title: "Chapter", size: .micro, uppercase: true)
+                }
+                if item.marks.isFirstTime {
+                  MTBadge(title: "First Time", tone: .neutral, size: .micro, uppercase: true)
+                }
+              }
+            }
+            if let dateLabel = item.dateLabel {
+              Text(dateLabel)
+                .font(MTFont.detail)
+                .foregroundStyle(MTColor.inkFaint)
+                .lineLimit(1)
             }
           }
-          Text(item.dateLabel)
-            .font(MTFont.detail)
-            .foregroundStyle(MTColor.inkFaint)
-            .lineLimit(1)
-            .fixedSize()
         }
-        Text(item.title)
+        Text(item.displayTitle)
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
@@ -343,13 +315,14 @@ private struct LibraryItemRow: View {
             .lineLimit(1)
         }
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
       .padding(.horizontal, MTSpacing.s3)
       .padding(.vertical, MTSpacing.s4)
     }
     .buttonStyle(MTListRowButtonStyle())
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel("\(item.identityLabel), \(item.title), \(item.dateLabel)")
-    .accessibilityHint("Opens this record")
+    .accessibilityLabel(item.accessibilityLabel)
+    .accessibilityHint("Opens this Entry")
     .accessibilityAddTraits(.isButton)
   }
 }
@@ -357,27 +330,27 @@ private struct LibraryItemRow: View {
 /// Web `SearchResults`: why a search could not run, no matches, or the matching records.
 private struct LibraryResults: View {
   let controller: LibraryController
-  let open: (WikiItemLink) -> Void
+  let open: (ItemLink) -> Void
 
   var body: some View {
     if let message = controller.searchErrorMessage, controller.results.isEmpty {
       LibraryMessage(title: "Search unavailable", message: message)
     } else if controller.results.isEmpty {
       if controller.isSearching {
-        ProgressView("Searching your Life Wiki...")
+        ProgressView("Searching Library...")
           .font(MTFont.caption)
           .tint(MTColor.accent)
           .frame(maxWidth: .infinity, minHeight: MTLayout.Loading.list)
       } else {
         LibraryMessage(
-          title: "No matching items",
-          message: "Try fewer words, remove a filter, or search for a broader date.")
+          title: "No Entries match",
+          message: "Try fewer words, another spelling, or remove a filter.")
       }
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
         MTSectionHeader(
           "Results", variant: .list,
-          detail: countLabel(controller.resultCount, "item")
+          detail: countLabel(controller.resultCount, "Entry")
         ) {
           if controller.isSearching {
             ProgressView().controlSize(.small).tint(MTColor.accent)
@@ -385,7 +358,7 @@ private struct LibraryResults: View {
         }
         MTListSurface {
           ForEach(controller.results) { entry in
-            LibraryResultCard(entry: entry) { open(WikiItemLink(entry)) }
+            LibraryResultCard(entry: entry) { open(entry.link) }
             if entry.id != controller.results.last?.id { MTListDivider() }
           }
         }
@@ -396,8 +369,8 @@ private struct LibraryResults: View {
   }
 }
 
-/// A Web search result card: identity, Inbox state, and date; the title that opens the record;
-/// the note clamped to four lines with "Read full note"; organization; and what matched.
+/// A Web search result card: identity and date; the title that opens the Entry; the note
+/// clamped to four lines with "Read full note"; tags; and what matched.
 private struct LibraryResultCard: View {
   let entry: SearchEntry
   let action: () -> Void
@@ -407,13 +380,13 @@ private struct LibraryResultCard: View {
     VStack(alignment: .leading, spacing: 0) {
       Button(action: action) {
         VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
-          MTFlowLayout(spacing: MTSpacing.s1_5) {
-            MTBadge(title: entry.identityLabel, tone: .neutral)
-            if entry.isInInbox { MTBadge(title: "In Inbox", tone: .warm) }
+          MTBadge(title: entry.identityLabel, tone: .neutral)
+          // An untitled Entry is already named by its date.
+          if entry.title != nil {
+            Text(entry.displayDate)
+              .font(MTFont.detail)
+              .foregroundStyle(MTColor.inkFaint)
           }
-          Text(entry.displayDate)
-            .font(MTFont.detail)
-            .foregroundStyle(MTColor.inkFaint)
           Text(entry.displayTitle)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
@@ -427,10 +400,8 @@ private struct LibraryResultCard: View {
       }
       .buttonStyle(.plain)
       .accessibilityElement(children: .ignore)
-      .accessibilityLabel(
-        "\(entry.identityLabel)\(entry.isInInbox ? ", In Inbox" : ""), \(entry.displayTitle), \(entry.displayDate)"
-      )
-      .accessibilityHint(entry.isInInbox ? "Opens its Inbox review" : "Opens this record")
+      .accessibilityLabel(entry.accessibilityLabel)
+      .accessibilityHint("Opens this Entry")
       .accessibilityAddTraits(.isButton)
 
       if !entry.note.isEmpty {
@@ -470,16 +441,14 @@ private struct LibraryResultCard: View {
           .padding(.top, MTSpacing.s2)
         }
       }
-      if !entry.collectionNames.isEmpty || !entry.tagNames.isEmpty {
+      if !entry.tagNames.isEmpty {
         MTFlowLayout(spacing: MTSpacing.s1_5) {
-          ForEach(entry.collectionNames, id: \.self) { MTBadge(title: $0, tone: .neutral) }
           ForEach(entry.tagNames, id: \.self) { MTBadge(title: "#\($0)", tone: .neutral) }
         }
         .padding(.top, MTSpacing.s4)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(
-          "Organization: \((entry.collectionNames + entry.tagNames.map { "#\($0)" }).joined(separator: ", "))"
-        )
+          "Organization: \(entry.tagNames.map { "#\($0)" }.joined(separator: ", "))")
       }
       if !entry.matchReasons.isEmpty {
         HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {

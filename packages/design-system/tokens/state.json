@@ -210,11 +210,6 @@
       "opacity": {
         "$type": "number",
         "$description": "Opacity of content drawn at reduced emphasis, not disabled.",
-        "$extensions": {
-          "com.memotrail": {
-            "platforms": ["web"]
-          }
-        },
         "outsideRange": {
           "$description": "Calendar days outside the shown month.",
           "$value": 0.55

@@ -136,6 +136,7 @@ struct MTSectionHeader<Trailing: View>: View {
   var detailAlign = MTSectionHeaderDefaults.detailAlign
   var description: String?
   private let trailing: Trailing
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   init(
     _ title: String, variant: MTSectionHeaderVariant = MTSectionHeaderDefaults.variant,
@@ -151,24 +152,40 @@ struct MTSectionHeader<Trailing: View>: View {
   }
 
   var body: some View {
-    HStack(alignment: rowAlignment, spacing: MTSpacing.s2) {
-      VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
-        HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
-          titleText
-          if detailAlign == .start, let detail { detailText(detail) }
-        }
-        if let description {
-          Text(description)
-            .font(MTFont.detail)
-            .foregroundStyle(variant == .list ? MTColor.inkFaint : MTColor.inkMuted)
-            .fixedSize(horizontal: false, vertical: true)
-        }
+    if typeSize.isAccessibilitySize {
+      // At accessibility text sizes the detail and trailing content wrap under the title, like
+      // Web when the row is too narrow, so the title keeps the full width.
+      VStack(alignment: .leading, spacing: MTSpacing.s1) {
+        titleText
+        if let detail { detailText(detail) }
+        descriptionText
+        trailing
       }
-      Spacer(minLength: MTSpacing.s2)
-      if detailAlign == .end, let detail { detailText(detail) }
-      trailing
+      .frame(maxWidth: .infinity, alignment: .leading)
+    } else {
+      HStack(alignment: rowAlignment, spacing: MTSpacing.s2) {
+        VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
+          HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s2) {
+            titleText
+            if detailAlign == .start, let detail { detailText(detail) }
+          }
+          descriptionText
+        }
+        Spacer(minLength: MTSpacing.s2)
+        if detailAlign == .end, let detail { detailText(detail) }
+        trailing
+      }
+      .frame(minHeight: variant == .list ? MTSize.Control.small : nil)
     }
-    .frame(minHeight: variant == .list ? MTSize.Control.small : nil)
+  }
+
+  @ViewBuilder private var descriptionText: some View {
+    if let description {
+      Text(description)
+        .font(MTFont.detail)
+        .foregroundStyle(variant == .list ? MTColor.inkFaint : MTColor.inkMuted)
+        .fixedSize(horizontal: false, vertical: true)
+    }
   }
 
   /// A list header centers its row in the reserved height, and a description centers the

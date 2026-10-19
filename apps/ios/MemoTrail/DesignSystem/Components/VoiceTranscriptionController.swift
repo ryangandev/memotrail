@@ -6,7 +6,7 @@ enum VoiceTranscriptText {
   static func merging(
     existingText: String,
     transcript: String,
-    limit: Int = InboxCapture.bodyLimit
+    limit: Int = CaptureInput.bodyLimit
   ) -> String {
     guard limit > 0 else { return "" }
 
@@ -20,6 +20,19 @@ enum VoiceTranscriptText {
       ? ""
       : "\n"
     return String("\(existingText)\(separator)\(spokenText)".prefix(limit))
+  }
+
+  /// The note with dictated text: the note as it was when dictation began, formatting
+  /// included, followed by the newly spoken words as plain text. `mergedText` comes from
+  /// `merging`, so it starts with the note's text unless the limit cut into it.
+  static func applying(_ mergedText: String, to note: NSAttributedString) -> NSAttributedString {
+    let existingText = note.string
+    guard mergedText.hasPrefix(existingText) else {
+      return NSAttributedString(string: mergedText)
+    }
+    let result = NSMutableAttributedString(attributedString: note)
+    result.append(NSAttributedString(string: String(mergedText.dropFirst(existingText.count))))
+    return result
   }
 }
 
@@ -50,7 +63,7 @@ final class VoiceTranscriptionController {
   func start(currentText: String) async {
     guard !isActive else { return }
 
-    guard currentText.count < InboxCapture.bodyLimit else {
+    guard currentText.count < CaptureInput.bodyLimit else {
       fail("This note has reached the 50,000 character limit.")
       return
     }

@@ -1,15 +1,15 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-/// Web `/first-times` at phone width: the archive of First Times as record cards that open each
-/// First Time's own page, and Add First Time.
+/// Web `/first-times` at phone width: the Entries marked First Time as record cards that open
+/// each one's Item page, and Add First Time.
 struct FirstTimesView: View {
   let client: SupabaseClient
   let ownerID: UUID
 
   @State private var controller: FirstTimesController
   @State private var isAdding = false
-  @State private var openedFirstTimeID: UUID?
+  @Environment(AppNavigator.self) private var navigator
 
   init(client: SupabaseClient, ownerID: UUID) {
     self.client = client
@@ -29,23 +29,24 @@ struct FirstTimesView: View {
           Label("Add First Time", icon: .plus)
         }
         .mtButtonStyle()
-        .accessibilityIdentifier("add-first-time")
+        .accessibilityIdentifier("firsttimes-add")
       }
-      summary
+      // The counts say what is saved, so they wait for a successful load.
+      if controller.showsSummary { summary }
       content
     }
     .refreshable { await controller.load() }
     .navigationTitle("First Times")
     .navigationBarTitleDisplayMode(.inline)
     .sheet(isPresented: $isAdding) {
-      FirstTimeEditorSheet(controller: controller, entry: nil)
-    }
-    .navigationDestination(item: $openedFirstTimeID) { id in
-      FirstTimeDetailView(controller: controller, client: client, ownerID: ownerID, entryID: id)
+      EntryEditorSheet(client: client, ownerID: ownerID, mode: .new(.firstTime)) { _ in
+        navigator.entriesChanged()
+      }
     }
     .task {
       if !controller.hasLoaded { await controller.load() }
     }
+    .onChange(of: navigator.entriesRevision) { Task { await controller.load() } }
   }
 
   private var summary: some View {
@@ -94,12 +95,15 @@ struct FirstTimesView: View {
         spacing: MTSpacing.s3
       ) {
         ForEach(Array(controller.entries.enumerated()), id: \.element.id) { index, entry in
-          FirstTimeCard(entry: entry, index: index) { openedFirstTimeID = entry.id }
+          FirstTimeCard(entry: entry, index: index, photoURLs: controller.photoURLs) {
+            // First Times is a page in the More tab, so its Items open on that stack.
+            navigator.morePath.append(ItemLink(entryID: entry.id))
+          }
         }
       }
       .padding(.top, MTSpacing.s4)
       .accessibilityElement(children: .contain)
-      .accessibilityLabel("First Times archive")
+      .accessibilityLabel("First Times")
     }
   }
 }
@@ -107,17 +111,18 @@ struct FirstTimesView: View {
 /// Web `FirstTimeCard`: a cover photo, else a map of its Location, else its place in the
 /// archive; then the date, title, Location, a short reflection, and organization.
 private struct FirstTimeCard: View {
-  let entry: FirstTimeEntry
+  let entry: FirstTimeRow
   let index: Int
+  let photoURLs: [String: URL]
   let open: () -> Void
   @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
   var body: some View {
-    let photos = entry.originalAttachments
-    MTRecordCard(accessibilityLabel: "\(entry.title), \(entry.displayDate)", action: open) {
+    let photos = entry.attachments.filter { $0.variant == "original" }
+    MTRecordCard(accessibilityLabel: "\(entry.displayTitle), \(entry.dateLabel)", action: open) {
       MTRecordCardVisual {
         if let cover = photos.first {
-          MTRemoteImage(url: cover.signedURL)
+          MTRemoteImage(url: photoURLs[cover.objectPath])
         } else {
           MTLocationSnapshot(
             latitude: entry.location?.latitude, longitude: entry.location?.longitude
@@ -133,16 +138,16 @@ private struct FirstTimeCard: View {
         }
       }
       MTRecordCardBody {
-        Text(entry.displayDate.uppercased())
+        Text(entry.dateLabel.uppercased())
           .mtTextRole(.firstTimeDate)
           .foregroundStyle(MTColor.warm)
-        Text(entry.title)
+        Text(entry.displayTitle)
           .mtTextRole(horizontalSizeClass == .regular ? .recordCardTitle : .recordCardTitleCompact)
           .foregroundStyle(MTColor.ink)
           .multilineTextAlignment(.leading)
           .padding(.top, MTSpacing.s1)
         if let location = entry.location {
-          Label(location.name, icon: .map)
+          Label(location.label, icon: .map)
             .labelStyle(MTInlineIconLabelStyle())
             .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
@@ -158,9 +163,7 @@ private struct FirstTimeCard: View {
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s2)
         }
-        MTRecordCardFooter(
-          status: entry.inboxStatus == "unreviewed" ? [("In Inbox", .warm)] : [],
-          collectionNames: entry.collectionNames, tagNames: entry.tagNames)
+        MTRecordCardFooter(tagNames: entry.tagNames)
       }
     }
   }

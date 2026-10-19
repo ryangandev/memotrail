@@ -106,11 +106,6 @@
       "$value": {
         "value": 1100,
         "unit": "ms"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "platforms": ["web"]
-        }
       }
     },
     "shimmer": {

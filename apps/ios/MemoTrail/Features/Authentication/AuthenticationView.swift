@@ -72,14 +72,14 @@ struct AuthenticationView: View {
   private var story: some View {
     VStack(alignment: .leading, spacing: 0) {
       eyebrow("Your life, kept with context")
-      Text("A quiet place for everything worth keeping.")
+      Text("The one private place your life is written down.")
         .mtTextRole(.hero)
         .foregroundStyle(MTColor.ink)
         .fixedSize(horizontal: false, vertical: true)
         .padding(.top, MTSpacing.s4)
         .accessibilityAddTraits(.isHeader)
       Text(
-        "Capture thoughts, first times, places, and the chapters that connect them. MemoTrail keeps the archive private and leaves the organization in your hands."
+        "Jot down a thought in seconds, find it again from any half-remembered clue, and get each Chapter of your life back."
       )
       .font(MTFont.body)
       .foregroundStyle(MTColor.inkMuted)
@@ -94,7 +94,7 @@ struct AuthenticationView: View {
       MemoTrailMark()
         .frame(width: MTLayout.SignIn.cardMark, height: MTLayout.SignIn.cardMark)
         .accessibilityHidden(true)
-      eyebrow("Personal archive")
+      eyebrow("Private to you")
         .padding(.top, MTSpacing.s8)
       Text("Welcome to MemoTrail")
         .mtTextRole(.welcomeTitle)

@@ -705,6 +705,7 @@ enum MTMotion {
   static let standard = Double(180) / 1_000
   static let deliberate = Double(280) / 1_000
   static let markTurn = Double(320) / 1_000
+  static let pulse = Double(1100) / 1_000
   static let shimmer = Double(1250) / 1_000
   static let toast = Double(4500) / 1_000
   static let toastError = Double(8000) / 1_000
@@ -722,6 +723,7 @@ enum MTMotion {
     ("standard", standard),
     ("deliberate", deliberate),
     ("markTurn", markTurn),
+    ("pulse", pulse),
     ("shimmer", shimmer),
     ("toast", toast),
     ("toastError", toastError),
@@ -1239,6 +1241,14 @@ enum MTState {
 
   enum Pressed {
     static let cardScale: Double = 0.99
+  }
+
+  enum Muted {
+    enum Opacity {
+      static let outsideRange: Double = 0.55
+      static let gridLine: Double = 0.66
+      static let pulseLow: Double = 0.3
+    }
   }
 }
 

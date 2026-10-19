@@ -106,25 +106,11 @@ export const allowances = [
       "Rebuilds the run's font from the editor's base font when the writer toggles bold or italic.",
   },
   {
-    file: "DesignSystem/Components/MTOrganizationEditor.swift",
-    rule: "shadow",
-    match: ".shadow(",
-    reason:
-      "A Collection chip's glow uses MTColor.labelShade, which changes with the theme; MTShadow layers have one fixed color.",
-  },
-  {
     file: "DesignSystem/Components/MTToast.swift",
     rule: "animation",
     match: ".snappy(duration: MTMotion.",
     reason:
       "A system spring for toasts entering and leaving; its duration reads a motion token, and the tokens have no spring curve.",
-  },
-  {
-    file: "Features/People/PersonEditorSheet.swift",
-    rule: "animation",
-    match: ".snappy(duration: MTMotion.",
-    reason:
-      "A system spring for the optional details disclosure; its duration reads a motion token, and the tokens have no spring curve.",
   },
   // Gradient stops and centers stay with the drawing they shape, as they do in the Web CSS
   // modules; the colors they blend are tokens.
@@ -151,19 +137,6 @@ export const allowances = [
     rule: "gradient",
     reason:
       "The warm wash on a Trash item's visual, transcribed from components/trash-workspace.module.css.",
-  },
-  {
-    file: "DesignSystem/Components/MTOrganizationEditor.swift",
-    rule: "gradient",
-    reason:
-      "The sheen and shade bands that make a Collection chip read as a paper label.",
-  },
-  {
-    file: "Features/Map/NativeLocationMap.swift",
-    rule: "layout",
-    match: "MKMapSize(width: 1, height: 1)",
-    reason:
-      "A one-map-point rectangle that adds a pin to the region the map fits; it is never drawn.",
   },
   {
     file: "DesignSystem/GalleryFoundations.swift",

@@ -14,7 +14,8 @@ enum NativeAppearance: String, CaseIterable, Sendable {
 }
 
 /// Web `/settings`: the account, what MemoTrail calls you, your Timeline starting point, the
-/// default time zone, appearance, and the paths to AI status, organization, and export.
+/// default time zone, appearance, and the paths to tags, import, and export. iOS searches by
+/// keyword only, so it shows no meaning-search switch, and import stays on the Web.
 struct NativeSettingsView: View {
   let client: SupabaseClient
   let user: AuthenticatedUser
@@ -27,6 +28,7 @@ struct NativeSettingsView: View {
   @State private var birthDate = ""
   @State private var timezone = "UTC"
   @Environment(AppNavigator.self) private var navigator
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   init(
     client: SupabaseClient, user: AuthenticatedUser, isAuthenticationBusy: Bool,
@@ -71,7 +73,7 @@ struct NativeSettingsView: View {
       if controller.profile != nil {
         SettingsFormCard(
           title: "What should we call you?",
-          detail: "Used in your Home greeting. Leave blank to use your Google name."
+          detail: "Used in your Dashboard greeting. Leave blank to use your Google name."
         ) {
           MTTextField(
             label: "Preferred name", text: $preferredName, prompt: user.name, maxLength: 80
@@ -118,7 +120,7 @@ struct NativeSettingsView: View {
           Text(accountName)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
-            .lineLimit(1)
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
           Text(user.email)
             .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
@@ -176,21 +178,20 @@ struct NativeSettingsView: View {
           .accessibilityIdentifier("settings-appearance")
         }
         MTListDivider()
-        SettingsPreferenceLink(
-          icon: .sparkle, title: "AI capabilities · Beta",
-          detail: "Off and unavailable while we rethink how AI can help."
-        ) {
-          AISettingsView()
-        }
-        MTListDivider()
         SettingsWorkspaceLink(
-          icon: .archive, title: "Archive organization",
-          detail: "Open the Library to manage Collections and tags across items.",
-          route: .collections)
+          icon: .tag, title: "Tags",
+          detail: "Rename, merge, and clean up tags.",
+          route: .tags)
+        MTListDivider()
+        SettingsInfoRow(
+          icon: .plus, title: "Import",
+          detail:
+            "Bring notes and journals from another app. Import is available in MemoTrail on the Web."
+        )
         MTListDivider()
         SettingsPreferenceLink(
-          icon: .archive, title: "Export archive",
-          detail: "Create a complete portable copy of your private archive."
+          icon: .archive, title: "Export",
+          detail: "A complete, portable copy of everything you have written."
         ) {
           ExportView(client: client, ownerID: user.id)
         }
@@ -224,7 +225,7 @@ struct NativeSettingsView: View {
         Text("Private by default")
           .font(MTFont.label)
           .foregroundStyle(MTColor.ink)
-        Text("Your account and archive are not shared with other MemoTrail users.")
+        Text("Your account and everything you write are not shared with other MemoTrail users.")
           .font(MTFont.detail)
           .foregroundStyle(MTColor.inkMuted)
           .mtLineSpacing(MTLineHeight.body, textStyle: .caption1)
@@ -288,21 +289,37 @@ private struct SettingsSectionHeading<Trailing: View>: View {
     self.trailing = trailing()
   }
 
+  @Environment(\.dynamicTypeSize) private var typeSize
+
   var body: some View {
-    HStack(alignment: .center, spacing: MTSpacing.s4) {
-      VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
-        Text(title.uppercased())
-          .mtTextRole(.settingsHeading)
-          .foregroundStyle(MTColor.ink)
-          .accessibilityAddTraits(.isHeader)
-        Text(detail)
-          .font(MTFont.detail)
-          .foregroundStyle(MTColor.inkFaint)
+    Group {
+      // At accessibility text sizes the trailing badge goes under the copy, so words stay whole.
+      if typeSize.isAccessibilitySize {
+        VStack(alignment: .leading, spacing: MTSpacing.s2) {
+          copy
+          trailing
+        }
+      } else {
+        HStack(alignment: .center, spacing: MTSpacing.s4) {
+          copy
+          Spacer(minLength: 0)
+          trailing
+        }
       }
-      Spacer(minLength: 0)
-      trailing
     }
     .padding(.top, MTSpacing.s4)
+  }
+
+  private var copy: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
+      Text(title.uppercased())
+        .mtTextRole(.settingsHeading)
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+      Text(detail)
+        .font(MTFont.detail)
+        .foregroundStyle(MTColor.inkFaint)
+    }
   }
 }
 
@@ -419,6 +436,20 @@ private struct SettingsWorkspaceLink: View {
     .buttonStyle(MTListRowButtonStyle())
     .accessibilityLabel(title)
     .accessibilityHint(detail)
+  }
+}
+
+/// A row that leads nowhere on iOS, like Import, which stays on the Web.
+private struct SettingsInfoRow: View {
+  let icon: MTIcon
+  let title: String
+  let detail: String
+
+  var body: some View {
+    SettingsPreferenceLabel(icon: icon, title: title, detail: detail)
+      .padding(MTSpacing.s4)
+      .frame(maxWidth: .infinity, minHeight: MTLayout.OptionRow.minHeight, alignment: .leading)
+      .accessibilityElement(children: .combine)
   }
 }
 
