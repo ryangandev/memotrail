@@ -90,6 +90,9 @@ struct SearchEntry: Decodable, Equatable, Identifiable, Sendable {
     }
   }
 
+  /// Every result opens its Item page, like Web `wikiEntryHref`.
+  var link: ItemLink { ItemLink(entryID: id) }
+
   var marks: EntryMarks { EntryMarks(subtype: subtype, isFirstTime: isFirstTime) }
 
   var occurrence: EntryOccurrence {
@@ -116,6 +119,13 @@ struct SearchEntry: Decodable, Equatable, Identifiable, Sendable {
   /// Web `resultDateLabel`: a Chapter shows the span it covers, anything else its date.
   var displayDate: String {
     subtype == .chapter ? occurrence.spanLabel : occurrence.displayLabel
+  }
+
+  /// What VoiceOver reads for a result: its identity, title, and a date only when the title
+  /// does not already name it.
+  var accessibilityLabel: String {
+    [identityLabel, displayTitle, title == nil ? nil : displayDate].compactMap(\.self)
+      .joined(separator: ", ")
   }
 }
 

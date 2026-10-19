@@ -1,8 +1,6 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-// P7: First Times list polish.
-
 /// Web `/first-times` at phone width: the Entries marked First Time as record cards that open
 /// each one's Item page, and Add First Time.
 struct FirstTimesView: View {
@@ -33,7 +31,8 @@ struct FirstTimesView: View {
         .mtButtonStyle()
         .accessibilityIdentifier("firsttimes-add")
       }
-      summary
+      // The counts say what is saved, so they wait for a successful load.
+      if controller.showsSummary { summary }
       content
     }
     .refreshable { await controller.load() }
@@ -164,8 +163,7 @@ private struct FirstTimeCard: View {
             .multilineTextAlignment(.leading)
             .padding(.top, MTSpacing.s2)
         }
-        MTRecordCardFooter(
-          status: entry.isChapter ? [("Chapter", .neutral)] : [], tagNames: entry.tagNames)
+        MTRecordCardFooter(tagNames: entry.tagNames)
       }
     }
   }

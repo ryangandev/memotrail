@@ -57,6 +57,42 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertEqual(values["p_offset"] as? Int, 72)
   }
 
+  func testEveryRowOpensTheItemPage() throws {
+    // Entries, Chapters, First Times, and both marks at once open the canonical Entry, never the
+    // `item_id` of the row.
+    for (subtype, isFirstTime) in [
+      ("entry", false), ("chapter", false), ("entry", true), ("chapter", true),
+    ] {
+      let row = try decodeRow(subtype: subtype, isFirstTime: isFirstTime)
+      XCTAssertEqual(row.link, ItemLink(entryID: row.id))
+      XCTAssertEqual(row.link.entryID.uuidString, "98900000-0000-4000-8000-000000000011")
+    }
+    let result = SearchEntry(id: UUID(), title: "Result", body: "")
+    XCTAssertEqual(result.link, ItemLink(entryID: result.id))
+  }
+
+  func testOnlyChaptersAndFirstTimesAreBadgedAndAnUntitledEntryShowsNoDate() throws {
+    // Web `EntryList`: an ordinary Entry has no badge, so its row has no meta line without a date.
+    let plain = try decodeRow(precision: "unknown", start: nil, end: nil)
+    XCTAssertFalse(plain.hasMeta)
+    XCTAssertEqual(plain.accessibilityLabel, "Evening walks")
+
+    let untitledDay = try decodeRow(title: "", precision: "day")
+    XCTAssertFalse(untitledDay.hasMeta)
+    XCTAssertEqual(untitledDay.accessibilityLabel, "Monday, March 31, 2025")
+
+    let dated = try decodeRow(precision: "day", end: nil)
+    XCTAssertTrue(dated.hasMeta)
+    XCTAssertEqual(dated.accessibilityLabel, "Evening walks, Mar 31, 2025")
+
+    let firstTime = try decodeRow(isFirstTime: true, precision: "unknown", start: nil, end: nil)
+    XCTAssertTrue(firstTime.hasMeta)
+    XCTAssertEqual(firstTime.accessibilityLabel, "First Time, Evening walks")
+    let both = try decodeRow(
+      subtype: "chapter", isFirstTime: true, precision: "unknown", start: nil, end: nil)
+    XCTAssertEqual(both.accessibilityLabel, "Chapter · First Time, Evening walks")
+  }
+
   func testItemLinksOpenTheItemPageByEntry() {
     let id = UUID()
     XCTAssertEqual(ItemLink(entryID: id), ItemLink(entryID: id))

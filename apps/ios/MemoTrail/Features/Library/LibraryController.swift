@@ -131,9 +131,7 @@ final class LibraryController {
   func search() async {
     let request: EntrySearchRequest
     do {
-      request = try EntrySearchRequest.validate(
-        query: query, records: record.map { [$0] } ?? [], tagNames: tagName.map { [$0] } ?? [],
-        dateFrom: dateFrom, dateTo: dateTo)
+      request = try searchRequest()
     } catch {
       clearResults()
       searchErrorMessage = error.localizedDescription
@@ -144,6 +142,22 @@ final class LibraryController {
       return
     }
     await run(request)
+  }
+
+  /// The form as a validated search. Record sends its Web classification: `entry`, `chapter`,
+  /// or `first_time`, so one Entry can match more than one record.
+  func searchRequest() throws -> EntrySearchRequest {
+    try Self.searchRequest(
+      query: query, record: record, tagName: tagName, dateFrom: dateFrom, dateTo: dateTo)
+  }
+
+  nonisolated static func searchRequest(
+    query: String, record: EntryRecordFilter?, tagName: String?, dateFrom: String,
+    dateTo: String
+  ) throws -> EntrySearchRequest {
+    try EntrySearchRequest.validate(
+      query: query, records: record.map { [$0] } ?? [], tagNames: tagName.map { [$0] } ?? [],
+      dateFrom: dateFrom, dateTo: dateTo)
   }
 
   func loadMoreResults() async {
