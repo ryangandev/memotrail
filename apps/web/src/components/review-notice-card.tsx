@@ -65,11 +65,17 @@ export function ReviewNoticeCard({ notice }: { notice: ReviewNotice }) {
         <ButtonLink
           href={href}
           onClick={(event) => void follow(event)}
+          size="small"
           variant="secondary"
         >
           {notice.kind === "year" ? "Open year review" : "Open Chapter"}
         </ButtonLink>
-        <Button disabled={busy} onClick={() => void dismiss()} variant="ghost">
+        <Button
+          disabled={busy}
+          onClick={() => void dismiss()}
+          size="small"
+          variant="ghost"
+        >
           Not now
         </Button>
       </div>

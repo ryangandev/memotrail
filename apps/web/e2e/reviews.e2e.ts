@@ -272,7 +272,7 @@ test("Asking for a Chapter review shows the disclosure, then a labeled review wh
   await page.goto(`/items/${chapterId}`);
   const panel = panelOf(page);
   await expect(
-    panel.getByRole("heading", { name: "Review", exact: true }),
+    panel.getByRole("heading", { name: "Looking back", exact: true }),
   ).toBeVisible(firstCompile);
   // Before anything is sent, the page says what would be.
   await expect(panel).toContainText(
@@ -286,7 +286,7 @@ test("Asking for a Chapter review shows the disclosure, then a labeled review wh
   await expect(panel.getByRole("status")).toContainText("Reading 6 Entries");
 
   await expect(panel.getByText("Written by AI")).toBeVisible(generated);
-  await expect(panel).toContainText("Read all 6 Entries");
+  await expect(panel).toContainText("From 6 Entries");
 
   // The same disclosure can be read again from Settings; here, check what it promised.
   await page.goto("/settings");
@@ -322,17 +322,21 @@ test("Asking for a Chapter review shows the disclosure, then a labeled review wh
     records.getByRole("link", { name: /First application sent/ }),
   ).toHaveAttribute("href", `/items/${ids[0]}`);
 
-  // Interpretation is labeled, in both places it appears.
-  for (const heading of ["How it felt", "What kept coming back"]) {
-    const section = panel.getByRole("region", { name: heading });
-    await expect(section).toBeVisible();
-    await expect(
-      section.getByText("Interpretation", { exact: true }),
-    ).toBeVisible();
-  }
+  // Claude's reading is labeled once, beside "Looking back", and named again where it ends.
+  for (const heading of ["How it felt", "What kept coming up"])
+    await expect(panel.getByRole("region", { name: heading })).toBeVisible();
+  await expect(panel.getByText("Written by AI")).toHaveCount(1);
+  await expect(panel).toContainText(
+    "Written by Claude, an AI model made by Anthropic",
+  );
+  const themes = panel.getByRole("region", { name: "What kept coming up" });
+  await expect(themes).toContainText("Work");
+  // Each theme opens the Entries it came from.
+  const cited = themes.getByRole("button", { expanded: false }).first();
+  await cited.click();
   await expect(
-    panel.getByRole("region", { name: "What kept coming back" }),
-  ).toContainText("Work");
+    themes.locator("[data-ui-entry-row]").first().getByRole("link"),
+  ).toHaveAttribute("href", /^\/items\//);
 
   // In your words: four quotes, each copied exactly from a seeded Entry.
   const words = panel.getByRole("region", { name: "In your words" });
@@ -348,6 +352,15 @@ test("Asking for a Chapter review shows the disclosure, then a labeled review wh
   });
   await words.locator("figure").first().getByRole("link").click();
   await expect(page).toHaveURL(`/items/${ids[0]}`);
+
+  // The made review is listed under Reviews and opens its Chapter.
+  await page.goto("/reviews");
+  const chapters = page.getByRole("list", { name: "Chapters" });
+  await expect(chapters).toContainText(name, firstCompile);
+  await expect(chapters).toContainText("Review made");
+  await expect(
+    chapters.getByRole("link", { name: new RegExp(name) }),
+  ).toHaveAttribute("href", `/items/${chapterId}`);
 
   // What left the app: one request, text only, and nothing but the seeded Entries.
   const requests = await sent(name);
@@ -433,7 +446,7 @@ test("A quote that no longer matches its Entry is hidden and counted, and an unk
     "1 Entry in this Chapter is new or changed since this review.",
   );
   await expect(
-    panel.getByRole("button", { name: "Make a new review" }).first(),
+    panel.getByRole("button", { name: "Write again" }).first(),
   ).toBeVisible();
 
   // A second edit makes the wording plural.
@@ -615,7 +628,7 @@ test("Turning reviews off in Settings deletes the saved reviews", async ({
   expect(await sent(name)).toHaveLength(1);
 });
 
-test("A year review is made from Year reviews, and a quiet notice offers a Chapter that just ended", async ({
+test("A year review is made from Reviews, and a quiet notice offers a Chapter that just ended", async ({
   page,
   workspace: { client, owner },
 }) => {
@@ -640,25 +653,45 @@ test("A year review is made from Year reviews, and a quiet notice offers a Chapt
   }));
   await seedEntries(client, owner, seeds);
 
+  // Reviews is a destination of its own in the sidebar.
   await page.goto("/timeline");
-  await page.getByRole("link", { name: "Year reviews" }).click(firstCompile);
+  await page
+    .getByRole("navigation", { name: "Primary navigation" })
+    .getByRole("link", { name: "Reviews" })
+    .click(firstCompile);
   await expect(page).toHaveURL(/\/reviews$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Reviews" }),
+  ).toBeVisible();
   const years = page.getByRole("list", { name: "Years" });
   await expect(years.getByRole("listitem")).toHaveCount(1);
   await expect(years).toContainText("2025");
   await expect(years).toContainText("6 Entries");
+  await expect(page.getByRole("list", { name: "Chapters" })).toHaveCount(0);
   await years.getByRole("link", { name: /2025/ }).click();
   await expect(page).toHaveURL(/\/reviews\/2025$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "2025 in review" }),
+  ).toBeVisible();
 
   const panel = panelOf(page);
   await expect(panel).toContainText(
     "MemoTrail sends the writing of your 6 Entries from 2025, text only, to Anthropic to write the review.",
   );
   await makeFirstReview(page, panel);
-  await expect(panel.getByText("Written by AI")).toBeVisible(generated);
+  // A year's review is labeled in the page's own meta line, under its title.
+  const header = page.locator("[data-ui-page-header]");
+  await expect(header.getByText("Written by AI")).toBeVisible(generated);
+  await expect(header).toContainText("From 6 Entries");
   await expect(
     panel.getByRole("region", { name: "From your records" }),
-  ).toContainText("2025");
+  ).toContainText("6 Entries");
+  await expect(
+    panel.getByRole("button", { name: "Write again" }),
+  ).toBeVisible();
+  await expect(
+    panel.getByRole("button", { name: "Delete review" }),
+  ).toBeVisible();
   await expect(
     panel.getByRole("region", { name: "In your words" }).locator("blockquote"),
   ).toHaveCount(4);

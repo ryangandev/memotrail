@@ -1,53 +1,139 @@
-.years {
+/* Reviews and a year's review page: quiet rows between hairlines, a year switcher under the
+   year's title, and plain notes where a review cannot be made yet. */
+
+/* TODO(WP0b): the 17px row title becomes a type role. */
+.index {
   display: grid;
+  gap: var(--mt-space-11);
+  margin-top: var(--mt-space-8);
+}
+
+.index section {
+  display: grid;
+  gap: var(--mt-space-1);
+  min-width: 0;
+}
+
+.rows {
   margin: 0;
   padding: 0;
-  border-block: var(--mt-size-stroke-thin) solid var(--mt-color-border);
   list-style: none;
 }
 
-.years li + li {
-  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-}
-
-.years a {
+.row {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: var(--mt-space-1) var(--mt-space-4);
-  padding: var(--mt-space-4) var(--mt-space-3);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+  padding: var(--mt-space-3) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink);
   text-decoration: none;
 }
 
-.years a:hover {
-  background: var(--mt-color-surface-subtle);
+.row:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
 }
 
-.years strong {
+.name {
+  min-width: 0;
   color: var(--mt-color-ink);
   font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-medium);
+  font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-title);
+  overflow-wrap: anywhere;
+  transition: color var(--mt-motion-quick) var(--mt-motion-easing-standard);
 }
 
-.back {
-  display: block;
-  width: fit-content;
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
-  text-decoration: none;
-}
-
-.back:hover {
+.row:hover .name {
   color: var(--mt-color-accent);
 }
 
-.note {
-  margin: 0;
+.facts {
+  --separated-list-row-gap: 0px;
   color: var(--mt-color-ink-muted);
   font-size: var(--mt-font-size-label);
-  line-height: var(--mt-line-height-body);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--mt-line-height-message);
+}
+
+.note {
+  max-width: 36rem;
+  margin: var(--mt-space-3) 0 0;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
+  text-wrap: pretty;
+}
+
+/* On a year's page the note is the page's whole content, so it reads as a sentence. */
+.switcher + .note,
+[data-ui-page-header] + .note {
+  /* TODO(WP0b): the 18px serif note shares the review prose size, which becomes a type role. */
+  --review-note-size: 18px;
+  margin-top: var(--mt-space-8);
+  color: var(--mt-color-ink);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--review-note-size);
+  line-height: var(--mt-line-height-prose);
+}
+
+/* The years a review can be read or made for, oldest first. */
+.switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--mt-space-1);
+  margin-top: var(--mt-space-5);
+}
+
+.switcher a {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  padding: 0 var(--mt-space-3);
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+  transition:
+    color var(--mt-motion-quick) var(--mt-motion-easing-standard),
+    background-color var(--mt-motion-quick) var(--mt-motion-easing-standard);
+}
+
+.switcher a:hover {
+  color: var(--mt-color-ink);
+  background: var(--mt-state-hover-surface);
+}
+
+.switcher a[aria-current="page"] {
+  color: var(--mt-color-ink);
+  background: var(--mt-color-surface-raised);
+  box-shadow: 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-border);
+}
+
+.switcher a:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset);
+}
+
+@media (max-width: 720px) {
+  .index {
+    gap: var(--mt-space-8);
+    margin-top: var(--mt-space-6);
+  }
+
+  .switcher + .note,
+  [data-ui-page-header] + .note {
+    --review-note-size: var(--mt-font-size-callout);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .name,
+  .switcher a {
+    transition: none;
+  }
 }
