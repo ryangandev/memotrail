@@ -188,17 +188,21 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
       "Updated after organizing",
     );
     await page.goto("/search?tag=Rich%20notes");
+    // Library rows show the writing as a plain excerpt.
     await expect(
       page
-        .locator("[data-entry-rich-text] em")
-        .filter({ hasText: /^Updated after organizing$/ }),
-    ).toHaveText("Updated after organizing");
+        .getByRole("region", { name: "Entries", exact: true })
+        .getByRole("listitem")
+        .filter({ hasText: "Updated after organizing" }),
+    ).toHaveCount(1);
     await page.goto("/search?q=Updated%20after%20organizing");
+    // Library rows show the writing as a plain excerpt.
     await expect(
       page
-        .locator("[data-entry-rich-text] em")
-        .filter({ hasText: /^Updated after organizing$/ }),
-    ).toHaveText("Updated after organizing");
+        .getByRole("region", { name: "Entries", exact: true })
+        .getByRole("listitem")
+        .filter({ hasText: "Updated after organizing" }),
+    ).toHaveCount(1);
   } finally {
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }

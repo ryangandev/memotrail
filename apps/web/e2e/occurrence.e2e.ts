@@ -110,8 +110,8 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
     });
     for (const [precision, start, expected] of [
       ["year", "2017", "2017"],
-      ["month", "2017-07", "Jul 2017"],
-      ["day", "2017-07-08", "Jul 8, 2017"],
+      ["month", "2017-07", "July 2017"],
+      ["day", "2017-07-08", "Saturday, July 8, 2017"],
     ] as const) {
       await page
         .getByRole("button", { name: "Edit Entry", exact: true })
