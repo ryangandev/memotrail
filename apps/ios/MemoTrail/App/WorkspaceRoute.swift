@@ -199,7 +199,7 @@ struct WikiItemDestinationView: View {
     case (.entry, "first_time", _):
       FirstTimeDetailView(client: client, ownerID: ownerID, entryID: entryID)
     default:
-      WikiItemDetailView(client: client, ownerID: ownerID, entryID: entryID)
+      ItemPageView(client: client, ownerID: ownerID, entryID: entryID)
     }
   }
 }

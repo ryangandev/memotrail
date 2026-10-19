@@ -73,7 +73,7 @@ final class NativeContractTests: XCTestCase {
       clientID: "native-contract:\(id)")
     try await client.from("entries").insert(payload).execute()
 
-    let inbox = InboxController(client: client, ownerID: ownerID)
+    let inbox = CaptureController(client: client, ownerID: ownerID)
     await inbox.load()
     XCTAssertNil(inbox.loadErrorMessage)
     let entry = try XCTUnwrap(inbox.entries.first { $0.id == id })
@@ -136,7 +136,7 @@ final class NativeContractTests: XCTestCase {
         id: id, ownerID: ownerID, title: nil, body: "Harbor lights", occurredStart: nil,
         occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
     ).execute()
-    let inbox = InboxController(client: client, ownerID: ownerID)
+    let inbox = CaptureController(client: client, ownerID: ownerID)
     await inbox.load()
     let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
     XCTAssertNil(capture.bodyRich)
@@ -186,7 +186,7 @@ final class NativeContractTests: XCTestCase {
         UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
       }
       let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-      let inbox = InboxController(
+      let inbox = CaptureController(
         client: client, ownerID: ownerID, queueStore: InboxQueueStore(defaults: defaults))
       // Let the connectivity monitor's first update pass, so each save starts its own sync.
       try await Task.sleep(for: .milliseconds(500))
@@ -249,7 +249,7 @@ final class NativeContractTests: XCTestCase {
       }
       let queueStore = InboxQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
       let photoStore = InboxPhotoStore(rootURL: photoRoot)
-      let inbox = InboxController(
+      let inbox = CaptureController(
         client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
       // Let the connectivity monitor's first update pass, so each save starts its own sync.
       try await Task.sleep(for: .milliseconds(500))
@@ -327,7 +327,7 @@ final class NativeContractTests: XCTestCase {
       XCTAssertTrue(inbox.entries.contains { $0.id == queued[1].id })
 
       // After a relaunch, refused captures are still marked and are never sent again.
-      let relaunched = InboxController(
+      let relaunched = CaptureController(
         client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
       XCTAssertEqual(relaunched.pendingEntries, inbox.pendingEntries)
       NativeReviewNetwork.isOffline = true
@@ -548,7 +548,7 @@ final class NativeContractTests: XCTestCase {
     /// An Inbox with its own queue and photo files, past its first connectivity update so each
     /// save starts its own sync.
     private func isolatedInbox(client: SupabaseClient, ownerID: UUID) async throws
-      -> (InboxController, InboxPhotoStore)
+      -> (CaptureController, InboxPhotoStore)
     {
       let suiteName = "NativeContractTests.\(UUID().uuidString)"
       let photoRoot = FileManager.default.temporaryDirectory.appending(
@@ -559,7 +559,7 @@ final class NativeContractTests: XCTestCase {
       }
       let queueStore = InboxQueueStore(defaults: try XCTUnwrap(UserDefaults(suiteName: suiteName)))
       let photoStore = InboxPhotoStore(rootURL: photoRoot)
-      let inbox = InboxController(
+      let inbox = CaptureController(
         client: client, ownerID: ownerID, queueStore: queueStore, photoStore: photoStore)
       try await Task.sleep(for: .milliseconds(500))
       return (inbox, photoStore)
@@ -582,7 +582,7 @@ final class NativeContractTests: XCTestCase {
     }
 
     /// Waits for the sync a save starts, then returns the toasts shown since `shown`.
-    private func toasts(after shown: Set<UUID>, from inbox: InboxController) async throws
+    private func toasts(after shown: Set<UUID>, from inbox: CaptureController) async throws
       -> [MTToast]
     {
       let deadline = Date().addingTimeInterval(15)
@@ -1053,7 +1053,7 @@ final class NativeContractTests: XCTestCase {
 
   func testItemHistoryRestoresLinksCreatesALinkedGoalAndMovesToTrash() async throws {
     let (client, ownerID) = try await client()
-    let inbox = InboxController(client: client, ownerID: ownerID)
+    let inbox = CaptureController(client: client, ownerID: ownerID)
     var ids: [UUID] = []
     for body in ["Native item source", "Native item target"] {
       let id = UUID()
@@ -1378,7 +1378,7 @@ final class NativeContractTests: XCTestCase {
         id: id, ownerID: ownerID, title: nil, body: body, occurredStart: nil,
         occurredTimezone: "UTC", datePrecision: "unknown", clientID: "native-contract:\(id)")
     ).execute()
-    let inbox = InboxController(client: client, ownerID: ownerID)
+    let inbox = CaptureController(client: client, ownerID: ownerID)
     await inbox.load()
     let capture = try XCTUnwrap(inbox.entries.first { $0.id == id })
     let saved = await inbox.review(

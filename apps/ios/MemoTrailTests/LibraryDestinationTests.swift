@@ -390,18 +390,18 @@ final class LibraryDestinationTests: XCTestCase {
   @MainActor
   func testWikiItemLinksFollowWebRoutingAndLibraryFilters() {
     let navigator = AppNavigator()
-    var pushed: [WikiItemLink] = []
-    let capture = WikiItemLink(entryID: UUID(), kind: .entry, subtype: "entry", isInInbox: true)
+    var pushed: [ItemLink] = []
+    let capture = ItemLink(entryID: UUID(), kind: .entry, subtype: "entry", isInInbox: true)
     navigator.open(capture) { pushed.append($0) }
     XCTAssertEqual(navigator.selectedTab, .inbox)
     XCTAssertEqual(navigator.inboxReviewRequest, capture.entryID)
 
-    let period = WikiItemLink(entryID: UUID(), kind: .entry, subtype: "period")
+    let period = ItemLink(entryID: UUID(), kind: .entry, subtype: "period")
     navigator.open(period) { pushed.append($0) }
     XCTAssertEqual(navigator.selectedTab, .timeline)
     XCTAssertEqual(navigator.timelineEntryRequest, period.entryID)
 
-    let person = WikiItemLink(entryID: UUID(), kind: .entity, subtype: "person", personID: UUID())
+    let person = ItemLink(entryID: UUID(), kind: .entity, subtype: "person", personID: UUID())
     navigator.open(person) { pushed.append($0) }
     XCTAssertEqual(pushed, [person])
 

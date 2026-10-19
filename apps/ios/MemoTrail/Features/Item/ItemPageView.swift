@@ -4,7 +4,7 @@ import SwiftUI
 /// Web `/items/<id>`: an Item without a focused page of its own, such as a plain Entry or a
 /// person Entry. It shows the current writing and facts, the actions for its Kind, Related
 /// Items, and current photos, with version history one step away.
-struct WikiItemDetailView: View {
+struct ItemPageView: View {
   let client: SupabaseClient
   let ownerID: UUID
   let entryID: UUID
@@ -77,14 +77,14 @@ struct WikiItemDetailView: View {
       case .goal(let id):
         GoalDetailView(client: client, ownerID: ownerID, entryID: id)
       case .item(let id):
-        WikiItemDetailView(client: client, ownerID: ownerID, entryID: id)
+        ItemPageView(client: client, ownerID: ownerID, entryID: id)
       }
     }
     .sheet(isPresented: $isCreatingGoal) {
       LinkedGoalSheet(controller: controller) { destination = .goal($0) }
     }
     .sheet(item: $editingEntry) { entry in
-      EntryReviewSheet(
+      EntryEditorSheet(
         client: client, ownerID: ownerID, entry: entry,
         collectionOptions: entry.collectionNames, tagOptions: entry.tagNames,
         showsVersionHistory: false

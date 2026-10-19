@@ -17,7 +17,7 @@ struct TagsView: View {
   @State private var errorMessage: String?
   @State private var moreErrorMessage: String?
   @State private var editing: Editing?
-  @State private var opened: WikiItemLink?
+  @State private var opened: ItemLink?
   /// Where to go once the editor has closed, since switching tabs or pushing a page while it
   /// closes would cancel the dismissal.
   @State private var afterEditing: (@MainActor () -> Void)?
@@ -59,7 +59,7 @@ struct TagsView: View {
       OrganizationEditorSheet(
         actions: actions, kind: .tag, item: editing.item, mergeTargets: tags,
         changed: { await load(query: appliedQuery) },
-        openEntry: { entry in afterEditing = { open(WikiItemLink(entry)) } },
+        openEntry: { entry in afterEditing = { open(ItemLink(entry)) } },
         openAllEntries: { name in afterEditing = { navigator.openLibrary(tag: name) } })
     }
     .wikiItemDestination($opened, client: client, ownerID: ownerID)
@@ -125,7 +125,7 @@ struct TagsView: View {
     }
   }
 
-  private func open(_ link: WikiItemLink) {
+  private func open(_ link: ItemLink) {
     navigator.open(link) { opened = $0 }
   }
 

@@ -243,20 +243,20 @@ struct LibraryView: View {
 
   /// Web `wikiEntryHref`: Inbox captures open their review, Moments and Periods open on the
   /// Timeline, and other records open their focused page.
-  private func open(_ link: WikiItemLink) {
+  private func open(_ link: ItemLink) {
     navigator.open(link) { path.append(.item($0)) }
   }
 }
 
 private enum LibraryRoute: Hashable {
-  case item(WikiItemLink)
+  case item(ItemLink)
   case history
 }
 
 /// Web `LibraryBrowse`: every organized record, newest change first.
 private struct LibraryBrowse: View {
   let controller: LibraryController
-  let open: (WikiItemLink) -> Void
+  let open: (ItemLink) -> Void
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s3) {
@@ -298,7 +298,7 @@ private struct LibraryBrowse: View {
       } else {
         VStack(spacing: 0) {
           ForEach(controller.items) { item in
-            LibraryItemRow(item: item) { open(WikiItemLink(item)) }
+            LibraryItemRow(item: item) { open(ItemLink(item)) }
             MTListDivider()
           }
         }
@@ -357,7 +357,7 @@ private struct LibraryItemRow: View {
 /// Web `SearchResults`: why a search could not run, no matches, or the matching records.
 private struct LibraryResults: View {
   let controller: LibraryController
-  let open: (WikiItemLink) -> Void
+  let open: (ItemLink) -> Void
 
   var body: some View {
     if let message = controller.searchErrorMessage, controller.results.isEmpty {
@@ -385,7 +385,7 @@ private struct LibraryResults: View {
         }
         MTListSurface {
           ForEach(controller.results) { entry in
-            LibraryResultCard(entry: entry) { open(WikiItemLink(entry)) }
+            LibraryResultCard(entry: entry) { open(ItemLink(entry)) }
             if entry.id != controller.results.last?.id { MTListDivider() }
           }
         }

@@ -3,10 +3,10 @@ import SwiftUI
 
 /// Web `EntryReviewDialog`: review an Inbox capture, or edit an organized Entry, with the same
 /// fields, footer actions, and toasts.
-struct EntryReviewSheet: View {
+struct EntryEditorSheet: View {
   typealias Save =
-    @MainActor (EntryReviewDraft, InboxController.ReviewIntent) async ->
-    InboxController.ReviewResult
+    @MainActor (EntryReviewDraft, CaptureController.ReviewIntent) async ->
+    CaptureController.ReviewResult
 
   let client: SupabaseClient
   let ownerID: UUID
@@ -25,7 +25,7 @@ struct EntryReviewSheet: View {
   @State private var tagNames: [String]
   @State private var occurrence: OccurrenceDraft
   @State private var photoPlace: PhotoPlaceDraft?
-  @State private var savingIntent: InboxController.ReviewIntent?
+  @State private var savingIntent: CaptureController.ReviewIntent?
   @State private var isTrashing = false
   @State private var isConfirmingTrash = false
   @State private var isShowingHistory = false
@@ -175,7 +175,7 @@ struct EntryReviewSheet: View {
   }
 
   @MainActor
-  private func submit(_ intent: InboxController.ReviewIntent) async {
+  private func submit(_ intent: CaptureController.ReviewIntent) async {
     let resolved: EntryOccurrence
     do {
       resolved = try occurrence.resolve(original: entry.occurrence)

@@ -8,7 +8,7 @@ struct HomeView: View {
 
   private let client: SupabaseClient
   @Bindable private var controller: HomeController
-  @Bindable private var captureController: InboxController
+  @Bindable private var captureController: CaptureController
   @Binding private var captureTitle: String
   @Binding private var captureNote: NSAttributedString
   @Binding private var captureOccurrence: OccurrenceDraft?
@@ -25,7 +25,7 @@ struct HomeView: View {
     isAuthenticationBusy: Bool,
     signOut: @escaping @MainActor () async -> Void,
     controller: HomeController,
-    captureController: InboxController,
+    captureController: CaptureController,
     captureTitle: Binding<String>,
     captureNote: Binding<NSAttributedString>,
     captureOccurrence: Binding<OccurrenceDraft?>,

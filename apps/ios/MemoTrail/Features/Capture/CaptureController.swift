@@ -5,7 +5,7 @@ import Observation
 
 @MainActor
 @Observable
-final class InboxController {
+final class CaptureController {
   private(set) var entries: [InboxEntry] = []
   private(set) var collectionOptions: [String] = []
   private(set) var pendingEntries: [QueuedInboxEntry]
@@ -883,7 +883,7 @@ final class InboxController {
   }
 }
 
-extension InboxController {
+extension CaptureController {
   enum ReviewIntent: Sendable {
     case done
     case save
