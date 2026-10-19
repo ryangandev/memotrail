@@ -89,6 +89,13 @@ struct MTDateField: View {
     MTDateText.date(value, granularity: granularity, includesTime: includesTime)
   }
 
+  /// A day still waiting for its time, as after Add time: the date stays and the time starts
+  /// empty rather than at an invented hour.
+  private var dayWithoutTime: Date? {
+    includesTime && date == nil
+      ? MTDateText.date(value, granularity: .day, includesTime: false) : nil
+  }
+
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
       MTFieldLabel(title: label, isRequired: isRequired, note: note)
@@ -105,6 +112,9 @@ struct MTDateField: View {
             if includesTime, let date {
               Image(.clock).foregroundStyle(MTColor.inkMuted)
               Text(MTDateText.displayTime(date)).foregroundStyle(MTColor.ink)
+            } else if dayWithoutTime != nil {
+              Image(.clock).foregroundStyle(MTColor.inkFaint)
+              Text("Select time").foregroundStyle(MTColor.inkFaint).lineLimit(1)
             }
           }
           .frame(maxHeight: .infinity)
@@ -141,7 +151,7 @@ struct MTDateField: View {
 
   private var dateText: String? {
     guard !value.isEmpty else { return nil }
-    guard let date else { return value }
+    guard let date = date ?? dayWithoutTime else { return value }
     return MTDateText.display(date, granularity: granularity)
   }
 
@@ -156,6 +166,7 @@ struct MTDateField: View {
   private var accessibilityValue: String {
     guard let dateText else { return "Not set" }
     if includesTime, let date { return "\(dateText), \(MTDateText.displayTime(date))" }
+    if dayWithoutTime != nil { return "\(dateText), time not set" }
     return dateText
   }
 }
@@ -178,9 +189,14 @@ private struct MTDatePicker: View {
     self.granularity = granularity
     self.includesTime = includesTime
     self.timeZone = timeZone
+    // A day waiting for its time opens on that day at noon.
+    let dayWithoutTime =
+      includesTime
+      ? MTDateText.date(value.wrappedValue, granularity: .day, includesTime: false)
+        .map { $0.addingTimeInterval(12 * 3_600) } : nil
     let initial =
       MTDateText.date(value.wrappedValue, granularity: granularity, includesTime: includesTime)
-      ?? Self.today(in: timeZone, includesTime: includesTime)
+      ?? dayWithoutTime ?? Self.today(in: timeZone, includesTime: includesTime)
     _date = State(initialValue: initial)
   }
 
