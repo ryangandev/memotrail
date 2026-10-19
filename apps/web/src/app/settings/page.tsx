@@ -20,6 +20,7 @@ import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
+import { semanticSearchConfigured } from "@/lib/search/embedding-client";
 import { storedSemanticSearchPreference } from "@/lib/search/semantic-preference";
 import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
 
@@ -141,7 +142,8 @@ export default async function SettingsPage() {
           <TimezoneSetting initialTimezone={profileTimezone.timezone} />
         ) : null}
 
-        {semanticSearch.available ? (
+        {/* Without an embedding service search is keyword-only, so the switch would do nothing. */}
+        {semanticSearch.available && semanticSearchConfigured() ? (
           <SemanticSearchSetting initialEnabled={semanticSearch.enabled} />
         ) : null}
 

@@ -83,6 +83,10 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(
       main.getByRole("checkbox", { name: "Suggest Chapters" }),
     ).not.toBeChecked();
+    // This suite runs without an embedding service, so search is keyword-only.
+    await expect(
+      main.getByRole("checkbox", { name: "Search by meaning" }),
+    ).toHaveCount(0);
 
     const preferredName = main.getByRole("textbox", {
       name: "Preferred name",

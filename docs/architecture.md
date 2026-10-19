@@ -391,6 +391,7 @@ It lives in `lib/search`, outside `lib/ai`, and the AI pause gate does not apply
   There is no cron, service-role key, or public webhook.
   Indexing advances only while the user is active on Web.
 - `profiles.semantic_search_enabled` is the Settings switch, on by default.
+  Settings shows the switch only when `semanticSearchConfigured()` is true, because without a service it would change nothing.
   Turning it off deletes the user's vectors and the server stops sending that user's queries to the model; turning it on queues every Entry again.
 - Search keeps one RPC, `search_wiki_items`.
   `lib/search/semantic-query.ts` decides per search whether to embed the query, and any doubt (no service, an opt-out, an outage, a query of one character or an exact quoted phrase) sends the keyword-only call.

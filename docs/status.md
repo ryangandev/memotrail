@@ -16,7 +16,8 @@ Production runs the Web from before this branch, which calls functions this bran
 - Timeline of Chapter bars and First Time points, the Dashboard with current Chapters, and the Chapter Item page with its Entries and overlapping Chapters.
 - Someday and the Map are gone, and their addresses lead to Library or the Entry they became.
 - Homes, Vehicles, Periods, and Moment milestones became Chapters or ordinary Entries, and their addresses lead to Timeline or the Item page.
-- Search by meaning in code and migrations, with its embedding service in `services/embeddings`; without `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` Library searches by keywords only.
+- Search by meaning in code and migrations, with its embedding service in `services/embeddings`; without `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` Library searches by keywords only and Settings hides the switch.
+  Production stays keyword-only until Ryan hosts the model on his own Mac mini; Fly.io is no longer the plan.
 - Chapter and year reviews and Chapter suggestions in code and migrations, off for every person until they turn them on and accept the disclosure; the server refuses to call a provider unless `AI_PROVIDER` is `anthropic`.
 - Import of a Markdown folder (which also reads Apple Notes Markdown exports), Apple Journal, Notion, and Day One into ordinary Entries, with a preview, undo, and no duplicates on a second import.
 - A design system whose values all come from shared tokens.
@@ -47,7 +48,7 @@ Do the steps in this order.
    The Anthropic organization behind the key must not have opted in to any data-sharing or development program, because the disclosure tells people their review text is not shared for training.
    Then set `AI_PROVIDER=anthropic`, `AI_API_KEY`, `AI_MONTHLY_BUDGET_USD`, and `AI_USER_MONTHLY_BUDGET_USD`.
    Reviews stay off for each person until they turn them on.
-6. **Deploy the Fly.io embedding service**, about $27 a month, which needs Ryan's approval.
+6. **Turn on search by meaning later**, once Ryan's Mac mini can host the embedding model; until then leave `SEMANTIC_SEARCH_URL` unset.
    First run the model evaluation with `apps/web/scripts/semantic-eval.mjs` against the candidate models, as [services/embeddings/README.md](../services/embeddings/README.md) describes, and choose the model and similarity floor.
    Then set `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` in Vercel Production only.
 7. **Raise the hosted Storage file size limit** only if imports above 50 MB are wanted, then raise `IMPORT_MAX_ZIP_BYTES` to match.
