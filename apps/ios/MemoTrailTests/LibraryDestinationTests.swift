@@ -81,7 +81,7 @@ final class LibraryDestinationTests: XCTestCase {
     XCTAssertFalse(untitledDay.hasMeta)
     XCTAssertEqual(untitledDay.accessibilityLabel, "Monday, March 31, 2025")
 
-    let dated = try decodeRow(precision: "day")
+    let dated = try decodeRow(precision: "day", end: nil)
     XCTAssertTrue(dated.hasMeta)
     XCTAssertEqual(dated.accessibilityLabel, "Evening walks, Mar 31, 2025")
 
