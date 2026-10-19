@@ -1,193 +1,207 @@
+/* Timeline: a horizontal board of Chapters and First Times on wide screens, and a vertical list
+   by year on narrow ones. Spacing follows the Quiet ledger Timeline mockups. */
+
 .summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--mt-space-2);
-  margin-top: var(--mt-space-5);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
+  --separated-list-gap: var(--mt-space-1-5);
 }
 
-.summaryActions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--mt-space-2);
+/* Set birth date is a quiet action inside the meta line. */
+.metaAction {
+  padding: 0;
+  border: 0;
+  border-radius: var(--mt-radius-xxsmall);
+  color: var(--mt-color-accent);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.metaAction:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .suggestion {
-  margin-top: var(--mt-space-5);
+  margin-top: var(--mt-space-6);
 }
 
 .message {
   display: flex;
-  min-height: 150px;
   align-items: flex-start;
-  gap: var(--mt-space-4);
-  margin-top: var(--mt-space-8);
-  padding: var(--mt-space-8);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-surface);
+  gap: var(--mt-space-3);
+  margin-top: var(--mt-space-6);
+  padding: var(--mt-space-6) 0;
+  color: var(--mt-color-ink-faint);
 }
 
 .message strong {
   color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-body-large);
+  font-size: var(--mt-font-size-body);
   font-weight: var(--mt-font-weight-medium);
 }
 
 .message p {
   margin-top: var(--mt-space-1);
   color: var(--mt-color-ink-muted);
-  line-height: var(--mt-line-height-body);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
 }
 
-.message button {
-  margin-top: var(--mt-space-4);
-}
+/* The horizontal board. */
 
-.desktopTimeline {
-  margin-top: var(--mt-space-8);
+.board {
+  margin-top: var(--mt-space-6);
   overflow: hidden;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-raised);
-}
-
-.timelineHint {
-  display: flex;
-  height: 42px;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-4);
-  padding: 0 var(--mt-space-4);
-  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  color: var(--mt-color-ink-muted);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-medium);
   background: var(--mt-color-surface);
-  font-size: var(--mt-font-size-caption);
 }
 
-.timelineHint small {
-  color: var(--mt-color-ink-faint);
-}
-
-.timelineViewport {
+.viewport {
   max-width: 100%;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   scrollbar-color: var(--mt-color-border-strong) transparent;
 }
 
-.timelineGrid {
+.canvas {
   position: relative;
-  display: grid;
+  display: flex;
   width: var(--timeline-canvas-width);
   min-width: 100%;
-  /* The canvas fills the card until the measured width arrives. */
-  grid-template-columns: minmax(var(--timeline-canvas-width), 1fr);
+  min-height: 360px;
+  flex-direction: column;
+  overflow: clip;
+  /* Until it has scrolled to today, the board holds its place without showing the start. */
+  opacity: 0;
+  transition: opacity var(--mt-motion-quick) var(--mt-motion-easing-standard);
 }
 
-.todayLine {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(100% * var(--timeline-today-percent) / 100);
-  z-index: var(--mt-layout-layer-local1);
-  width: var(--mt-size-stroke-thin);
-  background: repeating-linear-gradient(
-    to bottom,
-    var(--mt-color-accent-stripe) 0 5px,
-    transparent 5px 10px
-  );
-  pointer-events: none;
-}
-
-.todayLine::before {
-  position: absolute;
-  top: 7px;
-  right: 6px;
-  padding: var(--mt-space-0-25) var(--mt-space-1);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-accent);
-  background: var(--mt-color-surface);
-  font-size: var(--mt-type-nano-font-size);
-  font-weight: var(--mt-type-nano-font-weight);
-  letter-spacing: var(--mt-type-nano-letter-spacing);
-  text-transform: var(--mt-type-nano-text-transform);
-  content: "Today";
+.canvas[data-positioned] {
+  opacity: 1;
 }
 
 .axis {
   position: relative;
-  height: 48px;
+  height: 40px;
+  flex: none;
   border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  background: var(--mt-color-surface);
 }
 
 .axis span {
   position: absolute;
-  top: 17px;
-  transform: translateX(-50%);
-  color: var(--mt-color-ink-faint);
-  font-family: var(--mt-font-family-mono);
-  font-size: var(--mt-font-size-fine);
+  top: 0;
+  bottom: 0;
+  padding: var(--mt-space-3) 0 0 var(--mt-space-2);
+  border-left: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-tight);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.axis span:first-child {
-  transform: none;
+.axis span[data-tick="year"] {
+  color: var(--mt-color-ink);
+  font-weight: var(--mt-font-weight-medium);
 }
 
-.axis span:last-child {
+/* A tick under the Today label keeps its line; the label names that spot. */
+.axis span[data-hidden] {
+  color: transparent;
+}
+
+/* A year on the very end of the Timeline reads before its line. */
+.axis span[data-edge="end"] {
+  padding: var(--mt-space-3) var(--mt-space-2) 0 0;
+  border-right: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-left: 0;
   transform: translateX(-100%);
 }
 
-/* A year on the very edge keeps clear of the card edge. */
-.axis span[data-edge="start"] {
-  transform: translateX(var(--mt-space-2));
+.gridLines {
+  position: absolute;
+  inset: 40px 0 0;
+  pointer-events: none;
 }
 
-.axis span[data-edge="end"] {
-  transform: translateX(calc(-100% - var(--mt-space-2)));
+.gridLines span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: var(--mt-size-stroke-thin) dashed var(--mt-color-border-faint);
+}
+
+.gridLines span[data-tick="year"] {
+  border-left-style: solid;
 }
 
 .band {
-  --timeline-band-surface: var(--mt-color-lane-surface);
+  --row-pitch: 40px;
+  --item-height: 30px;
   position: relative;
-  min-height: 70px;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  background: var(--timeline-band-surface);
-  list-style: none;
+  padding-bottom: var(--mt-space-3);
 }
 
-.yearLine {
-  position: absolute;
+.band[data-band="first-times"] {
+  --row-pitch: 36px;
+  --item-height: 20px;
+}
+
+.band + .band {
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+/* The last band fills the board, so the grid and Today lines run to its foot. */
+.band[data-last],
+.emptyBand {
+  flex: 1 0 auto;
+}
+
+.bandLabel {
+  position: sticky;
+  left: 0;
+  z-index: var(--mt-layout-layer-local2);
+  width: max-content;
+  margin: 0;
+  padding: var(--mt-space-2-5) var(--mt-space-3-5) var(--mt-space-2);
+  color: var(--mt-color-ink-muted);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-message);
+}
+
+.bandItems {
+  position: relative;
+  height: calc(var(--band-rows) * var(--row-pitch));
+  margin: 0;
+  padding: 0;
   list-style: none;
-  inset: 0 auto 0 0;
-  width: var(--mt-size-stroke-thin);
-  background: var(--mt-color-border);
-  opacity: var(--mt-state-muted-opacity-grid-line);
 }
 
 /* A bar or point is positioned by its list item; the link inside fills it. */
 .barItem,
 .pointItem {
   position: absolute;
-  top: calc(16px + var(--item-row) * 49px);
+  top: calc(var(--item-row) * var(--row-pitch));
   left: var(--item-left);
   z-index: var(--mt-layout-layer-local2);
   width: var(--item-width);
-  height: 34px;
+  height: var(--item-height);
   transform: translateX(var(--item-offset));
   color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-micro);
-  font-weight: var(--mt-font-weight-medium);
+  font-family: var(--mt-font-family-sans);
   white-space: nowrap;
+}
+
+.barItem {
+  --bar-fill: var(--mt-color-accent-subtle);
+  font-size: var(--mt-font-size-label);
+}
+
+.pointItem {
+  font-size: var(--mt-font-size-caption);
 }
 
 .barItem > a,
@@ -197,39 +211,43 @@
   height: 100%;
   align-items: center;
   gap: var(--mt-space-1-75);
-  padding: 0;
-  border-radius: inherit;
+  border-radius: var(--mt-radius-xsmall);
   color: inherit;
-  text-align: left;
   text-decoration: none;
-  cursor: pointer;
 }
 
 /* With no room after it, a title sits before its dot or bar. */
 .barItem[data-label="before"] > a,
 .pointItem[data-label="before"] > a {
   flex-direction: row-reverse;
-  text-align: right;
 }
 
 .itemTitle {
   display: flex;
   min-width: 0;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   align-items: center;
   gap: var(--mt-space-1);
+}
+
+.itemTitleText {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.barItem[data-label="before"] .itemTitle {
-  justify-content: flex-end;
-}
-
-/* A title beside its dot or bar reads over the year and Today lines. */
+/* A title beside its dot or bar reads over the grid and Today lines. The shadow pads its
+   end without taking room from the measured title. */
 .barItem:not([data-label="inside"]) .itemTitle,
 .pointItem .itemTitle {
-  background: var(--timeline-band-surface);
+  background: var(--mt-color-surface);
+  box-shadow: var(--mt-space-0-5) 0 0 var(--mt-color-surface);
+}
+
+/* A title inside a long bar stays in view while the bar's start scrolls away. */
+.barItem[data-label="inside"] .itemTitle {
+  position: sticky;
+  left: var(--mt-space-3);
 }
 
 .firstTimeStar {
@@ -241,41 +259,43 @@
 /* A bar wide enough for its title draws the bar itself, with the title inside. */
 .barItem[data-label="inside"],
 .bar {
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-accent-border-strong);
-  border-radius: var(--mt-radius-small);
-  background: var(--mt-color-accent-subtle);
+  border-radius: var(--mt-radius-xsmall);
+  background: var(--bar-fill);
+  box-shadow: inset var(--mt-size-stroke-thick) 0 0 var(--mt-color-accent);
 }
 
 .barItem[data-label="inside"] > a {
-  padding: 0 var(--mt-space-2-5);
+  padding: 0 var(--mt-space-2-5) 0 var(--mt-space-3);
 }
 
 .bar {
+  position: relative;
   width: var(--item-bar-width);
   height: 100%;
   flex: none;
 }
 
+/* A Chapter still going on reaches today and fades out past it. */
 .barItem[data-label="inside"][data-ongoing="true"],
 .barItem[data-ongoing="true"] .bar {
-  border-right: var(--mt-size-stroke-medium) solid var(--mt-color-accent);
-  border-radius: var(--mt-radius-small) 0 0 var(--mt-radius-small);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
-.barItem[data-label="inside"]:hover,
-.barItem:hover .bar {
-  border-color: var(--mt-color-accent);
-  background: var(--mt-state-hover-period-bar);
+.barItem[data-label="inside"][data-ongoing="true"]::after,
+.barItem[data-ongoing="true"] .bar::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: var(--mt-space-12);
+  background: linear-gradient(90deg, var(--bar-fill), transparent);
+  content: "";
+  pointer-events: none;
 }
 
-.pointDot {
-  width: 12px;
-  height: 12px;
-  flex: 0 0 auto;
-  border: var(--mt-size-stroke-thick) solid var(--mt-color-surface-raised);
-  border-radius: 50%;
-  background: var(--mt-color-warm);
-  box-shadow: 0 0 0 var(--mt-size-stroke-thin) var(--mt-color-warm);
+.barItem:hover {
+  --bar-fill: var(--mt-state-hover-period-bar);
 }
 
 .barItem:not([data-label="inside"]):hover,
@@ -283,35 +303,240 @@
   color: var(--mt-color-accent);
 }
 
-/* Carries the band item font so titles can be measured before layout. */
-.labelProbe {
+.pointDot {
+  display: grid;
+  width: 12px;
+  height: 12px;
+  flex: none;
+  place-items: center;
+}
+
+.pointDot::before {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mt-color-warm);
+  box-shadow: 0 0 0 var(--mt-size-stroke-thick) var(--mt-color-surface);
+  content: "";
+}
+
+.todayLine {
   position: absolute;
-  visibility: hidden;
-  font-size: var(--mt-font-size-micro);
-  font-weight: var(--mt-font-weight-medium);
+  top: 0;
+  bottom: 0;
+  left: calc(100% * var(--timeline-today-percent) / 100);
+  z-index: var(--mt-layout-layer-local1);
+  width: 0;
+  border-left: var(--mt-size-stroke-medium) solid var(--mt-color-warm);
+  transform: translateX(-1px);
   pointer-events: none;
 }
 
-.emptyTimeline {
+.todayLine span {
   position: absolute;
-  top: 18px;
-  left: var(--mt-space-4);
-  padding: var(--mt-space-1-75) var(--mt-space-2-5);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-ink-faint);
-  background: transparent;
-  font-size: var(--mt-font-size-micro);
-  cursor: pointer;
+  top: var(--mt-space-2-5);
+  left: var(--mt-space-1-5);
+  padding: 0 var(--mt-space-1);
+  color: var(--mt-color-warm);
+  background: var(--mt-color-surface);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-semibold);
+  line-height: var(--mt-line-height-message);
 }
 
-.emptyTimeline:hover {
+.todayLine[data-label="before"] span {
+  right: var(--mt-space-1-5);
+  left: auto;
+}
+
+/* Carry the band item fonts so titles can be measured before layout. */
+.barProbe,
+.pointProbe {
+  position: absolute;
+  visibility: hidden;
+  font-family: var(--mt-font-family-sans);
+  font-weight: var(--mt-font-weight-regular);
+  pointer-events: none;
+}
+
+.barProbe {
+  font-size: var(--mt-font-size-label);
+}
+
+.pointProbe {
+  font-size: var(--mt-font-size-caption);
+}
+
+.emptyBand {
+  padding: var(--mt-space-2) var(--mt-space-6);
+}
+
+.note {
+  margin-top: var(--mt-space-3-5);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+}
+
+.note a {
+  border-radius: var(--mt-radius-xxsmall);
   color: var(--mt-color-accent);
-  background: var(--mt-color-accent-subtle);
+  text-decoration: none;
 }
 
-.mobileTimeline {
+.note a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* The vertical Timeline, newest first. */
+
+.vertical {
   display: none;
 }
+
+.rail {
+  --rail-indent: calc(var(--mt-space-6) + var(--mt-space-1));
+
+  position: relative;
+  margin-top: var(--mt-space-4);
+  padding-left: var(--rail-indent);
+}
+
+.rail::before {
+  position: absolute;
+  top: var(--mt-space-2);
+  bottom: 0;
+  left: 9px;
+  width: var(--mt-size-stroke-medium);
+  background: var(--mt-color-border);
+  content: "";
+}
+
+.year h2 {
+  position: relative;
+  margin: 0 0 0 calc(var(--rail-indent) * -1);
+  padding: var(--mt-space-3-5) 0 var(--mt-space-1-5) var(--rail-indent);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-canvas);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-semibold);
+  line-height: var(--mt-line-height-message);
+  font-variant-numeric: tabular-nums;
+}
+
+.year ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.verticalItem {
+  position: relative;
+  display: flex;
+  gap: var(--mt-space-3);
+  padding: var(--mt-space-2-5) 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  color: var(--mt-color-ink);
+  text-decoration: none;
+}
+
+.verticalCopy {
+  display: grid;
+  min-width: 0;
+  gap: var(--mt-space-0-5);
+}
+
+.verticalCopy small {
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-message);
+}
+
+.verticalCopy strong {
+  display: flex;
+  align-items: baseline;
+  gap: var(--mt-space-1-5);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-callout);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-title);
+  overflow-wrap: anywhere;
+}
+
+.verticalItem:hover strong {
+  color: var(--mt-color-accent);
+}
+
+.railDot {
+  position: absolute;
+  top: var(--mt-space-4);
+  left: -23px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mt-color-warm);
+  box-shadow: 0 0 0 var(--mt-size-stroke-thick) var(--mt-color-canvas);
+}
+
+.railBar {
+  position: absolute;
+  top: var(--mt-space-3);
+  bottom: var(--mt-space-3);
+  left: -23px;
+  width: 10px;
+  border-radius: var(--mt-radius-pill);
+  background: var(--mt-color-accent);
+}
+
+/* A Chapter still going on runs up toward today. */
+.railBar[data-ongoing="true"] {
+  top: var(--mt-space-1);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.todayRule {
+  position: relative;
+  display: flex;
+  height: var(--mt-space-5-5);
+  align-items: center;
+  margin: var(--mt-space-1) 0 var(--mt-space-2);
+  scroll-margin-top: calc(var(--mt-space-12) * 2);
+}
+
+.todayRule::before {
+  position: absolute;
+  top: calc(50% - var(--mt-size-stroke-thin));
+  right: 0;
+  left: calc(var(--rail-indent) * -1);
+  border-top: var(--mt-size-stroke-medium) solid var(--mt-color-warm);
+  content: "";
+}
+
+.todayRule span {
+  position: relative;
+  padding-right: var(--mt-space-2);
+  color: var(--mt-color-warm);
+  background: var(--mt-color-canvas);
+  font-size: var(--mt-font-size-caption);
+  font-weight: var(--mt-font-weight-semibold);
+  line-height: var(--mt-line-height-none);
+}
+
+@media (max-width: 900px) {
+  .zoom,
+  .board {
+    display: none;
+  }
+
+  .vertical {
+    display: block;
+  }
+}
+
+/* The add flow. */
 
 .dialogBackdrop {
   position: fixed;
@@ -373,12 +598,10 @@
   cursor: pointer;
   transition:
     border-color var(--mt-motion-quick) var(--mt-motion-easing-standard),
-    background var(--mt-motion-quick) var(--mt-motion-easing-standard),
-    transform var(--mt-motion-quick) var(--mt-motion-easing-standard);
+    background var(--mt-motion-quick) var(--mt-motion-easing-standard);
 }
 
 .creationOption:hover {
-  transform: translateY(-1px);
   border-color: var(--mt-color-accent);
   background: var(--mt-color-accent-subtle);
 }
@@ -406,7 +629,7 @@
 
 .creationOption small {
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
   line-height: var(--mt-line-height-title-relaxed);
 }
 
@@ -431,171 +654,20 @@
   gap: var(--mt-space-2);
 }
 
-.mobileBand {
-  overflow: hidden;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface-raised);
-}
-
-.mobileBand header:not([data-ui-page-header]) {
-  display: flex;
-  min-height: 62px;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--mt-space-3);
-  padding: var(--mt-space-3) var(--mt-space-4);
-  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-}
-
-.mobileBand header:not([data-ui-page-header]) h2 {
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title-small);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.mobileBand header:not([data-ui-page-header]) span {
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
-}
-
-.mobileEmpty {
-  padding: var(--mt-space-5) var(--mt-space-4);
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-caption);
-}
-
-.mobileItems {
-  display: grid;
-}
-
-.mobileItems > a {
-  display: grid;
-  grid-template-columns: 14px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--mt-space-3);
-  min-height: 62px;
-  padding: var(--mt-space-3) var(--mt-space-4);
-  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  color: var(--mt-color-ink-muted);
-  background: transparent;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.mobileItems > a:last-child {
-  border-bottom: 0;
-}
-
-.mobileItems > a:hover {
-  background: var(--mt-color-surface);
-}
-
-.mobileItems > a > span:nth-child(2) {
-  display: grid;
-  min-width: 0;
-  gap: var(--mt-space-0-75);
-}
-
-.mobileItems strong {
-  overflow: hidden;
-  color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-label);
-  font-weight: var(--mt-font-weight-medium);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mobileItems small {
-  color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
-}
-
-.mobileBarMarker {
-  width: 14px;
-  height: 7px;
-  border-radius: var(--mt-radius-pill);
-  background: var(--mt-color-accent);
-}
-
-.mobilePointMarker {
-  width: 10px;
-  height: 10px;
-  margin-left: var(--mt-space-0-5);
-  border-radius: 50%;
-  background: var(--mt-color-warm);
-}
-
 @media (max-width: 780px) {
-  .desktopTimeline {
-    display: none;
-  }
-
-  .mobileTimeline {
-    display: grid;
-    gap: var(--mt-space-4);
-    margin-top: var(--mt-space-8);
-  }
-
   .dialogBackdrop {
     align-items: end;
     padding: 0;
   }
 }
 
-@media (max-width: 480px) {
-  .summary {
-    margin-top: var(--mt-space-4);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
+  .canvas,
   .creationOption {
     transition: none;
-  }
-
-  .creationOption:hover {
-    transform: none;
   }
 
   .editorLoading > span {
     animation: none;
   }
-}
-.undatedItems {
-  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  padding: var(--mt-space-6);
-  display: grid;
-  gap: var(--mt-space-4);
-}
-
-.undatedItems p {
-  color: var(--mt-color-ink-muted);
-}
-
-.undatedItems h2 {
-  font-family: var(--mt-font-family-serif);
-  font-weight: var(--mt-font-weight-medium);
-}
-.undatedItems h3 {
-  font-size: var(--mt-font-size-caption);
-  color: var(--mt-color-ink-muted);
-}
-.undatedItems div {
-  display: grid;
-  gap: var(--mt-space-2);
-}
-.undatedItems
-  button:not(
-    :where([data-ui-button], [data-ui-empty-state], [data-record-card])
-  ),
-.undatedItems a {
-  text-align: left;
-  color: inherit;
-  background: transparent;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-medium);
-  padding: var(--mt-space-3) var(--mt-space-4);
-  cursor: pointer;
 }

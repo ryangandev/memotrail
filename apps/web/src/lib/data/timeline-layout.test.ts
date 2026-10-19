@@ -328,5 +328,110 @@ describe("createTimelineLayout", () => {
     const long = createTimelineLayout([], reference, "1990-01-01", 1100);
     expect(long.canvasWidth).toBe(long.yearMarkers.length * 112);
     expect(long.canvasWidth).toBeGreaterThan(1100);
+    expect(long.monthMarkers).toEqual([]);
+  });
+});
+
+describe("createTimelineLayout zoomed to months", () => {
+  it("gives every month 60 px and marks each month start but January", () => {
+    const layout = createTimelineLayout(
+      [point({ windowStart: "2025-03-10" })],
+      reference,
+      null,
+      1100,
+      "months",
+    );
+    const months =
+      (new Date(layout.end).getTime() - new Date(layout.start).getTime()) /
+      ((365.2425 / 12) * 24 * 60 * 60 * 1_000);
+
+    expect(layout.canvasWidth).toBe(Math.ceil(months * 60));
+    expect(layout.monthMarkers.some((marker) => marker.month === 1)).toBe(
+      false,
+    );
+    expect(
+      layout.yearMarkers.map((marker) => marker.label),
+    ).toEqual(["2026", "2027"]);
+    const april = layout.monthMarkers.find(
+      (marker) => marker.year === 2025 && marker.month === 4,
+    )!;
+    const may = layout.monthMarkers.find(
+      (marker) => marker.year === 2025 && marker.month === 5,
+    )!;
+    expect(april.label).toBe("Apr");
+    // April has 30 days, so it is a little narrower than the average month. The canvas rounds
+    // up to whole pixels.
+    expect(
+      ((may.leftPercent - april.leftPercent) / 100) * layout.canvasWidth,
+    ).toBeCloseTo((30 / (365.2425 / 12)) * 60, 1);
+  });
+
+  it("runs half a year past today so today can sit in the right third", () => {
+    const layout = createTimelineLayout(
+      [point({ windowStart: "2025-03-10" })],
+      reference,
+      null,
+      1100,
+      "months",
+    );
+    const pastToday =
+      ((100 - layout.todayPercent) / 100) * layout.canvasWidth;
+
+    expect(pastToday).toBeGreaterThanOrEqual(6 * 60 - 1);
+    expect(
+      createTimelineLayout(
+        [point({ windowStart: "2025-03-10" })],
+        reference,
+        null,
+        1100,
+      ).end,
+    ).not.toBe(layout.end);
+  });
+
+  it("places items and stacks rows as it does zoomed to years", () => {
+    const items = [
+      bar({ id: "bar-1", windowEnd: "2024-12-01", windowStart: "2020-01-01" }),
+      bar({ id: "bar-2", windowEnd: "2023-01-01", windowStart: "2022-01-01" }),
+      point({ id: "point-1", windowStart: "2021-06-01" }),
+    ];
+    const months = createTimelineLayout(
+      items,
+      reference,
+      "2000-01-01",
+      1100,
+      "months",
+    );
+    const rows = (layout: ReturnType<typeof createTimelineLayout>) =>
+      Object.fromEntries(
+        layout.positions.map((position) => [position.id, position.row]),
+      );
+
+    expect(rows(months)).toEqual({ "bar-1": 0, "bar-2": 1, "point-1": 0 });
+    expect(
+      months.positions.find((position) => position.id === "bar-2")!
+        .barWidthPixels,
+    ).toBeCloseTo((365 / (365.2425 / 12)) * 60, 0);
+  });
+
+  it("keeps a month start clear of the birth date's year marker", () => {
+    const layout = createTimelineLayout(
+      [],
+      reference,
+      "1994-04-18",
+      1100,
+      "months",
+    );
+
+    expect(layout.yearMarkers[0]).toEqual({
+      label: "1994",
+      leftPercent: 0,
+      year: 1994,
+    });
+    // May 1 is 13 days, about 26 px, after the birth date, so the first month shown is June.
+    expect(layout.monthMarkers[0]).toMatchObject({
+      label: "Jun",
+      month: 6,
+      year: 1994,
+    });
   });
 });

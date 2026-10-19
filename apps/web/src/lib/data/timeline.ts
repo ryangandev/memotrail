@@ -22,6 +22,8 @@ export type TimelineItem = {
   tagNames: string[];
   /** Its title, or its date when it has none. */
   title: string;
+  /** True when the title is its date, so a date line beside it would only repeat it. */
+  untitled: boolean;
   updatedAt: string;
   /** The day after the last day it covers, as YYYY-MM-DD. Null while it is still going on. */
   windowEnd: string | null;
@@ -133,6 +135,7 @@ function timelineItemFromRow(row: TimelineRow): TimelineItem {
     revision: row.revision,
     tagNames: row.tag_names,
     title: entryDisplayTitle(row.title, occurrence),
+    untitled: !row.title.trim(),
     updatedAt: row.updated_at,
     windowEnd: row.window_end,
     windowStart: row.window_start,

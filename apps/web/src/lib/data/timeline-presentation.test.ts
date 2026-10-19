@@ -4,7 +4,11 @@ import {
   timelineItemAccessibleName,
   timelineItemDateLabel,
   timelineItemDurationLabel,
+  timelineChapterSpanLabel,
+  timelineRowDateLabel,
+  timelineToday,
   timelineUndatedLabel,
+  timelineYearGroups,
 } from "./timeline-presentation";
 
 function item(overrides: Partial<TimelineItem> = {}): TimelineItem {
@@ -22,6 +26,7 @@ function item(overrides: Partial<TimelineItem> = {}): TimelineItem {
     revision: 1,
     tagNames: [],
     title: "First solo hike",
+    untitled: false,
     updatedAt: "2026-09-24T00:00:00Z",
     windowEnd: null,
     windowStart: null,
@@ -125,5 +130,135 @@ describe("Timeline date labels", () => {
     expect(timelineItemAccessibleName(item())).toBe(
       "First solo hike, Date unknown",
     );
+  });
+});
+
+function dayFirstTime(id: string, day: string, title = id) {
+  return item({
+    id,
+    occurrence: {
+      datePrecision: "day",
+      occurredAt: `${day}T12:00:00Z`,
+      occurredEnd: null,
+      occurredLabel: null,
+      occurredTimezone: "UTC",
+    },
+    title,
+    windowEnd: null,
+    windowStart: day,
+  });
+}
+
+describe("the vertical Timeline", () => {
+  it("groups dated items by year, newest first, with Today in this year", () => {
+    const groups = timelineYearGroups(
+      [
+        dayFirstTime("old", "2024-03-01"),
+        dayFirstTime("future", "2026-12-24"),
+        dayFirstTime("spring", "2026-04-02"),
+        dayFirstTime("fall", "2026-10-14"),
+        item({ id: "undated" }),
+      ],
+      "2026-10-19",
+    );
+
+    expect(
+      groups.map((group) => [
+        group.year,
+        group.items.map((member) => member.id),
+        group.todayIndex,
+      ]),
+    ).toEqual([
+      [2026, ["future", "fall", "spring"], 1],
+      [2024, ["old"], null],
+    ]);
+  });
+
+  it("keeps this year for the Today rule when nothing started in it", () => {
+    expect(
+      timelineYearGroups([dayFirstTime("old", "2024-03-01")], "2026-10-19").map(
+        (group) => [group.year, group.items.length, group.todayIndex],
+      ),
+    ).toEqual([
+      [2026, 0, 0],
+      [2024, 1, null],
+    ]);
+    expect(timelineYearGroups([], "2026-10-19")).toEqual([
+      { items: [], todayIndex: 0, year: 2026 },
+    ]);
+  });
+
+  it("drops the group's year from a First Time's date", () => {
+    expect(timelineRowDateLabel(dayFirstTime("a", "2026-10-14"), 2026)).toBe(
+      "Oct 14",
+    );
+    expect(
+      timelineRowDateLabel(
+        item({
+          occurrence: {
+            datePrecision: "range",
+            occurredAt: "2025-12-30T12:00:00Z",
+            occurredEnd: "2026-01-02T12:00:00Z",
+            occurredLabel: null,
+            occurredTimezone: "UTC",
+          },
+          windowStart: "2025-12-30",
+        }),
+        2025,
+      ),
+    ).toBe("Dec 30 to Jan 2, 2026");
+    expect(
+      timelineRowDateLabel(
+        item({
+          occurrence: {
+            datePrecision: "year",
+            occurredAt: "2025-01-01T12:00:00Z",
+            occurredEnd: null,
+            occurredLabel: null,
+            occurredTimezone: "UTC",
+          },
+          windowStart: "2025-01-01",
+        }),
+        2025,
+      ),
+    ).toBe("2025");
+  });
+
+  it("gives an untitled First Time no date line, since its title is the date", () => {
+    expect(
+      timelineRowDateLabel(
+        { ...dayFirstTime("a", "2024-10-01", "Tuesday, October 1, 2024"), untitled: true },
+        2024,
+      ),
+    ).toBeNull();
+  });
+
+  it("reads a Chapter as its span to an end or to now", () => {
+    const chapter = (occurredEnd: string | null) =>
+      item({
+        isChapter: true,
+        isFirstTime: false,
+        occurrence: {
+          datePrecision: "month",
+          occurredAt: "2026-09-01T12:00:00Z",
+          occurredEnd,
+          occurredLabel: null,
+          occurredTimezone: "UTC",
+        },
+        windowStart: "2026-09-01",
+      });
+
+    expect(timelineRowDateLabel(chapter("2026-10-01T12:00:00Z"), 2026)).toBe(
+      "Sep 2026 to Oct 2026 · Chapter",
+    );
+    expect(timelineChapterSpanLabel(chapter(null))).toBe("Sep 2026 to now");
+  });
+
+  it("finds today's date in the owner's time zone", () => {
+    const reference = new Date("2026-10-19T02:00:00Z");
+
+    expect(timelineToday(reference, "UTC")).toBe("2026-10-19");
+    expect(timelineToday(reference, "America/Los_Angeles")).toBe("2026-10-18");
+    expect(timelineToday(reference, "Not/A_Zone")).toBe("2026-10-19");
   });
 });
