@@ -1,6 +1,7 @@
 import { execFileSync, spawn } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { createFakeAIProvider } from "./fake-ai-provider.mjs";
 import { e2ePort, e2eURL } from "./e2e-runtime.mjs";
 
 const local = JSON.parse(
@@ -9,7 +10,8 @@ const local = JSON.parse(
     stdio: ["ignore", "pipe", "ignore"],
   }),
 );
-if (local.API_URL !== "http://127.0.0.1:54321")
+// Any local stack will do, including a second one on other ports for concurrent work.
+if (!/^http:\/\/127\.0\.0\.1:\d+$/.test(local.API_URL))
   throw new Error("E2E requires the local Supabase instance.");
 const distDir = process.env.MEMOTRAIL_NEXT_DIST_DIR || `.next-e2e-${e2ePort}`;
 const tsconfig = `tsconfig.e2e-${e2ePort}.json`;
@@ -30,6 +32,15 @@ writeFileSync(
     exclude: ["node_modules"],
   }),
 );
+// Reviews and Chapter suggestions run against a scripted provider unless a live run is asked
+// for, so no test reaches the network or spends money. Tests read it on `e2ePort + 2000`.
+const liveAI = process.env.MEMOTRAIL_E2E_LIVE_AI === "1";
+const fakeAIKey = "synthetic-e2e-key";
+let fakeAI = null;
+if (!liveAI) {
+  fakeAI = createFakeAIProvider({ apiKey: fakeAIKey });
+  await fakeAI.start(e2ePort + 2000);
+}
 const env = {
   ...process.env,
   MEMOTRAIL_NEXT_DIST_DIR: distDir,
@@ -43,9 +54,16 @@ const env = {
       ? process.env.GEOAPIFY_API_KEY
       : "",
   // Real provider testing is explicit, bounded, and still uses synthetic local records.
-  AI_PROVIDER:
-    process.env.MEMOTRAIL_E2E_LIVE_AI === "1" ? "anthropic" : "disabled",
-  AI_TOTAL_BUDGET_USD: "0.10",
+  AI_PROVIDER: "anthropic",
+  ...(liveAI
+    ? {}
+    : {
+        AI_API_KEY: fakeAIKey,
+        AI_API_BASE_URL: `http://127.0.0.1:${e2ePort + 2000}`,
+      }),
+  // One review holds about $0.19 while it runs, and an interrupted one keeps it, so the
+  // server allowance has to cover every account a run creates. Each account keeps the default.
+  AI_MONTHLY_BUDGET_USD: "25",
 };
 const production = process.env.MEMOTRAIL_E2E_PRODUCTION === "1";
 // Build with the same local-only public configuration that next start will serve.
@@ -65,4 +83,7 @@ const server = spawn(
 );
 for (const signal of ["SIGINT", "SIGTERM"])
   process.on(signal, () => server.kill(signal));
-server.on("exit", (code) => process.exit(code ?? 1));
+server.on("exit", async (code) => {
+  await fakeAI?.stop();
+  process.exit(code ?? 1);
+});

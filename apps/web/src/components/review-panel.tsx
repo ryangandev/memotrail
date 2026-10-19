@@ -125,7 +125,9 @@ export function ReviewPanel({
               done?: number;
               total?: number;
             };
-            if (body.status === "ready" || body.status === "failed") {
+            // The database says "idle" once a job has finished and stored its review; only
+            // "generating" means more is coming.
+            if (body.status && body.status !== "generating") {
               stopped = true;
               router.refresh();
               return;
@@ -312,11 +314,13 @@ export function ReviewPanel({
               ? yearSendsLine(eligibility.entryCount, subject.year)
               : chapterSendsLine(eligibility.entryCount)}
           </p>
-          <div>
-            <Button loading={starting} onClick={begin} variant="primary">
-              Make a review
-            </Button>
-          </div>
+          {canRetry ? null : (
+            <div>
+              <Button loading={starting} onClick={begin} variant="primary">
+                Make a review
+              </Button>
+            </div>
+          )}
         </div>
       ) : null}
 
