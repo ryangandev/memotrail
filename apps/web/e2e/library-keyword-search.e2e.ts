@@ -176,7 +176,9 @@ test("Canonical keyword search finds Entries and Chapters", async ({
     ).toBeNull();
     await page.goto(`/items/${home}`);
     await expect(
-      page.getByText("This item is in Trash. Restore it there to change it."),
+      page.getByText(
+        "This Chapter is in Trash. Restore it from Trash to change it.",
+      ),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Edit Chapter" }),

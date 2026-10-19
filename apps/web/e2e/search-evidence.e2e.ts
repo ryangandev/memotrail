@@ -165,7 +165,7 @@ test("Shared search evidence preserves keyword search and opens its actual sourc
       new RegExp(`/items/${evidence.data.entries[0].id}$`),
     );
     await expect(
-      page.getByRole("article", { name: "Current item", exact: true }),
+      page.getByRole("article", { name: "Entry", exact: true }),
     ).toBeVisible();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });

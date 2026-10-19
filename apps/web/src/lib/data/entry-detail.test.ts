@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   chapterDateFacts,
+  chapterSpanLabel,
   entryDateAddsToTitle,
   entryDateLabel,
   entryTitle,
@@ -28,7 +29,51 @@ describe("Entry detail", () => {
     expect(entryDateLabel({ ...undated, occurred_label: "Age 17" })).toBe(
       "Age 17",
     );
-    expect(entryDateLabel(undated)).toBe("Unknown");
+    expect(entryDateLabel(undated)).toBe("Undated");
+    expect(
+      entryDateLabel({
+        ...undated,
+        occurred_start: "2026-10-14T16:00:00Z",
+        occurred_timezone: "America/New_York",
+        date_precision: "day",
+      }),
+    ).toBe("Wednesday, October 14, 2026");
+    expect(
+      entryDateLabel({
+        ...undated,
+        occurred_start: "2026-10-03T14:30:00Z",
+        date_precision: "exact",
+      }),
+    ).toBe("Saturday, October 3, 2026 at 2:30 PM");
+    expect(
+      entryDateLabel({
+        ...undated,
+        occurred_start: "2026-10-01T12:00:00Z",
+        occurred_end: "2026-11-01T12:00:00Z",
+        date_precision: "month",
+      }),
+    ).toBe("October 2026 to November 2026");
+  });
+  it("writes a Chapter's span out for its meta line", () => {
+    expect(
+      chapterSpanLabel({
+        ...undated,
+        occurred_start: "2026-01-05T12:00:00Z",
+        date_precision: "month",
+      }),
+    ).toBe("January 2026 to now");
+    expect(
+      chapterSpanLabel({
+        ...undated,
+        occurred_start: "2017-01-01T12:00:00Z",
+        occurred_end: "2021-01-01T12:00:00Z",
+        date_precision: "year",
+      }),
+    ).toBe("2017 to 2021");
+    expect(
+      chapterSpanLabel({ ...undated, occurred_label: "College years" }),
+    ).toBe("College years");
+    expect(chapterSpanLabel(undated)).toBeNull();
   });
   it("names an untitled item by its date, never by its writing", () => {
     expect(entryTitle({ ...undated, title: " 学习记录 " })).toBe("学习记录");
