@@ -5,7 +5,7 @@ import XCTest
 
 /// The Dashboard's `home_workspace` and `home_resurfaced_memory` rows, shaped like
 /// `supabase/migrations/202610190016_chapter_dashboard.sql`, and the app navigator.
-final class HomeEntryTests: XCTestCase {
+final class DashboardTests: XCTestCase {
   func testSnapshotDecodesCountsRecentEntriesNowItemsAndPrivateAttachmentMetadata() throws {
     let snapshot = try decodeSnapshot()
 
@@ -37,6 +37,7 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(entry.identityLabel, "Entry")
     XCTAssertEqual(entry.occurrence.displayLabel, "Sep 3, 2026")
     XCTAssertEqual(entry.displayTitle, "Why clear aligners move teeth")
+    XCTAssertEqual(entry.shownDate, "Sep 3, 2026")
 
     let chapter = try XCTUnwrap(
       decodeSnapshot(entryTitle: "  ", entrySubtype: "chapter").recentEntries.first)
@@ -51,6 +52,98 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(now.occurrence.spanLabel, "Since 2025")
     let untitled = try XCTUnwrap(decodeSnapshot(nowTitle: NSNull()).nowItems.first)
     XCTAssertEqual(untitled.displayTitle, "2025")
+  }
+
+  /// Durations are measured to the day the snapshot describes, like Web `Now`, and say no more
+  /// than the dates do: a Year never counts months, a Month or an approximate date says
+  /// "About", and only a known day or time claims an exact length.
+  func testNowDurationsNeverClaimMorePrecisionThanTheDates() throws {
+    func now(_ precision: String, start: String, label: String? = nil) throws -> [String] {
+      let snapshot = try decodeSnapshot(
+        nowStart: start, nowPrecision: precision, nowOccurredLabel: label)
+      return try XCTUnwrap(snapshot.nowItems.first).facts(asOf: snapshot.asOf)
+    }
+
+    // The snapshot describes 2026-09-03.
+    XCTAssertEqual(
+      try now("year", start: "2025-01-01T08:00:00+00:00"), ["Since 2025", "About 1 year"])
+    // A Year Chapter that started this year has not lasted a year yet, and says it is rough.
+    XCTAssertEqual(
+      try now("year", start: "2026-01-01T08:00:00+00:00"),
+      ["Since 2026", "Less than a year (approx.)"])
+    // A Year start never turns into months, however late in the year the day is.
+    XCTAssertEqual(try now("year", start: "2020-12-31T08:00:00+00:00").last, "About 6 years")
+    XCTAssertEqual(
+      try now("month", start: "2025-05-01T19:00:00+00:00"),
+      ["Since May 2025", "About 1 year 4 months"])
+    XCTAssertEqual(
+      try now("month", start: "2026-09-01T19:00:00+00:00").last, "Less than a month (approx.)")
+    // A known day counts whole months and does not say "About".
+    XCTAssertEqual(
+      try now("day", start: "2025-05-20T19:00:00+00:00"), ["Since May 20, 2025", "1 year 3 months"])
+    XCTAssertEqual(try now("day", start: "2026-08-20T19:00:00+00:00").last, "Less than a month")
+    // A description is the span, and a rough date still says "About".
+    XCTAssertEqual(
+      try now("approximate", start: "2024-01-01T08:00:00+00:00", label: "Since the move").last,
+      "About 2 years 8 months")
+    XCTAssertEqual(
+      try now("approximate", start: "2024-01-01T08:00:00+00:00", label: "Since the move").first,
+      "Since the move")
+    // Without a usable date there is no length to claim.
+    XCTAssertEqual(
+      try now("unknown", start: "2025-01-01T08:00:00+00:00"),
+      ["Date unknown", "Duration unavailable"])
+  }
+
+  func testNowDurationsAreMeasuredToTheSnapshotDayNotToday() throws {
+    let snapshot = try decodeSnapshot()
+    XCTAssertEqual(
+      snapshot.asOf, try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-09-03T12:00:00Z")))
+    let item = try XCTUnwrap(snapshot.nowItems.first)
+    // The same Chapter reads "About 1 year" on the snapshot's day and "About 2 years" a year
+    // on, so the length follows the day the snapshot describes, not when it is drawn.
+    XCTAssertEqual(item.facts(asOf: snapshot.asOf).last, "About 1 year")
+    XCTAssertEqual(
+      item.facts(asOf: try XCTUnwrap(ISO8601DateFormatter().date(from: "2027-09-03T12:00:00Z")))
+        .last,
+      "About 2 years")
+  }
+
+  /// An Entry without a title is named by its date, and the date is not shown a second time.
+  func testUntitledRecentEntryIsNamedByItsDate() throws {
+    let untitled = try XCTUnwrap(decodeSnapshot(entryTitle: "  ").recentEntries.first)
+    XCTAssertEqual(untitled.displayTitle, "Thursday, September 3, 2026")
+    XCTAssertNil(untitled.shownDate)
+
+    let titled = try XCTUnwrap(decodeSnapshot().recentEntries.first)
+    XCTAssertEqual(titled.displayTitle, "Why clear aligners move teeth")
+    XCTAssertEqual(titled.shownDate, "Sep 3, 2026")
+
+    // A description names an untitled Entry before its date does, and an undated one is
+    // "Undated entry".
+    let described = try XCTUnwrap(
+      decodeSnapshot(entryTitle: "", entryOccurredLabel: "The first warm weekend").recentEntries
+        .first)
+    XCTAssertEqual(described.displayTitle, "The first warm weekend")
+    XCTAssertNil(described.shownDate)
+    let undated = try XCTUnwrap(
+      decodeSnapshot(entryTitle: "", entryStart: NSNull(), entryPrecision: "unknown")
+        .recentEntries.first)
+    XCTAssertEqual(undated.displayTitle, "Undated entry")
+    XCTAssertNil(undated.shownDate)
+  }
+
+  func testSummaryIsTrimmedAndCutLikeWebsCards() throws {
+    let entry = try XCTUnwrap(
+      decodeSnapshot(entryBody: "  \(String(repeating: "word ", count: 60))  ").recentEntries.first)
+    let summary = try XCTUnwrap(entry.summary(limit: 170))
+    XCTAssertTrue(summary.hasSuffix("…"))
+    XCTAssertEqual(summary.count, 170)
+    XCTAssertEqual(
+      try XCTUnwrap(decodeSnapshot(entryBody: "Short.").recentEntries.first).summary(limit: 170),
+      "Short.")
+    XCTAssertNil(
+      try XCTUnwrap(decodeSnapshot(entryBody: " \n ").recentEntries.first).summary(limit: 170))
   }
 
   func testHumanLabelsTakePriorityOverDates() throws {
@@ -158,6 +251,27 @@ final class HomeEntryTests: XCTestCase {
     XCTAssertEqual(HomePresentation.firstName("   "), "there")
   }
 
+  func testGreetingUsesThePreferredNameThenTheAccountName() {
+    XCTAssertEqual(
+      HomePresentation.greetingName(preferred: " Ry Gan ", account: "Ryan Home"), "Ry")
+    // Like Web, a blank preferred name falls back to the account name, then to "there".
+    XCTAssertEqual(HomePresentation.greetingName(preferred: "  ", account: "Ryan Home"), "Ryan")
+    XCTAssertEqual(HomePresentation.greetingName(preferred: nil, account: "Ryan Home"), "Ryan")
+    XCTAssertEqual(HomePresentation.greetingName(preferred: nil, account: " "), "there")
+  }
+
+  func testEyebrowIsEnglishAndInTheDevicesTimeZone() throws {
+    let date = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-09-03T02:00:00Z"))
+    XCTAssertEqual(
+      HomePresentation.eyebrow(
+        at: date, timezone: try XCTUnwrap(TimeZone(identifier: "America/Los_Angeles"))),
+      "Wednesday, September 2")
+    XCTAssertEqual(
+      HomePresentation.eyebrow(
+        at: date, timezone: try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))),
+      "Thursday, September 3")
+  }
+
   @MainActor
   func testNavigatorOpensTabsRoutesLibraryFiltersAndCapture() {
     let navigator = AppNavigator()
@@ -215,7 +329,13 @@ final class HomeEntryTests: XCTestCase {
     entryTitle: String = "Why clear aligners move teeth",
     entrySubtype: String = "entry",
     entryOccurredLabel: String? = nil,
+    entryStart: Any = "2026-09-03T19:00:00+00:00",
+    entryPrecision: String = "day",
+    entryBody: String =
+      "A steady, gentle force encourages bone to remodel around a tooth over time.",
     nowTitle: Any = "Living in California",
+    nowStart: String = "2025-01-01T08:00:00+00:00",
+    nowPrecision: String = "year",
     nowOccurredLabel: String? = nil
   ) throws -> HomeSnapshot {
     let object: [[String: Any]] = [
@@ -230,13 +350,12 @@ final class HomeEntryTests: XCTestCase {
           [
             "entry_id": "10000000-0000-4000-8000-000000000001",
             "title": entryTitle,
-            "body":
-              "A steady, gentle force encourages bone to remodel around a tooth over time.",
+            "body": entryBody,
             "item_kind": "entry",
             "item_subtype": entrySubtype,
-            "occurred_start": "2026-09-03T19:00:00+00:00",
+            "occurred_start": entryStart,
             "occurred_end": NSNull(),
-            "date_precision": "day",
+            "date_precision": entryPrecision,
             "occurred_label": entryOccurredLabel.map { $0 as Any } ?? NSNull(),
             "occurred_timezone": "America/Los_Angeles",
             "revision": 1,
@@ -262,9 +381,9 @@ final class HomeEntryTests: XCTestCase {
             "entry_id": "30000000-0000-4000-8000-000000000001",
             "title": nowTitle,
             "is_first_time": true,
-            "occurred_start": "2025-01-01T08:00:00+00:00",
+            "occurred_start": nowStart,
             "occurred_end": NSNull(),
-            "date_precision": "year",
+            "date_precision": nowPrecision,
             "occurred_label": nowOccurredLabel.map { $0 as Any } ?? NSNull(),
             "occurred_timezone": "America/Los_Angeles",
           ]

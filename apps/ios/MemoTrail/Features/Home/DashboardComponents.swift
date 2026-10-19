@@ -1,7 +1,5 @@
 import SwiftUI
 
-// P6: the Dashboard's final layout.
-
 /// Web `Stats`: four archive counts that each open their area.
 struct DashboardRibbon: View {
   let snapshot: HomeSnapshot
@@ -42,7 +40,7 @@ struct DashboardRibbon: View {
     }
     .accessibilityElement(children: .contain)
     .accessibilityLabel("Your archive at a glance")
-    .accessibilityIdentifier("home-data-ribbon")
+    .accessibilityIdentifier("dashboard-counts")
   }
 
   private func row(_ leading: Item, _ trailing: Item) -> some View {
@@ -104,7 +102,7 @@ struct DashboardMemoryCard: View {
       VStack(alignment: .leading, spacing: MTSpacing.s2) {
         HStack(spacing: MTSpacing.s2) {
           Text(entry.identityLabel)
-          Text(entry.occurrence.displayLabel)
+          if let date = entry.shownDate { Text(date) }
         }
         .font(MTFont.noteStrong)
         .foregroundStyle(MTColor.warm)
@@ -112,8 +110,8 @@ struct DashboardMemoryCard: View {
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
           .fixedSize(horizontal: false, vertical: true)
-        if let body = entry.body.trimmed.nonEmpty {
-          Text(body.truncated(to: 260))
+        if let body = entry.summary(limit: 260) {
+          Text(body)
             .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)
             .mtLineSpacing(MTLineHeight.body, textStyle: .footnote)
@@ -178,9 +176,14 @@ struct DashboardNowCard: View {
   }
 
   private var span: some View {
-    Text("\(item.occurrence.spanLabel) · \(item.occurrence.durationLabel(now: asOf))")
-      .font(MTFont.detail)
-      .foregroundStyle(MTColor.inkMuted)
+    let facts = item.facts(asOf: asOf)
+    return MTFlowLayout(spacing: MTSpacing.s2) {
+      Text(facts[0])
+      MTFlowSeparator()
+      Text(facts[1])
+    }
+    .font(MTFont.detail)
+    .foregroundStyle(MTColor.inkMuted)
   }
 }
 
@@ -192,10 +195,12 @@ struct DashboardEntryRow: View {
     HStack(alignment: .center, spacing: MTSpacing.s3) {
       VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
         HStack(spacing: MTSpacing.s2) {
-          Text(entry.occurrence.displayLabel)
-            .font(MTFont.noteStrong)
-            .foregroundStyle(MTColor.warm)
-            .lineLimit(1)
+          if let date = entry.shownDate {
+            Text(date)
+              .font(MTFont.noteStrong)
+              .foregroundStyle(MTColor.warm)
+              .lineLimit(1)
+          }
           MTBadge(title: entry.identityLabel, tone: .outline)
             .fixedSize()
         }
@@ -203,7 +208,7 @@ struct DashboardEntryRow: View {
           .font(MTFont.itemTitle)
           .foregroundStyle(MTColor.ink)
           .lineLimit(1)
-        if let body = entry.body.trimmed.nonEmpty {
+        if let body = entry.summary(limit: 170) {
           Text(body.replacingOccurrences(of: "\n", with: " "))
             .font(MTFont.supporting)
             .foregroundStyle(MTColor.inkMuted)

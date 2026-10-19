@@ -39,6 +39,11 @@ struct HomeSnapshot: Decodable, Equatable, Sendable {
     nowItems = try values.decode([HomeNowItem].self, forKey: .nowItems)
   }
 
+  /// The day this snapshot describes, which Now durations are measured to (Web `Now`).
+  var asOf: Date {
+    EntryTimestamp.date(from: "\(snapshotDate)T12:00:00Z") ?? .now
+  }
+
   /// Web `safeCount`: a non-negative whole number, written as a number or a string.
   private static func count(_ values: KeyedDecodingContainer<CodingKeys>, _ key: CodingKeys)
     throws -> Int
@@ -101,6 +106,13 @@ struct HomeNowItem: Decodable, Equatable, Identifiable, Sendable {
 
   /// Web `entryDisplayTitle`.
   var displayTitle: String { entryDisplayTitle(title, occurrence) }
+
+  /// The span the Chapter covers, then how long it has lasted as of `asOf`, as Web `Now`
+  /// writes them. A duration is only as precise as the dates: a Year says "About 2 years",
+  /// never months, and a Month or an approximate date says "About".
+  func facts(asOf: Date) -> [String] {
+    [occurrence.spanLabel, occurrence.durationLabel(now: asOf)]
+  }
 }
 
 /// A recent Entry or resurfaced memory on the Dashboard, like Web `HomeEntry`. The RPC does not
@@ -163,6 +175,17 @@ struct HomeEntry: Decodable, Equatable, Identifiable, Sendable {
 
   /// Web `entryDisplayTitle`: the title, or the date when there is none.
   var displayTitle: String { entryDisplayTitle(title, occurrence) }
+
+  /// The date shown beside the title. An untitled Entry is already named by its date, so the
+  /// date is not repeated (Web `EntryCard`).
+  var shownDate: String? {
+    title.trimmed.isEmpty ? nil : occurrence.displayLabel
+  }
+
+  /// The note as a card shows it: trimmed and cut at `limit` characters, or nil when empty.
+  func summary(limit: Int) -> String? {
+    body.trimmed.nonEmpty.map { $0.truncated(to: limit) }
+  }
 
   /// "Chapter" or "Entry"; the row does not carry the First Time mark.
   var identityLabel: String { EntryMarks(subtype: subtype, isFirstTime: false).identityLabel }
@@ -308,6 +331,21 @@ enum HomeWorkspaceError: Error, Equatable {
 enum HomePresentation {
   static func firstName(_ value: String) -> String {
     value.trimmed.split(whereSeparator: \.isWhitespace).first.map(String.init) ?? "there"
+  }
+
+  /// The name the greeting uses: the preferred name when there is one, else the account name,
+  /// like Web `snapshot.profileDisplayName || viewer.name`.
+  static func greetingName(preferred: String?, account: String) -> String {
+    firstName(preferred?.trimmed.nonEmpty ?? account)
+  }
+
+  /// Web's eyebrow, such as "Thursday, September 3", always in English and in `timezone`.
+  static func eyebrow(at date: Date, timezone: TimeZone) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US")
+    formatter.timeZone = timezone
+    formatter.dateFormat = "EEEE, MMMM d"
+    return formatter.string(from: date)
   }
 
   static func greeting(at date: Date, timezone: TimeZone) -> String {

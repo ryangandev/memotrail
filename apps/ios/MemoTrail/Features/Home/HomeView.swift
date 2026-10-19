@@ -1,7 +1,8 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-// P6: the Dashboard's final layout.
+/// The Dashboard, like Web `HomeDashboard`: greeting, counts, Quick Capture, a memory beside Now,
+/// and Recent Entries.
 struct HomeView: View {
   let user: AuthenticatedUser
   let isAuthenticationBusy: Bool
@@ -54,10 +55,9 @@ struct HomeView: View {
     NavigationStack {
       MTPage(width: .wide) {
         MTPageHeader(
-          eyebrow: Date.now.formatted(.dateTime.weekday(.wide).month(.wide).day()),
-          title:
-            "\(HomePresentation.greeting(at: .now, timezone: .current)), \(HomePresentation.firstName(controller.snapshot?.profileDisplayName ?? user.name)).",
-          description: "A calm view of what is active, recent, and waiting for you.")
+          eyebrow: HomePresentation.eyebrow(at: .now, timezone: .current),
+          title: greeting,
+          description: "A calm view of what is going on and what you have kept.")
 
         if let snapshot = controller.snapshot {
           DashboardRibbon(snapshot: snapshot, navigator: navigator)
@@ -118,6 +118,12 @@ struct HomeView: View {
     }
   }
 
+  private var greeting: String {
+    let name = HomePresentation.greetingName(
+      preferred: controller.snapshot?.profileDisplayName, account: user.name)
+    return "\(HomePresentation.greeting(at: .now, timezone: .current)), \(name)."
+  }
+
   private var pendingCaptureSection: some View {
     // Captures MemoTrail refused need the person, so they read warm like Web's indicator.
     let hasRejected = captureController.rejectedEntryCount > 0
@@ -166,13 +172,13 @@ struct HomeView: View {
           icon: .sparkle)
       }
     }
-    .accessibilityIdentifier("home-resurfaced-memory")
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("dashboard-memory")
   }
 
   /// Web `Now`: the Chapters happening now, with durations measured to the snapshot's day.
   private func nowSection(_ snapshot: HomeSnapshot) -> some View {
-    let asOf = EntryTimestamp.date(from: "\(snapshot.snapshotDate)T12:00:00Z") ?? .now
-    return section("Now", action: "Timeline") {
+    section("Now", action: "Timeline") {
       navigator.show(.timeline)
     } content: {
       if snapshot.nowItems.isEmpty {
@@ -184,14 +190,15 @@ struct HomeView: View {
         VStack(spacing: MTSpacing.s3) {
           ForEach(snapshot.nowItems) { item in
             NavigationLink(value: ItemLink(entryID: item.id)) {
-              DashboardNowCard(item: item, asOf: asOf)
+              DashboardNowCard(item: item, asOf: snapshot.asOf)
             }
             .buttonStyle(MTCardButtonStyle(radius: MTRadius.medium))
           }
         }
       }
     }
-    .accessibilityIdentifier("home-now")
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("dashboard-now")
   }
 
   private func recentSection(_ entries: [HomeEntry]) -> some View {
@@ -217,7 +224,8 @@ struct HomeView: View {
         }
       }
     }
-    .accessibilityIdentifier("home-recent-entries")
+    .accessibilityElement(children: .contain)
+    .accessibilityIdentifier("dashboard-recent")
   }
 
   @MainActor
