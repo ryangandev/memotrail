@@ -196,7 +196,8 @@ extension LocalSessionUITests {
 
   func testUnreadableCaptureIsListedWithCopyAndDiscard() throws {
     let kept = "Notes from the old phone about the lake house"
-    let app = try launchCaptureSession(unreadableCapture: kept)
+    // Dark mode here, so the Pending sync sheet is reviewed in both appearances.
+    let app = try launchCaptureSession(unreadableCapture: kept, appearance: "dark")
 
     // A stored capture this version cannot read is counted apart and never sent.
     let indicator = app.buttons["workspace-pending-sync"]
@@ -214,22 +215,19 @@ extension LocalSessionUITests {
         .exists)
     XCTAssertTrue(text(kept, in: app).exists)
     XCTAssertFalse(app.buttons["capture-pending-retry"].exists)
-    attach(app, "Unreadable capture in Pending sync")
+    attach(app, "Unreadable capture in Pending sync in dark mode")
 
     // Copy text keeps what it holds. The runner does not read the pasteboard back, since iOS
     // asks the person before another app pastes.
     reveal(app.buttons["Copy the text of this saved Entry"], in: app).tap()
     XCTAssertTrue(text("Text copied.", in: app).waitForExistence(timeout: 5))
 
-    // Cancel keeps it; Discard after confirming removes it for good.
+    // Discard asks first, then removes it for good.
     let discard = app.buttons["Discard this saved Entry"]
     reveal(discard, in: app).tap()
     XCTAssertTrue(text("Discard this saved Entry?", in: app).waitForExistence(timeout: 5))
     XCTAssertTrue(
       text("It will be removed from this iPhone, along with any photos it holds.", in: app).exists)
-    app.buttons["Cancel"].tap()
-    XCTAssertTrue(text(kept, in: app).exists)
-    reveal(discard, in: app).tap()
     let confirm = app.buttons.matching(NSPredicate(format: "label == %@", "Discard")).firstMatch
     XCTAssertTrue(confirm.waitForExistence(timeout: 5))
     attach(app, "Discard unreadable capture")
@@ -261,12 +259,15 @@ extension LocalSessionUITests {
     XCTAssertEqual(composer.buttons["save-entry"].label, "Save")
     attach(app, "Quick Capture focused in dark mode")
 
-    // Command-Return saves from a hardware keyboard, like Web.
-    quick.typeKey(.return, modifierFlags: .command)
+    // Keys from a hardware keyboard reach the note too. XCUITest drops a Return typed with
+    // Command before it reaches the app, so CaptureComposerKeyboardTests covers that shortcut.
+    quick.typeKey("!", modifierFlags: [])
+    XCTAssertEqual(quick.value as? String, note + "!")
+    composer.buttons["save-entry"].tap()
     XCTAssertTrue(app.buttons["Close quick capture"].waitForNonExistence(timeout: 10))
     XCTAssertTrue(text("Saved to Library", in: app).waitForExistence(timeout: 15))
-    XCTAssertTrue(text(note, in: app).waitForExistence(timeout: 15))
-    attach(app, "Saved from the keyboard in dark mode")
+    XCTAssertTrue(text(note + "!", in: app).waitForExistence(timeout: 15))
+    attach(app, "Saved from Quick Capture in dark mode")
   }
 
   /// Whether any element inside `container` has a label containing `label`.

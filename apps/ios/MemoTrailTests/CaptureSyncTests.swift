@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 
 @testable import MemoTrail
@@ -270,5 +271,29 @@ final class CaptureSyncTests: XCTestCase {
     XCTAssertEqual(CaptureDate.value(day: "2024-05-01", time: "09:30"), "2024-05-01T09:30")
     XCTAssertEqual(CaptureDate.value(day: "2024-05-01", time: ""), "2024-05-01")
     XCTAssertEqual(CaptureDate.value(day: "", time: "09:30"), "")
+  }
+}
+
+/// The composer's Command-Return. XCUITest on the Simulator drops a Return typed with Command
+/// before it reaches the app, so the routing is checked here instead of in a UI test.
+@MainActor
+final class CaptureComposerKeyboardTests: XCTestCase {
+  func testCommandReturnSavesOnlyWhenTheNoteHasAComposer() throws {
+    let view = NativeRichTextView()
+    let save = #selector(NativeRichTextView.submitFromKeyboard)
+    XCTAssertFalse(view.keyCommands?.contains { $0.action == save } ?? false)
+    XCTAssertFalse(view.canPerformAction(save, withSender: nil))
+
+    var saves = 0
+    view.hasSubmit = true
+    view.submit = { saves += 1 }
+    let command = try XCTUnwrap(view.keyCommands?.first { $0.action == save })
+    XCTAssertEqual(command.input, "\r")
+    XCTAssertEqual(command.modifierFlags, .command)
+    XCTAssertTrue(command.wantsPriorityOverSystemBehavior)
+    XCTAssertTrue(view.canPerformAction(save, withSender: command))
+
+    view.submitFromKeyboard()
+    XCTAssertEqual(saves, 1)
   }
 }

@@ -141,6 +141,9 @@ struct CaptureCard: View {
         }
         .mtButtonStyle(.primary, isLoading: isSaving)
         .disabled(isBusy)
+        // Quick Capture is the whole dialog, so Command-Return saves wherever focus is in it.
+        // On the Dashboard the shortcut belongs to the note alone, through the editor.
+        .keyboardShortcut(style == .dialog ? KeyboardShortcut(.return, modifiers: .command) : nil)
         .accessibilityHint("Command-Return saves from a keyboard")
         .accessibilityIdentifier("save-entry")
       }

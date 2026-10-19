@@ -410,7 +410,14 @@ final class NativeRichTextView: UITextView {
     return (super.keyCommands ?? []) + [save]
   }
 
-  @objc private func submitFromKeyboard() {
+  /// Save is claimed explicitly, so Command-Return does not depend on how UITextView answers
+  /// for an action that is not one of its own editing actions.
+  override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+    if action == #selector(submitFromKeyboard) { return hasSubmit }
+    return super.canPerformAction(action, withSender: sender)
+  }
+
+  @objc func submitFromKeyboard() {
     // Like Web, a composition in progress is never saved half-typed.
     guard markedTextRange == nil else { return }
     submit()
