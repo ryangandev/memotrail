@@ -2,9 +2,13 @@ import Foundation
 @preconcurrency import Network
 import Observation
 @preconcurrency import Supabase
+import UIKit
 
 /// Quick Capture's queue and sync, like Web `capture-provider.tsx` and `inbox-sync.ts`. A capture
 /// is saved on this iPhone first, then sent to MemoTrail in order as a plain Entry in the Library.
+/// Captures sync when the controller starts, when a capture is saved, when the connection
+/// returns, and when the app comes back to the foreground, then keep retrying with backoff while
+/// this iPhone reports a connection.
 @MainActor
 @Observable
 final class CaptureController {
@@ -17,16 +21,34 @@ final class CaptureController {
   private(set) var captureError: String?
   /// Counts the sync runs in which an Entry reached MemoTrail, so lists know to reload.
   private(set) var entriesRevision = 0
-  /// Captures saved since the last sync attempt began; that attempt decides how each is announced.
-  private var unattemptedCaptureIDs: Set<UUID> = []
+  /// The capture a run is sending now, which Pending sync marks as syncing.
+  private(set) var syncingEntryID: UUID?
+  /// How many of the sending capture's photos reached MemoTrail, like Web's upload progress.
+  private(set) var photoUploadProgress: CapturePhotoProgress?
+  /// MemoTrail no longer accepts this session, so captures wait until the person signs in again.
+  private(set) var isSessionExpired = false
+  /// Captures saved while connected whose first attempt has not finished. Like Web's
+  /// `firstAttempt`, that brief stage is progress rather than something waiting in Pending sync,
+  /// and the attempt decides how each is announced.
+  private(set) var firstAttemptIDs: Set<UUID> = []
+
   /// Waiting captures already confirmed as safe on this iPhone, which retries do not announce.
-  private var confirmedOfflineCaptureIDs: Set<UUID> = []
+  @ObservationIgnored private var confirmedOfflineCaptureIDs: Set<UUID> = []
+  @ObservationIgnored private var syncTask: Task<Bool, Never>?
+  /// A capture or reconnection arrived during a run, so one more run settles it.
+  @ObservationIgnored private var rerunRequested = false
+  /// Whether this iPhone reports a usable network path; assumed until the monitor first answers.
+  @ObservationIgnored private var isNetworkAvailable = true
+  /// Set once the person signs out, after which this controller never sends anything again.
+  @ObservationIgnored private var isStopped = false
+  @ObservationIgnored private var syncRetry: CaptureSyncRetry?
 
   private let client: SupabaseClient
   private let ownerID: UUID
   private let queueStore: CaptureQueueStore
   private let photoStore: CapturePhotoStore
   private let networkMonitor: NWPathMonitor
+  private let lifetime = CaptureControllerLifetime()
   private let networkMonitorQueue = DispatchQueue(
     label: "com.rystudio.memotrail.inbox-connectivity"
   )
@@ -43,27 +65,27 @@ final class CaptureController {
     self.queueStore = queueStore
     self.photoStore = photoStore
     self.networkMonitor = networkMonitor
+    #if DEBUG
+      CaptureReviewSeed.applyOnce(ownerID: ownerID, queueStore: queueStore)
+    #endif
     pendingEntries = queueStore.load(ownerID: ownerID)
     unreadableCaptures = queueStore.unreadableCaptures(ownerID: ownerID)
 
-    networkMonitor.pathUpdateHandler = { [weak self] path in
-      guard path.status == .satisfied else { return }
-
-      Task { @MainActor [weak self] in
-        _ = await self?.synchronizePendingEntries()
-      }
-    }
-    networkMonitor.start(queue: networkMonitorQueue)
+    syncRetry = CaptureSyncRetry(
+      isOnline: { [weak self] in self?.isNetworkAvailable == true && self?.isStopped == false },
+      isSyncing: { [weak self] in self?.isSyncing == true },
+      retry: { [weak self] in self?.synchronizeInBackground() })
+    Self.register(self)
+    startWatching()
   }
 
   deinit {
-    networkMonitor.cancel()
+    lifetime.end()
   }
 
   /// Rereads the queue on this iPhone, then sends whatever still waits.
   func refresh() async {
-    pendingEntries = queueStore.load(ownerID: ownerID)
-    unreadableCaptures = queueStore.unreadableCaptures(ownerID: ownerID)
+    reloadQueue()
     _ = await synchronizePendingEntries()
   }
 
@@ -74,18 +96,16 @@ final class CaptureController {
   }
 
   /// Removes one unreadable capture for good, like Web's Discard for an unreadable capture.
-  /// Its photo drafts go first, so a failure leaves it listed for another try.
+  /// Its photo drafts go first, so a failure leaves it listed for another try. The queue is
+  /// rewritten on the main actor, where every other queue change happens, so a capture saved
+  /// meanwhile is never written over.
   func discardUnreadable(_ capture: UnreadableCapture) async -> Bool {
-    let queueStore = queueStore
     let photoStore = photoStore
     let ownerID = ownerID
-    let discarded = await Task.detached {
-      queueStore.discardUnreadable(capture, ownerID: ownerID) { photoID in
-        try photoStore.remove(photoID: photoID, ownerID: ownerID)
-      }
-    }.value
-    pendingEntries = queueStore.load(ownerID: ownerID)
-    unreadableCaptures = queueStore.unreadableCaptures(ownerID: ownerID)
+    let discarded = queueStore.discardUnreadable(capture, ownerID: ownerID) { photoID in
+      try photoStore.remove(photoID: photoID, ownerID: ownerID)
+    }
+    reloadQueue()
     return discarded
   }
 
@@ -97,17 +117,15 @@ final class CaptureController {
     occurrenceDraft: OccurrenceDraft? = nil,
     photos: [PhotoDraft] = []
   ) async -> Bool {
-    guard !isSaving, !isSyncing else { return false }
+    // A sync in progress never holds a capture back: it is stored here first either way.
+    guard !isSaving else { return false }
 
     let capture: CaptureInput
     let occurrence: EntryOccurrence
     let now = Date()
     do {
-      occurrence =
-        try occurrenceDraft?.resolve()
-        ?? EntryOccurrence(
-          precision: .exact, start: occurredAt ?? now, end: nil, label: nil,
-          timezone: TimeZone.current.identifier)
+      occurrence = try CaptureDate.resolve(
+        occurrenceDraft, now: occurredAt ?? now, timezone: TimeZone.current.identifier)
       try occurrence.validate()
       capture = try CaptureInput.validate(
         title: title,
@@ -143,12 +161,14 @@ final class CaptureController {
     }
 
     pendingEntries = nextQueue
-    unattemptedCaptureIDs.insert(pendingEntry.id)
-
-    Task { @MainActor [weak self] in
-      _ = await self?.synchronizePendingEntries()
+    if isNetworkAvailable {
+      firstAttemptIDs.insert(pendingEntry.id)
+    } else {
+      // Like Web's offline save, the capture is confirmed at once instead of after an attempt.
+      confirmedOfflineCaptureIDs.insert(pendingEntry.id)
+      MTToastCenter.shared.info(Self.savedOfflineMessage)
     }
-
+    synchronizeInBackground()
     return true
   }
 
@@ -169,132 +189,64 @@ final class CaptureController {
   /// Pending captures MemoTrail refused, kept until the person discards them.
   var rejectedEntryCount: Int { pendingEntries.count { $0.rejection != nil } }
 
-  /// Like Web's pending indicator, tells waiting captures apart from refused ones.
+  /// Whether Pending sync has anything to show, like Web `hasWaitingCaptures`: a capture on its
+  /// first attempt is progress, not a waiting capture.
+  var hasWaitingCaptures: Bool {
+    !unreadableCaptures.isEmpty || pendingEntries.contains { !firstAttemptIDs.contains($0.id) }
+  }
+
+  /// Like Web's pending indicator, tells waiting captures apart from refused and unreadable ones.
   var pendingSummary: String {
     let waiting = waitingEntryCount
     let rejected = rejectedEntryCount
-    guard waiting > 0 else { return countLabel(rejected, "Entry") + " not accepted" }
-    let summary = countLabel(waiting, "Entry") + " waiting to sync"
-    return rejected > 0 ? summary + " · \(rejected) not accepted" : summary
+    let unreadable = unreadableCaptures.count
+    var parts: [String] = []
+    if waiting > 0 { parts.append(countLabel(waiting, "Entry") + " waiting to sync") }
+    if rejected > 0 {
+      parts.append(
+        parts.isEmpty ? countLabel(rejected, "Entry") + " not accepted" : "\(rejected) not accepted")
+    }
+    if unreadable > 0 {
+      parts.append(
+        parts.isEmpty
+          ? countLabel(unreadable, "saved Entry", plural: "saved Entries") + " could not be read"
+          : "\(unreadable) unreadable")
+    }
+    return parts.joined(separator: " · ")
   }
 
   /// Sends waiting captures in order, like Web's sync store. A capture MemoTrail refuses is
   /// marked and skipped so later captures still sync; an unreachable MemoTrail stops the run.
+  /// A call during a run waits for it, and the run goes once more for what arrived meanwhile.
   /// Returns whether an Entry reached MemoTrail.
   @discardableResult
   func synchronizePendingEntries() async -> Bool {
-    guard !isSyncing, pendingEntries.contains(where: { $0.rejection == nil }) else {
+    if let syncTask {
+      rerunRequested = true
+      return await syncTask.value
+    }
+    guard !isStopped else { return false }
+
+    reloadQueue()
+    guard pendingEntries.contains(where: { $0.rejection == nil }) else {
+      // Only refused captures, if any, remain; they are never sent again.
       return false
     }
 
-    isSyncing = true
-    defer { isSyncing = false }
-    let firstAttemptIDs = unattemptedCaptureIDs
-    unattemptedCaptureIDs = []
+    let task = Task { await runUntilSettled() }
+    syncTask = task
+    return await task.value
+  }
 
-    do {
-      let session = try await client.auth.session
-      guard session.user.id == ownerID else {
-        throw CaptureControllerError.ownerChanged
-      }
-    } catch is URLError {
-      // An expired access token cannot be refreshed offline; the capture still waits safely.
-      announceUnreachable(firstAttemptIDs: firstAttemptIDs)
-      return false
-    } catch {
-      captureError = Self.sessionMessage
-      return false
-    }
+  /// Web's Retry now: a person asking is a fresh start, so the backoff begins again.
+  func retryNow() async {
+    syncRetry?.stop()
+    _ = await synchronizePendingEntries()
+  }
 
-    var didReachLibrary = false
-    var didSyncEntry = false
-    var lastSyncedPhotoCount = 0
-    var rejectedCount = 0
-    var didStop = false
-
-    sending: for entry in pendingEntries where entry.rejection == nil {
-      do {
-        try await insert(entry)
-      } catch {
-        switch await insertFailure(error, for: entry) {
-        case .alreadySynced:
-          break
-        case .rejected(let message):
-          guard reject(entry, message: message) else {
-            didStop = true
-            break sending
-          }
-          rejectedCount += 1
-          continue sending
-        case .session:
-          captureError = Self.sessionMessage
-          didStop = true
-          break sending
-        case .unavailable:
-          announceUnreachable(firstAttemptIDs: firstAttemptIDs)
-          didStop = true
-          break sending
-        }
-      }
-
-      do {
-        try await synchronizeAttachments(entry)
-      } catch {
-        let stop = Self.photoSyncStop(error)
-        switch stop.failure {
-        case .rejected:
-          guard reject(entry, message: stop.message) else {
-            didStop = true
-            break sending
-          }
-          // The Entry itself reached MemoTrail; only its photos stay behind.
-          didReachLibrary = true
-          rejectedCount += 1
-          continue sending
-        case .session:
-          captureError = Self.sessionMessage
-        case .unavailable:
-          captureError = stop.message
-        }
-        didStop = true
-        break sending
-      }
-
-      guard let nextQueue = queueStore.remove(entryID: entry.id, ownerID: ownerID) else {
-        captureError =
-          "This Entry reached MemoTrail, but its local pending copy could not be cleared."
-        didStop = true
-        break sending
-      }
-
-      pendingEntries = nextQueue
-      confirmedOfflineCaptureIDs.remove(entry.id)
-      didReachLibrary = true
-      didSyncEntry = true
-      lastSyncedPhotoCount = entry.attachments.count
-    }
-
-    if rejectedCount > 0 {
-      // A refused capture may come from a Quick Capture that is already closed.
-      MTToastCenter.shared.error(
-        "MemoTrail did not accept \(countLabel(rejectedCount, "Entry")). "
-          + "Review \(rejectedCount == 1 ? "it" : "them") in Pending sync.")
-    }
-
-    if didReachLibrary { entriesRevision += 1 }
-    guard !didStop else { return didReachLibrary }
-
-    // Every capture that can still sync did, so no problem waits in the composer.
-    captureError = nil
-    if didSyncEntry {
-      // Like Web, a synced capture is announced once; only problems stay in the composer.
-      MTToastCenter.shared.success(
-        lastSyncedPhotoCount > 0
-          ? "Saved to Library with \(countLabel(lastSyncedPhotoCount, "photo"))."
-          : "Saved to Library.")
-    }
-
-    return didReachLibrary
+  /// Rereads what is stored on this iPhone without sending anything.
+  func refreshQueue() {
+    reloadQueue()
   }
 
   /// Removes a capture MemoTrail refused, like Web's Discard in Pending sync. Its photo files
@@ -302,7 +254,7 @@ final class CaptureController {
   func discardRejected(_ entryID: UUID) async -> Bool {
     guard let entry = queueStore.load(ownerID: ownerID).first(where: { $0.id == entryID })
     else {
-      pendingEntries = queueStore.load(ownerID: ownerID)
+      reloadQueue()
       return true
     }
     // A capture that may still sync is never discarded.
@@ -328,8 +280,273 @@ final class CaptureController {
     return true
   }
 
+  // MARK: Workspace
+
+  private static var workspaces: [UUID: WeakCaptureController] = [:]
+
+  /// The capture controller of this person's workspace, like Web's one queue per person per
+  /// tab. SwiftUI can create a view's state more than once and keeps the first, so the earliest
+  /// controller still alive is the workspace's.
+  static func workspace(for ownerID: UUID) -> CaptureController? {
+    workspaces[ownerID]?.controller
+  }
+
+  private static func register(_ controller: CaptureController) {
+    guard workspaces[controller.ownerID]?.controller == nil else { return }
+    workspaces[controller.ownerID] = WeakCaptureController(controller: controller)
+  }
+
+  // MARK: Triggers
+
+  private func startWatching() {
+    networkMonitor.pathUpdateHandler = { [weak self] path in
+      let isAvailable = path.status == .satisfied
+      Task { @MainActor [weak self] in self?.networkChanged(isAvailable: isAvailable) }
+    }
+    networkMonitor.start(queue: networkMonitorQueue)
+    let networkMonitor = networkMonitor
+    lifetime.add { networkMonitor.cancel() }
+
+    // The observer token is only handed back to NotificationCenter, which is thread-safe.
+    nonisolated(unsafe) let foreground = NotificationCenter.default.addObserver(
+      forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+    ) { [weak self] _ in
+      MainActor.assumeIsolated { self?.becameActive() }
+    }
+    lifetime.add { NotificationCenter.default.removeObserver(foreground) }
+
+    // Retries belong to this signed-in person, so they end with the session and never send one
+    // person's captures under a later one.
+    Task { [weak self, lifetime, client] in
+      let registration = await client.auth.onAuthStateChange { [weak self] event, session in
+        let userID = session?.user.id
+        Task { @MainActor [weak self] in self?.authChanged(event, userID: userID) }
+      }
+      lifetime.add { registration.remove() }
+    }
+  }
+
+  private func networkChanged(isAvailable: Bool) {
+    isNetworkAvailable = isAvailable
+    guard isAvailable else {
+      // Regaining the connection starts a run of its own, like Web's `online` event.
+      syncRetry?.stop()
+      return
+    }
+    synchronizeInBackground()
+  }
+
+  /// Coming back to the app is a fresh chance to reach MemoTrail, so the backoff starts over.
+  private func becameActive() {
+    syncRetry?.stop()
+    synchronizeInBackground()
+  }
+
+  private func authChanged(_ event: AuthChangeEvent, userID: UUID?) {
+    switch event {
+    case .signedOut, .userDeleted:
+      isStopped = true
+      syncRetry?.stop()
+    case .signedIn, .tokenRefreshed:
+      guard userID == ownerID else { return }
+      isStopped = false
+      // A refreshed session can reach MemoTrail again.
+      if isSessionExpired { synchronizeInBackground() }
+    default:
+      break
+    }
+  }
+
+  private func synchronizeInBackground() {
+    Task { @MainActor [weak self] in
+      _ = await self?.synchronizePendingEntries()
+    }
+  }
+
+  private func reloadQueue() {
+    pendingEntries = queueStore.load(ownerID: ownerID)
+    let unreadable = queueStore.unreadableCaptures(ownerID: ownerID)
+    // Keep the same list while nothing changed, so open rows keep their state.
+    if unreadable.map(\.key) != unreadableCaptures.map(\.key) { unreadableCaptures = unreadable }
+  }
+
+  // MARK: Runs
+
+  private func runUntilSettled() async -> Bool {
+    isSyncing = true
+    var didReachLibrary = false
+    repeat {
+      rerunRequested = false
+      let ownerID = ownerID
+      let result = await CaptureSyncLock.run(ownerID: ownerID) { await runOnce() }
+      didReachLibrary = didReachLibrary || result.reachedLibrary
+      syncRetry?.afterRun(result.run)
+    } while rerunRequested && !isStopped
+      && queueStore.load(ownerID: ownerID).contains(where: { $0.rejection == nil })
+    isSyncing = false
+    syncTask = nil
+    return didReachLibrary
+  }
+
+  /// One pass over the queue, oldest first, rereading it before each capture so a capture saved
+  /// or discarded meanwhile is seen. It stops at the first capture that must wait.
+  private func runOnce() async -> (run: CaptureSyncRun, reachedLibrary: Bool) {
+    var run = CaptureSyncRun()
+    var reachedLibrary = false
+    var attempted = Set<UUID>()
+    var considered = Set<UUID>()
+    var stop: SyncStop?
+    var lastSyncedPhotoCount = 0
+
+    defer {
+      syncingEntryID = nil
+      photoUploadProgress = nil
+    }
+
+    switch await sessionCheck() {
+    case .ready:
+      sending: while true {
+        reloadQueue()
+        considered.formUnion(pendingEntries.map(\.id))
+        guard
+          let entry = pendingEntries.first(where: {
+            $0.rejection == nil && !attempted.contains($0.id)
+          })
+        else { break sending }
+        attempted.insert(entry.id)
+        syncingEntryID = entry.id
+        photoUploadProgress = nil
+
+        switch await attempt(entry) {
+        case .synced:
+          guard let nextQueue = queueStore.remove(entryID: entry.id, ownerID: ownerID) else {
+            stop = .problem(Self.uncleanedQueueMessage)
+            reachedLibrary = true
+            break sending
+          }
+          pendingEntries = nextQueue
+          confirmedOfflineCaptureIDs.remove(entry.id)
+          reachedLibrary = true
+          run.synced += 1
+          lastSyncedPhotoCount = entry.attachments.count
+        case .rejected(let message, let entryReachedLibrary):
+          reachedLibrary = reachedLibrary || entryReachedLibrary
+          guard reject(entry, message: message) else {
+            // Unmarked, the capture would be sent again, so like Web the run stops here instead.
+            stop = .problem(message)
+            break sending
+          }
+          run.rejected += 1
+        case .wait(let reason, let entryReachedLibrary):
+          reachedLibrary = reachedLibrary || entryReachedLibrary
+          stop = reason
+          break sending
+        }
+      }
+    case .unreachable:
+      considered.formUnion(pendingEntries.map(\.id))
+      stop = .unreachable
+    case .expired:
+      considered.formUnion(pendingEntries.map(\.id))
+      stop = .session
+    }
+
+    // Every capture this run could reach has had its first attempt; one saved after the last
+    // read keeps it for the run it requested.
+    let firstAttempts = firstAttemptIDs.intersection(considered)
+    firstAttemptIDs.subtract(considered)
+    syncingEntryID = nil
+    reloadQueue()
+    run.stoppedWaiting = stop != nil
+
+    if run.rejected > 0 {
+      // A refused capture may come from a Quick Capture that is already closed.
+      MTToastCenter.shared.error(
+        "MemoTrail did not accept \(countLabel(run.rejected, "Entry")). "
+          + "Review \(run.rejected == 1 ? "it" : "them") in Pending sync.")
+    }
+    if reachedLibrary { entriesRevision += 1 }
+    if run.synced > 0 || run.rejected > 0 { isSessionExpired = false }
+
+    switch stop {
+    case nil:
+      // Every capture that can still sync did, so no problem waits in the composer.
+      captureError = nil
+      isSessionExpired = false
+      if run.synced > 0 {
+        // Like Web, a synced capture is announced once; only problems stay in the composer.
+        MTToastCenter.shared.success(
+          lastSyncedPhotoCount > 0
+            ? "Saved to Library with \(countLabel(lastSyncedPhotoCount, "photo"))."
+            : "Saved to Library.")
+      }
+    case .unreachable:
+      announceUnreachable(firstAttemptIDs: firstAttempts)
+    case .session:
+      isSessionExpired = true
+      captureError = Self.sessionMessage
+    case .problem(let message):
+      captureError = message
+    }
+
+    return (run, reachedLibrary)
+  }
+
+  /// Sends one capture and then its photos.
+  private func attempt(_ entry: QueuedCapture) async -> AttemptResult {
+    do {
+      try await insert(entry)
+    } catch {
+      switch await insertFailure(error, for: entry) {
+      case .alreadySynced:
+        break
+      case .rejected(let message):
+        return .rejected(message, reachedLibrary: false)
+      case .session:
+        return .wait(.session, reachedLibrary: false)
+      case .unavailable:
+        return .wait(.unreachable, reachedLibrary: false)
+      }
+    }
+
+    do {
+      try await synchronizeAttachments(entry)
+      return .synced
+    } catch {
+      // The Entry itself reached MemoTrail; only its photos stay behind.
+      let stop = Self.photoSyncStop(error)
+      switch stop.failure {
+      case .rejected: return .rejected(stop.message, reachedLibrary: true)
+      case .session: return .wait(.session, reachedLibrary: true)
+      case .unavailable: return .wait(.problem(stop.message), reachedLibrary: true)
+      }
+    }
+  }
+
+  /// Whether this owner's session can write before anything is sent. An expired access token
+  /// cannot be refreshed offline, and an auth server that fails can answer later; only an answer
+  /// that refuses the session means the person must sign in again.
+  private func sessionCheck() async -> SessionCheck {
+    do {
+      let session = try await client.auth.session
+      return session.user.id == ownerID ? .ready : .expired
+    } catch is URLError {
+      return .unreachable
+    } catch is CancellationError {
+      return .unreachable
+    } catch AuthError.api(_, _, _, let response) where response.statusCode >= 500 {
+      return .unreachable
+    } catch {
+      return .expired
+    }
+  }
+
   // Web `capture-sync-messages.ts` keeps the same wording for a browser.
   private static let sessionMessage = "Your session expired. Sign in again to sync pending Entries."
+  private static let savedOfflineMessage =
+    "Saved on this iPhone. MemoTrail will sync when you are online."
+  private static let uncleanedQueueMessage =
+    "This Entry reached MemoTrail, but its local pending copy could not be cleared."
   private static let rejectedEntryMessage =
     "MemoTrail cannot accept this Entry, so it will not sync. "
     + "Copy its text to keep it, then discard it."
@@ -361,6 +578,9 @@ final class CaptureController {
     "Photos are saved on this iPhone. MemoTrail will retry when you are online."
   private static let photosElsewhereMessage =
     "MemoTrail will retry attaching this Entry's photos when you are online."
+  private static let uncleanedPhotoMessage =
+    "This photo reached MemoTrail, but its local pending copy could not be cleared. "
+    + "Retry to finish."
 
   /// MemoTrail names its own refusals in the error message, beside a standard SQLSTATE that
   /// deployed clients already classify, like Web `app/inbox/actions.ts`.
@@ -380,11 +600,7 @@ final class CaptureController {
     guard
       let nextQueue = queueStore.markRejected(
         entryID: entry.id, rejection: rejection, ownerID: ownerID)
-    else {
-      // Unmarked, the capture would be sent again, so like Web the run stops here instead.
-      captureError = message
-      return false
-    }
+    else { return false }
     pendingEntries = nextQueue
     confirmedOfflineCaptureIDs.remove(entry.id)
     return true
@@ -417,8 +633,8 @@ final class CaptureController {
     }
   }
 
-  /// Why a capture's photos stopped syncing; anything this iPhone could not read or clear in its
-  /// own photo files waits for a later attempt.
+  /// Why a capture's photos stopped syncing; anything this iPhone could not read in its own
+  /// photo files waits for a later attempt.
   private static func photoSyncStop(_ error: Error) -> PhotoSyncStop {
     error as? PhotoSyncStop ?? PhotoSyncStop(failure: .unavailable, message: offlinePhotoMessage)
   }
@@ -499,8 +715,9 @@ final class CaptureController {
   private func announceUnreachable(firstAttemptIDs: Set<UUID>) {
     let waitingIDs = Set(pendingEntries.filter { $0.rejection == nil }.map(\.id))
     let newlyWaitingIDs = firstAttemptIDs.intersection(waitingIDs)
+      .subtracting(confirmedOfflineCaptureIDs)
     if !newlyWaitingIDs.isEmpty {
-      MTToastCenter.shared.info("Saved on this iPhone. MemoTrail will sync when you are online.")
+      MTToastCenter.shared.info(Self.savedOfflineMessage)
     }
     confirmedOfflineCaptureIDs.formUnion(newlyWaitingIDs)
     confirmedOfflineCaptureIDs.formIntersection(waitingIDs)
@@ -539,6 +756,9 @@ final class CaptureController {
     }
   }
 
+  /// Like Web `synchronizeCapturePhotos`: uploads and registers the photos in order once the
+  /// Entry exists, removing each local copy after MemoTrail confirms it, and stops at the first
+  /// photo that must wait or that MemoTrail refuses.
   private func synchronizeAttachments(_ entry: QueuedCapture) async throws {
     guard !entry.attachments.isEmpty else { return }
 
@@ -547,8 +767,10 @@ final class CaptureController {
     let drafts = try await Task.detached {
       try photoStore.load(ownerID: ownerID)
     }.value
-    let draftsByID = Dictionary(uniqueKeysWithValues: drafts.map { ($0.id, $0) })
+    let draftsByID = Dictionary(drafts.map { ($0.id, $0) }) { first, _ in first }
 
+    var completed = 0
+    photoUploadProgress = CapturePhotoProgress(completed: 0, total: entry.attachments.count)
     for attachment in entry.attachments {
       let path = attachment.objectPath(ownerID: ownerID, entryID: entry.id)
       let draft = draftsByID[attachment.id]
@@ -569,7 +791,6 @@ final class CaptureController {
             )
           )
         } catch {
-          try Task.checkCancellation()
           var failure = CaptureUploadFailure(error)
           if failure == .denied { failure = await deniedUploadFailure() }
           // A stored original, perhaps from an attempt whose response was lost, continues to
@@ -603,11 +824,56 @@ final class CaptureController {
         throw Self.waitingRegistration(originalOnDevice: draft != nil)
       }
 
-      let attachmentID = attachment.id
-      try await Task.detached {
-        try photoStore.remove(photoID: attachmentID, ownerID: ownerID)
-      }.value
+      if draft != nil {
+        let attachmentID = attachment.id
+        do {
+          try await Task.detached {
+            try photoStore.remove(photoID: attachmentID, ownerID: ownerID)
+          }.value
+        } catch {
+          throw PhotoSyncStop(failure: .unavailable, message: Self.uncleanedPhotoMessage)
+        }
+      }
+      completed += 1
+      photoUploadProgress = CapturePhotoProgress(
+        completed: completed, total: entry.attachments.count)
     }
+  }
+}
+
+/// How many of a capture's photos reached MemoTrail while it syncs.
+struct CapturePhotoProgress: Equatable, Sendable {
+  let completed: Int
+  let total: Int
+}
+
+private struct WeakCaptureController {
+  weak var controller: CaptureController?
+}
+
+/// Work a controller ends when it goes away. Deinit cannot reach main-actor state, so each
+/// piece of work registers how to end it here; anything registered after the end ends at once.
+private final class CaptureControllerLifetime: @unchecked Sendable {
+  private let lock = NSLock()
+  private var endings: [@Sendable () -> Void] = []
+  private var hasEnded = false
+
+  func add(_ ending: @escaping @Sendable () -> Void) {
+    let endNow = lock.withLock {
+      guard !hasEnded else { return true }
+      endings.append(ending)
+      return false
+    }
+    if endNow { ending() }
+  }
+
+  func end() {
+    let all = lock.withLock {
+      hasEnded = true
+      defer { endings = [] }
+      return endings
+    }
+    for ending in all { ending() }
   }
 }
 
@@ -628,6 +894,29 @@ private enum ExistingEntryState: Equatable {
   case trashed
 }
 
+private enum SessionCheck {
+  case ready
+  case unreachable
+  case expired
+}
+
+/// Why a run stopped at a capture that must wait.
+private enum SyncStop {
+  /// MemoTrail could not be reached.
+  case unreachable
+  /// The session can no longer write.
+  case session
+  /// Anything else that a later attempt can resolve, with what the composer says.
+  case problem(String)
+}
+
+/// What one capture's attempt came to.
+private enum AttemptResult {
+  case synced
+  case rejected(String, reachedLibrary: Bool)
+  case wait(SyncStop, reachedLibrary: Bool)
+}
+
 /// What a failed Entry insert means for its capture.
 private enum InsertFailure {
   /// An earlier attempt already created the Entry, perhaps before its response was lost.
@@ -641,8 +930,4 @@ private enum InsertFailure {
 private struct PhotoSyncStop: Error {
   let failure: CaptureSyncFailure
   let message: String
-}
-
-private enum CaptureControllerError: Error {
-  case ownerChanged
 }
