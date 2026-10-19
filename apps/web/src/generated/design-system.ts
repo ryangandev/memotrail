@@ -690,6 +690,16 @@ export type DialogSize = (typeof dialogSizes)[number];
 /** Dialog prop defaults. */
 export const dialogDefaults = { size: "standard", busy: false } as const;
 
+// EntryRow, from packages/design-system/components/entry-row.yaml.
+
+/** Default fits a page's main list; compact tightens the padding and the title for a short list beside other content. */
+export const entryRowVariants = ["default", "compact"] as const;
+
+export type EntryRowVariant = (typeof entryRowVariants)[number];
+
+/** EntryRow prop defaults. */
+export const entryRowDefaults = { variant: "default" } as const;
+
 // IconButton, from packages/design-system/components/icon-button.yaml.
 
 /** The action's emphasis, with Button's variants. Ghost is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one. */
@@ -1021,6 +1031,18 @@ export const componentSpecimens = [
     id: "empty-state-button",
     description: "The whole state as one button that starts the missing record.",
     covers: {},
+  },
+  {
+    component: "EntryRow",
+    id: "entry-row-default",
+    description: "Rows grouped by month with a Chapter, a First Time, tags, a photo, a remembered period, and an untitled Entry titled by its date, in a wide and a narrow frame.",
+    covers: { variant: ["default"] },
+  },
+  {
+    component: "EntryRow",
+    id: "entry-row-compact",
+    description: "A short compact list, as on the side of a Chapter's page, and a search result with a highlighted excerpt and its match.",
+    covers: { variant: ["compact"] },
   },
   {
     component: "IconButton",

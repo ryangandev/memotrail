@@ -1,0 +1,252 @@
+/* Values follow packages/design-system/components/entry-row.yaml. */
+
+.list {
+  /* TODO(WP0b): the 18px and 17px row titles become a type role. */
+  --entry-row-title-size: 18px;
+  --entry-row-title-size-stacked: var(--mt-font-size-body-large);
+  --entry-row-date-column: 112px;
+  --entry-row-thumbnail: 48px;
+
+  container-type: inline-size;
+  margin: 0;
+  padding: 0;
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  column-gap: var(--mt-space-4);
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+.item[data-actions] {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.row {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: var(--entry-row-date-column) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--mt-space-4);
+  padding: var(--mt-space-3-5) 0;
+  border-radius: var(--mt-radius-xsmall);
+  color: var(--mt-color-ink);
+  text-decoration: none;
+}
+
+.item[data-thumbnail] .row {
+  grid-template-columns:
+    var(--entry-row-date-column) minmax(0, 1fr)
+    var(--entry-row-thumbnail);
+}
+
+.row:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
+}
+
+.date {
+  min-width: 0;
+  padding-top: var(--mt-space-1);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--mt-line-height-title-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.body {
+  display: grid;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--mt-space-2);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--entry-row-title-size);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-title);
+  transition: color var(--mt-motion-quick) var(--mt-motion-easing-standard);
+}
+
+.titleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row:hover .title {
+  color: var(--mt-color-accent);
+}
+
+.mark {
+  flex: none;
+  width: var(--mt-size-icon-15);
+  height: var(--mt-size-icon-15);
+}
+
+.mark[data-mark="chapter"] {
+  color: var(--mt-color-accent);
+}
+
+.mark[data-mark="first-time"] {
+  color: var(--mt-color-warm);
+}
+
+.excerpt {
+  margin-top: var(--mt-space-0-75);
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.excerpt mark {
+  border-radius: var(--mt-radius-xxsmall);
+  color: var(--mt-color-ink);
+  background: var(--mt-color-accent-subtle);
+}
+
+.tags,
+.match {
+  margin-top: var(--mt-space-1);
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  line-height: var(--mt-line-height-message);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.match {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: var(--mt-space-1-5);
+  white-space: normal;
+}
+
+.match > span:first-child {
+  flex: none;
+}
+
+.matchReasons {
+  min-width: 0;
+  color: var(--mt-color-ink);
+}
+
+.thumbnail {
+  width: var(--entry-row-thumbnail);
+  height: var(--entry-row-thumbnail);
+  align-self: center;
+  border-radius: var(--mt-radius-xsmall);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--mt-space-2);
+}
+
+/* Compact rows suit dense lists, such as a short list on the side of a page. */
+.item[data-variant="compact"] .row {
+  padding: var(--mt-space-2-5) 0;
+}
+
+.item[data-variant="compact"] .title {
+  font-size: var(--mt-font-size-callout);
+}
+
+.item[data-variant="compact"] .date {
+  padding-top: var(--mt-space-0-5);
+}
+
+.group + .group {
+  margin-top: 0;
+}
+
+.groupHeading {
+  padding: calc(var(--mt-space-6) + var(--mt-space-1)) 0 var(--mt-space-2);
+  color: var(--mt-color-ink-muted);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-title-relaxed);
+}
+
+/* In a narrow list the date sits above the title, and an untitled Entry has no date line. */
+@container (max-width: 620px) {
+  .row,
+  .item[data-thumbnail] .row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: var(--mt-space-3) 0;
+  }
+
+  .item[data-thumbnail] .row {
+    grid-template-columns: minmax(0, 1fr) var(--entry-row-thumbnail);
+    column-gap: var(--mt-space-3);
+  }
+
+  .item[data-thumbnail] .date {
+    grid-column: 1;
+  }
+
+  .item[data-thumbnail] .body {
+    grid-column: 1;
+  }
+
+  .item[data-thumbnail] .thumbnail {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .item[data-undated-title] .date {
+    display: none;
+  }
+
+  .date {
+    padding-top: 0;
+    font-size: var(--mt-font-size-caption);
+  }
+
+  .title {
+    margin-top: var(--mt-space-0-5);
+    font-size: var(--entry-row-title-size-stacked);
+  }
+
+  .item[data-undated-title] .title {
+    margin-top: 0;
+  }
+
+  .excerpt {
+    margin-top: var(--mt-space-0-5);
+  }
+
+  .item[data-actions] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions {
+    justify-content: flex-start;
+    padding-bottom: var(--mt-space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title {
+    transition: none;
+  }
+}
