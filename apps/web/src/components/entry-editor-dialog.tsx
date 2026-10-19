@@ -42,7 +42,11 @@ import {
   type EntryAttachmentInput,
 } from "@/lib/data/entry-photo-input";
 import { validateInboxPhotoFiles } from "@/lib/data/inbox-photo";
-import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
+import {
+  occurrenceDraft,
+  resolveOccurrenceDraft,
+  type OccurrenceDraft,
+} from "@/lib/data/occurrence";
 import type { InboxEntry } from "@/lib/data/inbox";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
 import {
@@ -53,28 +57,39 @@ import { trimEntryNote } from "@/lib/data/rich-text";
 import { tagNamesIncludingDraft } from "@/lib/data/organization";
 
 // Adds a new Entry, such as a Chapter or a First Time added from Timeline. `marks` are the
-// marks it starts with. Its id is drafted once, so a retried save cannot add it twice.
+// marks it starts with, and `initialDraft` fills in a title and dates, such as for a suggested
+// Chapter the person is reviewing. Its id is drafted once, so a retried save cannot add it twice.
 export function NewEntryDialog({
+  initialDraft,
   marks,
   onClose,
+  onSaved,
   ownerId,
   tagOptions,
   timezone,
 }: {
+  initialDraft?: { occurrence: OccurrenceDraft; title: string };
   marks: EntryMarks;
   onClose: () => void;
+  // Called with the saved Entry before the dialog closes.
+  onSaved?: (entry: InboxEntry) => void;
   ownerId: string;
   tagOptions: string[];
   timezone: string;
 }) {
-  const [entry] = useState(() => newEntryDraft({ marks, timezone }));
+  const [entry] = useState(() =>
+    newEntryDraft({ initialDraft, marks, timezone }),
+  );
   return (
     <EntryEditorDialog
       defaultTimezone={timezone}
       entry={entry}
       isNew
       onClose={onClose}
-      onSaved={onClose}
+      onSaved={(saved) => {
+        onSaved?.(saved);
+        onClose();
+      }}
       ownerId={ownerId}
       photos={[]}
       tagOptions={tagOptions}
@@ -83,30 +98,39 @@ export function NewEntryDialog({
 }
 
 function newEntryDraft({
+  initialDraft,
   marks,
   timezone,
 }: {
+  initialDraft?: { occurrence: OccurrenceDraft; title: string };
   marks: EntryMarks;
   timezone: string;
 }): InboxEntry {
+  const dated = initialDraft
+    ? resolveOccurrenceDraft(
+        initialDraft.occurrence,
+        undefined,
+        marks.isChapter,
+      ).value
+    : undefined;
   return {
     body: "",
     bodyRich: null,
     createdAt: new Date().toISOString(),
-    datePrecision: "unknown",
+    datePrecision: dated?.datePrecision ?? "unknown",
     id: crypto.randomUUID(),
     isChapter: marks.isChapter,
     isFirstTime: marks.isFirstTime,
     itemKind: "entry",
     itemSubtype: marks.isChapter ? "chapter" : "entry",
     location: null,
-    occurredAt: null,
-    occurredEnd: null,
-    occurredLabel: null,
-    occurredTimezone: timezone,
+    occurredAt: dated?.occurredAt ?? null,
+    occurredEnd: dated?.occurredEnd ?? null,
+    occurredLabel: dated?.occurredLabel ?? null,
+    occurredTimezone: dated?.occurredTimezone ?? timezone,
     revision: 0,
     tagNames: [],
-    title: null,
+    title: initialDraft?.title ?? null,
   };
 }
 

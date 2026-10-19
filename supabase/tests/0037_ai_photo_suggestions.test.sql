@@ -2,7 +2,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 select plan(12);
 insert into public.entries(id,owner_id,title) values('93700000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Synthetic photo');
-insert into public.ai_preferences(owner_id,enabled,photo_analysis) values('10000000-0000-0000-0000-000000000001',true,false)
+insert into public.ai_preferences(owner_id,enabled,photo_analysis,classification,tagging) values('10000000-0000-0000-0000-000000000001',true,false,true,true)
 on conflict(owner_id) do update set enabled=true,photo_analysis=false,classification=true,tagging=true;
 set local role service_role;
 select is(public.claim_entry_ai_suggestion('10000000-0000-0000-0000-000000000001','93700000-0000-4000-8000-000000000001',1,'classification_tagging',false)->>'claimed','true','Legacy text request remains supported');

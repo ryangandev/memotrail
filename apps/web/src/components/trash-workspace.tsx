@@ -126,6 +126,7 @@ export function TrashWorkspace({
         <div className={styles.actionRow}>
           <EmptyTrashControl
             disabled={Boolean(pending) || Boolean(confirmation)}
+            reviewsExist={workspace.reviewsExist}
             onBusy={setBatchBusy}
             onResult={announceResult}
             onFinish={() => {
@@ -270,7 +271,13 @@ export function TrashWorkspace({
           title={<>Delete “{confirmation.title}” forever?</>}
           titleId="trash-confirmation-title"
           description={
-            <>{deletionDescription(confirmation)} This cannot be undone.</>
+            <>
+              {deletionDescription(confirmation)}
+              {workspace.reviewsExist && confirmation.kind !== "attachment"
+                ? " Reviews that read these Entries are deleted too."
+                : ""}{" "}
+              This cannot be undone.
+            </>
           }
           eyebrow={<>Permanent action</>}
           busy={Boolean(pending)}

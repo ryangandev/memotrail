@@ -7,7 +7,6 @@ import { createClient } from "@supabase/supabase-js";
 const pageFamilies = [
   { path: "/library", variant: "standard", width: 960 },
   { path: "/settings", variant: "compact", width: 880 },
-  { path: "/settings/ai", variant: "compact", width: 880 },
   { path: "/settings/export", variant: "compact", width: 880 },
   { path: "/search", variant: "standard", width: 960 },
   { path: "/tags", variant: "standard", width: 960 },

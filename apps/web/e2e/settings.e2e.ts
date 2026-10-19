@@ -73,9 +73,16 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(
       main.getByText("Google Sign-In", { exact: true }),
     ).toBeVisible();
+    // The paused AI capabilities row is gone; the review switches take its place.
     await expect(
       page.getByRole("link", { name: /AI capabilities/ }),
-    ).toHaveAttribute("href", "/settings/ai");
+    ).toHaveCount(0);
+    await expect(
+      main.getByRole("checkbox", { name: "Chapter and year reviews" }),
+    ).not.toBeChecked();
+    await expect(
+      main.getByRole("checkbox", { name: "Suggest Chapters" }),
+    ).not.toBeChecked();
 
     const preferredName = main.getByRole("textbox", {
       name: "Preferred name",

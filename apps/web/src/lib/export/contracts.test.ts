@@ -10,6 +10,7 @@ import {
   hasCompleteExport,
   mediaArchivePath,
   parseExportAction,
+  reviewMarkdown,
 } from "./contracts";
 const id = "00000000-0000-0000-0000-000000000001";
 describe("portable export contracts", () => {
@@ -144,5 +145,73 @@ describe("portable export contracts", () => {
     ).toBe(false);
     footer[0] = 0;
     expect(hasCompleteExport(footer)).toBe(false);
+  });
+});
+
+describe("review Markdown", () => {
+  const review = {
+    id,
+    scope: "chapter",
+    chapter_id: "00000000-0000-0000-0000-0000000000c1",
+    review_year: null,
+    model: "claude-sonnet-5-5",
+    generated_at: "2026-10-18T12:00:00+00:00",
+    entries_read: 6,
+    entries_in_period: 6,
+    content: {
+      summary: "A tense spring that settled.",
+      feelings: {
+        overview: "Mostly steady.",
+        phases: [
+          {
+            feeling: "Anxious",
+            description: "Waiting on answers.",
+            entryIds: ["e1", "e2"],
+            windowStart: "2026-03-05",
+            windowEnd: "2026-04-01",
+          },
+        ],
+      },
+      themes: [
+        { name: "Work", description: "It came up often.", entryIds: ["e1"] },
+      ],
+      quotes: [
+        {
+          entryId: "e1",
+          start: 0,
+          end: 10,
+          text: "First line\nSecond line",
+          why: "It says it plainly.",
+        },
+      ],
+    },
+  };
+
+  it("writes the labeled record with exact quotes and links to the Entries", () => {
+    const markdown = reviewMarkdown(review, "Job search")!;
+    expect(markdown).toContain('scope: "chapter"');
+    expect(markdown).toContain("review_year: null");
+    expect(markdown).toContain("# Review of Job search");
+    expect(markdown).toContain(
+      "> Written by Claude at your request. This is AI interpretation, not your own writing. Quotes are copied exactly from your Entries.",
+    );
+    expect(markdown).toContain("A tense spring that settled.");
+    expect(markdown).toContain("## How it felt");
+    expect(markdown).toContain("Entries dated 2026-03-05 to 2026-03-31.");
+    expect(markdown).toContain("## What kept coming back");
+    expect(markdown).toContain(
+      "## In your words\n\n> First line\n> Second line\n>\n> From entries/e1.md",
+    );
+    expect(markdown).toContain("Why it stands out: It says it plainly.");
+  });
+
+  it("names a year review by its year and skips a row without a review", () => {
+    expect(
+      reviewMarkdown({ ...review, scope: "year", review_year: 2025 }, null),
+    ).toContain("# Review of 2025");
+    expect(reviewMarkdown({ ...review, content: null }, null)).toBeNull();
+    expect(
+      reviewMarkdown({ ...review, content: { summary: 3 } }, null),
+    ).toBeNull();
   });
 });

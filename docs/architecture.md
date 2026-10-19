@@ -31,16 +31,17 @@ A failed client request, such as saving Appearance offline, is handled where it 
 Use this table to find the first likely files, then search by the product term or RPC name.
 Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/MemoTrail`.
 
-| Request                                                  | Web                                                                                                                                          | iOS                                                                                   | Shared data and tests                                                              |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                                       | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                            |
-| Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`              | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests                 |
-| Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`, `lib/search` | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                         |
-| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                        | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                                    |
-| Import from another app                                  | `app/settings/import`, `app/api/import`, `components/import-*`, `lib/import`                                                                 | none yet                                                                              | import migrations `202610190040` to `202610190044` and `0081_import_jobs.test.sql` |
-| Timeline, Chapters, or First Times                       | matching `app` route, workspace component, and `lib/data` module                                                                             | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                              |
-| Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                        | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests            |
-| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                 | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator                 |
+| Request                                                        | Web                                                                                                                                                                                                                           | iOS                                                                                   | Shared data and tests                                                              |
+| -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Authentication or environment                                  | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                                                                                                                        | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                            |
+| Capture, drafts, dates, rich text, or offline sync             | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`                                                                                               | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests                 |
+| Library browsing, search, AI suggestions, or exploration       | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `lib/ai`, `lib/data/search*`, `lib/search`                                                                                                     | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                         |
+| Chapter or year reviews, Chapter suggestions, or their notices | `app/reviews`, `app/api/reviews`, `app/api/chapter-suggestions`, `components/review-*`, `components/chapter-suggestion-*`, `components/reviews-setting`, `lib/ai/review`, `lib/ai/chapter-suggestions.ts`, `lib/data/review*` | none yet                                                                              | review migrations `202610190030` to `202610190038` and `0082_reviews.test.sql`     |
+| Photos, metadata, or export                                    | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                                                                                                         | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                                    |
+| Import from another app                                        | `app/settings/import`, `app/api/import`, `components/import-*`, `lib/import`                                                                                                                                                  | none yet                                                                              | import migrations `202610190040` to `202610190044` and `0081_import_jobs.test.sql` |
+| Timeline, Chapters, or First Times                             | matching `app` route, workspace component, and `lib/data` module                                                                                                                                                              | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                              |
+| Tags, links, the Item page, or Trash                           | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                                                                                                         | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests            |
+| Visual system                                                  | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                                                                                                  | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator                 |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
 The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
@@ -306,14 +307,15 @@ Pair it with the test file carrying the same feature name.
 
 ## AI rules
 
-- `lib/ai/availability.ts` is the Web product pause gate, separate from provider configuration and saved consent.
-- Old AI feature components and their CSS have been removed; `ai-paused-settings` is only a status placeholder, and `/explore` is a redirect-only compatibility route.
-- While paused, Settings renders an off/disabled Beta status, Explore redirects to Library, and AI API requests and generation fail with `ai_paused` before provider calls or budget reservations.
-- Capture completion in `app/inbox/actions.ts` returns before authentication or revision lookups while paused, and `suggestForEntry` fails with `ai_paused` before reading preferences, preparing photo previews, or claiming a suggestion row.
+- `lib/ai/availability.ts` is the Web product gate, separate from provider configuration and saved consent.
+  It allows exactly two features, `review` and `chapter_suggestion`; every other AI feature stays paused.
+- A paused feature fails with `ai_paused` before authentication-dependent work, provider calls, or budget reservations, and `/explore` is a redirect-only compatibility route.
+- Old AI feature components and their CSS have been removed, and the Settings "AI capabilities" row and `/settings/ai` page are gone; `/settings/ai` redirects to the review switches in Settings.
+- Capture completion in `app/inbox/actions.ts` returns before authentication or revision lookups, and `suggestForEntry` fails with `ai_paused` before reading preferences, preparing photo previews, or claiming a suggestion row.
 - Stored preferences and historical AI records are preserved, not bulk-reset; native requests through this server are also blocked, but native UI is unchanged.
 - The Next.js server is the only AI provider boundary.
 - Native requests reuse the user's Supabase bearer session and never receive provider credentials.
-- Anthropic is the initial text provider behind a replaceable server interface.
+- Anthropic is the text provider behind a replaceable server interface (`lib/ai/provider.ts`), called through its official SDK with no automatic retries.
 - The retained preference contract distinguishes master, organizing, and photo permissions; its former Web controls are deleted, and photo understanding still requires separate consent before any future reactivation.
 - AI provider diagnostics, model identifiers, token prices, and editable spending caps stay out of ordinary Web settings. Per-user and server-wide budget logic remains intact; the former monthly activity UI is deleted.
 - Budget is reserved before a request and reconciled from actual usage.
@@ -323,6 +325,45 @@ Pair it with the test file carrying the same feature name.
 - `search_wiki_items` accepts canonical Kind and subtype classifications and returns Kind, subtype, record source, and specialized routing identity in one owner-scoped result stream for Web and iOS. Linked Location fields contribute searchable context.
   Native `LibraryController` runs the same relevance-ordered search as Web Library, with the grouped Record filter, Collection, tag, and local date filters, and loads each result's `body_rich` separately like Web `loadEntryRichTextMap`.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and opens the Library page for filtered search. Legacy `/search` URLs redirect there with their query parameters.
+
+## Review and Chapter suggestion rules
+
+Chapter reviews, year reviews, and Chapter suggestions are the only AI features offered.
+They are made only on request, or about monthly for suggestions, and only after a person accepts the disclosure in `lib/ai/review-disclosure.ts`, whose version is stored with the preference.
+
+- **Preferences.**
+  `reviews_enabled`, `chapter_suggestions_enabled`, and `review_disclosure_version` live in `ai_preferences` and are changed only through `save_review_preferences`.
+  A trigger deletes every saved review when reviews are turned off.
+  `app/reviews/actions.ts` records the disclosure version on the server, never from the client.
+- **Periods.**
+  A Chapter review reads the Entries whose dates fall inside `chapter_window`; a year review reads the Entries in a year by `entry_date_window`.
+  A period needs at least 5 Entries, a year must be over, and an ongoing Chapter offers "Review so far".
+  SQL (`review_eligibility`, `review_period_inputs`) decides eligibility and returns only title, date, tags, and body; photos, Locations, names, and email addresses never reach the provider.
+- **Jobs.**
+  A review is one to seven steps (map parts, then a reduce, or one request) stored in `entry_reviews.job_state` with five-minute leases.
+  `lib/ai/review/jobs.ts` advances a job from `after()` in `app/api/reviews` and from each status poll.
+  A paid step is never retried automatically, and "Try again" reuses finished map steps when the plan hash still matches.
+  The page polls `POST /api/reviews/{id}` because the identity check needs the app's Origin header, and a finished job reads as `idle`, not `ready`.
+- **Grounding.**
+  The model sees numbered passages and chooses quotes by passage ID, so `lib/ai/review/grounding.ts` inserts the exact words and never trusts retyped text.
+  Cited Entries, phase dates, quotation marks in prose, and counts are checked, and an ungrounded result is not stored.
+  Quotes are checked again in SQL when stored and on every read (`quoteAvailable`), so an edited or trashed Entry hides its quote and the page counts what is hidden.
+- **Deletion and export.**
+  `entry_review_sources` records each Entry a review read, and permanently deleting one of those Entries deletes the review.
+  Moving an Entry to Trash only hides what came from it.
+  Export includes `data/entry_reviews.json` and `reviews/{id}.md` (`lib/export/contracts.ts`), and the archive README says what they are.
+- **Accounting.**
+  `reserve_ai_usage`, `finish_ai_usage`, and `ai_budget_allows` apply per-feature byte, token, and time limits (`lib/ai/contracts.ts`), a per-person and a server-wide monthly budget, and a cap on one reservation.
+  A request whose outcome is unknown keeps its reservation.
+- **Suggestions.**
+  `claim_chapter_suggestion_run` takes a lease and returns whether a run is due; `lib/ai/chapter-suggestions.ts` reads at most 120,000 bytes of recent Entries and drops every suggestion that fails `validateSuggestions`.
+  Nothing becomes a Chapter until the person reviews it in the editor and saves; dismissing keeps only the stretch's dates so it is not suggested again.
+  The run starts from a Server Action or from `app/api/chapter-suggestions`, because `cookies()` cannot be read inside `after()` in a Server Component.
+- **Notices.**
+  The Dashboard shows at most one quiet notice (`review_notice`), only while reviews are on; resolving it retires that year or Chapter for good.
+- **Tests.**
+  Unit tests use the scripted provider in `lib/ai/fake-provider.ts`, and browser tests use `apps/web/scripts/fake-ai-provider.mjs`, a local server that speaks the Messages API.
+  Neither calls a real provider, and `MEMOTRAIL_E2E_LIVE_AI=1` is the only way a browser run reaches one.
 
 ## Semantic search rules
 
@@ -594,7 +635,7 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
 - Address search and preview routes each consume an owner-scoped hourly database quota before contacting Geoapify.
 - iOS receives public backend configuration and the Web API base URL.
 - `lib/auth/api.ts` verifies Web cookie or native bearer identity for media, metadata, and export independently of AI availability.
-  AI routes add their own pause gate before shared authentication, and native AI entry points remain paused as well.
+  AI routes add their own per-feature gate before shared authentication, and native AI entry points remain paused as well.
 - `src/proxy.ts` refreshes the Supabase session for pages and Server Actions.
   API routes are outside its matcher because they authenticate and refresh the session themselves, so Next.js does not copy upload bodies for the proxy, and an upload the browser abandons ends quietly.
 - Shared behavior should be implemented and tested across Web, iOS, and Supabase in the same product slice.
@@ -610,7 +651,7 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   Build caches are isolated per checkout, logs are unique per run, and concurrent use of one build directory fails immediately.
 - Keep regression cases that protect distinct behavior, even when unit, SQL, and UI coverage overlap.
   Delete a test when its product surface has been retired and current behavior is covered; do not keep permanently skipped tests for removed UI.
-  The retired active-AI browser flows are removed, while the pause flow, retained provider unit tests, SQL tests, and multi-client exploration contracts remain.
+  The retired active-AI browser flows are removed, while the pause flow, the review browser flows, retained provider unit tests, SQL tests, and multi-client exploration contracts remain.
 - Hosted configuration, destructive behavior, media integrity, and recovery require their own end-to-end evidence.
 
 Commands live in the root [README.md](../README.md).

@@ -184,6 +184,9 @@ Set `MEMOTRAIL_E2E_PORT` to an available port if another project is using it; th
 The native review script's `--web` option honors this variable as well.
 Test server build output is isolated by port, so independent test servers do not share Next.js build state.
 Next.js writes test type paths into an ignored per-port TypeScript configuration that extends the strict project configuration.
+The product browser suite also starts `apps/web/scripts/fake-ai-provider.mjs` on the e2e port plus 2000 and points the server at it, so reviews and Chapter suggestions never reach a real model.
+Set `MEMOTRAIL_E2E_LIVE_AI=1` with a synthetic `AI_API_KEY` to use the real provider instead; the review scenarios then skip.
+The suite accepts any local Supabase stack on `127.0.0.1`, so a second stack on other ports can run beside the default one.
 Use `MEMOTRAIL_E2E_PRODUCTION=1` for browser acceptance against a local production build.
 Run the development-only gallery interactions and visual checks separately with `pnpm --filter @memotrail/web test:e2e:design` when shared components or design tokens change.
 This suite always uses the development server because the gallery is absent from production builds.

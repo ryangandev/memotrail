@@ -6,7 +6,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-test("AI beta stays off, has no entry points, and blocks old clients without changing saved consent", async ({
+test("Paused AI has no setting or entry point and blocks old clients without changing saved consent", async ({
   baseURL,
   page,
   context,
@@ -17,7 +17,7 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
       stdio: ["ignore", "pipe", "ignore"],
     }),
   );
-  expect(env.API_URL).toBe("http://127.0.0.1:54321");
+  expect(env.API_URL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
   const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });
@@ -89,12 +89,21 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     ).toBeNull();
 
     await page.goto("/settings");
-    await page.getByRole("link", { name: /AI capabilities/ }).click();
-    const toggle = page.getByRole("switch", { name: "AI capabilities" });
-    await expect(toggle).not.toBeChecked();
-    await expect(toggle).toBeDisabled();
-    await expect(page.getByText("Beta", { exact: true })).toBeVisible();
-    await expect(page.getByRole("switch")).toHaveCount(1);
+    // The paused AI capabilities setting is gone; Settings offers only the review switches,
+    // and an old bookmark lands on them.
+    await expect(
+      page.getByRole("link", { name: /AI capabilities/ }),
+    ).toHaveCount(0);
+    await expect(page.getByText("Beta", { exact: true })).toHaveCount(0);
+    const reviews = page.getByRole("checkbox", {
+      name: "Chapter and year reviews",
+    });
+    await expect(reviews).not.toBeChecked();
+    await expect(
+      page.getByRole("checkbox", { name: "Suggest Chapters" }),
+    ).not.toBeChecked();
+    await page.goto("/settings/ai");
+    await expect(page).toHaveURL(/\/settings#reviews$/);
     // Preserve SSR input styles while React finishes hydration.
     await page.screenshot({
       caret: "initial",
@@ -104,8 +113,7 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
     await page.reload();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
-    await expect(toggle).toBeDisabled();
-    await expect(toggle).not.toBeChecked();
+    await expect(reviews).not.toBeChecked();
     await page.screenshot({
       caret: "initial",
       path: test.info().outputPath("memotrail-ai-paused-mobile.png"),
@@ -168,8 +176,8 @@ test("AI beta stays off, has no entry points, and blocks old clients without cha
   }
 });
 
-// With MEMOTRAIL_E2E_LIVE_AI=1 and a synthetic AI_API_KEY, the server is configured like
-// Production; the pause must still stop capture follow-up work before any provider call.
+// The e2e server is configured like Production, with a scripted provider behind it; the pause
+// must still stop capture follow-up work before any provider call.
 test("Captures with saved AI consent start no paused suggestion work", async ({
   page,
   context,
@@ -181,7 +189,7 @@ test("Captures with saved AI consent start no paused suggestion work", async ({
       stdio: ["ignore", "pipe", "ignore"],
     }),
   );
-  expect(env.API_URL).toBe("http://127.0.0.1:54321");
+  expect(env.API_URL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
   const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
     auth: { persistSession: false },
   });

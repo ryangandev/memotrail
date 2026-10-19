@@ -8,7 +8,7 @@ export async function cleanupMediaFixture(
   owner: string,
   apiURL: string,
 ) {
-  expect(apiURL).toBe("http://127.0.0.1:54321");
+  expect(apiURL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
   expect(owner).toMatch(/^[a-f0-9-]{36}$/);
   const user = await client.auth.admin.getUserById(owner);
   expect(user.data.user?.email).toMatch(/^media-.+@memotrail\.local$/);

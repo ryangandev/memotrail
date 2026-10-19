@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { EntryEditorDialog } from "./entry-editor-dialog";
 import { EntryPhotos } from "./entry-photos";
 import { EntryRichTextContent } from "./entry-rich-text-content";
+import { ReviewPanel } from "./review-panel";
 import { EntryList } from "./entry-list";
 import { Icon } from "./icon";
 import { SectionHeader } from "./section-header";
@@ -36,6 +37,7 @@ import {
   wikiItemSubtypeLabel,
 } from "@/lib/data/wiki-item";
 import type { EntryPhotos as EntryPhotoList } from "@/lib/data/entry-photos";
+import type { ReviewPageData, ReviewSettings } from "@/lib/data/review-input";
 import { locationDisplayLabel } from "@/lib/locations/location";
 import styles from "@/components/entry-detail-view.module.css";
 
@@ -46,6 +48,13 @@ export type ChapterPageData = {
   /** The request date as an ISO string, so server and client render the same duration. */
   now: string;
   page: number;
+  /** The Chapter's review, or null when reviews could not be read. */
+  review: {
+    data: ReviewPageData;
+    preferences: ReviewSettings;
+    timezone: string;
+    today: string;
+  } | null;
 };
 
 const sourceLinkLabels: Record<string, string> = {
@@ -286,6 +295,16 @@ function ChapterSections({
 
   return (
     <>
+      {chapter.review ? (
+        <ReviewPanel
+          data={chapter.review.data}
+          preferences={chapter.review.preferences}
+          spanLabel={chapterDateFacts(entry, new Date(chapter.now)).span}
+          subject={{ chapterId: entry.id, scope: "chapter" }}
+          timezone={chapter.review.timezone}
+          today={chapter.review.today}
+        />
+      ) : null}
       <section aria-labelledby="chapter-entries-heading">
         <SectionHeader
           detail={

@@ -1,10 +1,6 @@
-import { AIPausedSettings } from "@/components/ai-paused-settings";
-import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function AISettingsPage() {
-  const context = await getAuthenticatedContext();
-  if (!context) return null;
-  return <AIPausedSettings />;
+// The paused AI capabilities page is gone. Bookmarks land on the review settings.
+export default function AISettingsPage() {
+  redirect("/settings#reviews");
 }
