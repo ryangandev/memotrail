@@ -1,7 +1,11 @@
 import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { entryDisplayTitle, storedOccurrence, type Occurrence } from "./occurrence";
+import {
+  entryDisplayTitle,
+  storedOccurrence,
+  type Occurrence,
+} from "./occurrence";
 import { chaptersContaining } from "./occurrence-window";
 
 /** A Chapter an Entry falls inside, as the Entry's page names it. */

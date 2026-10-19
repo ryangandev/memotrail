@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  EntryRow,
-  EntryRowGroup,
-  EntryRowList,
-} from "@/components/entry-row";
+import { EntryRow, EntryRowGroup, EntryRowList } from "@/components/entry-row";
 import styles from "./entry-row-specimen.module.css";
 import { loadedImage } from "./samples";
 import { Specimen, SpecimenCase } from "./specimen";
@@ -112,8 +108,8 @@ export function EntryRowSpecimen() {
                   dateTime="2017-07-09"
                   excerpt={
                     <>
-                      …the old <mark>lantern</mark> on the porch still
-                      worked after the storm…
+                      …the old <mark>lantern</mark> on the porch still worked
+                      after the storm…
                     </>
                   }
                   href="#entry-row"

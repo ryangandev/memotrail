@@ -83,9 +83,7 @@ test("Timeline adds without asking for a birth date and starts from the earliest
       .getByRole("link", { name: /Moved into the studio/ }),
   ).toBeVisible();
   await expect(
-    page.getByText(
-      "1 Entry has no calendar date and is not on the Timeline.",
-    ),
+    page.getByText("1 Entry has no calendar date and is not on the Timeline."),
   ).toBeVisible();
   await expect(
     page.getByRole("link", { name: "Find them in Library" }),

@@ -242,7 +242,10 @@ describe("the vertical Timeline", () => {
   it("gives an untitled First Time no date line, since its title is the date", () => {
     expect(
       timelineRowDateLabel(
-        { ...dayFirstTime("a", "2024-10-01", "Tuesday, October 1, 2024"), untitled: true },
+        {
+          ...dayFirstTime("a", "2024-10-01", "Tuesday, October 1, 2024"),
+          untitled: true,
+        },
         2024,
       ),
     ).toBeNull();

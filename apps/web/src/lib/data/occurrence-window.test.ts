@@ -22,9 +22,10 @@ const at = (
 
 describe("Occurrence windows", () => {
   it("covers the days a date names, in the zone it was recorded in", () => {
-    expect(occurrenceWindow(at("day", "2026-10-14T12:00:00Z"), false)).toEqual(
-      { first: "2026-10-14", last: "2026-10-14" },
-    );
+    expect(occurrenceWindow(at("day", "2026-10-14T12:00:00Z"), false)).toEqual({
+      first: "2026-10-14",
+      last: "2026-10-14",
+    });
     // Late evening in New York is already the next day in UTC.
     expect(
       occurrenceWindow(

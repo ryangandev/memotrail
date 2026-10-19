@@ -349,9 +349,10 @@ describe("createTimelineLayout zoomed to months", () => {
     expect(layout.monthMarkers.some((marker) => marker.month === 1)).toBe(
       false,
     );
-    expect(
-      layout.yearMarkers.map((marker) => marker.label),
-    ).toEqual(["2026", "2027"]);
+    expect(layout.yearMarkers.map((marker) => marker.label)).toEqual([
+      "2026",
+      "2027",
+    ]);
     const april = layout.monthMarkers.find(
       (marker) => marker.year === 2025 && marker.month === 4,
     )!;
@@ -374,8 +375,7 @@ describe("createTimelineLayout zoomed to months", () => {
       1100,
       "months",
     );
-    const pastToday =
-      ((100 - layout.todayPercent) / 100) * layout.canvasWidth;
+    const pastToday = ((100 - layout.todayPercent) / 100) * layout.canvasWidth;
 
     expect(pastToday).toBeGreaterThanOrEqual(6 * 60 - 1);
     expect(
