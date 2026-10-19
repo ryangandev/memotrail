@@ -148,11 +148,17 @@ struct TimelineView: View {
   /// that have no calendar date.
   private func canvasCard(layout: TimelineLayout) -> some View {
     VStack(spacing: 0) {
-      HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s4) {
-        Text("Scroll across years").foregroundStyle(MTColor.inkMuted)
-        Spacer(minLength: 0)
-        Text("Select anything to open it").foregroundStyle(MTColor.inkFaint)
-          .multilineTextAlignment(.trailing)
+      ViewThatFits(in: .horizontal) {
+        HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s4) {
+          Text("Scroll across years").foregroundStyle(MTColor.inkMuted)
+          Spacer(minLength: 0)
+          Text("Select anything to open it").foregroundStyle(MTColor.inkFaint)
+        }
+        .fixedSize(horizontal: true, vertical: false)
+        VStack(alignment: .leading, spacing: MTSpacing.s1) {
+          Text("Scroll across years").foregroundStyle(MTColor.inkMuted)
+          Text("Select anything to open it").foregroundStyle(MTColor.inkFaint)
+        }
       }
       .font(MTFont.caption)
       .padding(.horizontal, MTSpacing.s4)

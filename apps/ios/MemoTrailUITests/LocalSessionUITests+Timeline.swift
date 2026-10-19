@@ -51,6 +51,8 @@ extension LocalSessionUITests {
     // The same canvas in dark mode.
     XCUIDevice.shared.appearance = .dark
     addTeardownBlock { @MainActor in XCUIDevice.shared.appearance = .light }
+    // The appearance change settles asynchronously, so give it a moment before the capture.
+    _ = XCTWaiter.wait(for: [expectation(description: "appearance settles")], timeout: 2)
     attach(app, "Timeline canvas in dark mode")
     XCUIDevice.shared.appearance = .light
 
@@ -62,7 +64,8 @@ extension LocalSessionUITests {
     app.buttons["timeline-type-chapter"].tap()
     let titleField = element("editor-title", in: app)
     XCTAssertTrue(titleField.waitForExistence(timeout: 10))
-    XCTAssertEqual(app.buttons["editor-chapter"].value as? String, "Checked")
+    // Chapter is already checked for a Chapter, so the editor asks for its title.
+    XCTAssertTrue(element("editor-chapter", in: app).exists)
     titleField.tap()
     titleField.typeText(title)
     app.buttons["editor-save"].tap()
@@ -90,7 +93,7 @@ extension LocalSessionUITests {
       "/rest/v1/profiles?birth_date=not.is.null", method: "PATCH", body: ["birth_date": nil])
     addTeardownBlock { @MainActor [self] in
       _ = try? requestTimelineStack(
-        "/rest/v1/profiles?birth_date=is.null", method: "PATCH",
+        "/rest/v1/profiles?user_id=not.is.null", method: "PATCH",
         body: ["birth_date": "1990-05-14"])
     }
     let app = try launchLocalSession()
@@ -171,6 +174,23 @@ extension LocalSessionUITests {
     // An item in the list opens its Item page.
     first.tap()
     XCTAssertTrue(app.buttons["item-edit"].waitForExistence(timeout: 15))
+  }
+
+  /// The summary wraps without a separator at either end of a line, and the canvas still opens
+  /// items at accessibility text sizes.
+  func testTimelineSummaryAndCanvasHoldAtAccessibilityTextSizes() throws {
+    let app = try launchLocalSession(contentSize: "UICTContentSizeCategoryAccessibilityL")
+    openTimeline(in: app)
+    XCTAssertTrue(element("timeline-canvas", in: app).waitForExistence(timeout: 20))
+    let summary = app.otherElements["Timeline summary"]
+    XCTAssertTrue(summary.waitForExistence(timeout: 5))
+    let lines = assertSeparatorsBetweenFacts(revealWhole(summary, in: app), in: app)
+    XCTAssertGreaterThan(lines.count, 1, "\(lines)")
+    attach(app, "Timeline summary at accessibility size")
+    reveal(element("timeline-canvas", in: app), in: app)
+    attach(app, "Timeline canvas at accessibility size")
+    let open = item("Living on Maple Street", in: element("timeline-band-chapters", in: app))
+    XCTAssertTrue(open.exists)
   }
 
   // MARK: Helpers

@@ -79,7 +79,7 @@ private struct TimelineAxis: View {
     .frame(width: layout.canvasWidth, height: TimelineMetrics.axisPixels * scale)
     .overlay(alignment: .bottom) { MTColor.border.frame(height: MTSize.Stroke.thin) }
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel("Years \(layout.startYear) to \(layout.endYear)")
+    .accessibilityLabel("Years " + String(layout.startYear) + " to " + String(layout.endYear))
     .accessibilityIdentifier("timeline-axis")
   }
 
@@ -160,6 +160,8 @@ private struct TimelineItemView: View {
       content
         .frame(width: position.widthPixels, height: itemHeight, alignment: .leading)
         .contentShape(Rectangle())
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(item.accessibleName)
     }
     .buttonStyle(TimelineItemButtonStyle())
     .offset(
@@ -167,8 +169,6 @@ private struct TimelineItemView: View {
       y: (TimelineMetrics.rowTopPixels + Double(position.row) * TimelineMetrics.rowPitchPixels)
         * scale
     )
-    .accessibilityElement(children: .ignore)
-    .accessibilityLabel(item.accessibleName)
     .accessibilityIdentifier("timeline-item-\(item.id.uuidString.lowercased())")
   }
 
