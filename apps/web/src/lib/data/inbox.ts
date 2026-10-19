@@ -9,7 +9,6 @@ import {
 } from "./occurrence";
 import { entryRichTextFromMetadata, type EntryRichText } from "./rich-text";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
-import type { Milestone } from "./milestone";
 import type {
   ExistingLocation,
   LocationSelection,
@@ -21,9 +20,10 @@ export type InboxEntry = Occurrence & {
   createdAt: string;
   id: string;
   itemKind: WikiItemKind;
+  isChapter: boolean;
+  isFirstTime: boolean;
   itemSubtype: string;
   location?: LocationSelection | null;
-  milestone?: Milestone | null;
   revision: number;
   tagNames: string[];
   title: string | null;
@@ -43,6 +43,7 @@ type EntryRow = {
   created_at: string;
   id: string;
   item_kind: string;
+  is_first_time?: boolean;
   item_subtype: string;
   metadata: unknown;
   occurred_start: string | null;
@@ -120,6 +121,8 @@ export function entryFromRow(
     createdAt: row.created_at,
     id: row.id,
     itemKind: isWikiItemKind(row.item_kind) ? row.item_kind : "entry",
+    isChapter: row.item_subtype === "chapter",
+    isFirstTime: row.is_first_time === true,
     itemSubtype:
       typeof row.item_subtype === "string" && row.item_subtype
         ? row.item_subtype

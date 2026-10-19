@@ -32,7 +32,6 @@ import {
   trashedPhotoMessage,
 } from "@/lib/data/capture-sync-messages";
 import { classifySyncFailure, type SyncFailure } from "@/lib/data/sync-failure";
-import { milestoneRow } from "@/lib/data/milestone";
 import { scheduleSearchIndexDrain } from "@/lib/search/search-index";
 
 /**
@@ -56,6 +55,9 @@ const isDeletedForever = (error: MemoTrailError) =>
 /** The Entry is in Trash, so it cannot take photos. */
 const isInTrash = (error: MemoTrailError) =>
   error.code === "22023" && error.message === "entry_in_trash";
+/** A Chapter was saved without a title. */
+const isChapterWithoutTitle = (error: MemoTrailError) =>
+  error.code === "22023" && error.message === "chapter_requires_title";
 /** The original has not reached Storage. */
 const isOriginalMissing = (error: MemoTrailError) =>
   error.code === "22023" && error.message === "attachment_object_missing";
@@ -247,7 +249,8 @@ export async function reviewInboxEntry(
     p_occurred_timezone: parsedInput.data.occurredTimezone,
     p_tag_names: parsedInput.data.tagNames,
     p_title: parsedInput.data.title,
-    p_milestone: milestoneRow(parsedInput.data.milestone ?? null),
+    p_is_chapter: parsedInput.data.isChapter,
+    p_is_first_time: parsedInput.data.isFirstTime,
   });
 
   if (error?.code === "40001")
@@ -256,6 +259,10 @@ export async function reviewInboxEntry(
       message:
         "The photo or Location changed. Close this editor, refresh, and confirm the latest version before saving.",
     };
+
+  if (error && isChapterWithoutTitle(error)) {
+    return { message: "Give this Chapter a title.", status: "error" };
+  }
 
   if (error) {
     return {

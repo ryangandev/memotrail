@@ -1,18 +1,25 @@
+export type TimelineBand = "chapters" | "first-times";
+
+// A Chapter is a bar from its window start to its window end, and a First Time is a point. The
+// window is the whole days the item covers, read in its own time zone: the start is the first
+// day and the end is the day after the last, or null while the stretch is still going on.
 export type TimelineLayoutSource = {
+  band: TimelineBand;
   id: string;
-  // The title's rendered width at the lane item font.
+  // The title's rendered width at the band item font.
   labelWidthPixels: number;
-  lane: string;
-  occurredEnd: string | null;
-  occurredStart: string | null;
-  shape: "moment" | "period";
+  shape: "bar" | "point";
+  // An exclusive YYYY-MM-DD date. A bar with none runs to the reference date.
+  windowEnd: string | null;
+  // A YYYY-MM-DD date. Items without a calendar date never reach the layout.
+  windowStart: string;
 };
 
-// Where a title sits: inside a Period wide enough to hold it, or beside a Moment's dot or a
-// short Period's bar, before it only when it would run past the end of the Timeline.
+// Where a title sits: inside a bar wide enough to hold it, or beside a point's dot or a short
+// bar, before it only when it would run past the end of the Timeline.
 export type TimelineLabelPlacement = "after" | "before" | "inside";
 
-// Overlapping items in one lane stack on separate rows. An item is drawn from its anchor at
+// Overlapping items in one band stack on separate rows. An item is drawn from its anchor at
 // leftPercent, shifted by offsetPixels, and is widthPixels wide including any outside label.
 export type TimelinePosition = {
   barWidthPixels: number;
@@ -35,7 +42,7 @@ export type TimelineLayout = {
   canvasWidth: number;
   end: string;
   positions: TimelinePosition[];
-  rowCountByLane: Record<string, number>;
+  rowCountByBand: Record<string, number>;
   start: string;
   todayPercent: number;
   yearMarkers: TimelineYearMarker[];
@@ -44,10 +51,10 @@ export type TimelineLayout = {
 const minimumRangeMilliseconds = 365 * 24 * 60 * 60 * 1_000;
 const minimumCanvasWidthPixels = 840;
 const yearWidthPixels = 112;
-// A Period's title sits inside when the bar holds it with its padding and borders.
-const periodLabelInsetPixels = 22;
-const minimumPeriodBarPixels = 10;
-const momentDotPixels = 12;
+// A bar's title sits inside when the bar holds it with its padding and borders.
+const barLabelInsetPixels = 22;
+const minimumBarPixels = 10;
+const pointDotPixels = 12;
 const outsideLabelGapPixels = 7;
 // Longer titles beside a dot or bar end in an ellipsis and show in full on hover.
 const maximumOutsideLabelPixels = 180;
@@ -68,10 +75,10 @@ export function createTimelineLayout(
   const birthTime = validTime(birthDate);
   const normalized = items
     .map((item) => {
-      const start = validTime(item.occurredStart);
-      const explicitEnd = item.occurredEnd ? validTime(item.occurredEnd) : null;
+      const start = dateTime(item.windowStart);
+      const explicitEnd = item.windowEnd ? dateTime(item.windowEnd) : null;
       const end =
-        item.shape === "period"
+        item.shape === "bar"
           ? Math.max(start ?? validReference, explicitEnd ?? validReference)
           : start;
 
@@ -133,18 +140,18 @@ export function createTimelineLayout(
     yearMarkers.length * yearWidthPixels,
   );
   const positions: TimelinePosition[] = [];
-  const rowCountByLane: Record<string, number> = {};
+  const rowCountByBand: Record<string, number> = {};
   const renderedItems = normalized.map((item) => {
     const leftPercent = clamp(((item.start - earliest) / range) * 100);
     const anchor = (leftPercent / 100) * canvasWidth;
     const spanPixels =
-      item.shape === "moment"
+      item.shape === "point"
         ? 0
         : (clamp(((item.end - item.start) / range) * 100) / 100) * canvasWidth;
 
     if (
-      item.shape === "period" &&
-      spanPixels >= item.labelWidthPixels + periodLabelInsetPixels
+      item.shape === "bar" &&
+      spanPixels >= item.labelWidthPixels + barLabelInsetPixels
     ) {
       return {
         ...item,
@@ -159,16 +166,16 @@ export function createTimelineLayout(
       };
     }
 
-    // A Moment's dot centers on its date. A short Period's bar covers its dates, and an
-    // ongoing one still ends at today.
+    // A point's dot centers on its date. A short bar covers its dates, and an ongoing one still
+    // ends at today.
     const barWidthPixels =
-      item.shape === "moment"
-        ? momentDotPixels
-        : Math.max(spanPixels, minimumPeriodBarPixels);
+      item.shape === "point"
+        ? pointDotPixels
+        : Math.max(spanPixels, minimumBarPixels);
     const barStart =
-      item.shape === "moment"
-        ? anchor - momentDotPixels / 2
-        : item.occurredEnd === null
+      item.shape === "point"
+        ? anchor - pointDotPixels / 2
+        : item.windowEnd === null
           ? anchor + spanPixels - barWidthPixels
           : anchor;
     const barEnd = barStart + barWidthPixels;
@@ -198,25 +205,25 @@ export function createTimelineLayout(
       widthPixels: visualEnd - visualStart,
     };
   });
-  const itemsByLane = new Map<string, typeof renderedItems>();
+  const itemsByBand = new Map<string, typeof renderedItems>();
 
   for (const item of renderedItems) {
-    const laneItems = itemsByLane.get(item.lane) ?? [];
-    laneItems.push(item);
-    itemsByLane.set(item.lane, laneItems);
+    const bandItems = itemsByBand.get(item.band) ?? [];
+    bandItems.push(item);
+    itemsByBand.set(item.band, bandItems);
   }
 
-  for (const [lane, laneItems] of itemsByLane) {
+  for (const [band, bandItems] of itemsByBand) {
     const rowEnds: number[] = [];
 
-    laneItems.sort(
+    bandItems.sort(
       (a, b) =>
         a.visualStart - b.visualStart ||
         a.visualEnd - b.visualEnd ||
         a.start - b.start,
     );
 
-    for (const item of laneItems) {
+    for (const item of bandItems) {
       let row = rowEnds.findIndex((rowEnd) => rowEnd <= item.visualStart);
 
       if (row === -1) {
@@ -236,18 +243,26 @@ export function createTimelineLayout(
       });
     }
 
-    rowCountByLane[lane] = Math.max(1, rowEnds.length);
+    rowCountByBand[band] = Math.max(1, rowEnds.length);
   }
 
   return {
     canvasWidth,
     end: new Date(latest).toISOString(),
     positions,
-    rowCountByLane,
+    rowCountByBand,
     start: new Date(earliest).toISOString(),
     todayPercent: clamp(((validReference - earliest) / range) * 100),
     yearMarkers,
   };
+}
+
+// A date placed at midnight UTC, so year markers sit on January 1 whatever the viewer's zone.
+function dateTime(value: string | null) {
+  const match = value ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(value) : null;
+  return match
+    ? Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    : null;
 }
 
 function validTime(value: string | null) {

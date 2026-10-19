@@ -3,7 +3,6 @@ import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext, entryFromRow } from "@/lib/data/inbox";
 import { validEntryID } from "@/lib/data/entry-detail";
 import { existingLocationFromRow } from "@/lib/locations/location";
-import { milestoneFromRow } from "@/lib/data/milestone";
 import { loadEntryPhotos } from "@/lib/data/entry-photos";
 import { loadDefaultTimezone } from "@/lib/data/profile-timezone";
 import { loadTagOptions } from "@/lib/data/tag-options";
@@ -21,14 +20,11 @@ export async function loadEditableEntry(id: string) {
   if (error || !data || !photos) return null;
   return {
     defaultTimezone,
-    entry: {
-      ...entryFromRow(
-        data,
-        data.tag_names,
-        existingLocationFromRow(data.primary_location),
-      ),
-      milestone: milestoneFromRow(data.milestone),
-    },
+    entry: entryFromRow(
+      data,
+      data.tag_names,
+      existingLocationFromRow(data.primary_location),
+    ),
     photos: photos.photos,
     tagOptions: tags ?? data.tag_names,
   };

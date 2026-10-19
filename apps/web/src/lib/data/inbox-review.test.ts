@@ -9,8 +9,9 @@ import {
 const validInput = {
   body: "Small forces trigger bone remodeling.",
   id: "f4d2df16-a506-4be6-a63e-b7b18afe3468",
+  isChapter: false,
+  isFirstTime: false,
   location: null,
-  milestone: null,
   occurredAt: "2026-09-01T15:00:00.000Z",
   occurredTimezone: "America/Los_Angeles",
   occurredEnd: null,
@@ -119,48 +120,69 @@ describe("Inbox Entry review", () => {
     ).toBe(false);
   });
 
-  it("marks an Entry as a Timeline milestone", () => {
-    const period = {
-      isFirstTime: false,
-      lane: "work_study",
-      shape: "period",
-    } as const;
+  it("marks an Entry as a Chapter and as a First Time", () => {
+    const chapter = {
+      ...validInput,
+      datePrecision: "day",
+      isChapter: true,
+      occurredAt: "2019-03-04T00:00:00.000Z",
+      occurredEnd: "2019-03-09T00:00:00.000Z",
+      title: "Living in Portland",
+    };
+    expect(parseInboxReviewInput(chapter)).toMatchObject({
+      data: { isChapter: true, isFirstTime: false },
+      success: true,
+    });
     expect(
-      parseInboxReviewInput({
-        ...validInput,
-        datePrecision: "year",
-        milestone: period,
-        occurredAt: "2013-01-01T00:00:00.000Z",
-        occurredEnd: "2017-01-01T00:00:00.000Z",
-      }),
-    ).toMatchObject({ data: { milestone: period }, success: true });
+      parseInboxReviewInput({ ...validInput, isFirstTime: true }),
+    ).toMatchObject({
+      data: { isChapter: false, isFirstTime: true },
+      success: true,
+    });
     expect(
-      parseInboxReviewInput({
-        ...validInput,
-        milestone: { isFirstTime: true, lane: "other", shape: "moment" },
-      }),
-    ).toMatchObject({ data: { milestone: { isFirstTime: true } } });
-    expect(
-      parseInboxReviewInput({
-        ...validInput,
-        milestone: { isFirstTime: false, lane: "homes", shape: "period" },
-      }),
-    ).toEqual({
-      message: "Choose how this Entry appears on Timeline.",
+      parseInboxReviewInput({ ...chapter, isFirstTime: true }),
+    ).toMatchObject({
+      data: { isChapter: true, isFirstTime: true },
+      success: true,
+    });
+  });
+
+  it("lets a Chapter keep a Day with an end but not an ordinary Entry", () => {
+    const dayWithEnd = {
+      ...validInput,
+      datePrecision: "day",
+      occurredAt: "2019-03-04T00:00:00.000Z",
+      occurredEnd: "2019-03-09T00:00:00.000Z",
+    };
+    expect(parseInboxReviewInput(dayWithEnd)).toEqual({
+      message: "Only ranges, ages, or approximate periods can have an end date.",
       success: false,
     });
     expect(
+      parseInboxReviewInput({ ...dayWithEnd, isChapter: true }).success,
+    ).toBe(true);
+  });
+
+  it("requires a title on a Chapter", () => {
+    expect(
+      parseInboxReviewInput({ ...validInput, isChapter: true, title: "  " }),
+    ).toEqual({ message: "Give this Chapter a title.", success: false });
+    expect(
+      parseInboxReviewInput({ ...validInput, isChapter: true, title: null }),
+    ).toEqual({ message: "Give this Chapter a title.", success: false });
+  });
+
+  it("refuses the retired milestone field and missing marks", () => {
+    expect(
       parseInboxReviewInput({
         ...validInput,
-        datePrecision: "range",
         milestone: { isFirstTime: false, lane: "other", shape: "moment" },
-        occurredEnd: "2026-09-03T15:00:00.000Z",
       }),
-    ).toEqual({
-      message:
-        "A Moment is one point in time. Remove the end date, or make it a Period.",
-      success: false,
-    });
+    ).toEqual({ message: "This Entry review is invalid.", success: false });
+    const { isChapter: _chapter, ...withoutChapter } = validInput;
+    expect(parseInboxReviewInput(withoutChapter).success).toBe(false);
+    const { isFirstTime: _first, ...withoutFirstTime } = validInput;
+    expect(parseInboxReviewInput(withoutFirstTime).success).toBe(false);
   });
 
   it("accepts a provider Location and rejects incomplete coordinates", () => {

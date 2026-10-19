@@ -6,75 +6,58 @@ import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
-import { isWikiItemKind, type WikiItemKind } from "@/lib/data/wiki-item";
-import {
-  isMilestoneShape,
-  isTimelineLane,
-  timelineLaneLabels,
-  timelineLanes,
-  type MilestoneShape,
-  type TimelineLane,
-} from "@/lib/data/milestone";
 import {
   entryDisplayTitle,
   storedOccurrence,
-  type OccurrencePrecision,
+  type Occurrence,
 } from "@/lib/data/occurrence";
 
-export type TimelineEntry = {
-  body: string;
-  datePrecision: OccurrencePrecision;
+/** A Chapter or a First Time, with the whole days it covers. */
+export type TimelineItem = {
   id: string;
+  isChapter: boolean;
   isFirstTime: boolean;
-  itemKind: WikiItemKind;
-  itemSubtype: string;
-  lane: TimelineLane;
-  occurredEnd: string | null;
-  occurredLabel: string | null;
-  occurredStart: string | null;
-  occurredTimezone: string;
+  occurrence: Occurrence;
   revision: number;
-  shape: MilestoneShape;
   tagNames: string[];
   /** Its title, or its date when it has none. */
   title: string;
   updatedAt: string;
-};
-
-export type TimelineLaneGroup = {
-  items: TimelineEntry[];
-  key: TimelineLane;
-  name: string;
+  /** The day after the last day it covers, as YYYY-MM-DD. Null while it is still going on. */
+  windowEnd: string | null;
+  /** The first day it covers, as YYYY-MM-DD. Null when it has no calendar date. */
+  windowStart: string | null;
 };
 
 export type TimelineWorkspace = {
   birthDate: string | null;
   birthDateAvailable: boolean;
+  /** Every Chapter, including the ones that are also First Times. */
+  chapters: TimelineItem[];
   defaultTimezone: string;
-  lanes: TimelineLaneGroup[];
+  /** First Times that are not Chapters. */
+  firstTimes: TimelineItem[];
   loadError: string | null;
   tagOptions: string[];
   viewer: Viewer;
 };
 
-type TimelineRow = {
-  body: string;
+export type TimelineRow = {
   date_precision: string;
   entry_id: string;
+  is_chapter: boolean;
   is_first_time: boolean;
-  item_kind: WikiItemKind;
-  item_subtype: string;
-  lane: TimelineLane;
   occurred_end: string | null;
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_timezone: string;
   revision: number;
-  shape: MilestoneShape;
-  /** The stored title, blank when the Entry has none. */
-  stored_title: string;
   tag_names: string[];
+  /** The stored title, blank when the Entry has none. */
+  title: string;
   updated_at: string;
+  window_end: string | null;
+  window_start: string | null;
 };
 
 export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> {
@@ -98,12 +81,14 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
   );
+  const items = timelineItems(rows ?? []);
 
   return {
     birthDate: profileBirthDate.birthDate,
     birthDateAvailable: profileBirthDate.available,
+    chapters: items.chapters,
     defaultTimezone: profileTimezone.timezone,
-    lanes: timelineLaneGroups((rows ?? []).map(timelineEntryFromRow)),
+    firstTimes: items.firstTimes,
     loadError: rows
       ? null
       : "MemoTrail could not load your Timeline. Refresh to try again.",
@@ -112,25 +97,25 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
   };
 }
 
-// Every lane appears, in a fixed order, even when it is empty.
-export function timelineLaneGroups(
-  entries: TimelineEntry[],
-): TimelineLaneGroup[] {
-  return timelineLanes.map((key) => ({
-    items: entries
-      .filter((entry) => entry.lane === key)
-      .sort(
-        (a, b) =>
-          (a.occurredStart ? Date.parse(a.occurredStart) : Infinity) -
-            (b.occurredStart ? Date.parse(b.occurredStart) : Infinity) ||
-          a.title.localeCompare(b.title),
-      ),
-    key,
-    name: timelineLaneLabels[key],
-  }));
+/**
+ * Splits the rows into Chapters and the First Times that are not Chapters, each by start date.
+ * A First Time Chapter is one bar, so it appears in `chapters` only. Items without a calendar
+ * date come last, in title order.
+ */
+export function timelineItems(rows: TimelineRow[]) {
+  const items = rows.map(timelineItemFromRow).sort(
+    (a, b) =>
+      (a.windowStart ?? "9999-99-99").localeCompare(
+        b.windowStart ?? "9999-99-99",
+      ) || a.title.localeCompare(b.title),
+  );
+  return {
+    chapters: items.filter((item) => item.isChapter),
+    firstTimes: items.filter((item) => item.isFirstTime && !item.isChapter),
+  };
 }
 
-function timelineEntryFromRow(row: TimelineRow): TimelineEntry {
+function timelineItemFromRow(row: TimelineRow): TimelineItem {
   const occurrence = storedOccurrence({
     datePrecision: row.date_precision,
     occurredEnd: row.occurred_end,
@@ -139,32 +124,28 @@ function timelineEntryFromRow(row: TimelineRow): TimelineEntry {
     occurredTimezone: row.occurred_timezone,
   });
   return {
-    body: row.body,
-    datePrecision: occurrence.datePrecision,
     id: row.entry_id,
+    isChapter: row.is_chapter,
     isFirstTime: row.is_first_time,
-    itemKind: row.item_kind,
-    itemSubtype: row.item_subtype,
-    lane: row.lane,
-    occurredEnd: row.occurred_end,
-    occurredLabel: row.occurred_label,
-    occurredStart: row.occurred_start,
-    occurredTimezone: row.occurred_timezone,
+    occurrence,
     revision: row.revision,
-    shape: row.shape,
     tagNames: row.tag_names,
-    title: entryDisplayTitle(row.stored_title, occurrence),
+    title: entryDisplayTitle(row.title, occurrence),
     updatedAt: row.updated_at,
+    windowEnd: row.window_end,
+    windowStart: row.window_start,
   };
 }
 
-function timelineRows(value: unknown): TimelineRow[] | null {
+export function timelineRows(value: unknown): TimelineRow[] | null {
   if (!Array.isArray(value)) {
     return null;
   }
 
   return value.every(isTimelineRow) ? value : null;
 }
+
+const dateOnly = /^\d{4}-\d{2}-\d{2}$/;
 
 function isTimelineRow(value: unknown): value is TimelineRow {
   if (!isRecord(value)) {
@@ -173,21 +154,19 @@ function isTimelineRow(value: unknown): value is TimelineRow {
 
   return (
     typeof value.entry_id === "string" &&
-    typeof value.body === "string" &&
-    isWikiItemKind(value.item_kind) &&
-    typeof value.item_subtype === "string" &&
-    typeof value.stored_title === "string" &&
-    isTimelineLane(value.lane) &&
-    isMilestoneShape(value.shape) &&
+    typeof value.title === "string" &&
+    typeof value.is_chapter === "boolean" &&
     typeof value.is_first_time === "boolean" &&
     nullableString(value.occurred_start) &&
     nullableString(value.occurred_end) &&
     nullableString(value.occurred_label) &&
     typeof value.occurred_timezone === "string" &&
+    typeof value.date_precision === "string" &&
+    nullableDate(value.window_start) &&
+    nullableDate(value.window_end) &&
     stringArray(value.tag_names) &&
     typeof value.revision === "number" &&
-    typeof value.updated_at === "string" &&
-    typeof value.date_precision === "string"
+    typeof value.updated_at === "string"
   );
 }
 
@@ -197,6 +176,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nullableString(value: unknown) {
   return value === null || typeof value === "string";
+}
+
+function nullableDate(value: unknown) {
+  return value === null || (typeof value === "string" && dateOnly.test(value));
 }
 
 function stringArray(value: unknown): value is string[] {

@@ -1,5 +1,4 @@
 import type { WikiItemKind } from "./wiki-item";
-import type { MilestoneLane, MilestoneShape } from "./milestone";
 import { entryDisplayTitle, storedOccurrence } from "./occurrence";
 
 /** The current Entry the Item page shows, as `entry_detail` returns it. */
@@ -9,6 +8,7 @@ export type EntryDetail = {
   body: string;
   item_kind: WikiItemKind;
   item_subtype: string;
+  is_first_time: boolean;
   revision: number;
   deleted_at: string | null;
   occurred_start: string | null;
@@ -25,11 +25,6 @@ export type EntryDetail = {
     latitude: number | null;
     longitude: number | null;
   }[];
-  milestone: {
-    shape: MilestoneShape;
-    lane: MilestoneLane;
-    is_first_time: boolean;
-  } | null;
   links: { target_entry_id: string; relationship: string }[];
 };
 
