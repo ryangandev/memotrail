@@ -209,7 +209,8 @@ test("Settings is reachable from the sidebar and owns account controls", async (
 
     // Offline, a failed save is reported where it happened; Settings stays.
     await context.setOffline(true);
-    await darkTheme.check();
+    // click, not check: the failed save puts System back, possibly before check() could see Dark.
+    await darkTheme.click();
     await expect(
       page.getByText("Appearance could not be saved", { exact: false }).first(),
     ).toBeVisible();
