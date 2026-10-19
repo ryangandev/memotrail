@@ -246,8 +246,12 @@ test("Search keeps working with words alone when the service is down", async ({
   await page.goto(
     "/search?q=" + encodeURIComponent(`bike or ${OUTAGE_SENTINEL}`),
   );
+  // While a streamed Suspense boundary swaps in, the page can briefly hold a hidden copy of the
+  // notice, so a page-wide match is ambiguous. The search region only matches the shown one.
   await expect(
-    page.getByText("Search by meaning is unavailable right now"),
+    page
+      .getByRole("region", { name: "Entry search" })
+      .getByText("Search by meaning is unavailable right now"),
   ).toBeVisible();
   expect(await resultTitles(page)).toEqual(["River ride"]);
   await expect(resultCard(page, "River ride").getByText("Body")).toBeVisible();
