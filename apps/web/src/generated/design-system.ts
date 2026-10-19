@@ -331,7 +331,6 @@ export const typeRoles = [
   "display",
   "title",
   "welcomeTitle",
-  "goalCardTitle",
   "recordCardTitle",
   "sheetTitle",
   "recordTitle",
@@ -445,7 +444,6 @@ export const layers = {
   popover: 80,
   palette: 80,
   nestedPopover: 90,
-  mapOverlay: 500,
 } as const;
 
 /** Resolved semantic colors for code that cannot read CSS variables, such as server-rendered images. */
@@ -487,8 +485,6 @@ export const themeColors = {
     accentBorderStrong: "rgb(47 90 75 / 0.42)",
     accentStripe: "rgb(47 90 75 / 0.62)",
     accentHalo: "rgb(220 229 220 / 0.55)",
-    accentPanel: "#ECEFE7",
-    accentPanelBorder: "#9CA89A",
     warmGlow: "rgb(241 226 216 / 0.78)",
     warmWash: "rgb(241 226 216 / 0.65)",
     captureQueued: "#F1F2EA",
@@ -516,8 +512,6 @@ export const themeColors = {
       grid: "#D9D5CA",
       labelSurface: "#FFFFFF",
       labelInk: "#4C514B",
-      pin: "#526F60",
-      pinInk: "#FFFFFF",
     },
     brand: { ring: "#315E4F", accent: "#A76346", innerRing: "#82AD98" },
   },
@@ -558,8 +552,6 @@ export const themeColors = {
     accentBorderStrong: "rgb(141 181 161 / 0.42)",
     accentStripe: "rgb(141 181 161 / 0.62)",
     accentHalo: "rgb(36 52 44 / 0.55)",
-    accentPanel: "#212923",
-    accentPanelBorder: "#54655A",
     warmGlow: "rgb(67 46 37 / 0.78)",
     warmWash: "rgb(67 46 37 / 0.65)",
     captureQueued: "#202621",
@@ -587,8 +579,6 @@ export const themeColors = {
       grid: "#3E433F",
       labelSurface: "#343A35",
       labelInk: "#E4E7DF",
-      pin: "#526F60",
-      pinInk: "#FFFFFF",
     },
     brand: { ring: "#315E4F", accent: "#A76346", innerRing: "#82AD98" },
   },
@@ -1038,12 +1028,6 @@ export const componentSpecimens = [
     covers: {},
   },
   {
-    component: "FocusedRecord",
-    id: "focused-record-home",
-    description: "A Home's page with its photos, facts, Story, and tags, and Edit beside the title.",
-    covers: {},
-  },
-  {
     component: "IconButton",
     id: "icon-button-variants",
     description: "Every variant at the default medium size, with add, edit, more, and remove icons.",
@@ -1112,19 +1096,19 @@ export const componentSpecimens = [
   {
     component: "PhotoViewer",
     id: "photo-viewer-paged",
-    description: "Three saved Home photos that open on the second, with Previous, the position, and Next.",
+    description: "Three saved photos that open on the second, with Previous, the position, and Next.",
     covers: {},
   },
   {
     component: "RecordCard",
     id: "record-card-photo",
-    description: "A Home card with a cover photo and a Current badge, then its dates, name, a fact, and its organization.",
+    description: "A card with a cover photo and a photo count, then its date, name, a Location line, story, and tags.",
     covers: {},
   },
   {
     component: "RecordCard",
     id: "record-card-mark",
-    description: "A Vehicle card without a photo or map, showing its mark over a soft accent wash.",
+    description: "A card without a photo or map, showing its mark over a soft accent wash.",
     covers: {},
   },
   {

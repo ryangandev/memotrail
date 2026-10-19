@@ -141,6 +141,9 @@ export function TagControl({
   }
 
   function openEditor() {
+    // An editor closed without saving never keeps its unsaved changes.
+    setName(item?.name ?? "");
+    setTargetId("");
     setTagPreview(null);
     setOpen(true);
   }

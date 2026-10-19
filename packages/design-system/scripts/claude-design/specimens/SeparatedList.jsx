@@ -34,10 +34,10 @@ export const specimens = {
       <Frames>
         <SeparatedList>
           <a href="#separated-list" style={link}>
-            Manage tracks
+            Manage tags
           </a>
-          <span>8 tracks</span>
-          <span>12 moments</span>
+          <span>8 tags</span>
+          <span>12 entries</span>
           <span>2017 to 2026</span>
         </SeparatedList>
       </Frames>

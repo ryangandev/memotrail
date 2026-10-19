@@ -147,7 +147,7 @@
       }
     },
     "goalCardTitle": {
-      "$description": "Goal card titles. iOS draws them at its title2 size in regular width.",
+      "$description": "Large serif titles on native cards. iOS draws them at its title2 size in regular width.",
       "$value": {
         "fontFamily": "{font.family.serif}",
         "fontSize": "{font.size.title}",
@@ -172,12 +172,13 @@
                 "unit": "px"
               }
             }
-          }
+          },
+          "platforms": ["ios"]
         }
       }
     },
     "recordCardTitle": {
-      "$description": "Large serif titles on Home, Vehicle, and First Time cards. iOS draws them at its title2 size in regular width.",
+      "$description": "Large serif titles on First Time cards, and on native Home and Vehicle cards. iOS draws them at its title2 size in regular width.",
       "$value": {
         "fontFamily": "{font.family.serif}",
         "fontSize": "{font.size.title}",
@@ -599,7 +600,7 @@
       }
     },
     "legend": {
-      "$description": "The uppercase legend set into the border of a record group, such as a Home's details.",
+      "$description": "The uppercase legend set into the border of a record group, such as a native Home's details. Web has no record group.",
       "$value": {
         "fontFamily": "{font.family.sans}",
         "fontSize": "{font.size.caption}",

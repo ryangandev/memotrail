@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type Locator } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { test as workspaceTest } from "./helpers/workspace-test";
 
 type SidebarMotionFrame = {
   logoCenter: number;
@@ -116,9 +117,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
   });
   expect(created.error).toBeNull();
   const owner = created.data.user!.id;
-  let releaseMapNavigation = () => {};
-  const mapNavigationGate = new Promise<void>((resolve) => {
-    releaseMapNavigation = resolve;
+  let releaseSlowNavigation = () => {};
+  const slowNavigationGate = new Promise<void>((resolve) => {
+    releaseSlowNavigation = resolve;
   });
 
   try {
@@ -152,17 +153,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       })),
     );
 
-    let mapNavigationStarted = false;
+    let slowNavigationStarted = false;
 
-    await page.route("**/map*", async (route) => {
+    await page.route("**/timeline*", async (route) => {
       const headers = route.request().headers();
       const isRscRequest =
         headers.rsc === "1" ||
         new URL(route.request().url()).searchParams.has("_rsc");
 
-      if (isRscRequest && !mapNavigationStarted) {
+      if (isRscRequest && !slowNavigationStarted) {
         await route.fulfill({
-          body: "Map prefetch intentionally unavailable during this test.",
+          body: "Timeline prefetch intentionally unavailable during this test.",
           contentType: "text/plain",
           status: 503,
         });
@@ -170,7 +171,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       }
 
       if (isRscRequest) {
-        await mapNavigationGate;
+        await slowNavigationGate;
       }
 
       await route.continue();
@@ -291,6 +292,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       shell.getByText("Focused views", { exact: true }),
     ).toBeVisible();
+    // Homes and Vehicles are Chapters now, so the sidebar has no section for them.
+    for (const name of ["Homes", "Vehicles"])
+      await expect(shell.getByRole("link", { name, exact: true })).toHaveCount(
+        0,
+      );
     await expect(shell.getByText("Organize", { exact: true })).toBeVisible();
     await expect(shell.getByRole("button", { name: "New entry" })).toHaveCount(
       0,
@@ -551,7 +557,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeVisible();
-    for (const label of ["Dashboard", "Timeline", "Library", "Map"]) {
+    for (const label of ["Dashboard", "Timeline", "Library"]) {
       await expect(
         page
           .getByRole("navigation", { name: "Mobile navigation" })
@@ -562,7 +568,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const mobileNavigation = page.getByRole("navigation", {
       name: "Mobile navigation",
     });
-    await expect(mobileNavigation.locator(":scope > *")).toHaveCount(5);
+    await expect(mobileNavigation.locator(":scope > *")).toHaveCount(4);
     const moreButton = mobileNavigation.getByRole("button", {
       name: "More destinations",
     });
@@ -571,6 +577,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "More destinations",
     });
     await expect(moreDestinations).toBeVisible();
+    for (const name of ["Homes", "Vehicles"])
+      await expect(
+        moreDestinations.getByRole("link", { name, exact: true }),
+      ).toHaveCount(0);
     await moreDestinations.getByRole("link", { name: "Tags" }).click();
     await expect(page).toHaveURL(/\/tags$/);
     await expect(
@@ -642,24 +652,24 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Escape");
     await expect(commandPalette).not.toBeVisible();
 
-    mapNavigationStarted = true;
+    slowNavigationStarted = true;
     await page
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Map", exact: true })
+      .getByRole("link", { name: "Timeline", exact: true })
       .click({ noWaitAfter: true });
 
     await expect(
-      page.getByRole("status", { name: "Opening Map" }),
+      page.getByRole("status", { name: "Opening Timeline" }),
     ).toBeVisible();
     await page.screenshot({
       caret: "initial",
       path: test.info().outputPath("memotrail-navigation-loading.png"),
     });
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
-    releaseMapNavigation();
-    await expect(page).toHaveURL(/\/map$/);
+    releaseSlowNavigation();
+    await expect(page).toHaveURL(/\/timeline$/);
     await expect(
-      page.getByRole("heading", { name: "Map", exact: true }),
+      page.getByRole("heading", { name: "Timeline", exact: true }),
     ).toBeVisible();
 
     await shell
@@ -1044,8 +1054,45 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.goBack();
     await expect(page).toHaveURL(/\/library$/);
   } finally {
-    releaseMapNavigation();
+    releaseSlowNavigation();
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }
 });
+
+workspaceTest(
+  "retired Homes and Vehicles addresses open Timeline or the Chapter's Item page",
+  async ({ page, workspace: { client, owner } }) => {
+    const chapter = randomUUID();
+    expect(
+      (
+        await client.from("entries").insert({
+          id: chapter,
+          owner_id: owner,
+          title: "Maple Street flat",
+          body: "",
+          item_kind: "entry",
+          item_subtype: "chapter",
+          occurred_start: "2021-06-01T12:00:00+00:00",
+          occurred_end: null,
+          occurred_timezone: "UTC",
+          date_precision: "day",
+        })
+      ).error,
+    ).toBeNull();
+
+    for (const path of ["/homes", "/vehicles", `/vehicles/${randomUUID()}`]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/timeline$/);
+    }
+    await page.goto("/homes/not-an-id");
+    await expect(page).toHaveURL(/\/timeline$/);
+    await page.goto(`/homes/${chapter}`);
+    await expect(page).toHaveURL(`/items/${chapter}`);
+    await expect(
+      page.getByRole("heading", { name: "Maple Street flat" }),
+    ).toBeVisible();
+    await page.goto(`/vehicles/${chapter}/edit`);
+    await expect(page).toHaveURL(/\/timeline$/);
+  },
+);

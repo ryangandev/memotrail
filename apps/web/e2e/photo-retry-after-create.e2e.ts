@@ -7,44 +7,30 @@ import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 const scenarios = [
-  { name: "Someday item", kind: "goal", provider: false },
-  { name: "Home", kind: "home", provider: false },
-  { name: "Vehicle", kind: "vehicle", provider: false },
-  { name: "Home with a provider address", kind: "home", provider: true },
+  { name: "Chapter", kind: "chapter", provider: false },
+  { name: "First Time", kind: "first-time", provider: false },
+  { name: "Chapter with a provider address", kind: "chapter", provider: true },
   {
-    name: "Vehicle with a provider Location",
-    kind: "vehicle",
+    name: "First Time with a provider Location",
+    kind: "first-time",
     provider: true,
   },
 ] as const;
 
 const records = {
-  goal: {
-    add: "Add to Someday",
-    nameField: "Title",
-    partial: "Saved",
-    saved: "Changes saved.",
-    path: "/goals",
-    itemKind: "goal",
-    subtype: "goal",
+  chapter: {
+    add: "Add Chapter",
+    dialog: "Add a Chapter",
+    isFirstTime: false,
+    subtype: "chapter",
+    saved: "Chapter added.",
   },
-  home: {
-    add: "Add Home",
-    nameField: "Home name",
-    partial: "The Home was saved",
-    saved: "Home saved.",
-    path: "/homes",
-    itemKind: "entity",
-    subtype: "home",
-  },
-  vehicle: {
-    add: "Add Vehicle",
-    nameField: "Name or nickname",
-    partial: "The Vehicle was saved",
-    saved: "Vehicle saved.",
-    path: "/vehicles",
-    itemKind: "entity",
-    subtype: "vehicle",
+  "first-time": {
+    add: "Add First Time",
+    dialog: "Add a First Time",
+    isFirstTime: true,
+    subtype: "entry",
+    saved: "First Time added.",
   },
 } as const;
 
@@ -76,7 +62,7 @@ for (const scenario of scenarios) {
     expect(created.error).toBeNull();
     const owner = created.data.user!.id;
     const record = records[scenario.kind];
-    const title = `Retry ${record.subtype} fixture`;
+    const title = `Retry ${scenario.kind} fixture`;
 
     try {
       const cookies: { name: string; value: string }[] = [];
@@ -111,17 +97,24 @@ for (const scenario of scenarios) {
       );
       if (scenario.provider) await mockProviderSearch(page);
 
-      const editor = page.getByRole("dialog");
-      await page.goto(record.path);
+      const editor = page.getByRole("dialog", { name: record.dialog });
+      await page.goto("/timeline");
       // The page is server rendered, so a click before hydration opens nothing.
       await expect(async () => {
         if (!(await editor.isVisible())) {
-          await page.getByRole("button", { name: record.add }).first().click();
+          await page
+            .getByRole("button", { name: "Add to Timeline" })
+            .first()
+            .click();
+          await page
+            .getByRole("dialog", { name: "What are you adding?" })
+            .getByRole("button", { name: record.add })
+            .click();
         }
         await expect(editor).toBeVisible({ timeout: 2_000 });
       }).toPass(slow);
       await editor
-        .getByRole("textbox", { name: record.nameField, exact: true })
+        .getByRole("textbox", { name: "Title", exact: true })
         .fill(title);
       if (scenario.provider) {
         await editor
@@ -154,12 +147,10 @@ for (const scenario of scenarios) {
           await route.abort("failed");
         } else await route.continue();
       });
-      await editor
-        .getByRole("button", { name: record.add, exact: true })
-        .click();
+      await editor.getByRole("button", { name: "Add", exact: true }).click();
       await expect(
         editor.getByText(
-          `${record.partial}, but 1 photo could not be attached. Select Save again to retry.`,
+          "The Entry was saved, but 1 photo could not be attached. Select Save again to retry.",
         ),
       ).toBeVisible(slow);
       expect(failedUploads).toBe(1);
@@ -168,39 +159,30 @@ for (const scenario of scenarios) {
         .from("entries")
         .select("id")
         .eq("owner_id", owner)
-        .eq("item_kind", record.itemKind)
+        .eq("item_kind", "entry")
         .eq("item_subtype", record.subtype)
+        .eq("is_first_time", record.isFirstTime)
         .single();
       expect(saved.error).toBeNull();
       const entryID = saved.data!.id;
-      const createdLocations = await savedLocations(
-        client,
-        scenario.kind,
-        entryID,
-      );
+      const createdLocations = await savedLocations(client, entryID);
       expect(createdLocations).toHaveLength(scenario.provider ? 1 : 0);
 
-      // A record that exists is updated; the provider choice belongs only to creation.
+      // An Entry that exists is updated; the provider choice belongs only to creation.
       await expect(
-        editor.getByRole("heading", { name: title, exact: true }),
-      ).toBeVisible();
-      await expect(editor.locator('img[alt^="Selected "]')).toHaveCount(1);
-      await editor
-        .getByRole("button", { name: "Save changes", exact: true })
-        .click();
+        editor.getByRole("button", { name: /^Remove selected / }),
+      ).toHaveCount(1);
+      await editor.getByRole("button", { name: "Add", exact: true }).click();
       await expect(editor).not.toBeVisible(slow);
       await expect(page.getByText(record.saved)).toBeVisible();
-      // The refreshed card shows both photos.
-      await expect(
-        page.locator("main").getByText("2 photos", { exact: true }),
-      ).toBeVisible();
 
       const entries = await client
         .from("entries")
         .select("id,title,occurred_start")
         .eq("owner_id", owner)
-        .eq("item_kind", record.itemKind)
-        .eq("item_subtype", record.subtype);
+        .eq("item_kind", "entry")
+        .eq("item_subtype", record.subtype)
+        .eq("is_first_time", record.isFirstTime);
       expect(entries.data).toEqual([
         { id: entryID, title, occurred_start: null },
       ]);
@@ -226,10 +208,14 @@ for (const scenario of scenarios) {
         );
       }
 
+      await page.goto(`/items/${entryID}`);
+      for (const name of ["first.png", "second.png"])
+        await expect(
+          page.getByRole("button", { name: `Open ${name}`, exact: true }),
+        ).toBeVisible();
+
       // The retry keeps the provider snapshot made on creation instead of copying it.
-      expect(await savedLocations(client, scenario.kind, entryID)).toEqual(
-        createdLocations,
-      );
+      expect(await savedLocations(client, entryID)).toEqual(createdLocations);
       const locations = await client
         .from("locations")
         .select("id,provider,provider_location_id,address,latitude")
@@ -254,12 +240,7 @@ for (const scenario of scenarios) {
   });
 }
 
-async function savedLocations(
-  client: SupabaseClient,
-  kind: keyof typeof records,
-  entryID: string,
-) {
-  if (kind === "goal") return [];
+async function savedLocations(client: SupabaseClient, entryID: string) {
   const links = await client
     .from("entry_locations")
     .select("location_id")

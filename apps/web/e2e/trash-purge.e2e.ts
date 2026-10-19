@@ -4,6 +4,7 @@ import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
+import { sql } from "./helpers/database";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 // The first visit can compile the Trash route and its Server Actions.
@@ -15,24 +16,6 @@ type Account = {
   owner: string;
   photoEntry: (title: string) => Promise<{ entry: string; path: string }>;
 };
-
-function sql(statement: string) {
-  return execFileSync(
-    "docker",
-    [
-      "exec",
-      "supabase_db_memotrail",
-      "psql",
-      "-U",
-      "postgres",
-      "-d",
-      "postgres",
-      "-Atc",
-      statement,
-    ],
-    { encoding: "utf8" },
-  ).trim();
-}
 
 /** Counts every Storage object of one Entry, including generated previews. */
 function entryObjects(owner: string, entry: string) {

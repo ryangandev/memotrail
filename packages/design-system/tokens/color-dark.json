@@ -310,38 +310,6 @@
         }
       }
     },
-    "accentPanel": {
-      "$description": "Opaque accent panel, such as a selected goal section.",
-      "$value": {
-        "colorSpace": "srgb",
-        "components": [0.1294, 0.1608, 0.1373],
-        "hex": "#212923"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "mix": {
-            "colors": ["{color.accentSubtle}", "{color.surface}"],
-            "weight": 0.42
-          }
-        }
-      }
-    },
-    "accentPanelBorder": {
-      "$description": "Border of the accent panel.",
-      "$value": {
-        "colorSpace": "srgb",
-        "components": [0.3294, 0.3961, 0.3529],
-        "hex": "#54655A"
-      },
-      "$extensions": {
-        "com.memotrail": {
-          "mix": {
-            "colors": ["{color.accent}", "{color.border}"],
-            "weight": 0.38
-          }
-        }
-      }
-    },
     "warmNotice": {
       "$description": "Native Home summary background when a capture was refused.",
       "$value": {
@@ -763,7 +731,7 @@
       }
     },
     "map": {
-      "$description": "Colors of the server-rendered location map and its pins.",
+      "$description": "Colors of the server-rendered location map image.",
       "$extensions": {
         "com.memotrail": {
           "platforms": ["web"]
@@ -783,14 +751,6 @@
       },
       "labelInk": {
         "$value": "{palette.map.labelInkDark}"
-      },
-      "pin": {
-        "$description": "Interactive map pins and clusters.",
-        "$value": "{palette.map.pin}"
-      },
-      "pinInk": {
-        "$description": "Pin borders and counts.",
-        "$value": "{palette.white}"
       }
     },
     "accentGroupBorder": {

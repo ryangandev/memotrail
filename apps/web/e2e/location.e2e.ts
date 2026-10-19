@@ -4,7 +4,7 @@ import { expect, test } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("repeating an address creates independent Entry and Home Locations", async ({
+test("repeating an address creates independent Entry and Chapter Locations", async ({
   context,
   page,
 }) => {
@@ -225,9 +225,13 @@ test("repeating an address creates independent Entry and Home Locations", async 
     ).toContain("location_belongs_to_another_entry");
 
     await page.setViewportSize({ height: 900, width: 1280 });
-    await page.goto("/homes");
-    await page.getByRole("button", { name: "Add Home" }).first().click();
-    const homeDialog = page.getByRole("dialog");
+    await page.goto("/timeline");
+    await page.getByRole("button", { name: "Add to Timeline" }).first().click();
+    await page
+      .getByRole("dialog", { name: "What are you adding?" })
+      .getByRole("button", { name: "Add Chapter" })
+      .click();
+    const homeDialog = page.getByRole("dialog", { name: "Add a Chapter" });
     await expect(
       homeDialog.getByPlaceholder("Search for an address"),
     ).toHaveCSS("border-top-width", "0px");
@@ -237,10 +241,10 @@ test("repeating an address creates independent Entry and Home Locations", async 
     ).toHaveCSS("box-shadow", "none");
     await homeDialog.locator("[data-search-field]").screenshot({
       animations: "disabled",
-      path: test.info().outputPath("memotrail-home-search-focused.png"),
+      path: test.info().outputPath("memotrail-chapter-search-focused.png"),
     });
     await homeDialog
-      .getByRole("textbox", { name: "Home name" })
+      .getByRole("textbox", { name: "Title", exact: true })
       .fill("Market Street Home");
     await homeDialog
       .getByRole("combobox", { name: "Find a Location" })
@@ -260,23 +264,24 @@ test("repeating an address creates independent Entry and Home Locations", async 
     await page.screenshot({
       animations: "disabled",
       caret: "hide",
-      path: test.info().outputPath("memotrail-home-location-editor.png"),
+      path: test.info().outputPath("memotrail-chapter-location-editor.png"),
     });
-    await homeDialog.getByRole("button", { name: "Add Home" }).click();
+    await homeDialog.getByRole("button", { name: "Add", exact: true }).click();
     await expect(homeDialog).not.toBeVisible();
 
     const home = (
       await client
-        .from("homes")
-        .select("entry_id")
+        .from("entries")
+        .select("id")
         .eq("owner_id", owner)
+        .eq("item_subtype", "chapter")
         .single()
     ).data!;
     const homeLocation = (
       await client
         .from("entry_locations")
         .select("location_id")
-        .eq("entry_id", home.entry_id)
+        .eq("entry_id", home.id)
         .eq("relationship", "primary")
         .single()
     ).data;

@@ -13,7 +13,7 @@ select ok(public.consume_location_provider_quota('search'),'First address search
 reset role;
 select is((select request_count from public.location_provider_usage where kind='search'),1,'Search usage is counted atomically');
 set local role authenticated;
-select ok(public.consume_location_provider_quota('preview'),'Map preview has an independent quota');
+select ok(public.consume_location_provider_quota('preview'),'Location preview has an independent quota');
 
 do $test$
 declare counter integer;
@@ -30,7 +30,8 @@ select ok(not public.consume_location_provider_quota('search'),'Search is reject
 reset role;
 select is((select request_count from public.location_provider_usage where kind='search'),120,'A rejected request never advances the counter');
 set local role authenticated;
-select ok(public.consume_location_provider_quota('tiles'),'Tile requests remain available after search quota is exhausted');
+select throws_ok($$select public.consume_location_provider_quota('tiles')$$,'22023','invalid_location_quota_kind','Map tiles are gone, so they have no quota');
+select ok(public.consume_location_provider_quota('preview'),'Previews remain available after search quota is exhausted');
 select throws_ok($$select public.consume_location_provider_quota('unknown')$$,'22023','invalid_location_quota_kind','Unknown provider actions cannot consume quota');
 
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000127',true);

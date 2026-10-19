@@ -1,4 +1,3 @@
-import type { FocusedRecordPhoto } from "@/components/focused-record-detail";
 import {
   createEntryRichText,
   type EntryRichText,
@@ -17,8 +16,8 @@ export const loadedImage =
 export const tallImage =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='640' viewBox='0 0 360 640'%3E%3Crect width='360' height='640' fill='%23DDE8E1'/%3E%3Cpath d='M0 506 107 204l63 169 51-128 139 261v134H0Z' fill='%2382AD98'/%3E%3Ccircle cx='277' cy='164' r='38' fill='%23A76346'/%3E%3C/svg%3E";
 
-/** A Home's three saved photos, for its focused page and the photo viewer. */
-export const homePhotos: FocusedRecordPhoto[] = [
+/** Three saved photos on an Entry, for the photo viewer. */
+export const samplePhotos = [
   "kitchen-window.jpg",
   "maple-in-october.jpg",
   "front-steps.jpg",

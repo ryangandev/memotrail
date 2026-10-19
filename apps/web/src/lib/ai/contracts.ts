@@ -1,4 +1,20 @@
 export const AI_MODEL = "claude-haiku-4-5-20251001";
+/**
+ * Writes Chapter and year reviews and Chapter suggestions.
+ * Changing it changes the price table below, the SQL price table, and the disclosure's cost basis.
+ */
+export const REVIEW_MODEL = "claude-sonnet-5-5";
+/** Micro-dollars per token, matching `public.ai_model_price` in the database. */
+export const aiModelPricing: Record<
+  string,
+  { inputMicros: number; outputMicros: number }
+> = {
+  [AI_MODEL]: { inputMicros: 1, outputMicros: 5 },
+  [REVIEW_MODEL]: { inputMicros: 2, outputMicros: 10 },
+};
+/** Requests behind their own switches, separate from the paused features below. */
+export const reviewFeatures = ["review", "chapter_suggestion"] as const;
+export type ReviewAIFeature = (typeof reviewFeatures)[number];
 export const aiFeatures = [
   "classification",
   "tagging",
@@ -8,6 +24,8 @@ export const aiFeatures = [
   "photo_analysis",
 ] as const;
 export type AIFeature = (typeof aiFeatures)[number];
+/** Every feature a provider request can be made for. */
+export type AIRequestFeature = AIFeature | ReviewAIFeature;
 export type AIPreferences = Record<AIFeature | "enabled", boolean> & {
   monthly_budget_micros: number;
   revision: number;

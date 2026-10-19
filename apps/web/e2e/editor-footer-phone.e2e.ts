@@ -4,7 +4,7 @@ import { expect, test, type Locator, type Page } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 
-test("record editors keep Move to Trash, Cancel, and Save apart and reachable on a phone", async ({
+test("Entry editors keep Cancel and Save apart and reachable on a phone", async ({
   context,
   page,
 }) => {
@@ -58,63 +58,47 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
       })),
     );
 
-    // Each record is saved the way its editor saves it.
-    const saves = await Promise.all([
-      client.rpc("save_home_entry_with_occurrence", {
-        p_body: "",
-        p_date_precision: "day",
-        p_entry_id: null,
-        p_expected_revision: null,
-        p_move_in_reason: null,
-        p_move_out_reason: null,
-        p_occurred_end: null,
-        p_occurred_label: null,
-        p_occurred_start: "2021-06-01T12:00:00+00:00",
-        p_occurred_timezone: "UTC",
-        p_tag_names: [],
-        p_title: "Maple Street flat",
-      }),
-      client.rpc("save_vehicle_entry_with_occurrence", {
-        p_body: "",
-        p_color: "Blue",
-        p_date_precision: "day",
-        p_entry_id: null,
-        p_expected_revision: null,
-        p_make: "Memo",
-        p_model: "Trail",
-        p_model_year: 2019,
-        p_occurred_end: null,
-        p_occurred_label: null,
-        p_occurred_start: "2019-09-15T12:00:00+00:00",
-        p_occurred_timezone: "UTC",
-        p_tag_names: [],
-        p_title: "Blue hatchback",
-      }),
-      client.rpc("save_goal_entry", {
-        p_body: "",
-        p_entry_id: null,
-        p_expected_revision: null,
-        p_status: "active",
-        p_tag_names: [],
-        p_target_date: null,
-        p_title: "Hike the coast trail",
-      }),
+    // Each Entry is saved the way its editor saves it.
+    const entry = (
+      title: string,
+      start: string,
+      marks: { chapter: boolean; firstTime: boolean },
+      precision = "day",
+      end: string | null = null,
+    ) =>
       client.rpc("save_entry", {
         p_body: "",
         p_body_rich: null,
-        p_date_precision: "range",
+        p_date_precision: precision,
         p_entry_id: randomUUID(),
         p_expected_revision: null,
-        p_milestone: { isFirstTime: true, lane: "other", shape: "period" },
-        p_occurred_end: "2017-07-15T12:00:00+00:00",
+        p_is_chapter: marks.chapter,
+        p_is_first_time: marks.firstTime,
+        p_occurred_end: end,
         p_occurred_label: null,
-        p_occurred_start: "2017-07-08T12:00:00+00:00",
+        p_occurred_start: start,
         p_occurred_timezone: "UTC",
         p_photo_location: null,
         p_primary_location: null,
         p_tag_names: [],
-        p_title: "First trip to Japan",
+        p_title: title,
+      });
+    const saves = await Promise.all([
+      entry("Maple Street flat", "2021-06-01T12:00:00+00:00", {
+        chapter: true,
+        firstTime: false,
       }),
+      entry("Blue hatchback years", "2019-09-15T12:00:00+00:00", {
+        chapter: true,
+        firstTime: false,
+      }),
+      entry(
+        "First trip to Japan",
+        "2017-07-08T12:00:00+00:00",
+        { chapter: false, firstTime: true },
+        "range",
+        "2017-07-15T12:00:00+00:00",
+      ),
     ]);
     for (const saved of saves) expect(saved.error).toBeNull();
     const { data: records, error } = await client
@@ -127,41 +111,37 @@ test("record editors keep Move to Trash, Cancel, and Save apart and reachable on
 
     for (const width of [390, 320]) {
       await page.setViewportSize({ width, height: 844 });
-      for (const [path, edit] of [
-        [`/homes/${idFor("Maple Street flat")}`, "Edit Home"],
-        [`/vehicles/${idFor("Blue hatchback")}`, "Edit Vehicle"],
-        [`/goals/${idFor("Hike the coast trail")}`, "Edit Someday item"],
+      // A Chapter and a First Time are edited as Entries, in the same editor.
+      for (const [title, edit] of [
+        ["Maple Street flat", "Edit Chapter"],
+        ["Blue hatchback years", "Edit Chapter"],
+        ["First trip to Japan", "Edit Entry"],
       ]) {
-        await page.goto(path);
+        await page.goto(`/items/${idFor(title)}`);
         await openEditor(
           page,
           page.getByRole("button", { name: edit, exact: true }),
         );
-        await expectFooterApartAndReachable(page, `${edit} at ${width}`);
+        await expectFooterApartAndReachable(page, `${title} at ${width}`);
+        const dialog = page.getByRole("dialog", { name: "Edit Entry" });
+        // The footer lines up with the form above it, like every other editor.
+        const titleBox = await dialog
+          .getByRole("textbox", { name: "Title" })
+          .boundingBox();
+        const saveBox = await dialog
+          .getByRole("button", { name: "Save changes", exact: true })
+          .boundingBox();
+        expect(
+          Math.abs(
+            titleBox!.x + titleBox!.width - (saveBox!.x + saveBox!.width),
+          ),
+        ).toBeLessThan(1);
+        if (width === 320 && title === "First trip to Japan")
+          await page.screenshot({
+            caret: "initial",
+            path: test.info().outputPath("memotrail-editor-footer-phone.png"),
+          });
       }
-
-      // A First Time is edited as its Entry, which moves to Trash from its page.
-      await page.goto(`/items/${idFor("First trip to Japan")}`);
-      await openEditor(
-        page,
-        page.getByRole("button", { name: "Edit Entry", exact: true }),
-      );
-      const dialog = page.getByRole("dialog", { name: "Edit Entry" });
-      // The footer lines up with the form above it, like every other editor.
-      const title = await dialog
-        .getByRole("textbox", { name: "Title" })
-        .boundingBox();
-      const save = await dialog
-        .getByRole("button", { name: "Save changes", exact: true })
-        .boundingBox();
-      expect(
-        Math.abs(title!.x + title!.width - (save!.x + save!.width)),
-      ).toBeLessThan(1);
-      if (width === 320)
-        await page.screenshot({
-          caret: "initial",
-          path: test.info().outputPath("memotrail-editor-footer-phone.png"),
-        });
     }
   } finally {
     await admin.auth.admin.deleteUser(owner);
@@ -178,19 +158,16 @@ async function openEditor(page: Page, opener: Locator) {
 }
 
 /**
- * Move to Trash, Cancel, and Save never overlap, and once the page or dialog
- * scrolls to its end each one is the element a tap at its center reaches.
+ * Cancel and Save never overlap, and once the dialog scrolls to its end each one
+ * is the element a tap at its center reaches.
  */
 async function expectFooterApartAndReachable(page: Page, editor: string) {
   const save = page.getByRole("button", { name: "Save changes", exact: true });
   await expect(save).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Move to Trash", exact: true }),
-  ).toBeVisible();
   await page.evaluate(() => {
     for (const element of [
       document.scrollingElement,
-      ...document.querySelectorAll("*"),
+      ...document.querySelectorAll('[role="dialog"], [role="dialog"] *'),
     ])
       if (element && element.scrollHeight > element.clientHeight + 1)
         element.scrollTop = element.scrollHeight;
@@ -199,9 +176,10 @@ async function expectFooterApartAndReachable(page: Page, editor: string) {
     .poll(
       () =>
         page.evaluate(() => {
-          const buttons = [...document.querySelectorAll("button")].filter(
+          const dialog = document.querySelector('[role="dialog"]')!;
+          const buttons = [...dialog.querySelectorAll("button")].filter(
             (button) =>
-              ["Move to Trash", "Cancel", "Save changes"].includes(
+              ["Cancel", "Save changes"].includes(
                 button.textContent?.trim() ?? "",
               ) && button.getBoundingClientRect().width > 0,
           );
@@ -236,5 +214,5 @@ async function expectFooterApartAndReachable(page: Page, editor: string) {
         }),
       { message: editor },
     )
-    .toEqual({ buttons: 3, overlapping: false, unreachable: [], wide: false });
+    .toEqual({ buttons: 2, overlapping: false, unreachable: [], wide: false });
 }

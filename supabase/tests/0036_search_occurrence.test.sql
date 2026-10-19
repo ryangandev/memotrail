@@ -28,8 +28,7 @@ insert into public.entries(id,owner_id,title,body,date_precision,occurred_start,
  ('96000000-0000-4000-8000-000000000004','10000000-0000-0000-0000-000000000001','Precision unknown','','unknown',null,null,'UTC','entry','entry'),
  ('96000000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000001','Precision stage','','year','2015-01-01Z','2020-01-01Z','UTC','entry','entry'),
  ('96000000-0000-4000-8000-000000000006','10000000-0000-0000-0000-000000000099','Precision foreign','','year','2017-01-01Z',null,'UTC','entry','entry');
-insert into public.milestones(entry_id,owner_id,shape,lane) values
- ('96000000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000001','period','other');
+update public.entries set item_subtype='chapter' where id='96000000-0000-4000-8000-000000000005';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000001',true);
 select is((select count(*) from public.search_wiki_items('Precision','{}','{}','2017-07-10','2017-07-10')),4::bigint,'Canonical search includes overlapping partial dates and ranges');
@@ -49,6 +48,6 @@ select throws_ok($$select * from public.search_wiki_items('Precision','{}','{}',
 update public.entries set deleted_at=now() where id='96000000-0000-4000-8000-000000000001';
 select is((select count(*) from public.search_wiki_items('Precision year')),0::bigint,'Trash is excluded by new projection');
 reset role;
-select ok(not has_function_privilege('anon','public.search_wiki_items(text,text[],text[],date,date,integer,integer,text)','execute'),'Anonymous canonical search is denied');
+select ok(not has_function_privilege('anon','public.search_wiki_items(text,text[],text[],date,date,integer,integer,text,real[],text,real)','execute'),'Anonymous canonical search is denied');
 select * from finish();
 rollback;

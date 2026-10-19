@@ -586,7 +586,7 @@ export function LayoutTokens({ tokens }: { tokens: TokenSet }) {
         </div>
       </Specimen>
       <Specimen
-        description="Web stacking order, from local layering inside a component to overlays above the map."
+        description="Web stacking order, from local layering inside a component to the highest popovers and overlays."
         id="layers"
         title="Layers"
       >

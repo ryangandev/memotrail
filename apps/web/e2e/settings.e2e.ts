@@ -73,9 +73,20 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(
       main.getByText("Google Sign-In", { exact: true }),
     ).toBeVisible();
+    // The paused AI capabilities row is gone; the review switches take its place.
     await expect(
       page.getByRole("link", { name: /AI capabilities/ }),
-    ).toHaveAttribute("href", "/settings/ai");
+    ).toHaveCount(0);
+    await expect(
+      main.getByRole("checkbox", { name: "Chapter and year reviews" }),
+    ).not.toBeChecked();
+    await expect(
+      main.getByRole("checkbox", { name: "Suggest Chapters" }),
+    ).not.toBeChecked();
+    // This suite runs without an embedding service, so search is keyword-only.
+    await expect(
+      main.getByRole("checkbox", { name: "Search by meaning" }),
+    ).toHaveCount(0);
 
     const preferredName = main.getByRole("textbox", {
       name: "Preferred name",
@@ -195,6 +206,20 @@ test("Settings is reachable from the sidebar and owns account controls", async (
         ),
       )
       .toBe("light");
+
+    // Offline, a failed save is reported where it happened; Settings stays.
+    await context.setOffline(true);
+    // click, not check: the failed save puts System back, possibly before check() could see Dark.
+    await darkTheme.click();
+    await expect(
+      page.getByText("Appearance could not be saved", { exact: false }).first(),
+    ).toBeVisible();
+    await expect(main.locator("h1")).toHaveText("Settings");
+    await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+    await expect(systemTheme).toBeChecked();
+    await expect(page.locator("html")).not.toHaveAttribute("data-theme");
+    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await context.setOffline(false);
 
     const timezone = main.getByRole("combobox", {
       name: "Default time zone",

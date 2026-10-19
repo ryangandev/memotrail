@@ -526,7 +526,7 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
       "A title and a description without an icon or action, for a section that fills in on its own."
     case .emptyStateButton: "The whole state as one button that starts the missing record."
     case .focusedRecordHome:
-      "A Home's page with its photos, facts, Story, and tags, and Edit beside the title."
+      "A record page with its photos, facts, Story, and tags, and Edit beside the title."
     case .iconButtonVariants:
       "Every variant at the default medium size, with add, edit, more, and remove icons."
     case .iconButtonSizes:
@@ -548,14 +548,13 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .pageHeaderFull: "An eyebrow, a title, a description, and two actions beside the copy."
     case .pageHeaderTitleOnly: "A title alone, as a focused page with nothing else to say opens."
     case .photoViewerPaged:
-      "Three saved Home photos that open on the second, with Previous, the position, and Next."
+      "Three saved photos that open on the second, with Previous, the position, and Next."
     case .recordCardPhoto:
       """
-      A Home card with a cover photo and a Current badge, then its dates, name, a fact, and its \
-      organization.
+      A card with a cover photo and a photo count, then its date, name, a Location line, story, \
+      and tags.
       """
-    case .recordCardMark:
-      "A Vehicle card without a photo or map, showing its mark over a soft accent wash."
+    case .recordCardMark: "A card without a photo or map, showing its mark over a soft accent wash."
     case .richTextContent: "A saved note with a paragraph, emphasis, a link, a quote, and a list."
     case .richTextForm: "The bordered editor with a placeholder, as in the Entry editor."
     case .richTextEmbedded: "The editor without a field, as inside the capture composer."

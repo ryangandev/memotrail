@@ -62,8 +62,6 @@ enum MTColor {
     lightHex: "#DCE5DC", darkHex: "#24342C", lightOpacity: 0.55, darkOpacity: 0.55)
   static let accentNotice = Color(
     lightHex: "#DCE5DC", darkHex: "#24342C", lightOpacity: 0.42, darkOpacity: 0.42)
-  static let accentPanel = Color(lightHex: "#ECEFE7", darkHex: "#212923")
-  static let accentPanelBorder = Color(lightHex: "#9CA89A", darkHex: "#54655A")
   static let warmNotice = Color(
     lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.42, darkOpacity: 0.42)
   static let warmGlow = Color(
@@ -179,9 +177,6 @@ enum MTColor {
     MTColorToken(
       name: "accentNotice", lightHex: "#DCE5DC", darkHex: "#24342C", lightOpacity: 0.42,
       darkOpacity: 0.42, color: accentNotice),
-    MTColorToken(name: "accentPanel", lightHex: "#ECEFE7", darkHex: "#212923", color: accentPanel),
-    MTColorToken(
-      name: "accentPanelBorder", lightHex: "#9CA89A", darkHex: "#54655A", color: accentPanelBorder),
     MTColorToken(
       name: "warmNotice", lightHex: "#F1E2D8", darkHex: "#432E25", lightOpacity: 0.42,
       darkOpacity: 0.42, color: warmNotice),
@@ -515,9 +510,9 @@ enum MTFont {
   static let title = Font.system(.title, design: .serif).weight(.medium)
   /// The sign-in welcome title.
   static let welcomeTitle = Font.system(.title, design: .serif).weight(.medium)
-  /// Goal card titles. iOS draws them at its title2 size in regular width.
+  /// Large serif titles on native cards. iOS draws them at its title2 size in regular width.
   static let goalCardTitle = Font.system(.title2, design: .serif).weight(.medium)
-  /// Large serif titles on Home, Vehicle, and First Time cards. iOS draws them at its title2 size in regular width.
+  /// Large serif titles on First Time cards, and on native Home and Vehicle cards. iOS draws them at its title2 size in regular width.
   static let recordCardTitle = Font.system(.title2, design: .serif).weight(.medium)
   /// Sheet and dialog titles.
   static let sheetTitle = Font.system(.title2, design: .serif).weight(.medium)
@@ -545,7 +540,7 @@ enum MTFont {
   static let caption = Font.caption.weight(.medium)
   /// The uppercase context above a page title, such as a date or area name.
   static let pageEyebrow = Font.caption.weight(.semibold)
-  /// The uppercase legend set into the border of a record group, such as a Home's details.
+  /// The uppercase legend set into the border of a record group, such as a native Home's details. Web has no record group.
   static let legend = Font.caption.weight(.semibold)
   /// Dense badges and tooltips.
   static let micro = Font.caption2.weight(.semibold)

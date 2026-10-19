@@ -35,7 +35,7 @@ as $$
     entry_id,expected_revision,
     (select title from public.entries where id=entry_id),
     (select body from public.entries where id=entry_id),null,null,
-    null,'UTC',null,'unknown',array[]::text[],location,null, null);
+    null,'UTC',null,'unknown',array[]::text[],location,null, false, false);
 $$;
 
 set local role authenticated;
@@ -162,21 +162,15 @@ create function pg_temp.save_precision_home(entry_id uuid, expected_revision int
 returns jsonb
 language sql
 as $$
-  select to_jsonb(saved) from public.save_home_with_location(
-    jsonb_build_object(
-      'title', 'High-precision Home',
-      'body', '',
-      'datePrecision', 'unknown',
-      'occurredTimezone', 'UTC',
-      'tagNames', jsonb_build_array(),
-      'id', entry_id,
-      'revision', expected_revision
-    ),
+  select to_jsonb(saved) from public.save_entry(
+    coalesce(entry_id, gen_random_uuid()), expected_revision,
+    'High-precision Chapter', '', null, null, null, 'UTC', null, 'unknown', '{}',
     pg_temp.provider(
       'geoapify-high-precision-home',
       '10 Pine Street, Philadelphia, PA 19107, USA',
       39.95261234, -75.16529876
-    )
+    ),
+    null, true, false
   ) as saved;
 $$;
 
@@ -187,12 +181,12 @@ set constraints all immediate;
 select is(
   (select count(*) from public.locations where provider_location_id='geoapify-high-precision-home'),
   1::bigint,
-  'A high-precision Home provider result creates only one Location snapshot'
+  'A high-precision Chapter provider result creates only one Location snapshot'
 );
 select is(
   (select latitude from public.locations where provider_location_id='geoapify-high-precision-home'),
   39.952612::numeric,
-  'A Home snapshot stores the rounded latitude without changing provider input'
+  'A Chapter snapshot stores the rounded latitude without changing provider input'
 );
 select is(
   (
@@ -201,7 +195,7 @@ select is(
     where location.provider_location_id='geoapify-high-precision-home'
   ),
   (select (saved->>'entry_id')::uuid from precision_home),
-  'The high-precision provider snapshot belongs to its Home'
+  'The high-precision provider snapshot belongs to its Chapter'
 );
 
 set constraints all deferred;
@@ -210,13 +204,13 @@ select ok(
     (select (saved->>'entry_id')::uuid from precision_home),
     (select (saved->>'revision')::integer from precision_home)
   ) is not null,
-  'An existing Home can save a high-precision provider Location again'
+  'An existing Chapter can save a high-precision provider Location again'
 );
 set constraints all immediate;
 select is(
   (select count(*) from public.locations where provider_location_id='geoapify-high-precision-home' and bound_entry_id is not null),
   1::bigint,
-  'Resaving replaces the Home snapshot instead of keeping both'
+  'Resaving replaces the Chapter snapshot instead of keeping both'
 );
 
 reset role;

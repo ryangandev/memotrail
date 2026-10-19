@@ -6,8 +6,7 @@ insert into auth.users(id,email,raw_user_meta_data) values
  ('10000000-0000-0000-0000-000000000092','media-other@memotrail.local','{}');
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_precision) values
  ('91000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000091','Photos','Original writing','entry','entry','unknown');
-insert into public.milestones(entry_id,owner_id,shape,lane,is_first_time) values
- ('91000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000091','moment','other',true);
+update public.entries set is_first_time=true where id='91000000-0000-4000-8000-000000000001';
 insert into public.attachments(id,owner_id,entry_id,object_path,mime_type,byte_size) values
  ('91000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000091','91000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000091/91000000-0000-4000-8000-000000000001/91000000-0000-4000-8000-000000000002.jpg','image/jpeg',1000);
 create temporary table fixture as select '10000000-0000-0000-0000-000000000091'::uuid owner,'91000000-0000-4000-8000-000000000002'::uuid original,

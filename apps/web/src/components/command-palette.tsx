@@ -9,6 +9,7 @@ import {
   parseQuickSearchResult,
   type QuickSearchResult,
 } from "@/lib/data/search-input";
+import { quickResultDescription } from "@/lib/search/match-presentation";
 import styles from "./command-palette.module.css";
 
 type Command = {
@@ -93,7 +94,7 @@ export function CommandPalette({
       : null;
   const searchItems: PaletteItem[] = (resolvedSearch?.items ?? []).map(
     (item) => ({
-      description: `${item.label} · ${item.subtitle}`,
+      description: quickResultDescription(item),
       href: item.href,
       icon: "timeline",
       key: `entry:${item.id}`,

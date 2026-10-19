@@ -1,13 +1,14 @@
 # MemoTrail
 
-MemoTrail is a private, cross-platform record of a life in progress.
-The repository contains a native SwiftUI iOS app, a responsive Next.js Web app, shared Soft Ledger design tokens, and Supabase infrastructure.
+MemoTrail is the one private place a life is written down: jot down a thought, a mood, something learned, or something lived in seconds, find it again from any half-remembered clue, and get back the story of each chapter of your life.
+[Positioning](./docs/positioning.md) explains why it exists and which features belong.
+The repository contains a responsive Next.js Web app, a native SwiftUI iOS app that follows the finished Web behavior, shared Soft Ledger design tokens, and Supabase infrastructure.
 
 ## Start here
 
 - [Documentation guide](./docs/README.md) routes each request to the smallest useful context.
 - [Current status](./docs/status.md) summarizes what is shipped, what remains, and what is blocked.
-- [Product contract](./docs/product.md) defines current behavior and scope.
+- [Product contract](./docs/product.md) defines intended behavior and scope.
 - [Architecture](./docs/architecture.md) maps system boundaries and requests to likely code.
 
 Agents should also follow the repository-wide instructions in [AGENTS.md](./AGENTS.md).
@@ -33,7 +34,7 @@ supabase/
 ## Requirements
 
 - Node.js 24.13 or another compatible Node.js 24 release.
-- pnpm 10.33.
+- pnpm 12.6.
 - Xcode 16 or newer.
 - Supabase CLI 2.116 or newer.
 - Docker Desktop when running the local Supabase stack and database tests.
@@ -62,6 +63,9 @@ The Web app is available at `http://localhost:3000`.
 It remains buildable before credentials exist.
 Set the server-only `GEOAPIFY_API_KEY` to enable address search and static maps in Web Entry and Home Location fields.
 Without it, existing Entry Locations and coordinates remain accessible, but provider search and map imagery are unavailable.
+Set the server-only `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` to enable search by meaning.
+Without them, Library and the Command Palette search by keywords only.
+[`services/embeddings`](./services/embeddings/README.md) defines the embedding service, and `apps/web/scripts/fake-embedding-server.mjs` is a deterministic stand-in for tests.
 
 ## iOS setup
 
@@ -159,6 +163,7 @@ Before merging a change to `apps/ios` or generated design-system output that iOS
 | Multi-client RPC, Storage, and locking contracts  | `apps/web/contracts`                                    | `pnpm --filter @memotrail/web test:contracts`                                        | Local Supabase stack; no Web server or browser          |
 | Web browser and HTTP acceptance                   | `apps/web/e2e`                                          | `pnpm --filter @memotrail/web test:e2e`                                              | Local Supabase stack, Next.js, and Chrome               |
 | Web design gallery interactions and visual checks | `apps/web/e2e/design-system.e2e.ts`                     | `pnpm --filter @memotrail/web test:e2e:design`                                       | Local Supabase, development server, and Chrome          |
+| Web search by meaning                             | `apps/web/e2e/semantic-search.e2e.ts`                   | `pnpm --filter @memotrail/web test:e2e:semantic`                                     | Local Supabase, fake embedding service, and Chrome      |
 | Native unit and serialization contracts           | `apps/ios/MemoTrailTests`, except `NativeContractTests` | `MemoTrail` scheme with `-skip-testing:MemoTrailTests/NativeContractTests`           | iOS Simulator                                           |
 | Native backend contracts                          | `NativeContractTests`                                   | `verify-local-contracts.py` with `--only-testing MemoTrailTests/NativeContractTests` | iOS Simulator and local Supabase                        |
 | Native interaction acceptance                     | `apps/ios/MemoTrailUITests`                             | `MemoTrailUI` scheme or `review-local-session.py`                                    | iOS Simulator; signed-in flows also need local Supabase |
@@ -179,9 +184,14 @@ Set `MEMOTRAIL_E2E_PORT` to an available port if another project is using it; th
 The native review script's `--web` option honors this variable as well.
 Test server build output is isolated by port, so independent test servers do not share Next.js build state.
 Next.js writes test type paths into an ignored per-port TypeScript configuration that extends the strict project configuration.
+The product browser suite also starts `apps/web/scripts/fake-ai-provider.mjs` on the e2e port plus 2000 and points the server at it, so reviews and Chapter suggestions never reach a real model.
+Set `MEMOTRAIL_E2E_LIVE_AI=1` with a synthetic `AI_API_KEY` to use the real provider instead; the review scenarios then skip.
+The suite accepts any local Supabase stack on `127.0.0.1`, so a second stack on other ports can run beside the default one.
 Use `MEMOTRAIL_E2E_PRODUCTION=1` for browser acceptance against a local production build.
 Run the development-only gallery interactions and visual checks separately with `pnpm --filter @memotrail/web test:e2e:design` when shared components or design tokens change.
 This suite always uses the development server because the gallery is absent from production builds.
+Run `pnpm --filter @memotrail/web test:e2e:semantic` when search, indexing, or the embedding client changes.
+It starts the deterministic fake embedding service next to its own development server; the product suite never configures search by meaning.
 Run any suite with `--list` to inspect collection without starting services.
 
 Build the iOS app without signing:

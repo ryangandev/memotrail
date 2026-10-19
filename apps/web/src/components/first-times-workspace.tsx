@@ -18,7 +18,7 @@ import {
   RecordCardVisual,
 } from "@/components/record-card";
 import type { FirstTimeEntry } from "@/lib/data/first-times";
-import { occurrenceLabel } from "@/lib/data/occurrence";
+import { occurrenceLabel, occurrenceSpanLabel } from "@/lib/data/occurrence";
 import { locationDisplayLabel } from "@/lib/locations/location";
 import { countLabel } from "@/lib/count-label";
 
@@ -28,7 +28,7 @@ const NewEntryDialog = dynamic(() =>
   ),
 );
 
-// First Times are the Timeline milestones marked as a First Time. Each opens as an Entry.
+// First Times are the Entries marked as a First Time. Each opens as an Entry.
 export function FirstTimesWorkspace({
   defaultTimezone,
   entries,
@@ -58,7 +58,7 @@ export function FirstTimesWorkspace({
         </Button>
       }
       description={
-        <>Keep the small beginnings and major milestones worth finding again.</>
+        <>Keep the small beginnings and big firsts worth finding again.</>
       }
       eyebrow={<>A record of beginnings</>}
       summary={
@@ -112,7 +112,7 @@ export function FirstTimesWorkspace({
 
       {adding ? (
         <NewEntryDialog
-          milestone={{ isFirstTime: true, lane: "other", shape: "moment" }}
+          marks={{ isChapter: false, isFirstTime: true }}
           onClose={() => setAdding(false)}
           ownerId={ownerId}
           tagOptions={tagOptions}
@@ -214,14 +214,18 @@ function originalAttachments(entry: FirstTimeEntry) {
   );
 }
 
+// A First Time that is also a Chapter spans the time it covered.
 function firstTimeDateLabel(entry: FirstTimeEntry) {
-  return occurrenceLabel({
+  const occurrence = {
     datePrecision: entry.datePrecision,
     occurredAt: entry.occurredStart,
     occurredEnd: entry.occurredEnd,
     occurredLabel: entry.occurredLabel,
     occurredTimezone: entry.occurredTimezone ?? "UTC",
-  });
+  };
+  return entry.isChapter
+    ? occurrenceSpanLabel(occurrence)
+    : occurrenceLabel(occurrence);
 }
 
 function truncate(value: string, limit: number) {

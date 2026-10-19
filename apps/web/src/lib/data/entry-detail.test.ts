@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  chapterDateFacts,
   entryDateAddsToTitle,
   entryDateLabel,
   entryTitle,
@@ -78,6 +79,47 @@ describe("Entry detail", () => {
       }),
     ).toBe(false);
     expect(entryDateAddsToTitle({ ...undated, title: null })).toBe(false);
+  });
+  it("gives a Chapter its span and duration", () => {
+    const now = new Date("2026-10-18T12:00:00Z");
+    expect(
+      chapterDateFacts(
+        {
+          ...undated,
+          date_precision: "month",
+          occurred_start: "2019-03-01T12:00:00Z",
+        },
+        now,
+      ),
+    ).toEqual({ duration: "About 7 years 7 months", span: "Since Mar 2019" });
+    expect(
+      chapterDateFacts(
+        {
+          ...undated,
+          date_precision: "year",
+          occurred_end: "2021-01-01T12:00:00Z",
+          occurred_start: "2019-01-01T12:00:00Z",
+        },
+        now,
+      ),
+    ).toEqual({ duration: "About 2 years", span: "2019 - 2021" });
+  });
+  it("shows an undated Chapter's description without a duration", () => {
+    const now = new Date("2026-10-18T12:00:00Z");
+    expect(
+      chapterDateFacts(
+        {
+          ...undated,
+          date_precision: "approximate",
+          occurred_label: "College years",
+        },
+        now,
+      ),
+    ).toEqual({ duration: null, span: "College years" });
+    expect(chapterDateFacts(undated, now)).toEqual({
+      duration: null,
+      span: "Date unknown",
+    });
   });
   it("accepts only Entry identities", () => {
     expect(validEntryID("94000000-0000-4000-8000-000000000001")).toBe(true);

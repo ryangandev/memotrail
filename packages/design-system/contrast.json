@@ -115,11 +115,6 @@
       "text": "{color.map.labelInk}",
       "role": "{type.caption}",
       "on": ["{color.map.labelSurface}"]
-    },
-    {
-      "text": "{color.map.pinInk}",
-      "role": "{type.caption}",
-      "on": ["{color.map.pin}"]
     }
   ],
   "exceptions": [

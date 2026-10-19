@@ -210,10 +210,8 @@ values
     null
   );
 
-insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
-values
-  ('87000000-0000-0000-0000-000000000001', '10000000-0000-0000-0000-000000000001', 'moment', 'other', true),
-  ('87000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'period', 'other', false);
+update public.entries set is_first_time = true where id = '87000000-0000-0000-0000-000000000001';
+update public.entries set item_subtype = 'chapter' where id = '87000000-0000-0000-0000-000000000005';
 
 insert into public.tags (id, owner_id, name)
 values (
@@ -300,7 +298,7 @@ select isnt(
 select isnt(
   (select title from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),
   'Life stage anniversary',
-  'Periods stay in Now on Home'
+  'Chapters stay in Now on Home'
 );
 select isnt(
   (select title from public.home_resurfaced_memory('2026-09-03', 'America/Los_Angeles')),

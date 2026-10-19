@@ -1,8 +1,8 @@
 import { entryBodyLimit } from "./inbox-input";
 import {
   clearInboxDraft,
-  loadInboxDraft,
   persistInboxDraft,
+  readInboxDraft,
   type DraftStorage,
 } from "./inbox-draft";
 import type { InboxPhotoDraft } from "./inbox-photo";
@@ -83,6 +83,10 @@ export type InboxDraftStore = {
 
 export const photoDraftsUnavailableMessage =
   "Photo drafts are unavailable in this browser. Text capture still works.";
+export const unrestoredDraftMessage =
+  "Some of your saved draft could not be restored. The original stays on this device.";
+export const unreadableDraftMessage =
+  "Your saved draft could not be read. The original stays on this device.";
 export const changedElsewhereVoiceMessage =
   "Voice capture stopped because this draft changed in another tab.";
 
@@ -154,38 +158,53 @@ export function createInboxDraftStore({
     return { body, bodyRich, occurrence, title };
   }
 
-  function readValues(): InboxDraftValues | null {
-    const draft = loadInboxDraft(storage, ownerId);
-    if (!draft) return null;
+  function readValues(): {
+    isComplete: boolean;
+    values: InboxDraftValues | null;
+  } {
+    const { draft, isComplete } = readInboxDraft(storage, ownerId);
+    if (!draft) return { isComplete, values: null };
 
     return {
-      body: draft.body,
-      bodyRich: draft.bodyRich ?? null,
-      occurrence:
-        draft.occurrence ??
-        (draft.occurredAt
-          ? occurrenceDraft({
-              datePrecision: "exact",
-              occurredAt: new Date(draft.occurredAt).toISOString(),
-              occurredEnd: null,
-              occurredLabel: null,
-              occurredTimezone: timezone(),
-            })
-          : null),
-      title: draft.title,
+      isComplete,
+      values: {
+        body: draft.body,
+        bodyRich: draft.bodyRich ?? null,
+        occurrence:
+          draft.occurrence ??
+          (draft.occurredAt
+            ? occurrenceDraft({
+                datePrecision: "exact",
+                occurredAt: new Date(draft.occurredAt).toISOString(),
+                occurredEnd: null,
+                occurredLabel: null,
+                occurredTimezone: timezone(),
+              })
+            : null),
+        title: draft.title,
+      },
     };
   }
 
   function ensureLoaded() {
     if (isLoaded) return;
     isLoaded = true;
-    const stored = readValues();
+    const { isComplete, values: stored } = readValues();
     hasStoredWriting = Boolean(stored);
     snapshot = {
       ...snapshot,
       ...(stored ?? emptyValues),
       hasLocalDraft: hasStoredWriting,
       isReady: true,
+      // The unreadable part stays in storage and is kept aside before the
+      // first change replaces it.
+      notice: isComplete
+        ? null
+        : {
+            isError: true,
+            message: stored ? unrestoredDraftMessage : unreadableDraftMessage,
+            revision: snapshot.revision,
+          },
     };
   }
 
@@ -431,7 +450,7 @@ export function createInboxDraftStore({
     reload() {
       // A draft not read yet is read in full on first use.
       if (!isLoaded) return;
-      const stored = readValues();
+      const { values: stored } = readValues();
       hasStoredWriting = Boolean(stored);
       const values = stored ?? emptyValues;
       if (sameValues(values, currentValues())) {

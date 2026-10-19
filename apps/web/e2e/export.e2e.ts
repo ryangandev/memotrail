@@ -219,8 +219,11 @@ test("Complete ZIP is portable, byte-identical, shared with native auth, and rec
     expect(read(`entries/${entryID}.md`).toString()).toContain(
       'occurred_label: "17岁"',
     );
-    for (const name of ["homes", "vehicles"])
-      expect(read(`tables/${name}.csv`).toString()).toContain('"id"');
+    // Chapters and First Times are Entries, so the Entries table carries their marks.
+    expect(read("tables/entries.csv").toString()).toContain(
+      '"item_subtype","is_first_time"',
+    );
+    expect(read("tables/locations.csv").toString()).toContain('"id"');
     const checksum = JSON.parse(read("checksums.json").toString()).media[0];
     expect(checksum.sha256).toBe(sha(original));
     expect(sha(read(checksum.archive_path))).toBe(sha(original));

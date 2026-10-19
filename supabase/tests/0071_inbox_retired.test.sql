@@ -35,8 +35,8 @@ select hasnt_function('public','extract_capture_to_home','A Home no longer start
 select hasnt_function('public','extract_capture_to_vehicle','A Vehicle no longer starts from a Capture');
 select hasnt_function('public','save_home_entry_with_geoapify',array['jsonb','jsonb','jsonb'],'Home saves take no Capture source');
 select hasnt_function('public','save_vehicle_with_location',array['jsonb','jsonb','jsonb'],'Vehicle saves take no Capture source');
-select has_function('public','save_home_with_location',array['jsonb','jsonb'],'Home saves take the record and its Location');
-select has_function('public','save_vehicle_with_location',array['jsonb','jsonb'],'Vehicle saves take the record and its Location');
+select hasnt_function('public','save_home_with_location',array['jsonb','jsonb'],'Home saves are retired with the Home record');
+select hasnt_function('public','save_vehicle_with_location',array['jsonb','jsonb'],'Vehicle saves are retired with the Vehicle record');
 select hasnt_function('public','review_wiki_item_with_photo_place','The plain-text review without a Location is retired');
 select hasnt_function('public','review_wiki_item_with_photo_place_rich','The rich-text review without a Location is retired');
 select hasnt_function('public','trash_item_storage_paths','The per-record deletion manifest is retired');

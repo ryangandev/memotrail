@@ -57,9 +57,9 @@ content:
   lines: 1
   overflow: truncateTail
   casing: sentence
-  length: The label counts what waits, such as 3 pending, and adds refused captures after a middle dot, such as 3 pending · 1 not accepted.
+  length: The label counts what waits, such as 3 pending, and adds refused captures after a middle dot, such as 3 pending · 1 not accepted, or saved captures this version cannot read, such as 1 unreadable.
   notes:
-    - When MemoTrail refused a capture, the label turns warm, because only the person can resolve it.
+    - When MemoTrail refused or could not read a capture, the label turns warm, because only the person can resolve it.
 
 accessibility:
   role: A button that syncs now and opens the Pending sync dialog. While a sync runs it carries aria-busy.

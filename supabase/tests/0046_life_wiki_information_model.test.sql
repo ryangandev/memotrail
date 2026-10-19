@@ -6,14 +6,14 @@ insert into auth.users(id,email) values
   ('10000000-0000-0000-0000-000000000103','life-wiki-owner@memotrail.local'),
   ('10000000-0000-0000-0000-000000000104','life-wiki-other@memotrail.local');
 
-select has_column('public','entries','item_kind','Entries distinguish Entry from focused Entity and Goal records');
-select has_column('public','entries','item_subtype','Entries retain only focused structural forms');
+select has_column('public','entries','item_kind','Entries keep one Kind');
+select has_column('public','entries','item_subtype','Entries are either ordinary or a Chapter');
 select hasnt_column('public','entries','entry_type','Entries no longer expose the transitional Entry type');
 
 insert into public.entries(id,owner_id,body,item_kind,item_subtype,date_precision) values
   ('97000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000103','A raw thought','entry','entry','unknown'),
   ('97000000-0000-4000-8000-000000000002','10000000-0000-0000-0000-000000000103','An organized note','entry','entry','unknown'),
-  ('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000103','Home facts','entity','home','unknown');
+  ('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000103','Home facts','entry','chapter','unknown');
 
 select is(
   (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000001'),
@@ -27,16 +27,22 @@ select is(
 );
 select is(
   (select item_kind || ':' || item_subtype from public.entries where id='97000000-0000-4000-8000-000000000003'),
-  'entity:home',
-  'A Home keeps a focused Entity form'
+  'entry:chapter',
+  'A Chapter is an Entry with the chapter subtype'
 );
 select throws_ok(
   $$update public.entries set item_subtype = 'first_time' where id = '97000000-0000-4000-8000-000000000001'$$,
-  '23514', null, 'A First Time is an Entry with a milestone, not a separate form'
+  '23514', null, 'A First Time is a mark on an Entry, not a separate form'
 );
 
-insert into public.homes(entry_id,owner_id)
-values('97000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000103');
+select throws_ok(
+  $$update public.entries set item_kind = 'entity' where id = '97000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'The Entity Kind is retired'
+);
+select throws_ok(
+  $$update public.entries set item_subtype = 'home' where id = '97000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'A Home is a Chapter, not a separate form'
+);
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000103',true);

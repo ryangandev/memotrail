@@ -1,7 +1,7 @@
 "use client";
 import { notify } from "@/components/app-toast";
 import { PageHeader } from "@/components/page-header";
-import { Button, ButtonLink } from "@/components/button";
+import { Button } from "@/components/button";
 import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import Link from "next/link";
 import { useState } from "react";
@@ -9,38 +9,66 @@ import { useRouter } from "next/navigation";
 import { EntryEditorDialog } from "./entry-editor-dialog";
 import { EntryPhotos } from "./entry-photos";
 import { EntryRichTextContent } from "./entry-rich-text-content";
+import { ReviewPanel } from "./review-panel";
+import { EntryList } from "./entry-list";
 import { Icon } from "./icon";
-import { DatePickerField } from "./date-picker-field";
-import { TextField } from "./text-field";
+import { SectionHeader } from "./section-header";
+import { SeparatedList } from "./separated-list";
+import { loadEditableEntry, trashWikiItem } from "@/app/items/actions";
 import {
-  extractGoalFromItem,
-  loadEditableEntry,
-  trashWikiItem,
-} from "@/app/items/actions";
-import {
+  chapterDateFacts,
   entryDateAddsToTitle,
   entryDateLabel,
   entryTitle,
   type EntryDetail,
 } from "@/lib/data/entry-detail";
-import { wikiItemIdentityLabel, wikiItemKindLabel } from "@/lib/data/wiki-item";
+import {
+  chapterEntriesPageSize,
+  type ChapterContents,
+} from "@/lib/data/chapter-contents-types";
+import {
+  entryDisplayTitle,
+  occurrenceLabel,
+  occurrenceSpanLabel,
+} from "@/lib/data/occurrence";
+import {
+  wikiEntryHref,
+  wikiItemIdentityLabel,
+  wikiItemSubtypeLabel,
+} from "@/lib/data/wiki-item";
 import type { EntryPhotos as EntryPhotoList } from "@/lib/data/entry-photos";
+import type { ReviewPageData, ReviewSettings } from "@/lib/data/review-input";
 import { locationDisplayLabel } from "@/lib/locations/location";
-import { timelineLaneLabels } from "@/lib/data/milestone";
 import styles from "@/components/entry-detail-view.module.css";
 
+/** What a Chapter's Item page adds: the Entries dated inside it and the Chapters beside it. */
+export type ChapterPageData = {
+  /** Null for a Chapter without a calendar date, which has no days to hold Entries. */
+  contents: ChapterContents | null;
+  /** The request date as an ISO string, so server and client render the same duration. */
+  now: string;
+  page: number;
+  /** The Chapter's review, or null when reviews could not be read. */
+  review: {
+    data: ReviewPageData;
+    preferences: ReviewSettings;
+    timezone: string;
+    today: string;
+  } | null;
+};
+
 const sourceLinkLabels: Record<string, string> = {
-  derived: "Open extracted item",
-  derived_from: "Open source item",
   exploration_source: "Open source item",
   exploration_conclusion: "Open saved conclusion",
 };
 
 export function EntryDetailView({
+  chapter = null,
   entry,
   ownerId,
   photos,
 }: {
+  chapter?: ChapterPageData | null;
   entry: EntryDetail;
   ownerId: string;
   // Null when the item is in Trash or its photos could not load.
@@ -100,7 +128,12 @@ export function EntryDetailView({
       <Link className={styles.backLink} href="/library">
         ← Library
       </Link>
-      <PageHeader title={<>{entryTitle(entry)}</>} />
+      <PageHeader
+        eyebrow={
+          <>{wikiItemIdentityLabel(entry.item_subtype, entry.is_first_time)}</>
+        }
+        title={<>{entryTitle(entry)}</>}
+      />
       <div className={styles.itemActions}>
         {active && entry.item_kind === "entry" && (
           <Button
@@ -109,7 +142,7 @@ export function EntryDetailView({
             disabled={busy}
             onClick={() => void edit()}
           >
-            Edit {wikiItemKindLabel(entry.item_kind)}
+            Edit {wikiItemSubtypeLabel(entry.item_subtype)}
           </Button>
         )}
         {editing && (
@@ -123,19 +156,6 @@ export function EntryDetailView({
             // The editor refreshes the page after it saves.
             onSaved={() => setEditing(null)}
           />
-        )}
-        {active && entry.item_kind !== "goal" && (
-          <GoalExtraction
-            key={`${entry.id}:${entry.revision}`}
-            entry={entry}
-            disabled={busy}
-            onBusyChange={setBusy}
-          />
-        )}
-        {active && entry.item_kind === "goal" && (
-          <ButtonLink href={`/goals/${entry.id}`} variant="secondary">
-            Open in Someday
-          </ButtonLink>
         )}
         {active ? (
           <Button
@@ -166,17 +186,28 @@ export function EntryDetailView({
         </p>
       )}
       <CurrentItem
+        now={chapter ? new Date(chapter.now) : null}
         photos={active ? photos : { hasMore: false, photos: [] }}
         value={entry}
       />
+      {chapter ? (
+        <ChapterSections
+          chapter={chapter}
+          entry={entry}
+          onEdit={() => void edit()}
+        />
+      ) : null}
     </>
   );
 }
 
 function CurrentItem({
+  now,
   photos,
   value,
 }: {
+  // Set for a Chapter, whose Date fact also says how long it lasted.
+  now: Date | null;
   photos: EntryPhotoList | null;
   value: EntryDetail;
 }) {
@@ -192,21 +223,6 @@ function CurrentItem({
           longitude: location.longitude,
         }),
       ),
-    },
-    {
-      key: "timeline",
-      label: "timeline",
-      names: value.milestone
-        ? [
-            [
-              value.milestone.is_first_time ? "First Time" : null,
-              value.milestone.shape === "period" ? "Period" : "Moment",
-              timelineLaneLabels[value.milestone.lane],
-            ]
-              .filter(Boolean)
-              .join(" · "),
-          ]
-        : [],
     },
   ]
     .filter((group) => group.names.length > 0)
@@ -227,18 +243,12 @@ function CurrentItem({
         <EntryPhotos hasMore={photos.hasMore} photos={photos.photos} />
       ) : null}
       <dl className={styles.currentFacts}>
-        {value.item_kind !== "entry" || value.item_subtype !== "entry" ? (
-          <div>
-            <dt>Record</dt>
-            <dd>
-              {wikiItemIdentityLabel(value.item_kind, value.item_subtype)}
-            </dd>
-          </div>
-        ) : null}
-        {entryDateAddsToTitle(value) ? (
+        {now && value.item_subtype === "chapter" ? (
+          <ChapterDate now={now} value={value} />
+        ) : entryDateAddsToTitle(value) ? (
           <div>
             <dt>Date</dt>
-            <dd>{entryDateLabel(value)}</dd>
+            <dd className={styles.dateValue}>{entryDateLabel(value)}</dd>
           </div>
         ) : null}
         {groups.map((group) => (
@@ -251,106 +261,150 @@ function CurrentItem({
     </article>
   );
 }
-function GoalExtraction({
-  entry,
-  disabled,
-  onBusyChange,
-}: {
-  entry: EntryDetail;
-  disabled: boolean;
-  onBusyChange: (busy: boolean) => void;
-}) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [goalId, setGoalId] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [title, setTitle] = useState(entry.title ?? "");
-  const [targetDate, setTargetDate] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  if (!open)
-    return (
-      <Button
-        variant="secondary"
-        type="button"
-        disabled={disabled}
-        onClick={() => {
-          setGoalId(crypto.randomUUID());
-          setOpen(true);
-        }}
-      >
-        Add to Someday
-      </Button>
-    );
+
+// A Chapter's Date fact: the span it covers and how long that is. An undated Chapter shows its
+// description alone.
+function ChapterDate({ now, value }: { now: Date; value: EntryDetail }) {
+  const { duration, span } = chapterDateFacts(value, now);
   return (
-    <form
-      aria-label="Add to Someday"
-      className={styles.conversion}
-      onSubmit={async (event) => {
-        event.preventDefault();
-        setBusy(true);
-        onBusyChange(true);
-        setError(null);
-        try {
-          if (!goalId) throw Error("Missing Someday item identity");
-          const result = await extractGoalFromItem({
-            goalId,
-            sourceId: entry.id,
-            sourceRevision: entry.revision,
-            title,
-            targetDate: targetDate || null,
-          });
-          if (result.error) setError(result.error);
-          else if (result.goalId) {
-            setOpen(false);
-            router.push(`/goals/${result.goalId}`);
-          }
-        } catch {
-          setError(
-            "Could not confirm it was added. Refresh to check the source before retrying.",
-          );
-        } finally {
-          setBusy(false);
-          onBusyChange(false);
-        }
-      }}
-    >
-      <h3>Add this to Someday</h3>
-      <p>
-        This adds a separate item to Someday and links it back to this source.
-        The source keeps its writing, dates, and photos.
-      </p>
-      <fieldset disabled={busy || disabled}>
-        <TextField
-          disabled={busy || disabled}
-          label="What do you want to do?"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          maxLength={200}
-          required
-        />
-        <DatePickerField
-          disabled={busy}
-          label="Target date"
-          value={targetDate}
-          onChange={setTargetDate}
-        />
-        <div className={styles.controls}>
-          <Button
-            variant="secondary"
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              setGoalId(null);
-            }}
-          >
-            Cancel
-          </Button>
-          <Button variant="primary" type="submit">
-            {busy ? "Adding..." : "Add to Someday"}
-          </Button>
-        </div>
-      </fieldset>
-      {error && <p role="alert">{error}</p>}
-    </form>
+    <div>
+      <dt>Date</dt>
+      <dd className={styles.dateValue}>
+        <SeparatedList>
+          <span>{span}</span>
+          {duration ? <span>{duration}</span> : null}
+        </SeparatedList>
+      </dd>
+    </div>
   );
+}
+
+function ChapterSections({
+  chapter,
+  entry,
+  onEdit,
+}: {
+  chapter: ChapterPageData;
+  entry: EntryDetail;
+  onEdit: () => void;
+}) {
+  const { contents, page } = chapter;
+  const total = contents?.totalCount ?? 0;
+  const pageCount = Math.max(1, Math.ceil(total / chapterEntriesPageSize));
+  const overlaps = contents?.overlaps ?? [];
+
+  return (
+    <>
+      {chapter.review ? (
+        <ReviewPanel
+          data={chapter.review.data}
+          preferences={chapter.review.preferences}
+          spanLabel={chapterDateFacts(entry, new Date(chapter.now)).span}
+          subject={{ chapterId: entry.id, scope: "chapter" }}
+          timezone={chapter.review.timezone}
+          today={chapter.review.today}
+        />
+      ) : null}
+      <section aria-labelledby="chapter-entries-heading">
+        <SectionHeader
+          detail={
+            contents && !contents.failed
+              ? `${total} ${total === 1 ? "Entry" : "Entries"}`
+              : undefined
+          }
+          headingId="chapter-entries-heading"
+          title="In this Chapter"
+        />
+        {!contents ? (
+          <div className={styles.chapterEmpty}>
+            <p>Add a rough start date to see the Entries from this time.</p>
+            <Button variant="secondary" onClick={onEdit} type="button">
+              Add a start date
+            </Button>
+          </div>
+        ) : contents.failed ? (
+          <p role="alert">
+            The Entries in this Chapter could not load. Refresh to try again.
+          </p>
+        ) : contents.entries.length === 0 ? (
+          <p className={styles.chapterEmpty}>
+            No Entries are dated inside this Chapter yet.
+          </p>
+        ) : (
+          <>
+            <EntryList
+              items={contents.entries.map((item) => {
+                // An untitled Entry is already named by its date.
+                const title = entryDisplayTitle(item.title, item.occurrence);
+                return {
+                  cover: item.coverPhoto
+                    ? {
+                        alt: item.coverPhoto.alt,
+                        src: item.coverPhoto.imageUrl,
+                      }
+                    : null,
+                  date: item.title.trim()
+                    ? occurrenceLabel(item.occurrence)
+                    : null,
+                  excerpt: item.excerpt,
+                  href: wikiEntryHref(item),
+                  id: item.id,
+                  isChapter: false,
+                  isFirstTime: item.isFirstTime,
+                  title,
+                };
+              })}
+              label="Entries in this Chapter"
+            />
+            {pageCount > 1 ? (
+              <nav
+                aria-label="Chapter Entry pages"
+                className={styles.pagination}
+              >
+                {page > 1 ? (
+                  <Link href={chapterPageHref(entry.id, page - 1)}>
+                    Previous
+                  </Link>
+                ) : (
+                  <span />
+                )}
+                <span>
+                  Page {page} of {pageCount}
+                </span>
+                {page < pageCount ? (
+                  <Link href={chapterPageHref(entry.id, page + 1)}>Next</Link>
+                ) : (
+                  <span />
+                )}
+              </nav>
+            ) : null}
+          </>
+        )}
+      </section>
+
+      {overlaps.length > 0 ? (
+        <section aria-labelledby="chapter-overlaps-heading">
+          <SectionHeader
+            headingId="chapter-overlaps-heading"
+            title="Chapters during this time"
+          />
+          <ul
+            aria-label="Chapters during this time"
+            className={styles.overlaps}
+          >
+            {overlaps.map((overlap) => (
+              <li key={overlap.id}>
+                <Link href={wikiEntryHref(overlap)}>{overlap.title}</Link>
+                <small>{occurrenceSpanLabel(overlap.occurrence)}</small>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </>
+  );
+}
+
+function chapterPageHref(id: string, page: number) {
+  return page > 1 ? `/items/${id}?page=${page}` : `/items/${id}`;
 }

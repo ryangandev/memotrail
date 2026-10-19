@@ -9,6 +9,7 @@ export type WikiItemSummary = {
   datePrecision: string;
   excerpt: string;
   id: string;
+  isFirstTime: boolean;
   itemKind: WikiItemKind;
   itemSubtype: string;
   occurredEnd: string | null;
@@ -25,6 +26,7 @@ type WikiItemRow = {
   canonical_item_id: string;
   date_precision: string;
   excerpt: string;
+  is_first_time: boolean;
   item_id: string;
   item_kind: WikiItemKind;
   item_subtype: string;
@@ -69,6 +71,7 @@ export function parseWikiItemRows(value: unknown): WikiItemSummary[] | null {
       datePrecision: candidate.date_precision,
       excerpt: candidate.excerpt,
       id: candidate.canonical_item_id,
+      isFirstTime: candidate.is_first_time,
       itemKind: candidate.item_kind,
       itemSubtype: candidate.item_subtype,
       occurredEnd: candidate.occurred_end,
@@ -98,6 +101,7 @@ function isWikiItemRow(value: unknown): value is WikiItemRow {
   return (
     typeof row.canonical_item_id === "string" &&
     typeof row.item_id === "string" &&
+    typeof row.is_first_time === "boolean" &&
     isWikiItemKind(row.item_kind) &&
     typeof row.item_subtype === "string" &&
     typeof row.title === "string" &&

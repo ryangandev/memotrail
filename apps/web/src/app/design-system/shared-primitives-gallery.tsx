@@ -277,8 +277,8 @@ export function SharedPrimitivesGallery() {
               <div className={controls.choices}>
                 {(
                   [
-                    ["timeline", "Moment"],
-                    ["home", "Home"],
+                    ["timeline", "Chapter"],
+                    ["star", "First Time"],
                   ] as const
                 ).map(([icon, title]) => (
                   <Button
@@ -388,7 +388,7 @@ export function SharedPrimitivesGallery() {
             <EmptyState
               headingLevel={3}
               title="No photos yet"
-              description="Photos you add to this Home appear here."
+              description="Photos you add to this Entry appear here."
             />
           </SpecimenCase>
           <SpecimenCase id="empty-state-button">

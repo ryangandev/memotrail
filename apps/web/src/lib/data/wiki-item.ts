@@ -1,35 +1,17 @@
-import { milestoneLabel, type Milestone } from "./milestone";
-
-export const wikiItemKinds = ["entry", "entity", "goal"] as const;
+// Every item is an Entry. A Chapter is an Entry whose subtype is "chapter", and a First Time is
+// an Entry marked `is_first_time`; both marks can sit on the same Entry.
+export const wikiItemKinds = ["entry"] as const;
 
 export type WikiItemKind = (typeof wikiItemKinds)[number];
 
-export type WikiItemSearchGroup = {
+/** The Library Record filter: Entries, Chapters, and First Times. */
+export const wikiItemRecordFilters: readonly {
   label: string;
-  options: readonly {
-    label: string;
-    value: string;
-  }[];
-};
-
-export const wikiItemSearchGroups: readonly WikiItemSearchGroup[] = [
-  {
-    label: "Records",
-    options: [
-      { label: "Entries", value: "entry" },
-      { label: "Entities", value: "entity" },
-      { label: "Someday", value: "goal" },
-    ],
-  },
-  {
-    label: "Focused records",
-    options: [
-      { label: "Timeline milestones", value: "milestone" },
-      { label: "First Times", value: "first_time" },
-      { label: "Homes", value: "home" },
-      { label: "Vehicles", value: "vehicle" },
-    ],
-  },
+  value: string;
+}[] = [
+  { label: "Entries", value: "entry" },
+  { label: "Chapters", value: "chapter" },
+  { label: "First Times", value: "first_time" },
 ] as const;
 
 export function isWikiItemKind(value: unknown): value is WikiItemKind {
@@ -38,55 +20,20 @@ export function isWikiItemKind(value: unknown): value is WikiItemKind {
   );
 }
 
-export function wikiItemKindLabel(kind: WikiItemKind) {
-  switch (kind) {
-    case "entry":
-      return "Entry";
-    case "entity":
-      return "Entity";
-    case "goal":
-      return "Someday";
-  }
+export function wikiItemSubtypeLabel(subtype: string) {
+  return subtype === "chapter" ? "Chapter" : "Entry";
 }
 
-export function wikiItemSubtypeLabel(kind: WikiItemKind, subtype: string) {
-  if (kind === "entry") return "Entry";
-  if (kind === "entity" && subtype === "home") return "Home";
-  if (kind === "entity" && subtype === "vehicle") return "Vehicle";
-  if (kind === "goal") return "Someday";
-  return subtype
-    .split("_")
-    .map((part) => part.charAt(0).toLocaleUpperCase() + part.slice(1))
-    .join(" ");
+/** What an item is called in a heading or badge: "Chapter · First Time", "Chapter", "First Time", or "Entry". */
+export function wikiItemIdentityLabel(subtype: string, isFirstTime = false) {
+  const isChapter = subtype === "chapter";
+  if (isChapter && isFirstTime) return "Chapter · First Time";
+  if (isChapter) return "Chapter";
+  if (isFirstTime) return "First Time";
+  return "Entry";
 }
 
-// A milestone Entry reads as what it is on Timeline: a First Time, a Period, or a Moment.
-export function wikiItemIdentityLabel(
-  kind: WikiItemKind,
-  subtype: string,
-  milestone: Pick<Milestone, "isFirstTime" | "shape"> | null = null,
-) {
-  if (kind === "entry" && milestone) return milestoneLabel(milestone);
-  const kindLabel = wikiItemKindLabel(kind);
-  const subtypeLabel = wikiItemSubtypeLabel(kind, subtype);
-  return kindLabel.toLocaleLowerCase() === subtypeLabel.toLocaleLowerCase()
-    ? kindLabel
-    : subtypeLabel;
-}
-
-export function wikiEntryHref(item: {
-  id: string;
-  itemKind: WikiItemKind;
-  itemSubtype: string;
-}) {
-  if (item.itemKind === "entity" && item.itemSubtype === "home") {
-    return `/homes/${item.id}`;
-  }
-  if (item.itemKind === "entity" && item.itemSubtype === "vehicle") {
-    return `/vehicles/${item.id}`;
-  }
-  if (item.itemKind === "goal") {
-    return `/goals/${item.id}`;
-  }
+/** Every item opens on its Item page. */
+export function wikiEntryHref(item: { id: string }) {
   return `/items/${item.id}`;
 }

@@ -37,6 +37,8 @@ export type FirstTimeEntry = {
   body: string;
   datePrecision: OccurrencePrecision;
   id: string;
+  /** A First Time can also be a Chapter, which spans a stretch of time. */
+  isChapter: boolean;
   location?: LocationSelection | null;
   occurredLabel: string | null;
   occurredStart: string | null;
@@ -62,6 +64,7 @@ type FirstTimeRow = {
   body: string;
   date_precision: OccurrencePrecision;
   entry_id: string;
+  is_chapter: boolean;
   occurred_label: string | null;
   occurred_start: string | null;
   occurred_end: string | null;
@@ -72,7 +75,7 @@ type FirstTimeRow = {
   updated_at: string;
 };
 
-// First Times are the milestones marked as a First Time.
+// First Times are the Entries marked as a First Time.
 export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | null> {
   const context = await getAuthenticatedContext();
 
@@ -117,6 +120,7 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
       body: row.body,
       datePrecision: row.date_precision,
       id: row.entry_id,
+      isChapter: row.is_chapter,
       location: locations.get(row.entry_id) ?? null,
       occurredLabel: row.occurred_label,
       occurredStart: row.occurred_start,
@@ -173,6 +177,7 @@ export function parseFirstTimeRows(value: unknown):
     if (
       !attachments ||
       typeof item.entry_id !== "string" ||
+      typeof item.is_chapter !== "boolean" ||
       typeof item.title !== "string" ||
       typeof item.body !== "string" ||
       typeof item.date_precision !== "string" ||
@@ -195,6 +200,7 @@ export function parseFirstTimeRows(value: unknown):
       body: item.body,
       date_precision: item.date_precision as OccurrencePrecision,
       entry_id: item.entry_id,
+      is_chapter: item.is_chapter,
       occurred_label: item.occurred_label,
       occurred_start: item.occurred_start,
       occurred_end: item.occurred_end,

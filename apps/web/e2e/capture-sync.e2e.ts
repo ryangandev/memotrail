@@ -126,7 +126,7 @@ test("the header pending indicator syncs and lists captures waiting on this devi
   workspace,
 }) => {
   test.setTimeout(120_000);
-  await page.goto("/homes");
+  await page.goto("/first-times");
   await page.waitForLoadState("networkidle");
   const attempts = countCaptureSyncAttempts(page);
 

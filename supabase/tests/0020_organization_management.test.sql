@@ -1,8 +1,7 @@
 begin;
 create extension if not exists pgtap with schema extensions;
 select plan(23);
-insert into public.entries(id,owner_id,title,item_kind,item_subtype) values('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Pottery milestone','goal','goal');
-insert into public.goals(entry_id,owner_id) values('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001');
+insert into public.entries(id,owner_id,title,item_kind,item_subtype) values('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','Pottery milestone','entry','entry');
 insert into public.tags(id,owner_id,name) values('96000000-0000-4000-8000-000000000003','10000000-0000-0000-0000-000000000001','Organization test tag');
 insert into public.entry_tags(entry_id,owner_id,tag_id) values('96000000-0000-4000-8000-000000000001','10000000-0000-0000-0000-000000000001','96000000-0000-4000-8000-000000000003');
 select is(to_regclass('public.collections'),null,'Collections no longer exist');

@@ -20,7 +20,7 @@ describe("Badge", () => {
   });
 
   it("marks uppercase only when it is on", () => {
-    const html = renderToStaticMarkup(<Badge uppercase>Goal</Badge>);
+    const html = renderToStaticMarkup(<Badge uppercase>New</Badge>);
 
     expect(html).toContain('data-uppercase="true"');
   });

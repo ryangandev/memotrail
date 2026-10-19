@@ -39,14 +39,12 @@ export function OccurrenceEditor({
   disabled,
   defaultTimezone,
   span = false,
-  point = false,
 }: {
   value: OccurrenceDraft;
   onChange: (value: OccurrenceDraft) => void;
   disabled: boolean;
   defaultTimezone?: string;
   span?: boolean;
-  point?: boolean;
 }) {
   // An unknown date is a Day left empty; any edit stores it as a Day again.
   const precision = value.precision === "unknown" ? "day" : value.precision;
@@ -64,13 +62,13 @@ export function OccurrenceEditor({
 
   const exact = precision === "exact";
   const unsure = segment === "unsure";
-  const spanEnd = span && !point;
-  // Outside a Period, only a Day or Not sure date can end, and never with a time.
-  const endToggle = !span && !point && (segment === "day" || unsure) && !exact;
+  const spanEnd = span;
+  // Outside a Chapter, only a Day or Not sure date can end, and never with a time.
+  const endToggle = !span && (segment === "day" || unsure) && !exact;
   const endAdded =
     spanEnd ||
     precision === "range" ||
-    (unsure && !span && !point && value.endMode === "date");
+    (unsure && !span && value.endMode === "date");
   const presentShown = spanEnd || precision === "range";
   const endMode = presentShown ? (value.endMode ?? "date") : "date";
   const timeToggle = segment === "day" && (span || precision !== "range");
@@ -86,7 +84,7 @@ export function OccurrenceEditor({
 
   function changeSegment(next: Segment) {
     if (next === segment) return;
-    const keepEnd = span || (!point && (next === "day" || next === "unsure"));
+    const keepEnd = span || next === "day" || next === "unsure";
     const date = (text: string) => {
       if (next === "year") return text.slice(0, 4);
       if (next === "month") return text.length >= 7 ? text.slice(0, 7) : "";

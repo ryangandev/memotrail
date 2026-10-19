@@ -14,7 +14,8 @@ export const test = base.extend<{
         stdio: ["ignore", "pipe", "ignore"],
       }),
     );
-    expect(env.API_URL).toBe("http://127.0.0.1:54321");
+    // Any local stack, so a second one on other ports can run beside the default.
+    expect(env.API_URL).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
     const admin = createClient(env.API_URL, env.SERVICE_ROLE_KEY, {
       auth: { persistSession: false },
     });

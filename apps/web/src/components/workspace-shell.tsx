@@ -27,15 +27,11 @@ import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 export type WorkspaceDestination =
   | "explore"
   | "home"
-  | "homes"
   | "library"
-  | "map"
-  | "goals"
   | "settings"
   | "tags"
   | "timeline"
   | "trash"
-  | "vehicles"
   | "first-times";
 
 type NavigationItem = {
@@ -43,13 +39,6 @@ type NavigationItem = {
   href?: string;
   icon: IconName;
   label: string;
-};
-
-const mapNavigation: NavigationItem = {
-  destination: "map",
-  href: "/map",
-  icon: "map",
-  label: "Map",
 };
 
 const primaryNavigation: NavigationItem[] = [
@@ -66,24 +55,15 @@ const primaryNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Library",
   },
-  mapNavigation,
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
-  {
-    destination: "vehicles",
-    href: "/vehicles",
-    icon: "car",
-    label: "Vehicles",
-  },
   {
     destination: "first-times",
     href: "/first-times",
     icon: "star",
     label: "First Times",
   },
-  { destination: "goals", href: "/goals", icon: "target", label: "Someday" },
 ];
 
 const organizationNavigation: NavigationItem[] = [
@@ -105,7 +85,6 @@ const mobileNavigation: NavigationItem[] = [
     icon: "archive",
     label: "Library",
   },
-  mapNavigation,
 ];
 
 const mobileMoreGroups: { label: string; items: NavigationItem[] }[] = [
@@ -407,10 +386,6 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname.startsWith("/explore")) return "explore";
   if (pathname.startsWith("/settings")) return "settings";
   if (pathname.startsWith("/timeline")) return "timeline";
-  if (pathname.startsWith("/goals")) return "goals";
-  if (pathname.startsWith("/homes")) return "homes";
-  if (pathname.startsWith("/map")) return "map";
-  if (pathname.startsWith("/vehicles")) return "vehicles";
   if (pathname.startsWith("/first-times")) return "first-times";
   if (pathname.startsWith("/tags")) return "tags";
   if (pathname.startsWith("/trash")) return "trash";

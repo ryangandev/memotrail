@@ -5,6 +5,8 @@ import { getAuthenticatedContext, type Viewer } from "./inbox";
 import { TRASH_PAGE_SIZE, type TrashItemKind } from "./trash-input";
 import { isWikiItemKind, type WikiItemKind } from "./wiki-item";
 import { entryDisplayTitle, storedOccurrence } from "./occurrence";
+import { storedProfileTimezone } from "./profile-input";
+import { loadReviewSettings } from "./reviews";
 
 export type TrashItem = {
   deletedAt: string;
@@ -23,6 +25,12 @@ export type TrashWorkspace = {
   items: TrashItem[];
   loadError: string | null;
   page: number;
+  /** When the page was rendered, so every date and countdown agrees on "now". */
+  renderedAt: string;
+  /** Whether reviews or Chapter suggestions exist, so deleting forever mentions them. */
+  reviewsExist: boolean;
+  /** The profile time zone Trash dates are shown in. */
+  timezone: string;
   totalCount: number;
   viewer: Viewer;
 };
@@ -59,11 +67,17 @@ export async function getTrashWorkspace(
     return null;
   }
 
-  const [trashResult] = await Promise.all([
+  const [trashResult, profile, reviewSettings] = await Promise.all([
     context.client.rpc("trash_workspace", {
       p_limit: TRASH_PAGE_SIZE,
       p_offset: (page - 1) * TRASH_PAGE_SIZE,
     }),
+    context.client
+      .from("profiles")
+      .select("timezone")
+      .eq("user_id", context.userId)
+      .single(),
+    loadReviewSettings(context.client),
   ]);
   const rows = trashResult.error ? null : parseTrashRows(trashResult.data);
   const imageUrls = rows
@@ -80,6 +94,13 @@ export async function getTrashWorkspace(
         ? null
         : "MemoTrail could not load Trash. Refresh to try again.",
     page,
+    renderedAt: new Date().toISOString(),
+    reviewsExist:
+      (reviewSettings?.reviewCount ?? 0) +
+        (reviewSettings?.pendingSuggestionCount ?? 0) >
+      0,
+    timezone: storedProfileTimezone(profile.error ? null : profile.data)
+      .timezone,
     totalCount: safeCount(rows?.[0]?.total_count ?? 0),
     viewer: context.viewer,
   };

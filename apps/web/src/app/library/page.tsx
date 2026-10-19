@@ -1,5 +1,5 @@
 import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/badge";
+import { EntryList } from "@/components/entry-list";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LibrarySearch } from "@/components/library-search";
@@ -17,7 +17,6 @@ import {
   storedOccurrence,
   type Occurrence,
 } from "@/lib/data/occurrence";
-import { wikiItemKindLabel, wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 import {
   getWikiItemsWorkspace,
   wikiItemHref,
@@ -109,35 +108,24 @@ function LibraryBrowse({
           <p>Try another phrase or category, or capture something new.</p>
         </div>
       ) : (
-        <ul aria-label="Library items" className={styles.wikiList}>
-          {workspace.items.map((item) => {
+        <EntryList
+          items={workspace.items.map((item) => {
             const occurrence = storedOccurrence(item);
-            // An untitled Entry is already named by its date.
-            const date = item.title.trim()
-              ? wikiItemDateLabel(item, occurrence)
-              : null;
-            return (
-              <li key={item.id}>
-                <Link href={wikiItemHref(item)}>
-                  <div className={styles.wikiBadges}>
-                    <Badge size="micro" uppercase>
-                      {wikiItemKindLabel(item.itemKind)}
-                    </Badge>
-                    {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype) !==
-                    wikiItemKindLabel(item.itemKind) ? (
-                      <Badge size="micro" tone="neutral" uppercase>
-                        {wikiItemSubtypeLabel(item.itemKind, item.itemSubtype)}
-                      </Badge>
-                    ) : null}
-                  </div>
-                  {date ? <small>{date}</small> : null}
-                  <strong>{entryDisplayTitle(item.title, occurrence)}</strong>
-                  {item.excerpt ? <p>{item.excerpt}</p> : null}
-                </Link>
-              </li>
-            );
+            return {
+              // An untitled Entry is already named by its date.
+              date: item.title.trim()
+                ? wikiItemDateLabel(item, occurrence)
+                : null,
+              excerpt: item.excerpt,
+              href: wikiItemHref(item),
+              id: item.id,
+              isChapter: item.itemSubtype === "chapter",
+              isFirstTime: item.isFirstTime,
+              title: entryDisplayTitle(item.title, occurrence),
+            };
           })}
-        </ul>
+          label="Library items"
+        />
       )}
 
       {pageCount > 1 ? (
@@ -169,11 +157,10 @@ function libraryPageHref(page: number) {
   return page > 1 ? `/library?page=${page}` : "/library";
 }
 
-// Homes and Vehicles span the time they were part of the user's life.
+// A Chapter spans the time it covered.
 function wikiItemDateLabel(item: WikiItemSummary, occurrence: Occurrence) {
   if (!item.occurredStart && !item.occurredLabel) return null;
-  return item.itemKind === "entity" &&
-    ["home", "vehicle"].includes(item.itemSubtype)
+  return item.itemSubtype === "chapter"
     ? occurrenceSpanLabel(occurrence)
     : occurrenceLabel(occurrence);
 }

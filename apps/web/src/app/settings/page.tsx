@@ -12,11 +12,16 @@ import { TimezoneSetting } from "@/components/timezone-setting";
 import { PageFrame } from "@/components/page-frame";
 import { SectionHeader } from "@/components/section-header";
 import { PreferredNameSetting } from "@/components/preferred-name-setting";
+import { SemanticSearchSetting } from "@/components/semantic-search-setting";
+import { ReviewsSetting } from "@/components/reviews-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
+import { loadReviewSettings } from "@/lib/data/reviews";
 import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
+import { semanticSearchConfigured } from "@/lib/search/embedding-client";
+import { storedSemanticSearchPreference } from "@/lib/search/semantic-preference";
 import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
@@ -28,16 +33,16 @@ const preferences: Array<{
   title: string;
 }> = [
   {
-    detail: "Off and unavailable while we rethink how AI can help.",
-    href: "/settings/ai",
-    icon: "sparkle",
-    title: "AI capabilities · Beta",
-  },
-  {
     detail: "Rename, merge, and clean up the tags across your archive.",
     href: "/tags",
     icon: "tag",
     title: "Archive organization",
+  },
+  {
+    detail: "Bring notes and journals from another app into your archive.",
+    href: "/settings/import",
+    icon: "plus",
+    title: "Import notes",
   },
   {
     detail: "Create a complete portable copy of your private archive.",
@@ -62,6 +67,10 @@ export default async function SettingsPage() {
   const profileTimezone = storedProfileTimezone(
     profile.error ? null : profile.data,
   );
+  const semanticSearch = storedSemanticSearchPreference(
+    profile.error ? null : profile.data,
+  );
+  const reviewSettings = await loadReviewSettings(context.client);
   const cookieStore = await cookies();
   const preferredName =
     !profile.error && typeof profile.data?.display_name === "string"
@@ -132,6 +141,13 @@ export default async function SettingsPage() {
         {profileTimezone.available ? (
           <TimezoneSetting initialTimezone={profileTimezone.timezone} />
         ) : null}
+
+        {/* Without an embedding service search is keyword-only, so the switch would do nothing. */}
+        {semanticSearch.available && semanticSearchConfigured() ? (
+          <SemanticSearchSetting initialEnabled={semanticSearch.enabled} />
+        ) : null}
+
+        {reviewSettings ? <ReviewsSetting initial={reviewSettings} /> : null}
 
         <div className={pageStyles.preferenceList}>
           <AppearanceSetting initialPreference={themePreference} />

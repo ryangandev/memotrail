@@ -9,6 +9,11 @@
   font-weight: var(--mt-font-weight-medium);
 }
 
+.requiredMark {
+  margin-left: var(--mt-space-0-75);
+  color: var(--mt-color-warm);
+}
+
 .error {
   padding: var(--mt-space-3);
   border-radius: var(--mt-radius-small);

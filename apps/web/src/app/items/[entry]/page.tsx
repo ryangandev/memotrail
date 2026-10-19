@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 import { ButtonLink } from "@/components/button";
 import { PageHeader } from "@/components/page-header";
@@ -11,11 +12,20 @@ import {
   type EntryDetail,
 } from "@/lib/data/entry-detail";
 import { loadEntryPhotos } from "@/lib/data/entry-photos";
+import { chapterPage, loadChapterContents } from "@/lib/data/chapter-contents";
+import {
+  loadChapterReview,
+  loadReviewSettings,
+  reviewToday,
+} from "@/lib/data/reviews";
 import styles from "@/components/entry-detail-view.module.css";
 
 export const dynamic = "force-dynamic";
 
-type ItemPageProps = { params: Promise<{ entry: string }> };
+type ItemPageProps = {
+  params: Promise<{ entry: string }>;
+  searchParams: Promise<{ page?: string | string[] }>;
+};
 
 // The page and its metadata read the same item once per request.
 const loadItem = cache(async (entry: string) => {
@@ -41,8 +51,12 @@ export async function generateMetadata({
   return item ? { title: `${entryTitle(item)} | MemoTrail` } : {};
 }
 
-export default async function WikiItemPage({ params }: ItemPageProps) {
+export default async function WikiItemPage({
+  params,
+  searchParams,
+}: ItemPageProps) {
   const { entry } = await params;
+  const page = chapterPage((await searchParams).page);
   if (!validEntryID(entry)) {
     return (await getAuthenticatedContext()) ? <UnavailableItem /> : null;
   }
@@ -50,11 +64,21 @@ export default async function WikiItemPage({ params }: ItemPageProps) {
   const loaded = await loadItem(entry);
   if (!loaded) return null;
   const { context, failed, item } = loaded;
+  const active = item && !item.deleted_at;
+  // A Chapter lists the Entries dated inside it. One with no calendar date has no days to hold any.
+  const isChapter = active && item.item_subtype === "chapter";
   // Photos of an item in Trash show from Trash, where it can be restored.
-  const photos =
-    item && !item.deleted_at
-      ? await loadEntryPhotos(context.client, context.userId, item.id)
-      : null;
+  const [photos, contents] = await Promise.all([
+    active ? loadEntryPhotos(context.client, context.userId, item.id) : null,
+    isChapter && item.occurred_start
+      ? loadChapterContents(context.client, item.id, page)
+      : null,
+  ]);
+  const review = isChapter ? await loadReview(context.client, item.id) : null;
+  // A page past the last one opens the first, as Library does.
+  if (item && contents && page > 1 && !contents.failed) {
+    if (contents.entries.length === 0) redirect(`/items/${item.id}`);
+  }
 
   return (
     <PageFrame className={styles.workspace} variant="compact">
@@ -62,6 +86,11 @@ export default async function WikiItemPage({ params }: ItemPageProps) {
         <p role="alert">This item could not load. Refresh to try again.</p>
       ) : item ? (
         <EntryDetailView
+          chapter={
+            isChapter
+              ? { contents, now: new Date().toISOString(), page, review }
+              : null
+          }
           entry={item}
           ownerId={context.viewer.id}
           photos={photos}
@@ -71,6 +100,23 @@ export default async function WikiItemPage({ params }: ItemPageProps) {
       )}
     </PageFrame>
   );
+}
+
+/** A Chapter's review, shown only when its data and the review settings could be read. */
+async function loadReview(
+  client: NonNullable<
+    Awaited<ReturnType<typeof getAuthenticatedContext>>
+  >["client"],
+  chapterId: string,
+) {
+  const { localDate, timezone } = await reviewToday();
+  const [data, preferences] = await Promise.all([
+    loadChapterReview(client, chapterId, localDate),
+    loadReviewSettings(client),
+  ]);
+  return data && preferences
+    ? { data, preferences, timezone, today: localDate }
+    : null;
 }
 
 function UnavailableItem() {

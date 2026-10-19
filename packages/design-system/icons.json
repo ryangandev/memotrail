@@ -80,7 +80,7 @@
       ]
     },
     "car": {
-      "description": "Vehicles.",
+      "description": "A car.",
       "sfSymbol": "car",
       "svg": [
         [
@@ -443,7 +443,7 @@
       ]
     },
     "star": {
-      "description": "Goals and favorites.",
+      "description": "Favorites and highlights.",
       "sfSymbol": "star",
       "svg": [
         [
@@ -493,7 +493,7 @@
       ]
     },
     "target": {
-      "description": "Goals and targets.",
+      "description": "Targets.",
       "sfSymbol": "target",
       "svg": [
         ["circle", { "cx": "12", "cy": "12", "r": "8.5" }],

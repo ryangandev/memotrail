@@ -57,7 +57,6 @@ test("Search date filters include overlapping periods without inventing date pre
         httpOnly: false,
       })),
     );
-    const periodID = randomUUID();
     expect(
       (
         await client.from("entries").insert({
@@ -94,13 +93,12 @@ test("Search date filters include overlapping periods without inventing date pre
               item_subtype: "entry",
             },
             {
-              id: periodID,
               title: "College stage memory",
               date_precision: "year",
               occurred_start: "2015-01-01T12:00:00Z",
               occurred_end: "2020-01-01T12:00:00Z",
               item_kind: "entry",
-              item_subtype: "entry",
+              item_subtype: "chapter",
             },
             {
               title: "Unknown memory",
@@ -127,17 +125,6 @@ test("Search date filters include overlapping periods without inventing date pre
             ...row,
           })),
         )
-      ).error,
-    ).toBeNull();
-    // A Period with an end is a Timeline milestone.
-    expect(
-      (
-        await client.from("milestones").insert({
-          entry_id: periodID,
-          owner_id: ownerID,
-          shape: "period",
-          lane: "work_study",
-        })
       ).error,
     ).toBeNull();
     await page.goto("/library");

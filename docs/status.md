@@ -1,214 +1,100 @@
 # MemoTrail Status
 
-Last reviewed: 2026-10-10.
+Last reviewed: 2026-10-18.
 
-## Focus
+## Where things stand
 
-Web is the client Ryan uses most, so work now focuses on finishing Web before returning to native iOS.
-Native iOS work, including the acceptance items in section 3, is paused until Web is complete; native then follows the finished Web behavior.
-Before more Web building, unclear features and requirements are reviewed with Ryan and settled in [product.md](./product.md).
-The first review removed general links between Entries from Web; source and achievement links remain.
-Product direction is settled before UI questions.
-Collections are merged into tags: each Collection became a tag with the same name and kept its Entries.
-Migration `202610040001` carries this change; native iOS still calls the retired Collection functions until it follows Web.
-People are removed: migration `202610040002` deletes every Person, its Entity Wiki Item, its links, and its version history, and strips People from Entry version snapshots.
-Native iOS still calls the retired People functions until it follows Web.
-Goals became Someday: migration `202610040003` maps Considering and Paused to the open status, shown as Not yet, drops horizons, and stops Goal saves from touching related links; the former Bucket List Collection is already an ordinary tag.
-Native iOS still sends horizons and related links and fails against it until it follows Web.
-The list is named Someday and its open status Not yet; the working name Want to Do is retired.
-Inbox is retired: captures save straight to Library.
-Migration `202610040004` marks every Entry organized, keeps new ones organized, and drops the Inbox organize and capture-handoff functions.
-Native iOS still opens Inbox review and calls the retired functions until it follows Web.
-Native iOS is not in use and will be rewritten, so the database keeps no compatibility window for it.
-Migration `202610040005` drops `entries.inbox_status`, the Dashboard Inbox count, the organize flag on Entry review, the Capture source on Home and Vehicle saves, the constant record source in Library and search, the empty Trash storage path helper, and the native-only review functions.
-General related links are deleted: migration `202610040006` removes them, including those older Goals carried, from the data and version history, and drops the functions that browsed and edited them.
-Version history is removed: migration `202610040007` deletes every stored version and stops recording them, stops photo changes from creating Entry revisions, drops Locations kept only for history, and purges prepared export snapshots.
-`/history` links open the Item page or Library.
-Database leftovers are dropped: migration `202610040008` links Home Locations through `entry_locations` like every other Entry, turns `related` Location links into `photo` links and `source_capture` Entries into plain Entries, drops unused Location columns and functions no client calls, and replaces the Entry review chain with one `save_entry`.
-Timeline shows life milestones: any Entry can be marked as a Moment or a Period in Work and study or Other milestones, and a First Time is a flag on a milestone.
-Homes and Vehicles appear on Timeline in their own lanes, custom tracks are gone, First Times is a filtered view of Entries, and the Dashboard Now block replaces current chapters.
-Migration `202610040009` converts existing Moments, Periods, First Times, and track placements into milestones and turns custom track names into tags.
-Native iOS still calls the retired Timeline and First Time functions until it follows Web.
-Migrations `202610040001` through `202610040009` were applied to the hosted project on 2026-10-05 after a schema and data backup, and `main` at `cf68cab` was deployed to Production.
-Migration `202610180087` was applied to the hosted project on 2026-10-18, right after `main` at `497b9d4` was deployed to Production; it is additive and keeps the older `wiki_items_workspace` signature.
-Item page photos, the export page, and Timeline styles are settled: photos show on the Item page and are edited in the Entry editor, export is one Export everything action, and Timeline keeps only the lane view.
-The date precision controls are settled too: Web date forms choose Day, Month, Year, or Not sure, with Add time and Add end date toggles, and an empty date means Unknown.
-Native iOS still shows the eight Date types until it follows Web.
-Web Timeline no longer opens the birth date prompt on its own; native iOS still asks on the first Timeline visit until it follows Web.
-The Web capture composer's Date picks only a day with an optional time, and its action is labeled Save; native still opens the full date editor with Use capture time and saves to Inbox.
-Needs organizing is retired: capture never asks for a decision, so Library and the Dashboard no longer list or count Entries without a title or tag, and Quick Capture takes the Dashboard's full row.
-An untitled Entry is named by its date at its recorded precision on every Web surface, while its stored title stays empty.
-Migration `202610180087` makes the workspaces return blank stored titles with the date fields that name them and replaces the Library Needs organizing filter.
-It and the Web release can ship in either order; once that Web is deployed, a later migration removes the earlier six-argument Library workspace and the Timeline and Trash title stand-ins.
-Native iOS still shows the retired Inbox list, the Dashboard Ready to organize section, and its To organize count, and still expects workspace titles made from an Entry's writing, until it follows Web.
-Open `audit-2026-10` issues stay tracked in GitHub.
+The branch `product/positioning-reset` implements the positioning in [positioning.md](./positioning.md) and the product in [product.md](./product.md) on Web.
+Nothing on this branch is deployed.
+The hosted Supabase project `kaivkozeyuwzqrckmyqu` has every migration through `202610180087` and no later one.
+Production runs the Web from before this branch, which calls functions this branch's migrations drop.
 
-## Current state
+## Implemented on Web
 
-The Entry-centered Web information model was merged into `main` through PR #9, and its migration is live on the confirmed Supabase project.
-Authored Place records have also been removed from Web and the hosted schema; Entry-owned Locations and the Map remain.
-The obsolete Places Timeline track has been removed, with existing placements migrated to the general track.
-The Web Map and Location previews now follow light, dark, and System appearance; a local provider-backed dark map loaded successfully.
-The Map also offers filtered shortcuts to the user's most recorded cities when records span more than one city.
-The desktop sidebar has a compact icon rail, panel control, and animated width change; its browser preference persists across reloads.
-The Web sidebar supports an editor-aware Command B shortcut, and the bottom glass dock groups sparkle-icon New Entry on the left with Search on the right, retaining Command J and Command K.
-The capture dock uses an inset focus ring, a consistent frosted composer surface, and a retained editor with entrance and exit motion; personal visual acceptance is pending.
-Library now combines the organized all-items browser with keyword and filtered search; older `/search` URLs redirect to Library.
-The Entry editor hides AI suggestions and places tags right under the Note with most used suggestions; the Library browser includes every capture as soon as it is saved.
-Native iOS still adds tags through its picker sheet without most used suggestions and still shows the timezone select for every exact time until it follows Web.
-Web AI capabilities are paused, with a disabled Beta setting and no active AI entry points.
-The accepted Data Ribbon layout now replaces the Web Dashboard, using the signed-in user's data and the shared capture, page, image, empty-state, and tag components.
-The development preview routes and all 20 static Home mockups have been removed; Production deployment verification and browser acceptance remain pending.
-Native iOS now adopts the canonical Entry, Entity, and Goal contracts, optional Home Locations, and the paused AI state.
-The retired native Place surface and saved-Location catalog are removed; the existing screen layouts and accepted splash remain.
-Native navigation now uses Dashboard, Inbox, Timeline, Library, and More, with the active Web destinations grouped under More and the Web navigation icons.
-The native Dashboard now follows the Web Data Ribbon order and links.
-The native Inbox now matches the Web review list and Review Entry dialog, including Move to Trash and formatted note review.
-The native Library now matches Web Library, combining the all-items browser with keyword search, grouped filters, formatted result notes, and match reasons.
-The native MapKit screen and Debug Design System gallery are implemented; personal acceptance and broad screen migration remain pending.
-Adding or removing a photo in a focused First Time, Home, Vehicle, or Goal editor no longer makes Move to Trash or Mark achieved report a false conflict on Web or native.
-Delete forever and Empty Trash now delete an item's record before its private photo files on Web and native, so an interrupted request or a Restore from another device can no longer leave a restorable item without its originals.
-Restore refuses an item whose originals are missing, and opening Trash finishes any file removal left unfinished.
-Migration `202610030003` enforces this order on the server for every client, including deployed ones.
-Pending captures now stop as Not accepted instead of retrying forever when Storage refuses a photo or the Entry is already in Trash, and a capture still waiting on a device can no longer create an Entry again after Delete forever, on Web and native.
-Migration `202610030004` records each Entry deleted forever and refuses to insert it again.
-Migrations `202610030001` through `202610030004` are applied to the hosted project, which the new Web and native clients require.
-The merged Web release still needs Production deployment verification and browser acceptance; live configuration, native interactions, and recovery evidence remain incomplete.
+- Capture, drafts, offline retry, photos with private originals, Trash, Delete forever, and complete export, including reviews, suggestions, and import origins.
+- Library with keyword search and filters, tags, First Times as a mark on any Entry, and Chapters as Entries with a span.
+- Timeline of Chapter bars and First Time points, the Dashboard with current Chapters, and the Chapter Item page with its Entries and overlapping Chapters.
+- Someday and the Map are gone, and their addresses lead to Library or the Entry they became.
+- Homes, Vehicles, Periods, and Moment milestones became Chapters or ordinary Entries, and their addresses lead to Timeline or the Item page.
+- Search by meaning in code and migrations, with its embedding service in `services/embeddings`; without `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` Library searches by keywords only and Settings hides the switch.
+  Production stays keyword-only until Ryan hosts the model on his own Mac mini; Fly.io is no longer the plan.
+- Chapter and year reviews and Chapter suggestions in code and migrations, off for every person until they turn them on and accept the disclosure; the server refuses to call a provider unless `AI_PROVIDER` is `anthropic`.
+- Import of a Markdown folder (which also reads Apple Notes Markdown exports), Apple Journal, Notion, and Day One into ordinary Entries, with a preview, undo, and no duplicates on a second import.
+- A design system whose values all come from shared tokens.
 
-Use Git history for feature-level implementation and test evidence.
+All of it is verified against local Supabase only.
+No real AI provider, deployed embedding service, hosted project, or Production deployment has been exercised.
 
-| Area                                                                              | State                                                                                                                                                                                              |
-| --------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Capture, organization, dates, drafts, and offline queues                          | Implemented on Web and iOS; Web retired Inbox and Needs organizing and names untitled Entries by their date, while native still shows Inbox                                                        |
-| Timeline, Home (Dashboard on Web), First Times, Homes, Vehicles, and Someday      | Implemented on Web and iOS; Web simplified Goals into Someday and turned Timeline into fixed-lane milestones, and the retired Place and People surfaces are removed from Web                       |
-| Location data layer                                                               | Web and native Map, optional Home Location, photo GPS provenance, and Web provider quotas are implemented; personal acceptance remains.                                                            |
-| Habits                                                                            | Deferred and removed from the active Web, iOS, and hosted database product surface                                                                                                                 |
-| Web navigation shell                                                              | Persistent across routes with prefetch, route fallback, and cold-request feedback                                                                                                                  |
-| Web Settings                                                                      | Account, preferred name, dates, timezone, appearance, simplified AI, and account controls implemented                                                                                              |
-| Web tags                                                                          | One Tags destination and shared Entry tag editor implemented; Collections are merged into tags                                                                                                     |
-| Keyword and Command Palette search, grounded AI, suggestions, and Explore with AI | Keyword search remains available. Web AI is paused behind an off/disabled Beta setting; provider logic and historical data are retained.                                                           |
-| Private media, relationships, Trash, and complete export                          | Implemented; hosted APIs accepted with synthetic data; final UI acceptance remains                                                                                                                 |
-| Hosted Supabase contracts                                                         | Every repository migration through `202610180087` is deployed to project `kaivkozeyuwzqrckmyqu`; `202610040001` through `202610040009` were applied on 2026-10-05 and `202610180087` on 2026-10-18 |
-| Entry-centered information model                                                  | Web, hosted database, and native iOS use Entry, focused records, and intentional Timeline Moment or Period; native personal acceptance remains                                                     |
-| Web design system                                                                 | Every value comes from shared tokens and lint rejects hardcoded ones; 28 component specs shared with iOS; production browser acceptance pending                                                    |
-| Backup and restore                                                                | Not ready                                                                                                                                                                                          |
-| Current GitHub CI                                                                 | Pull requests run the Linux Web job and a Supabase job with database tests, data contracts, and the full browser suite; native checks run locally                                                  |
+## Native iOS
+
+Native iOS is broken against the new schema and paused.
+It still calls functions and tables these migrations drop (Homes, Vehicles, Someday, milestones, the Map).
+It is rewritten to follow the finished Web behavior, and the database keeps no compatibility window for it.
+
+## Hosted rollout
+
+Every step needs Ryan's explicit go-ahead before it starts.
+Do the steps in this order.
+
+1. **Back up** the hosted database, schema and data, to a destination Ryan names.
+2. **Apply the migrations** in filename order: `202610190001` and `202610190002`; `202610190010` through `202610190017`; `202610190020` through `202610190023`; `202610190030` through `202610190038`; `202610190040` through `202610190045`.
+   `202610190011` converts every Home, Vehicle, and Period and checks its own result before committing.
+   Apply them before deploying this Web, because the Web in Production calls RPCs these migrations drop.
+   A migration `202610190024` that drops dead columns does not exist yet, and the follow-up migration for [issue #101](https://github.com/ryangandev/memotrail/issues/101) is still pending; neither belongs in this rollout.
+3. **Set Vercel Production variables** before the deploy: `SUPABASE_SECRET_KEY`, and optionally `IMPORT_MAX_ZIP_BYTES`.
+   Remove `AI_TOTAL_BUDGET_USD` and `AI_EMBEDDING_MODEL`, which nothing reads any more.
+4. **Deploy this Web** to Production, then check Quick Capture, Library, Timeline, a Chapter Item page, and the Dashboard in a browser.
+5. **Confirm the Anthropic account's data-sharing settings.**
+   The Anthropic organization behind the key must not have opted in to any data-sharing or development program, because the disclosure tells people their review text is not shared for training.
+   Then set `AI_PROVIDER=anthropic`, `AI_API_KEY`, `AI_MONTHLY_BUDGET_USD`, and `AI_USER_MONTHLY_BUDGET_USD`.
+   Reviews stay off for each person until they turn them on.
+6. **Turn on search by meaning later**, once Ryan's Mac mini can host the embedding model; until then leave `SEMANTIC_SEARCH_URL` unset.
+   First run the model evaluation with `apps/web/scripts/semantic-eval.mjs` against the candidate models, as [services/embeddings/README.md](../services/embeddings/README.md) describes, and choose the model and similarity floor.
+   Then set `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` in Vercel Production only.
+7. **Raise the hosted Storage file size limit** only if imports above 50 MB are wanted, then raise `IMPORT_MAX_ZIP_BYTES` to match.
+8. **Verify the Apple Journal and Notion import adapters** against a real export of each app, because they are built from third-party reports and synthetic fixtures.
+
+After the deploy, run `supabase db diff --linked`.
+The hosted `service_role` and `anon` roles get no table access or function execution unless a migration grants it, and local Supabase grants both by default, so a missing grant can pass every local suite and fail only on the hosted project.
+
+## Questions for Ryan
+
+These are also listed in [product.md](./product.md#product-boundaries), and none is to be settled without him.
+
+- Does the Dashboard keep one writing entrance and frame capture as today's journal ([issue #94](https://github.com/ryangandev/memotrail/issues/94))?
+- Does the Dashboard keep a small daily resurfaced memory, or give that space to Chapters?
+- Do Entry Locations stay?
+- Do converted Work and study Periods keep the `work and study` tag?
 
 ## Next work
 
-### 1. Release and accept the Entry-centered Web flow
+### 1. Accept the Web release
 
-- Verify the Production deployment against the hosted project migrated through `202610180087`, then check Quick Capture, untitled Entries named by their date, Library, Timeline milestones, First Times, the Dashboard Now block, Home, Vehicle, and Someday in a browser.
-- The Vercel Preview has no Supabase public environment variables, so browser acceptance will be done by Ryan in a configured environment.
-- Native iOS is rewritten to follow Web once Web is complete; complete personal native acceptance before treating it as a release.
-- The hosted schema matches the migrations except for platform privilege defaults that `supabase db diff --linked` reports.
-  Hosted `service_role` and `anon` get no table access or function execution unless a migration grants it, and new public tables get row level security automatically.
-  Local Supabase grants both roles by default, so a missing explicit grant can pass every local suite and fail only on the hosted project.
+- Ryan accepts the Web flows in a configured browser, because the Vercel Preview has no Supabase public environment variables.
+- Verify an actual Production export download.
 
-### 2. Accept Web Location
-
-- The confirmed hosted project `kaivkozeyuwzqrckmyqu` is migrated through `202610180087`, which includes every Location migration. Home Location copy-on-write compares coordinates at the database's six-decimal storage precision.
-- Web now has optional Home Locations, address search that feeds Entry-owned Location snapshots on save, keyboard-accessible address suggestions, explicit photo GPS source identity, owner-scoped Geoapify quotas, and a clustered Map of current Entry coordinates with Kind and year filters.
-- `localhost:3000` points to the linked cloud Supabase project.
-- Accept the revised UI with a personal `localhost:3000` record, including retrying a provider-backed Home Location save after the precision migration, Home removal/manual address edits, and Entry map points. Map clustering is locally browser-tested but not yet personally accepted against hosted data.
-- The accepted shared SearchField is now used across Web search surfaces, including Location, Library search, Tags, organization pickers, and Command Palette.
-- The server-only Production `GEOAPIFY_API_KEY` is configured in Vercel; Production browser acceptance remains pending.
-- Native MapKit now reads current Entry-owned Locations and supports native clustering, Kind/year filters, city shortcuts, and associated record navigation.
-  Native address-provider search remains deferred; manual Home addresses follow the Entry-owned, optional Location contract.
-
-### 3. Accept native foundations, Map, and navigation
-
-Paused until Web is complete; see Focus.
-When native resumes, remove the general Related Items panel from the native Item page to match Web.
-Migration `202610040006` already drops the `entry_relations` and `set_entry_relation` functions that panel calls.
-
-- Native models, filters, Capture, and ordinary Inbox review now use the shared canonical identities; focused forms retain their existing RPCs.
-- Native `InboxController` retries waiting captures only when its network path becomes satisfied, a capture is saved, or Inbox or Home refreshes, including on return to the foreground.
-  A failed attempt therefore waits for one of those events; Web now keeps retrying with capped backoff while online, and native should adopt the same policy.
-- Home Location IDs and labels decode as optional, and editing address facts clears stale coordinates.
-- Supabase public configuration matches Web locally. Media, metadata, and export use the Web API base URL; Geoapify, AI, and Supabase secret keys remain on the server.
-- Shared media and export authentication is independent of the AI pause; local HTTP checks cover native bearer identity, Web cookies and Origin checks, metadata, retired catalog responses, invalid sessions, and all four paused AI endpoints.
-  A signed Simulator build launches to the Google sign-in screen; personal login, physical-device flows, and deployed shared API acceptance remain pending.
-- Review the Debug-only native Design System gallery, including appearance, Dynamic Type, action states, forms, cards, media, toasts, and feedback.
-  The new Map uses its shared presentation components; existing screens retain their layouts pending acceptance.
-  Native actions, badges, headers, empty states, form fields, record and Collection cards, read-only rich writing, toasts, remote images, upload progress, and the photo field now mirror the Web gallery specimens.
-  First Times, Homes, Vehicles, Goals, Collections, and an Item's Current photos load photos through the shared remote image; Home and Trash follow with their screen syncs.
-  One shared OccurrenceEditor and tag/Collection editor now serve Capture, Inbox review, Timeline, First Times, Homes, Vehicles, and Goals, with the Web date precision, Present end, and optional description at the time.
-- The gallery's Writing & formatting page now previews a native Aa toolbar with bold, italic, underline, strikethrough, selection formatting, typing styles, undo/redo, and saved note reopening.
-  The sample form uses the same reusable editor.
-  Preview saves round-trip Web-compatible paragraph and emphasis JSON locally; they do not create an Entry.
-  Web's validator accepts the Swift-encoded payload.
-  Native Capture now uses this editor as its single note, like the Web composer, and stores Web-compatible `body_rich` through drafts, the offline queue, and sync.
-  Native Inbox review now saves the same payload through `review_wiki_item_with_photo_place_rich` and keeps untouched Web-only formatting.
-  Native full-note rendering on focused record pages still needs to adopt the rich payload.
-- Native Settings now follows Web `/settings`: the account card with Sign out, preferred name, birth date, and default time zone each save on their own with Web validation and toasts, then app-local appearance and the paused Beta AI, organization, and export rows.
-  The Dashboard greeting refreshes after a name save.
-- Native Timeline now follows the Web phone layout with the shared header, type chooser, birth date prompt, and a Timeline editor that uses the Settings time zone and saves Collections and tags.
-  Manage tracks opens the Web track page, where each track saves its own name, order, and visibility.
-- Native Homes now follow Web `/homes` and its focused Home page: record cards with a photo, map, or mark, the facts, Story, and Organize page with Edit and Version history, and the sectioned Web Home editor.
-- Native Vehicles now follow Web `/vehicles` and its focused Vehicle page: one Vehicle archive of record cards with a photo, map, or mark, the When, Vehicle, and Location facts page, and the sectioned Web Vehicle editor with its Location panel.
-- Native First Times now follow Web `/first-times` and its focused First Time page: the archive of record cards with a photo, map, or number, the When and Location page, and the Web First Time editor with its Location panel.
-- Native Goals now follow Web `/goals` and its focused Goal page: record cards grouped by reflective state, the Status, Horizon, and Target page with Connected Items, and the sectioned Web Goal editor with Related Items and the Bucket List milestone.
-- Native People now follow Web `/people` and its focused Person page: cards with the initial, relationship, a short note, and connected Item count; the Relationship, Notes, and Connected Items page; and the Web Person editor with its linked Item picker.
-- Native Item pages and version history now follow Web `/items/[entry]` and `/history`: the current writing and facts with Edit, Version history, Create linked Goal, and Move to Trash; Related Items with the Web views and search; Current photos in the shared photo field; and the version picker, differences, side-by-side snapshots, and Restore.
-- Native Tags now follow Web `/tags`: tag badges with Entry counts, name search, New Tag, and the Web tag editor with its Entry previews, merge panel, and unused-tag deletion.
-- Native Collections now follow Web `/collections` and its Collection pages: compact cards with each Collection's editor, New Collection, and Entry cards with Web's rich notes, Read full note, and Collection and tag links into Library.
-- Native Trash now follows Web `/trash`: the retention badge and note, Web's cards with the photo or mark, removal date, and restorable window, toasts for each result, and the Permanent action sheets for Delete forever and Empty Trash.
-- The native More tab now follows Web's mobile More menu: the shared workspace header, then Explore, Focused views, Organize, and Archive and account as two columns of destinations with Web's icons.
-- Native sign-in now follows Web `AuthGate` at phone width: the brand header, the welcome story, and the sign-in card with Web's own Continue with Google button and Setup needed notice.
-- Native Export now follows Web `/settings/export`: the page header, the Everything in one ZIP and Prepare a snapshot cards, snapshot cards with Download ZIP and an inline discard confirmation, and toasts for each result.
-- Native Quick Capture now follows Web `QuickCaptureDialog` at phone width: the full-screen composer under Web's header and close button, the relevant date panel in place of a separate sheet, Web's photo and status strips, and a toast once the capture syncs.
-  Like Web, a capture saved without a connection is confirmed once with an info toast that it is safe on this iPhone; later offline retries stay quiet until it syncs and announces Saved to Inbox.
-  Web's bottom capture dock landed after this sync, so native still opens New entry from the header and Quick Capture full screen; adopting the dock and its bottom-anchored composer remains native work.
-- Native Map now follows Web `/map` at phone width: the page header, Category and year fields that filter as they change, Your areas shortcuts with View all, the map card, and the Entries here panel for the chosen pin or cluster, instead of a filter sheet and a record list sheet.
-- Review the normal authenticated Map against personal records; synthetic Simulator interaction evidence is separate from this acceptance.
-- Native History, Timeline, Homes, Vehicles, First Times, Goals, People, and Trash now apply only their newest load, so a slower refresh can no longer replace the reload after a restore or save.
-- Refactor existing screens after component acceptance; native address search remains later work.
-
-### 4. AI capabilities paused
-
-- Web AI entry points are removed; Settings shows an off, disabled Beta status.
-- Earlier AI narrative, requirements, and decision-model exploration are preserved in the [AI direction record](./ai-direction-record.md), not discarded with the UI.
-- Existing AI business logic, saved preferences, and historical records remain intact behind a server pause gate.
-- Web captures no longer start suggestion work while paused.
-  The browser capture scenario in `ai-paused.e2e.ts` reaches that path only with `MEMOTRAIL_E2E_LIVE_AI=1` and a synthetic `AI_API_KEY`, because the default E2E server disables the provider; both modes pass.
-- The old AI settings, search form, Entry suggestions panel, and exploration UI components and their dedicated styles are deleted, not merely unmounted.
-- The Beta pause page has its own minimal styles; old Explore URLs retain only a redirect, and future AI UI must be designed anew.
-- Do not install a local model or enable Production AI as part of this work.
-- Resume only after worthwhile use cases and redesigned entry points are accepted; decision-model actions remain exploratory.
-- Production deployment and live acceptance remain unverified; native AI entry points now follow the same pause.
-
-### 5. Complete real interaction acceptance
-
-- Verify an actual production browser export download.
-- Verify native Save and share for a production export.
-- Exercise authenticated native capture, photos, galleries, Trash, AI pause status, and export through the real UI with an isolated account.
-- Finish the remaining photo-surface and specialized metadata or relationship lifecycle audit.
-
-### 6. Establish recovery
+### 2. Establish recovery
 
 - Choose separately protected destinations for database backups and original Storage objects.
-- Decide whether to enable point-in-time recovery; the latest inventory showed PITR disabled and no listed restore point.
+- Decide whether to enable point-in-time recovery; the latest inventory showed it disabled and no listed restore point.
 - Complete and inspect a full restore in a non-production project.
 - Audit abandoned unregistered uploads before approving automatic retention cleanup.
 
-### 7. Redesign the UI on the finished design system
+### 3. Rewrite native iOS
+
+Start once Web is accepted.
+The rewrite follows the Web behavior in [product.md](./product.md), including Chapters, Library search, reviews, and import.
+
+### 4. Redesign the UI on the finished design system
 
 The design system the redesign builds on is complete.
 Web and iOS draw every visual value from the DTCG tokens in `packages/design-system/tokens`, and `pnpm lint` and `pnpm design-system:check` reject hardcoded values.
-All 28 shared components have a YAML spec that generates their variant types for both platforms, and both galleries show every specimen the specs list.
-The Claude Design copy is published from `pnpm design-system:export`; values tried there return through pull requests.
-
-A full redesign is deferred while feature work comes first.
-In its place, a tune moved the palette to warmer paper and night tones with no pure white surface, set Web controls and fields to 32, 36, and 44 px with 6 px corners through `radius.control`, and sized sidebar items to 36 px.
-The logo keeps its original greens through the palette's `brand` group.
-iOS took the shared colors but keeps its own control heights and radii until native work resumes.
-These open design decisions feed a later redesign:
+A full redesign is deferred while the work above comes first.
+These open design decisions feed it:
 
 - The type, spacing, and radius scales are named by value, so a retuned scale renames tokens.
 - Six contrast exceptions remain until a palette change: inkFaint metadata in each theme, muted text on subtle panels, and warm, danger, and warning text in light.
 - The brand mark's outer ring and arc use themed colors on iOS and fixed colors on Web, so the platforms differ in dark mode.
-- iOS `accentGroupBorder` looks the same as the shared `accentPanelBorder`, but merging them could shift a color by one rounding level.
 - Web `textSpace` is relative to the text size, so the paragraph gap is shared with iOS only once the Swift generator supports relative units.
 - Library filters mix two field styles: Record and Tag are hand-styled selects with uppercase labels, while From and To use the shared date field with sentence-case labels.
 
@@ -216,7 +102,7 @@ These open design decisions feed a later redesign:
 
 - A valid hosted media session previously returned intermittent HTTP 401 responses before a later run passed. Do not attribute recurrence to the decoder repair without evidence.
 - Next.js may log a client-aborted React Server Components request while application assertions pass. Keep it distinct from a product failure until the stable upstream fix is adopted.
-- Two native UI tests have each failed once under load and passed on rerun: `testPhotoFieldSamplesUploadProgressAndRemoval`, whose upload progress shows for about 1.8 seconds, and the rich-text typing test's bold assertion.
+- A local install whose `apps/web/node_modules/@memotrail/media-runtime` is a plain link, not a copy under `node_modules/.pnpm`, makes Next bundle the package, and every photo preview then fails with "Image decoder unavailable". The lockfile must keep the injected `file:` entry for that package.
 
 ## Updating this file
 

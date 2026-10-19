@@ -169,10 +169,10 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     await page.getByRole("button", { name: "Add to Timeline" }).click();
     await page
       .getByRole("dialog", { name: "What are you adding?" })
-      .getByRole("button", { name: "Add Milestone", exact: true })
+      .getByRole("button", { name: "Add First Time", exact: true })
       .click();
     const momentDialog = page.getByRole("dialog", {
-      name: "Add a milestone",
+      name: "Add a First Time",
     });
     await momentDialog
       .getByLabel("Title", { exact: true })
@@ -244,6 +244,18 @@ test("Tags are first-class and organize generic Timeline moments", async ({
         name: "View all Entries for this tag",
       }),
     ).toBeVisible();
+    // Cancel discards an unsaved rename, so the next open shows the saved name.
+    const travelName = travelDialog.getByRole("textbox", {
+      exact: true,
+      name: "Name",
+    });
+    await travelName.fill("travel, unsaved");
+    await travelDialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(travelDialog).not.toBeVisible();
+    await travelRow
+      .getByRole("button", { name: "Manage tag travel, used by 1 Entry" })
+      .click();
+    await expect(travelName).toHaveValue("travel");
     await page.screenshot({
       animations: "disabled",
       caret: "initial",

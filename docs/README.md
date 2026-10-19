@@ -7,7 +7,8 @@ Load only the document and section needed for the current request.
 
 | Question                                | Read                                           | Purpose                                                      |
 | --------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------ |
-| What should the product do?             | [product.md](./product.md)                     | Current behavior, terminology, scope, and product boundaries |
+| Why does it exist, and what belongs?    | [positioning.md](./positioning.md)             | Problem, audience, core model, and the feature filter        |
+| What should the product do?             | [product.md](./product.md)                     | Intended behavior, terminology, scope, and boundaries        |
 | Where and how should it be changed?     | [architecture.md](./architecture.md)           | System contracts and request-to-code map                     |
 | What is done or still open?             | [status.md](./status.md)                       | Current completion, next work, blockers, and acceptance gaps |
 | How do I run the repository?            | [../README.md](../README.md)                   | Local setup, validation, and deployment shape                |

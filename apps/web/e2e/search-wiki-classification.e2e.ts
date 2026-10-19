@@ -25,7 +25,7 @@ test("Search filters Entries by record and descriptive tag", async ({
   });
   if (!created.data.user) throw new Error("Local Search fixture unavailable.");
   const ownerID = created.data.user.id;
-  const harborHome = randomUUID();
+  const harborChapter = randomUUID();
 
   try {
     const cookies: { name: string; value: string }[] = [];
@@ -113,21 +113,14 @@ test("Search filters Entries by record and descriptive tag", async ({
     expect(
       (
         await client.from("entries").insert({
-          id: harborHome,
+          id: harborChapter,
           title: "Marina flat",
           body: "Where I learned to sail.",
-          item_kind: "entity",
-          item_subtype: "home",
+          item_kind: "entry",
+          item_subtype: "chapter",
           date_precision: "unknown",
           owner_id: ownerID,
         })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
-        await client
-          .from("homes")
-          .insert({ entry_id: harborHome, owner_id: ownerID })
       ).error,
     ).toBeNull();
 
@@ -144,11 +137,13 @@ test("Search filters Entries by record and descriptive tag", async ({
     await expect(visibleResult("Marina memory")).toContainText("Entry");
     await expect(visibleResult("Quiet reflection")).toHaveCount(0);
 
+    // Links that filter by an older type still find the Chapter that replaced it.
     await page.goto("/search?q=marina&type=entity");
     await expect(visibleResult("Marina flat")).toBeVisible();
-    await page.getByLabel("Record").selectOption("home");
+    await expect(visibleResult("Marina memory")).toHaveCount(0);
+    await page.getByLabel("Record").selectOption("chapter");
     await page.getByRole("button", { name: "Search", exact: true }).click();
-    await expect(page).toHaveURL(/type=home/);
+    await expect(page).toHaveURL(/type=chapter/);
     await expect(visibleResult("Marina flat")).toBeVisible();
 
     await page.waitForLoadState("networkidle");

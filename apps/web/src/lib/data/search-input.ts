@@ -1,4 +1,5 @@
 import { tagNameCountLimit, tagNameLengthLimit } from "./organization";
+import type { QuickMatchedBy } from "@/lib/search/match-presentation";
 
 export const SEARCH_PAGE_SIZE = 25;
 export const SEARCH_QUERY_LIMIT = 200;
@@ -25,6 +26,7 @@ export type QuickSearchItem = {
   href: string;
   id: string;
   label: string;
+  matchedBy: QuickMatchedBy;
   subtitle: string;
   title: string;
 };
@@ -48,7 +50,7 @@ export function parseQuickSearchResult(
     return null;
   }
 
-  return result.items.every(
+  const valid = result.items.every(
     (item) =>
       item &&
       typeof item.id === "string" &&
@@ -57,17 +59,30 @@ export function parseQuickSearchResult(
       !item.href.startsWith("//") &&
       typeof item.label === "string" &&
       typeof item.subtitle === "string" &&
-      typeof item.title === "string",
-  )
-    ? result
-    : null;
+      typeof item.title === "string" &&
+      // An older server omits how a result matched, which means its words.
+      (item.matchedBy === undefined || quickMatchedBy.includes(item.matchedBy)),
+  );
+  if (!valid) return null;
+
+  return {
+    ...result,
+    items: result.items.map((item) => ({
+      ...item,
+      matchedBy: item.matchedBy ?? "words",
+    })),
+  };
 }
+
+const quickMatchedBy: readonly string[] = ["both", "meaning", "words"];
 
 export function parseSearchRequest(
   parameters: RawSearchParams,
 ): ParsedSearchRequest {
   const query = firstValue(parameters.q).trim();
-  const itemClassifications = normalizedValues(parameters.type);
+  const itemClassifications = currentClassifications(
+    normalizedValues(parameters.type),
+  );
   // Collections became tags with the same names, so older links still filter.
   const tagNames = normalizedValues([
     ...listValues(parameters.tag),
@@ -175,6 +190,33 @@ function normalizedValues(value: string | string[] | undefined) {
   }
 
   return normalized;
+}
+
+// Homes, Vehicles, and Timeline milestones became Chapters and First Times, so links that filter
+// by the older types keep working. A milestone was either, so it stands for both.
+const olderClassifications: Record<string, readonly string[]> = {
+  entity: ["chapter"],
+  home: ["chapter"],
+  milestone: ["chapter", "first_time"],
+  vehicle: ["chapter"],
+};
+
+function currentClassifications(values: string[]) {
+  const seen = new Set<string>();
+  const current: string[] = [];
+
+  for (const value of values) {
+    for (const mapped of olderClassifications[value.toLocaleLowerCase()] ?? [
+      value,
+    ]) {
+      const key = mapped.toLocaleLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      current.push(mapped);
+    }
+  }
+
+  return current;
 }
 
 function validNames(

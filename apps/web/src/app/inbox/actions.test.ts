@@ -3,10 +3,14 @@ import { getAuthenticatedContext } from "@/lib/data/inbox";
 import type { QueuedInboxEntry } from "@/lib/data/inbox-queue";
 import { registerEntryAttachment, syncInboxEntry } from "./actions";
 
+vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("next/server", () => ({ after: vi.fn() }));
 vi.mock("@/lib/data/inbox", () => ({ getAuthenticatedContext: vi.fn() }));
 vi.mock("@/lib/ai/suggestions-server", () => ({ suggestForEntry: vi.fn() }));
+vi.mock("@/lib/search/search-index", () => ({
+  scheduleSearchIndexDrain: vi.fn(),
+}));
 
 const owner = "10000000-0000-4000-8000-000000000003";
 const entryId = "10000000-0000-4000-8000-000000000001";

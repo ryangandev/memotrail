@@ -39,6 +39,25 @@ describe("parseSearchRequest", () => {
     });
   });
 
+  it("reads older record types as Chapters and First Times", () => {
+    const types = (type: string | string[]) =>
+      parseSearchRequest({ type }).request.itemClassifications;
+
+    expect(types("home")).toEqual(["chapter"]);
+    expect(types("vehicle")).toEqual(["chapter"]);
+    expect(types("entity")).toEqual(["chapter"]);
+    expect(types("milestone")).toEqual(["chapter", "first_time"]);
+    expect(types(["home", "Vehicle", "milestone", "first_time"])).toEqual([
+      "chapter",
+      "first_time",
+    ]);
+    expect(types(["entry", "milestone"])).toEqual([
+      "entry",
+      "chapter",
+      "first_time",
+    ]);
+  });
+
   it("reads older Collection links as tag filters", () => {
     const parsed = parseSearchRequest({
       collection: [" Travel ", "snow"],
@@ -114,6 +133,29 @@ describe("parseQuickSearchResult", () => {
         ],
       }),
     ).not.toBeNull();
+  });
+
+  it("keeps how a result matched and treats a missing value as words", () => {
+    const item = {
+      href: "/items/123",
+      id: "123",
+      label: "Entry",
+      subtitle: "A saved note",
+      title: "Remember this",
+    };
+
+    expect(
+      parseQuickSearchResult({
+        error: null,
+        items: [{ ...item, matchedBy: "meaning" }, item],
+      })?.items.map((result) => result.matchedBy),
+    ).toEqual(["meaning", "words"]);
+    expect(
+      parseQuickSearchResult({
+        error: null,
+        items: [{ ...item, matchedBy: "vibes" }],
+      }),
+    ).toBeNull();
   });
 
   it("rejects malformed and external result links", () => {

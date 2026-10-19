@@ -1,7 +1,7 @@
 "use client";
 import { Dialog } from "@/components/dialog";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/button";
+import { Button, ButtonLink } from "@/components/button";
 import { notify } from "@/components/app-toast";
 
 import Link from "next/link";
@@ -21,13 +21,22 @@ import { Icon } from "@/components/icon";
 import { DatePickerField } from "@/components/date-picker-field";
 import { PageFrame } from "@/components/page-frame";
 import { SeparatedList } from "@/components/separated-list";
-import type { Milestone, MilestoneLane } from "@/lib/data/milestone";
-import type { TimelineLaneGroup } from "@/lib/data/timeline";
+import { ChapterSuggestionCard } from "@/components/chapter-suggestion-card";
+import type { EntryMarks } from "@/components/entry-marks-fields";
+import type { ChapterSuggestion } from "@/lib/data/review-input";
+import type { TimelineItem } from "@/lib/data/timeline";
 import {
   createTimelineLayout,
   estimateLabelWidth,
+  type TimelineBand,
+  type TimelineLayoutSource,
 } from "@/lib/data/timeline-layout";
-import { timelineEntryDateLabel } from "@/lib/data/timeline-presentation";
+import {
+  timelineItemAccessibleName,
+  timelineItemDateLabel,
+  timelineItemDurationLabel,
+  timelineUndatedLabel,
+} from "@/lib/data/timeline-presentation";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
 import styles from "@/components/timeline-workspace.module.css";
 
@@ -38,26 +47,14 @@ const NewEntryDialog = dynamic(
     ),
   { loading: () => <EditorLoading /> },
 );
-const HomeEditor = dynamic(
-  () =>
-    import("@/components/homes-workspace").then((module) => module.HomeEditor),
-  { loading: () => <EditorLoading /> },
-);
-const VehicleEditor = dynamic(
-  () =>
-    import("@/components/vehicles-workspace").then(
-      (module) => module.VehicleEditor,
-    ),
-  { loading: () => <EditorLoading /> },
-);
 
-type EditorSelection =
-  | { type: "chooser" }
-  | { type: "milestone"; milestone: Milestone }
-  | { type: "home" }
-  | { type: "vehicle" };
+type EditorSelection = { type: "chooser" } | { type: "new"; marks: EntryMarks };
 
-type CreationType = "milestone" | "first-time" | "home" | "vehicle";
+type CreationType = "chapter" | "first-time";
+
+// A Chapter that is also a First Time draws a star before its title, which the title's
+// measured width does not include.
+const starAllowancePixels = 18;
 
 type PositionedStyle = CSSProperties & {
   "--item-bar-width": string;
@@ -76,38 +73,59 @@ type GridStyle = CSSProperties & {
 export function TimelineWorkspace({
   birthDate: serverBirthDate,
   birthDateAvailable,
+  chapters,
   defaultTimezone,
-  lanes,
+  firstTimes,
   loadError,
   ownerId,
   referenceDate,
+  suggestion,
   tagOptions,
 }: {
   birthDate: string | null;
   birthDateAvailable: boolean;
+  chapters: TimelineItem[];
   defaultTimezone: string;
-  lanes: TimelineLaneGroup[];
+  firstTimes: TimelineItem[];
   loadError: string | null;
   ownerId: string;
   referenceDate: string;
+  /** The oldest Chapter suggestion still waiting, or null. */
+  suggestion: ChapterSuggestion | null;
   tagOptions: string[];
 }) {
   const [selection, setSelection] = useState<EditorSelection | null>(null);
   const [birthDate, setBirthDate] = useState(serverBirthDate);
   const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(false);
-  const items = useMemo(() => lanes.flatMap((lane) => lane.items), [lanes]);
+  const items = useMemo(
+    () => [...chapters, ...firstTimes],
+    [chapters, firstTimes],
+  );
   const labelProbe = useRef<HTMLSpanElement>(null);
   const measureLabel = useLabelMeasure(labelProbe);
   const viewport = useRef<HTMLDivElement>(null);
-  const laneLabel = useRef<HTMLDivElement>(null);
-  const fillWidth = useCanvasFillWidth(viewport, laneLabel);
+  const fillWidth = useCanvasFillWidth(viewport);
   const layout = useMemo(
     () =>
       createTimelineLayout(
-        items.map((item) => ({
-          ...item,
-          labelWidthPixels: measureLabel(item.title),
-        })),
+        items.flatMap((item): TimelineLayoutSource[] =>
+          item.windowStart
+            ? [
+                {
+                  band: item.isChapter ? "chapters" : "first-times",
+                  id: item.id,
+                  labelWidthPixels:
+                    measureLabel(item.title) +
+                    (item.isChapter && item.isFirstTime
+                      ? starAllowancePixels
+                      : 0),
+                  shape: item.isChapter ? "bar" : "point",
+                  windowEnd: item.windowEnd,
+                  windowStart: item.windowStart,
+                },
+              ]
+            : [],
+        ),
         new Date(referenceDate),
         birthDate,
         fillWidth,
@@ -118,30 +136,31 @@ export function TimelineWorkspace({
     () => new Map(layout.positions.map((position) => [position.id, position])),
     [layout.positions],
   );
+  const bands: {
+    band: TimelineBand;
+    label: string;
+    members: TimelineItem[];
+  }[] = [
+    { band: "chapters", label: "Chapters", members: chapters },
+    { band: "first-times", label: "First Times", members: firstTimes },
+  ];
   const gridStyle: GridStyle = {
     "--timeline-canvas-width": `${layout.canvasWidth}px`,
     "--timeline-today-percent": layout.todayPercent,
   };
+  const now = useMemo(() => new Date(referenceDate), [referenceDate]);
+  const firstTimeCount =
+    firstTimes.length + chapters.filter((item) => item.isFirstTime).length;
+  const undated = items.filter((item) => !item.windowStart);
 
-  function startCreation(type: CreationType, lane: MilestoneLane = "other") {
-    if (type === "home" || type === "vehicle") {
-      setSelection({ type });
-      return;
-    }
+  function startCreation(type: CreationType) {
     setSelection({
-      type: "milestone",
-      milestone: {
+      type: "new",
+      marks: {
+        isChapter: type === "chapter",
         isFirstTime: type === "first-time",
-        lane,
-        shape: lane === "work_study" ? "period" : "moment",
       },
     });
-  }
-
-  function startCreationForLane(lane: TimelineLaneGroup) {
-    if (lane.key === "homes") startCreation("home");
-    else if (lane.key === "vehicles") startCreation("vehicle");
-    else startCreation("milestone", lane.key);
   }
 
   function closeSelection() {
@@ -153,9 +172,7 @@ export function TimelineWorkspace({
       <PageHeader
         title={<>Timeline</>}
         eyebrow={<>Your life in context</>}
-        description={
-          <>See the places, vehicles, and milestones that shape your life.</>
-        }
+        description={<>See the Chapters of your life and your First Times.</>}
         actions={
           <Button
             variant="primary"
@@ -169,22 +186,39 @@ export function TimelineWorkspace({
       />
       <div className={styles.summary} aria-label="Timeline summary">
         <SeparatedList>
-          <span>{itemCountLabel(items.length)}</span>
-          {items.some((item) => item.occurredStart) ? (
+          <span>{countLabel(chapters.length, "Chapter")}</span>
+          <span>{countLabel(firstTimeCount, "First Time")}</span>
+          {items.some((item) => item.windowStart) ? (
             <span>{rangeLabel(layout.start, layout.end)}</span>
           ) : null}
         </SeparatedList>
-        {/* Its border sets the button apart, so it needs no separator. */}
-        {birthDateAvailable && !birthDate && !loadError ? (
-          <Button
-            variant="secondary"
-            onClick={() => setShowBirthDatePrompt(true)}
-            type="button"
-          >
-            Set birth date
-          </Button>
-        ) : null}
+        {/* Their borders set the buttons apart, so they need no separator. */}
+        <div className={styles.summaryActions}>
+          <ButtonLink href="/reviews" variant="secondary">
+            Year reviews
+          </ButtonLink>
+          {birthDateAvailable && !birthDate && !loadError ? (
+            <Button
+              variant="secondary"
+              onClick={() => setShowBirthDatePrompt(true)}
+              type="button"
+            >
+              Set birth date
+            </Button>
+          ) : null}
+        </div>
       </div>
+
+      {suggestion && !loadError ? (
+        <div className={styles.suggestion}>
+          <ChapterSuggestionCard
+            ownerId={ownerId}
+            suggestion={suggestion}
+            tagOptions={tagOptions}
+            timezone={defaultTimezone}
+          />
+        </div>
+      ) : null}
 
       {loadError ? (
         <div className={styles.message} role="alert">
@@ -200,46 +234,18 @@ export function TimelineWorkspace({
         <>
           <section
             className={styles.desktopTimeline}
-            aria-label="Timeline by lane"
+            aria-label="Timeline by year"
           >
             <div className={styles.timelineHint}>
               <span>Scroll across years</span>
               <small>Select anything to open it</small>
             </div>
-            {items.some((item) => !item.occurredStart) ? (
-              <section
-                className={styles.undatedItems}
-                aria-label="Without a calendar date"
-              >
-                <h2>Without a calendar date</h2>
-                <p>These stay in their lanes without an invented year.</p>
-                {lanes
-                  .filter((lane) =>
-                    lane.items.some((item) => !item.occurredStart),
-                  )
-                  .map((lane) => (
-                    <div key={lane.key}>
-                      <h3>{lane.name}</h3>
-                      {lane.items
-                        .filter((item) => !item.occurredStart)
-                        .map((entry) => (
-                          <Link href={wikiEntryHref(entry)} key={entry.id}>
-                            {entry.title}, {timelineEntryDateLabel(entry)}
-                          </Link>
-                        ))}
-                    </div>
-                  ))}
-              </section>
-            ) : null}
             <div
               className={styles.timelineViewport}
               data-testid="timeline-viewport"
               ref={viewport}
             >
               <div className={styles.timelineGrid} style={gridStyle}>
-                <div className={styles.axisCorner} ref={laneLabel}>
-                  Lane
-                </div>
                 <div className={styles.axis} data-testid="timeline-axis">
                   {layout.yearMarkers.map((marker) => (
                     <span
@@ -258,15 +264,29 @@ export function TimelineWorkspace({
                   ))}
                 </div>
 
-                {lanes.map((lane) => (
-                  <LaneRow
-                    key={lane.key}
-                    lane={lane}
-                    layout={layout}
-                    onAdd={() => startCreationForLane(lane)}
-                    positions={positions}
-                  />
-                ))}
+                {items.length === 0 ? (
+                  <div className={styles.band}>
+                    <button
+                      className={styles.emptyTimeline}
+                      onClick={() => setSelection({ type: "chooser" })}
+                      type="button"
+                    >
+                      {emptyLabel}
+                    </button>
+                  </div>
+                ) : null}
+                {bands.map(({ band, label, members }) =>
+                  members.length > 0 ? (
+                    <BandRow
+                      band={band}
+                      items={members}
+                      key={band}
+                      label={label}
+                      layout={layout}
+                      positions={positions}
+                    />
+                  ) : null,
+                )}
                 <div
                   aria-hidden="true"
                   className={styles.todayLine}
@@ -279,51 +299,75 @@ export function TimelineWorkspace({
                 />
               </div>
             </div>
+            {undated.length > 0 ? (
+              <section
+                className={styles.undatedItems}
+                aria-label="Without a calendar date"
+              >
+                <h2>Without a calendar date</h2>
+                <p>
+                  These have no calendar date, so they are not placed on the
+                  years above.
+                </p>
+                <div>
+                  {undated.map((item) => (
+                    <Link href={wikiEntryHref(item)} key={item.id}>
+                      {item.title}, {timelineUndatedLabel(item)}
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            ) : null}
           </section>
 
-          <section
-            className={styles.mobileTimeline}
-            aria-label="Timeline by lane"
-          >
-            {lanes.map((lane) => (
-              <article className={styles.mobileLane} key={lane.key}>
-                <header>
-                  <div>
-                    <h2>{lane.name}</h2>
-                    <span>{itemCountLabel(lane.items.length)}</span>
-                  </div>
-                  <button
-                    aria-label={addLabel(lane)}
-                    onClick={() => startCreationForLane(lane)}
-                    type="button"
+          <section className={styles.mobileTimeline} aria-label="Timeline list">
+            {items.length === 0 ? (
+              <p className={styles.mobileEmpty}>{emptyLabel}</p>
+            ) : null}
+            {bands.map(({ band, label, members }) =>
+              members.length > 0 ? (
+                <article className={styles.mobileBand} key={band}>
+                  <header>
+                    <h2>{label}</h2>
+                    <span>{members.length}</span>
+                  </header>
+                  <div
+                    aria-label={label}
+                    className={styles.mobileItems}
+                    role="list"
                   >
-                    <Icon name="plus" size={17} />
-                  </button>
-                </header>
-                {lane.items.length === 0 ? (
-                  <p className={styles.mobileEmpty}>{emptyLabel(lane)}</p>
-                ) : (
-                  <div className={styles.mobileItems}>
-                    {lane.items.map((entry) => (
-                      <Link href={wikiEntryHref(entry)} key={entry.id}>
-                        <span
-                          className={
-                            entry.shape === "period"
-                              ? styles.mobilePeriodMarker
-                              : styles.mobileMomentMarker
-                          }
-                        />
-                        <span>
-                          <strong>{entry.title}</strong>
-                          <small>{timelineEntryDateLabel(entry)}</small>
-                        </span>
-                        <Icon name="chevron" size={15} />
-                      </Link>
-                    ))}
+                    {members.map((item) => {
+                      const duration = timelineItemDurationLabel(item, now);
+                      return (
+                        <Link
+                          href={wikiEntryHref(item)}
+                          key={item.id}
+                          role="listitem"
+                        >
+                          <span
+                            className={
+                              item.isChapter
+                                ? styles.mobileBarMarker
+                                : styles.mobilePointMarker
+                            }
+                          />
+                          <span>
+                            <strong>{item.title}</strong>
+                            <small>
+                              {item.windowStart
+                                ? timelineItemDateLabel(item)
+                                : timelineUndatedLabel(item)}
+                              {duration ? ` · ${duration}` : ""}
+                            </small>
+                          </span>
+                          <Icon name="chevron" size={15} />
+                        </Link>
+                      );
+                    })}
                   </div>
-                )}
-              </article>
-            ))}
+                </article>
+              ) : null,
+            )}
           </section>
         </>
       ) : null}
@@ -335,37 +379,13 @@ export function TimelineWorkspace({
         />
       ) : null}
 
-      {selection?.type === "milestone" ? (
+      {selection?.type === "new" ? (
         <NewEntryDialog
-          milestone={selection.milestone}
+          marks={selection.marks}
           onClose={closeSelection}
           ownerId={ownerId}
           tagOptions={tagOptions}
           timezone={defaultTimezone}
-        />
-      ) : null}
-
-      {selection?.type === "home" ? (
-        <HomeEditor
-          defaultTimezone={defaultTimezone}
-          home={null}
-          onClose={closeSelection}
-          onSaved={() => undefined}
-          onTrashed={() => undefined}
-          ownerId={ownerId}
-          tagOptions={tagOptions}
-        />
-      ) : null}
-
-      {selection?.type === "vehicle" ? (
-        <VehicleEditor
-          defaultTimezone={defaultTimezone}
-          onClose={closeSelection}
-          onSaved={() => undefined}
-          onTrashed={() => undefined}
-          ownerId={ownerId}
-          tagOptions={tagOptions}
-          vehicle={null}
         />
       ) : null}
 
@@ -403,33 +423,22 @@ function TimelineTypeChooser({
 }) {
   const options: {
     description: string;
-    icon: "timeline" | "home" | "car" | "star";
+    icon: "timeline" | "star";
     label: string;
     type: CreationType;
   }[] = [
     {
-      description: "A moment or a period worth marking, like a job or a trip.",
+      description:
+        "A stretch of your life, like a home, a job, or a school year.",
       icon: "timeline",
-      label: "Milestone",
-      type: "milestone",
+      label: "Chapter",
+      type: "chapter",
     },
     {
-      description: "A milestone that was the first time you did something.",
+      description: "The first time you did something.",
       icon: "star",
       label: "First Time",
       type: "first-time",
-    },
-    {
-      description: "A place you called home, with its facts and memories.",
-      icon: "home",
-      label: "Home",
-      type: "home",
-    },
-    {
-      description: "A car, bike, or other vehicle that carried your story.",
-      icon: "car",
-      label: "Vehicle",
-      type: "vehicle",
     },
   ];
 
@@ -554,102 +563,95 @@ function BirthDatePrompt({
   );
 }
 
-function LaneRow({
-  lane,
+function BandRow({
+  band,
+  items,
+  label,
   layout,
-  onAdd,
   positions,
 }: {
-  lane: TimelineLaneGroup;
+  band: TimelineBand;
+  items: TimelineItem[];
+  label: string;
   layout: ReturnType<typeof createTimelineLayout>;
-  onAdd: () => void;
   positions: Map<
     string,
     ReturnType<typeof createTimelineLayout>["positions"][number]
   >;
 }) {
-  const rowCount = layout.rowCountByLane[lane.key] ?? 1;
+  const rowCount = layout.rowCountByBand[band] ?? 1;
   const rowHeight = Math.max(70, rowCount * 49 + 20);
 
   return (
-    <>
-      <div className={styles.laneLabel} style={{ height: rowHeight }}>
-        <span>
-          <strong>{lane.name}</strong>
-          <small>{lane.items.length || "Empty"}</small>
-        </span>
-        <button aria-label={addLabel(lane)} onClick={onAdd} type="button">
-          <Icon name="plus" size={15} />
-        </button>
-      </div>
-      <div
-        className={styles.laneCanvas}
-        data-testid="timeline-lane"
-        style={{ height: rowHeight }}
-      >
-        {layout.yearMarkers.map((marker) => (
-          <span
-            aria-hidden="true"
-            className={styles.yearLine}
-            key={marker.year}
-            style={{ left: `${marker.leftPercent}%` }}
-          />
-        ))}
-        {lane.items.map((entry) => {
-          const position = positions.get(entry.id);
+    <ul
+      aria-label={label}
+      className={styles.band}
+      data-testid="timeline-band"
+      style={{ height: rowHeight }}
+    >
+      {layout.yearMarkers.map((marker) => (
+        <li
+          aria-hidden="true"
+          className={styles.yearLine}
+          key={marker.year}
+          style={{ left: `${marker.leftPercent}%` }}
+        />
+      ))}
+      {items.map((item) => {
+        const position = positions.get(item.id);
 
-          if (!position) {
-            return null;
-          }
+        if (!position) {
+          return null;
+        }
 
-          const itemStyle: PositionedStyle = {
-            "--item-bar-width": `${position.barWidthPixels}px`,
-            "--item-label-width": `${position.labelWidthPixels}px`,
-            "--item-left": `${position.leftPercent}%`,
-            "--item-offset": `${position.offsetPixels}px`,
-            "--item-row": position.row,
-            "--item-width": `${position.widthPixels}px`,
-          };
-          const dateLabel = timelineEntryDateLabel(entry);
+        const itemStyle: PositionedStyle = {
+          "--item-bar-width": `${position.barWidthPixels}px`,
+          "--item-label-width": `${position.labelWidthPixels}px`,
+          "--item-left": `${position.leftPercent}%`,
+          "--item-offset": `${position.offsetPixels}px`,
+          "--item-row": position.row,
+          "--item-width": `${position.widthPixels}px`,
+        };
+        const dateLabel = timelineItemDateLabel(item);
 
-          return (
+        return (
+          <li
+            className={item.isChapter ? styles.barItem : styles.pointItem}
+            data-label={position.labelPlacement}
+            data-ongoing={
+              item.isChapter && item.windowEnd === null ? "true" : undefined
+            }
+            key={item.id}
+            style={itemStyle}
+          >
             <Link
-              aria-label={`${entry.title}, ${dateLabel}`}
-              className={
-                entry.shape === "period" ? styles.periodItem : styles.momentItem
-              }
-              data-label={position.labelPlacement}
-              data-ongoing={
-                entry.shape === "period" && entry.occurredEnd === null
-                  ? "true"
-                  : undefined
-              }
-              href={wikiEntryHref(entry)}
-              key={entry.id}
-              style={itemStyle}
-              title={`${entry.title} · ${dateLabel}`}
+              aria-label={timelineItemAccessibleName(item)}
+              href={wikiEntryHref(item)}
+              title={`${item.title} · ${dateLabel}`}
             >
-              {entry.shape === "moment" ? (
-                <span className={styles.momentDot} />
+              {!item.isChapter ? (
+                <span className={styles.pointDot} />
               ) : position.labelPlacement === "inside" ? null : (
-                <span className={styles.periodBar} />
+                <span className={styles.bar} />
               )}
-              <span>{entry.title}</span>
+              <span className={styles.itemTitle}>
+                {item.isChapter && item.isFirstTime ? (
+                  <span className={styles.firstTimeStar}>
+                    <Icon name="star" size={12} />
+                  </span>
+                ) : null}
+                {item.title}
+              </span>
             </Link>
-          );
-        })}
-        {lane.items.length === 0 ? (
-          <button className={styles.emptyLane} onClick={onAdd} type="button">
-            {emptyLabel(lane)}
-          </button>
-        ) : null}
-      </div>
-    </>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
-// Measures titles in the lane item font once it has loaded, so the layout knows which
-// fit inside their Period. The server and first render estimate, which keeps hydration
+// Measures titles in the band item font once it has loaded, so the layout knows which
+// fit inside their bar. The server and first render estimate, which keeps hydration
 // stable.
 function useLabelMeasure(probe: RefObject<HTMLSpanElement | null>) {
   const [measure, setMeasure] = useState<(text: string) => number>(
@@ -684,47 +686,30 @@ function useLabelMeasure(probe: RefObject<HTMLSpanElement | null>) {
   return measure;
 }
 
-// Tracks the width beside the lane labels, so an empty or short Timeline fills its card.
-// The server and first render use the minimum canvas, which keeps hydration stable.
-function useCanvasFillWidth(
-  viewport: RefObject<HTMLDivElement | null>,
-  laneLabel: RefObject<HTMLDivElement | null>,
-) {
+// Tracks the viewport width, so an empty or short Timeline fills its card. The server and
+// first render use the minimum canvas, which keeps hydration stable.
+function useCanvasFillWidth(viewport: RefObject<HTMLDivElement | null>) {
   const [width, setWidth] = useState(0);
 
   useEffect(() => {
     const element = viewport.current;
-    const label = laneLabel.current;
-    if (!element || !label) return;
+    if (!element) return;
     const observer = new ResizeObserver(() =>
-      setWidth(
-        element.getBoundingClientRect().width -
-          label.getBoundingClientRect().width,
-      ),
+      setWidth(element.getBoundingClientRect().width),
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [laneLabel, viewport]);
+  }, [viewport]);
 
   return width;
 }
 
-function addLabel(lane: TimelineLaneGroup) {
-  if (lane.key === "homes") return "Add a Home";
-  if (lane.key === "vehicles") return "Add a Vehicle";
-  return `Add a milestone to ${lane.name}`;
-}
-
-function emptyLabel(lane: TimelineLaneGroup) {
-  if (lane.key === "homes") return "Add a place you lived";
-  if (lane.key === "vehicles") return "Add a vehicle";
-  return "Add the first milestone";
-}
+const emptyLabel = "Add a Chapter or a First Time to start your Timeline.";
 
 function rangeLabel(start: string, end: string) {
   return `${new Date(start).getUTCFullYear()} to ${new Date(end).getUTCFullYear()}`;
 }
 
-function itemCountLabel(count: number) {
-  return `${count} ${count === 1 ? "item" : "items"}`;
+function countLabel(count: number, noun: string) {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }

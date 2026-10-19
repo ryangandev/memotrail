@@ -11,7 +11,6 @@ export type SearchPlan = {
   itemClassifications: string[];
   dateFrom: string | null;
   dateTo: string | null;
-  beforeLatestHome: boolean;
   order: "relevance" | "oldest" | "newest";
 };
 export type SearchSource = {
@@ -87,27 +86,13 @@ export function retrievalTerms(queries: string[]) {
   return terms.slice(0, 6);
 }
 
-const types = [
-  "entry",
-  "entity",
-  "goal",
-  "milestone",
-  "first_time",
-  "home",
-  "vehicle",
-];
+// Entries are everything captured; Chapters and First Times are Entries with a mark.
+const types = ["entry", "chapter", "first_time"];
 const acceptedManualTypes = new Set(types);
 export const searchPlanSchema = {
   type: "object",
   additionalProperties: false,
-  required: [
-    "queries",
-    "itemClassifications",
-    "dateFrom",
-    "dateTo",
-    "beforeLatestHome",
-    "order",
-  ],
+  required: ["queries", "itemClassifications", "dateFrom", "dateTo", "order"],
   properties: {
     queries: {
       type: "array",
@@ -122,7 +107,6 @@ export const searchPlanSchema = {
     },
     dateFrom: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
     dateTo: { anyOf: [{ type: "string", format: "date" }, { type: "null" }] },
-    beforeLatestHome: { type: "boolean" },
     order: { type: "string", enum: ["relevance", "oldest", "newest"] },
   },
 };
@@ -193,7 +177,6 @@ export function parseSearchPlan(raw: unknown): SearchPlan | null {
     !date(v.dateFrom) ||
     !date(v.dateTo) ||
     (v.dateFrom && v.dateTo && v.dateFrom > v.dateTo) ||
-    typeof v.beforeLatestHome !== "boolean" ||
     !["relevance", "oldest", "newest"].includes(String(v.order))
   )
     return null;
@@ -202,27 +185,20 @@ export function parseSearchPlan(raw: unknown): SearchPlan | null {
     itemClassifications: v.itemClassifications as string[],
     dateFrom: v.dateFrom,
     dateTo: v.dateTo,
-    beforeLatestHome: v.beforeLatestHome,
     order: v.order as SearchPlan["order"],
   };
 }
-export function evidenceParameters(
-  plan: SearchPlan,
-  request: SearchRequest,
-  asOf: string,
-) {
+export function evidenceParameters(plan: SearchPlan, request: SearchRequest) {
   // Explicit user filters take precedence over model-inferred filters.
   return {
     p_queries: plan.queries,
     // All Types really means all types. Thoughts can live inside a First Time
-    // or Home, so model-inferred labels must not silently narrow the archive.
+    // or Chapter, so model-inferred labels must not silently narrow the archive.
     p_item_classifications: request.itemClassifications,
     p_tag_names: request.tagNames,
     p_date_from: request.dateFrom ?? plan.dateFrom,
     p_date_to: request.dateTo ?? plan.dateTo,
-    p_before_latest_home: plan.beforeLatestHome,
     p_order: plan.order,
-    p_as_of: asOf,
   };
 }
 export function sourceQuotations(text: string) {
@@ -336,7 +312,7 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
         "occurred_label",
         "occurred_timezone",
         "tags",
-        "facts",
+        "is_first_time",
       ].map((k) => [k, row[k]]),
     );
     const facts = JSON.stringify(
@@ -372,15 +348,9 @@ export function buildSearchSources(raw: unknown, queries: string[]) {
     });
   };
   rows(evidence.entries).forEach((r) => add(r));
-  if (evidence.latest_home_reference)
-    add(object(evidence.latest_home_reference));
   if (evidence.query_truncated || Number(evidence.candidate_count) > 36)
     notices.push(
       "This answer uses a bounded selection of matches, not the complete archive. Narrow the question to improve coverage.",
-    );
-  if (evidence.latest_home_reference && !evidence.reference_window_applied)
-    notices.push(
-      "The latest Home has an uncertain date. A precise before-move boundary could not be applied.",
     );
   if (sources.some((s) => s.truncated))
     notices.push(

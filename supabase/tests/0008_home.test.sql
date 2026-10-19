@@ -212,12 +212,13 @@ values (
   512
 );
 
-insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
-values
-  ('81000000-0000-0000-0000-000000000002', '10000000-0000-0000-0000-000000000001', 'moment', 'other', true),
-  ('81000000-0000-0000-0000-000000000003', '10000000-0000-0000-0000-000000000001', 'period', 'work_study', false),
-  ('81000000-0000-0000-0000-000000000004', '10000000-0000-0000-0000-000000000001', 'period', 'other', false),
-  ('81000000-0000-0000-0000-000000000005', '10000000-0000-0000-0000-000000000001', 'period', 'other', false);
+update public.entries set is_first_time = true where id = '81000000-0000-0000-0000-000000000002';
+update public.entries set item_subtype = 'chapter'
+where id in (
+  '81000000-0000-0000-0000-000000000003',
+  '81000000-0000-0000-0000-000000000004',
+  '81000000-0000-0000-0000-000000000005'
+);
 
 set local role authenticated;
 set local request.jwt.claim.sub = '10000000-0000-0000-0000-000000000001';
@@ -256,7 +257,7 @@ select is(
 select is(
   (select now_count from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1::bigint,
-  'Now counts only Periods that have started and not ended'
+  'Now counts only Chapters that have started and not ended'
 );
 select is(
   (select jsonb_array_length(recent_entries) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 2)),
@@ -300,7 +301,7 @@ select is(
 select is(
   (select jsonb_array_length(now_items) from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
   1,
-  'Now lists only Periods that have started and not ended'
+  'Now lists only Chapters that have started and not ended'
 );
 select is(
   (select now_items -> 0 ->> 'title' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
@@ -308,9 +309,13 @@ select is(
   'Now items keep their Entry title'
 );
 select is(
-  (select now_items -> 0 ->> 'lane' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
-  'work_study',
-  'Now items say which Timeline lane they belong to'
+  (select now_items -> 0 ->> 'is_first_time' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  'false',
+  'Now items say whether the Chapter is also a First Time'
+);
+select ok(
+  not (select (now_items -> 0) ? 'lane' or (now_items -> 0) ? 'item_kind' from public.home_workspace('2026-09-03', 'America/Los_Angeles', 5)),
+  'Now items carry no lane or Kind'
 );
 select is(
   pg_temp.capture_sqlstate(

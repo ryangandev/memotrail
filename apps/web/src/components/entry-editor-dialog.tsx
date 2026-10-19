@@ -8,7 +8,7 @@ import { useConfirmationDialog } from "@/components/confirmation-dialog";
 import { EntryPhotoField } from "@/components/entry-photo-field";
 import type { PhotoLocationDraft } from "@/lib/media/photo-location";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   registerEntryAttachment,
@@ -21,9 +21,14 @@ import { OccurrenceEditor } from "@/components/occurrence-editor";
 import { EntryPhotoDates } from "@/components/entry-photo-dates";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { LocationPicker } from "@/components/location-picker";
-import { MilestoneFields } from "@/components/milestone-fields";
-import type { Milestone } from "@/lib/data/milestone";
-import type { LocationSelection } from "@/lib/locations/location";
+import {
+  EntryMarksFields,
+  type EntryMarks,
+} from "@/components/entry-marks-fields";
+import {
+  savedLocationSelection,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import {
   photoCalendarDateDraft,
   type EntryPhoto,
@@ -37,7 +42,11 @@ import {
   type EntryAttachmentInput,
 } from "@/lib/data/entry-photo-input";
 import { validateInboxPhotoFiles } from "@/lib/data/inbox-photo";
-import { occurrenceDraft, resolveOccurrenceDraft } from "@/lib/data/occurrence";
+import {
+  occurrenceDraft,
+  resolveOccurrenceDraft,
+  type OccurrenceDraft,
+} from "@/lib/data/occurrence";
 import type { InboxEntry } from "@/lib/data/inbox";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
 import {
@@ -47,29 +56,40 @@ import {
 import { trimEntryNote } from "@/lib/data/rich-text";
 import { tagNamesIncludingDraft } from "@/lib/data/organization";
 
-// A new Entry for the editor's create mode, such as a milestone added from Timeline.
-// Adds a new Entry. Its id is drafted once, so a retried save cannot add it twice.
+// Adds a new Entry, such as a Chapter or a First Time added from Timeline. `marks` are the
+// marks it starts with, and `initialDraft` fills in a title and dates, such as for a suggested
+// Chapter the person is reviewing. Its id is drafted once, so a retried save cannot add it twice.
 export function NewEntryDialog({
-  milestone,
+  initialDraft,
+  marks,
   onClose,
+  onSaved,
   ownerId,
   tagOptions,
   timezone,
 }: {
-  milestone: Milestone | null;
+  initialDraft?: { occurrence: OccurrenceDraft; title: string };
+  marks: EntryMarks;
   onClose: () => void;
+  // Called with the saved Entry before the dialog closes.
+  onSaved?: (entry: InboxEntry) => void;
   ownerId: string;
   tagOptions: string[];
   timezone: string;
 }) {
-  const [entry] = useState(() => newEntryDraft({ milestone, timezone }));
+  const [entry] = useState(() =>
+    newEntryDraft({ initialDraft, marks, timezone }),
+  );
   return (
     <EntryEditorDialog
       defaultTimezone={timezone}
       entry={entry}
       isNew
       onClose={onClose}
-      onSaved={onClose}
+      onSaved={(saved) => {
+        onSaved?.(saved);
+        onClose();
+      }}
       ownerId={ownerId}
       photos={[]}
       tagOptions={tagOptions}
@@ -78,29 +98,39 @@ export function NewEntryDialog({
 }
 
 function newEntryDraft({
-  milestone,
+  initialDraft,
+  marks,
   timezone,
 }: {
-  milestone: Milestone | null;
+  initialDraft?: { occurrence: OccurrenceDraft; title: string };
+  marks: EntryMarks;
   timezone: string;
 }): InboxEntry {
+  const dated = initialDraft
+    ? resolveOccurrenceDraft(
+        initialDraft.occurrence,
+        undefined,
+        marks.isChapter,
+      ).value
+    : undefined;
   return {
     body: "",
     bodyRich: null,
     createdAt: new Date().toISOString(),
-    datePrecision: "unknown",
+    datePrecision: dated?.datePrecision ?? "unknown",
     id: crypto.randomUUID(),
+    isChapter: marks.isChapter,
+    isFirstTime: marks.isFirstTime,
     itemKind: "entry",
-    itemSubtype: "entry",
+    itemSubtype: marks.isChapter ? "chapter" : "entry",
     location: null,
-    milestone,
-    occurredAt: null,
-    occurredEnd: null,
-    occurredLabel: null,
-    occurredTimezone: timezone,
+    occurredAt: dated?.occurredAt ?? null,
+    occurredEnd: dated?.occurredEnd ?? null,
+    occurredLabel: dated?.occurredLabel ?? null,
+    occurredTimezone: dated?.occurredTimezone ?? timezone,
     revision: 0,
     tagNames: [],
-    title: null,
+    title: initialDraft?.title ?? null,
   };
 }
 
@@ -135,9 +165,11 @@ export function EntryEditorDialog({
     entry.location ?? null,
   );
   const [occurrence, setOccurrence] = useState(() => occurrenceDraft(entry));
-  const [milestone, setMilestone] = useState<Milestone | null>(
-    entry.milestone ?? null,
-  );
+  const [marks, setMarks] = useState<EntryMarks>({
+    isChapter: entry.isChapter,
+    isFirstTime: entry.isFirstTime,
+  });
+  const titleRef = useRef<HTMLInputElement>(null);
   const [photoLocation, setPhotoLocation] = useState<PhotoLocationDraft | null>(
     null,
   );
@@ -154,32 +186,36 @@ export function EntryEditorDialog({
     isNew ? null : entry.revision,
   );
 
-  function changeMilestone(next: Milestone | null) {
-    // Only a Period can be still going on or end on a calendar date, and a Moment is one
-    // point in time, so leaving a Period drops its end. A plain Entry keeps a Day's end
-    // as a date range, and a Not sure date keeps its end.
-    if (next?.shape !== "period")
+  function changeMarks(next: EntryMarks) {
+    // A Chapter can have a Day with an end, a Month or Year with an end, or still be going on.
+    // Checking Chapter keeps a Day's own end, and unchecking it keeps a Day's end as a date
+    // range, and drops the end of every other date. A Not sure date keeps its end.
+    if (next.isChapter !== marks.isChapter)
       setOccurrence((value) => {
-        if (!next && value.precision === "day" && value.end)
+        if (next.isChapter)
+          return value.precision === "range"
+            ? { ...value, precision: "day" }
+            : value;
+        if (value.precision === "day" && value.end)
           return { ...value, endMode: "date", precision: "range" };
-        if (!next && ["range", "approximate", "age"].includes(value.precision))
+        if (["range", "approximate", "age"].includes(value.precision))
           return value;
-        return {
-          ...value,
-          end: "",
-          endMode: "date",
-          precision: value.precision === "range" ? "day" : value.precision,
-        };
+        return { ...value, end: "", endMode: "date" };
       });
-    setMilestone(next);
+    setMarks(next);
     setResult(null);
   }
 
   async function save() {
+    if (marks.isChapter && !title.trim()) {
+      setResult({ message: "Give this Chapter a title.", status: "error" });
+      titleRef.current?.focus();
+      return;
+    }
     const resolved = resolveOccurrenceDraft(
       occurrence,
       isNew ? undefined : entry,
-      milestone?.shape === "period",
+      marks.isChapter,
     );
     if (resolved.error) {
       setResult({ message: resolved.error, status: "error" });
@@ -193,7 +229,8 @@ export function EntryEditorDialog({
       body: note.body,
       bodyRich: note.bodyRich,
       id: entry.id,
-      milestone,
+      isChapter: marks.isChapter,
+      isFirstTime: marks.isFirstTime,
       revision,
       tagNames: tagNamesIncludingDraft(tagNames, tagInput, tagOptions),
       title: title || null,
@@ -213,6 +250,16 @@ export function EntryEditorDialog({
 
       if (nextResult.status === "saved") {
         setRevision(nextResult.revision);
+        // The saved snapshot stands in for the choice, so a retry keeps it.
+        if (nextResult.savedLocation)
+          setLocation(
+            (current) =>
+              savedLocationSelection(
+                current,
+                nextResult.savedLocation!.id,
+                nextResult.savedLocation!.revision,
+              ) ?? current,
+          );
         const failedPhotos = await uploadEntryPhotos(
           ownerId,
           entry.id,
@@ -241,10 +288,10 @@ export function EntryEditorDialog({
         notify.success(
           !isNew
             ? "Entry saved."
-            : milestone?.isFirstTime
-              ? "First Time added."
-              : milestone
-                ? "Added to Timeline."
+            : marks.isChapter
+              ? "Chapter added."
+              : marks.isFirstTime
+                ? "First Time added."
                 : "Entry added.",
         );
         return;
@@ -320,9 +367,11 @@ export function EntryEditorDialog({
       title={
         isNew ? (
           <>
-            {entry.milestone?.isFirstTime
-              ? "Add a First Time"
-              : "Add a milestone"}
+            {entry.isChapter
+              ? "Add a Chapter"
+              : entry.isFirstTime
+                ? "Add a First Time"
+                : "Add an Entry"}
           </>
         ) : (
           <>Edit Entry</>
@@ -360,14 +409,24 @@ export function EntryEditorDialog({
         onSubmit={handleSubmit}
       >
         <label>
-          <span>Title</span>
+          <span>
+            Title
+            {marks.isChapter ? (
+              <span aria-hidden="true" className={styles.requiredMark}>
+                *
+              </span>
+            ) : null}
+          </span>
           <input
             aria-label="Title"
             autoFocus
             disabled={isPending}
             maxLength={entryTitleLimit}
             onChange={(event) => setTitle(event.target.value)}
-            placeholder="Add a title"
+            placeholder={marks.isChapter ? "Name this Chapter" : "Add a title"}
+            ref={titleRef}
+            // Not the native `required`, which would stop the form before the message below.
+            aria-required={marks.isChapter}
             value={title}
           />
         </label>
@@ -417,10 +476,10 @@ export function EntryEditorDialog({
           recordLabel="Entry"
         />
 
-        <MilestoneFields
+        <EntryMarksFields
           disabled={isPending}
-          onChange={changeMilestone}
-          value={milestone}
+          onChange={changeMarks}
+          value={marks}
         />
 
         <OccurrenceEditor
@@ -428,8 +487,7 @@ export function EntryEditorDialog({
           value={occurrence}
           onChange={setOccurrence}
           disabled={isPending}
-          span={milestone?.shape === "period"}
-          point={milestone?.shape === "moment"}
+          span={marks.isChapter}
         />
 
         <LocationPicker

@@ -12,7 +12,7 @@ platforms:
 purpose: Sets a page's readable maximum width, centers it, and keeps responsive gutters and vertical rhythm around its content.
 
 use:
-  - The outer box of every workspace page, chosen by how the page reads, such as compact for a focused record and wide for a dashboard.
+  - The outer box of every workspace page, chosen by how the page reads, such as compact for an Item page and wide for a dashboard.
 
 avoid:
   - Sections inside a page. Use the page's own grid or stack.

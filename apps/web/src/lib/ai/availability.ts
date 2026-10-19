@@ -1,5 +1,13 @@
-// Product pause, not provider configuration or a user's saved consent.
-// Re-enable only after the AI use cases and entry points are accepted.
-export const AI_CAPABILITIES_AVAILABLE = false;
+import type { AIRequestFeature } from "./contracts";
+
+// Product availability, not provider configuration or a person's saved consent.
+// Chapter and year reviews and Chapter suggestions are the only AI features offered.
+// Every other feature stays paused until its use case and entry points are accepted.
+export const AVAILABLE_AI_FEATURES: ReadonlySet<AIRequestFeature> =
+  new Set<AIRequestFeature>(["review", "chapter_suggestion"]);
 export const AI_PAUSED_MESSAGE =
-  "AI capabilities are paused while we rethink how they can help. Manual features remain available.";
+  "This AI capability is paused while we rethink how it can help. Manual features remain available.";
+
+export function aiFeatureAvailable(feature: AIRequestFeature | "connection") {
+  return feature !== "connection" && AVAILABLE_AI_FEATURES.has(feature);
+}

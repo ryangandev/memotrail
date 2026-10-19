@@ -96,7 +96,9 @@ test("Complete export snapshot pages preserve original media across concurrent d
     expect(new Set(snapshots.map((s) => s.data.captured_at)).size).toBe(1);
     expect(snapshot.datasets.entries).toBe(1005);
     expect(Object.keys(snapshot.datasets)).toHaveLength(18);
-    expect(snapshot.datasets).toHaveProperty("milestones");
+    // Chapters and First Times are Entries, so they have no tables of their own.
+    for (const retired of ["milestones", "homes", "vehicles"])
+      expect(snapshot.datasets).not.toHaveProperty(retired);
     const current = (
       await first.from("entries").select("revision").eq("id", entryID).single()
     ).data!;
@@ -140,6 +142,10 @@ test("Complete export snapshot pages preserve original media across concurrent d
       rows.find((r) => r.dataset === "entries" && r.value.id === entryID)?.value
         .body,
     ).toBe("原始的生活记录");
+    expect(
+      rows.find((r) => r.dataset === "entries" && r.value.id === entryID)
+        ?.value,
+    ).toMatchObject({ is_first_time: false, item_subtype: "entry" });
     const media = rows.find((r) => r.dataset === "media_objects")!.value;
     expect(media.available).toBe(true);
     expect(media.storage_version).toEqual(expect.any(String));

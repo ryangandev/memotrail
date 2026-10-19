@@ -30,8 +30,10 @@ import {
 } from "@/lib/data/inbox-photo-store";
 import { synchronizeCapturePhotos } from "@/lib/data/inbox-photo-sync";
 import {
-  inboxQueueKey,
+  isInboxQueueStorageKey,
   loadInboxQueue,
+  loadUnreadableCaptures,
+  unreadableAttachmentIds,
   type QueueStorage,
   type QueuedInboxEntry,
 } from "@/lib/data/inbox-queue";
@@ -105,7 +107,8 @@ export function CaptureProvider({
     function handleStorage(event: StorageEvent) {
       if (event.key === null || event.key === inboxDraftKey(ownerId))
         draft.reload();
-      if (event.key !== null && event.key !== inboxQueueKey(ownerId)) return;
+      if (event.key !== null && !isInboxQueueStorageKey(event.key, ownerId))
+        return;
       queue.reload();
       // A stored photo is a draft photo unless a queued capture holds it. The
       // photo announcement can arrive before this tab sees the new queue, so
@@ -166,7 +169,10 @@ function useWorkspaceCapture(hook: string) {
 }
 
 export type CaptureQueue = InboxSyncSnapshot &
-  Pick<InboxSyncStore, "discard" | "enqueue" | "getSnapshot" | "synchronize">;
+  Pick<
+    InboxSyncStore,
+    "discard" | "discardUnreadable" | "enqueue" | "getSnapshot" | "synchronize"
+  >;
 
 /**
  * The workspace's pending captures and the actions that change them.
@@ -182,6 +188,7 @@ export function useCaptureQueue(): CaptureQueue {
   return {
     ...snapshot,
     discard: queue.discard,
+    discardUnreadable: queue.discardUnreadable,
     enqueue: queue.enqueue,
     getSnapshot: queue.getSnapshot,
     synchronize: queue.synchronize,
@@ -260,12 +267,16 @@ function workspaceCaptureFor(ownerId: string): WorkspaceCapture {
       remove: removeInboxPhotoDrafts,
     },
     // Read from storage, since another tab may have queued photos just now.
+    // An unreadable capture still owns its photos until it is discarded.
     queuedPhotoIds: () =>
-      new Set(
-        loadInboxQueue(browserStorage, ownerId).flatMap((entry) =>
+      new Set([
+        ...loadInboxQueue(browserStorage, ownerId).flatMap((entry) =>
           entry.attachments.map(({ id }) => id),
         ),
-      ),
+        ...loadUnreadableCaptures(browserStorage, ownerId).flatMap(
+          ({ value }) => unreadableAttachmentIds(value),
+        ),
+      ]),
     speechRecognition: () => browserSpeechRecognitionConstructor(window),
     storage: browserStorage,
     timezone: () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",

@@ -45,6 +45,14 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.semanticSearchCard {
+  margin-bottom: var(--mt-space-3);
+  padding: var(--mt-space-5);
+  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  border-radius: var(--mt-radius-large);
+  background: var(--mt-color-surface-raised);
+}
+
 .timezoneCard {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(230px, 300px);

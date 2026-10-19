@@ -2,12 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { getAuthenticatedContext, entryFromRow } from "@/lib/data/inbox";
 import { validEntryID } from "@/lib/data/entry-detail";
-import {
-  parseGoalExtractionInput,
-  type GoalExtractionInput,
-} from "@/lib/data/goal-record-input";
 import { existingLocationFromRow } from "@/lib/locations/location";
-import { milestoneFromRow } from "@/lib/data/milestone";
 import { loadEntryPhotos } from "@/lib/data/entry-photos";
 import { loadDefaultTimezone } from "@/lib/data/profile-timezone";
 import { loadTagOptions } from "@/lib/data/tag-options";
@@ -25,54 +20,14 @@ export async function loadEditableEntry(id: string) {
   if (error || !data || !photos) return null;
   return {
     defaultTimezone,
-    entry: {
-      ...entryFromRow(
-        data,
-        data.tag_names,
-        existingLocationFromRow(data.primary_location),
-      ),
-      milestone: milestoneFromRow(data.milestone),
-    },
+    entry: entryFromRow(
+      data,
+      data.tag_names,
+      existingLocationFromRow(data.primary_location),
+    ),
     photos: photos.photos,
     tagOptions: tags ?? data.tag_names,
   };
-}
-
-export async function extractGoalFromItem(
-  input: GoalExtractionInput,
-): Promise<{ error: string | null; goalId: string | null }> {
-  const parsed = parseGoalExtractionInput(input);
-  if (!parsed.success) return { error: parsed.message, goalId: null };
-  const context = await getAuthenticatedContext();
-  if (!context)
-    return {
-      error: "Sign in again to add this to Someday.",
-      goalId: null,
-    };
-  const value = parsed.data;
-  const { data, error } = await context.client.rpc("extract_goal_from_item", {
-    p_goal_id: value.goalId,
-    p_title: value.title,
-    p_status: "active",
-    p_target_date: value.targetDate,
-    p_source_entry_id: value.sourceId,
-    p_source_revision: value.sourceRevision,
-  });
-  if (error)
-    return {
-      error:
-        "Could not confirm it was added. Refresh to check the source before retrying.",
-      goalId: null,
-    };
-  const result = Array.isArray(data) ? data[0] : data;
-  if (!result?.goal_entry_id)
-    return {
-      error:
-        "The source changed or is in Trash. Refresh before adding it to Someday.",
-      goalId: null,
-    };
-  revalidatePath("/", "layout");
-  return { error: null, goalId: result.goal_entry_id };
 }
 
 export async function trashWikiItem(

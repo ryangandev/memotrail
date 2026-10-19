@@ -7,7 +7,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-for (const kind of ["home", "vehicle", "goal"] as const) {
+for (const kind of ["chapter"] as const) {
   for (const interrupted of [
     "registration",
     "upload",
@@ -60,55 +60,23 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
             sameSite: "Lax",
           })),
         );
-        const common = {
-          p_entry_id: null,
+        const saved = await client.rpc("save_entry", {
+          p_entry_id: randomUUID(),
           p_expected_revision: null,
           p_title: "Upload retry fixture",
           p_body: "Original writing",
+          p_body_rich: null,
           p_tag_names: [],
-        };
-        const dates = {
           p_occurred_start: "2017-07-08T12:00:00Z",
           p_occurred_end: null,
           p_date_precision: "day",
           p_occurred_label: null,
           p_occurred_timezone: "UTC",
-        };
-        const configs = {
-          home: {
-            path: "/homes",
-            rpc: "save_home_entry_with_occurrence",
-            args: {
-              ...common,
-              ...dates,
-              p_move_in_reason: "",
-              p_move_out_reason: "",
-            },
-          },
-          vehicle: {
-            path: "/vehicles",
-            rpc: "save_vehicle_entry_with_occurrence",
-            args: {
-              ...common,
-              ...dates,
-              p_make: "Test",
-              p_model: "Car",
-              p_model_year: null,
-              p_color: "",
-            },
-          },
-          goal: {
-            path: "/goals",
-            rpc: "save_goal_entry",
-            args: {
-              ...common,
-              p_status: "active",
-              p_target_date: null,
-            },
-          },
-        };
-        const config = configs[kind];
-        const saved = await client.rpc(config.rpc, config.args);
+          p_primary_location: null,
+          p_photo_location: null,
+          p_is_chapter: true,
+          p_is_first_time: false,
+        });
         expect(saved.error).toBeNull();
         const entry = saved.data[0].entry_id;
         const bytes = await sharp({
@@ -116,7 +84,7 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
         })
           .png()
           .toBuffer();
-        const previewCase = kind === "home" && interrupted === "registration";
+        const previewCase = interrupted === "registration";
         const selectedBytes = previewCase
           ? Buffer.from(
               readFileSync(
@@ -129,7 +97,7 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
         let dropped = false;
         await page.route(
           interrupted !== "upload"
-            ? `**${config.path}/*`
+            ? `**/items/*`
             : "**/storage/v1/object/entry-media/**",
           async (route) => {
             const request = route.request();
@@ -145,18 +113,9 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
             } else await route.continue();
           },
         );
-        await page.goto(config.path);
-        await page
-          .getByRole("button", { name: /Upload retry fixture/ })
-          .click();
-        await expect(page).toHaveURL(`${config.path}/${entry}`);
-        const label = {
-          home: "Home",
-          vehicle: "Vehicle",
-          goal: "Someday item",
-        }[kind];
-        await page.getByRole("button", { name: `Edit ${label}` }).click();
-        const dialog = page.getByRole("main");
+        await page.goto(`/items/${entry}`);
+        await page.getByRole("button", { name: "Edit Chapter" }).click();
+        const dialog = page.getByRole("dialog", { name: "Edit Entry" });
         const selection = [
           {
             name: previewCase ? "retry.heic" : "retry.png",
@@ -242,7 +201,7 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
           }
         }
         await expect(
-          page.getByRole("button", { name: `Edit ${label}` }),
+          page.getByRole("button", { name: "Edit Chapter" }),
         ).toBeVisible();
         const registeredPhotos = () =>
           client

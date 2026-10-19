@@ -17,7 +17,7 @@ export const specimens = {
     title: "Informational, without an icon or action",
     render: () => (
       <EmptyState
-        description="Photos you add to this Home appear here."
+        description="Photos you add to this Entry appear here."
         headingLevel={3}
         title="No photos yet"
       />

@@ -24,8 +24,11 @@ create function pg_temp.capture(p_id uuid default '87000000-0000-4000-8000-00000
 create function pg_temp.page(p_after bigint default 0,p_limit integer default 100) returns jsonb language sql as $$select public.read_export_snapshot('87000000-0000-4000-8000-000000000020',p_after,p_limit)$$;
 select set_eq($$select unnest(public.export_dataset_names()) except select 'media_objects'$$,
  -- Pending Storage removals belong to permanently deleted media, never to the archive,
- -- and tombstones only keep permanently deleted Entries from being created again.
- $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_places','location_provider_usage','media_purges','entry_tombstones')
+ -- tombstones only keep permanently deleted Entries from being created again, and the
+ -- search index is derived data that is rebuilt from the Entries, and import jobs and items
+ -- record how a file was read, not what the person wrote, and review notices and
+ -- suggestion scheduling are interface state.
+ $$select tablename from pg_tables where schemaname='public' and tablename not in ('export_snapshots','export_snapshot_rows','entry_places','location_provider_usage','media_purges','entry_tombstones','entry_search_index_state','entry_search_chunks','import_jobs','import_items','review_notices','chapter_suggestion_state')
    union all select 'entry_locations'$$,
  'Explicit export inventory covers every canonical table and requires updates for new tables');
 set local role authenticated;

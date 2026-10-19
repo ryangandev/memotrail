@@ -53,19 +53,6 @@
           }
         }
       },
-      "ringOffsetHairline": {
-        "$type": "dimension",
-        "$description": "Focus gap for map attribution links.",
-        "$value": {
-          "value": 1,
-          "unit": "px"
-        },
-        "$extensions": {
-          "com.memotrail": {
-            "platforms": ["web"]
-          }
-        }
-      },
       "ringOffsetInset": {
         "$type": "dimension",
         "$description": "Focus outline inside list links, dock controls, and mobile navigation buttons.",

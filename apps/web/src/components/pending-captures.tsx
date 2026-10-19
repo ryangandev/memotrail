@@ -13,6 +13,7 @@ import { countLabel } from "@/lib/count-label";
 import {
   queuedOccurrence,
   type QueuedInboxEntry,
+  type UnreadableCapture,
 } from "@/lib/data/inbox-queue";
 import type { PendingCapture } from "@/lib/data/inbox-sync";
 import { entryDisplayTitle, occurrenceLabel } from "@/lib/data/occurrence";
@@ -24,8 +25,11 @@ import styles from "./pending-captures.module.css";
  */
 export function PendingCaptureList({
   items,
+  unreadable = [],
 }: {
   items: readonly PendingCapture[];
+  /** Saved captures that could not be read; they are kept until discarded. */
+  unreadable?: readonly UnreadableCapture[];
 }) {
   return (
     <div className={entryListStyles.entryList}>
@@ -61,6 +65,19 @@ export function PendingCaptureList({
           {rejection ? (
             <RejectedCapture entry={entry} message={rejection.message} />
           ) : null}
+        </article>
+      ))}
+      {unreadable.map((capture) => (
+        <article
+          className={styles.pendingEntryCard}
+          data-status="rejected"
+          key={capture.key}
+        >
+          <div className={entryFormStyles.entryMeta}>
+            <Badge tone="warm">Could not be read</Badge>
+          </div>
+          <p>{capture.text}</p>
+          <UnreadableCaptureActions capture={capture} />
         </article>
       ))}
     </div>
@@ -129,6 +146,76 @@ function RejectedCapture({
             Copy text
           </Button>
         ) : null}
+        <Button
+          loading={isDiscarding}
+          onClick={() => void discardCapture()}
+          size="small"
+          variant="danger"
+        >
+          <Icon name="trash" size={14} />
+          Discard
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** The ways to keep or remove a saved capture this version cannot read. */
+function UnreadableCaptureActions({ capture }: { capture: UnreadableCapture }) {
+  const { discardUnreadable } = useCaptureQueue();
+  const requestConfirmation = useConfirmationDialog();
+  const [isDiscarding, setIsDiscarding] = useState(false);
+
+  async function copyText() {
+    try {
+      await navigator.clipboard.writeText(capture.text);
+      notify.success("Text copied.");
+    } catch {
+      notify.error("This browser could not copy the text.");
+    }
+  }
+
+  async function discardCapture() {
+    const confirmed = await requestConfirmation({
+      title: <>Discard this saved Entry?</>,
+      description: (
+        <>
+          It will be removed from this device, along with any photos it holds.
+          This cannot be undone.
+        </>
+      ),
+      confirmLabel: "Discard",
+      eyebrow: <>Permanent action</>,
+      variant: "danger",
+    });
+    if (!confirmed) return;
+
+    setIsDiscarding(true);
+    const discarded = await discardUnreadable(capture.key);
+    setIsDiscarding(false);
+    if (discarded) notify.info("Saved Entry discarded.");
+    else
+      notify.error(
+        "MemoTrail could not discard this Entry from this device. Try again.",
+      );
+  }
+
+  return (
+    <div className={styles.pendingRejection}>
+      <p>
+        This Entry was saved on this device, but this version of MemoTrail
+        cannot read it. It is kept until you discard it.
+      </p>
+      <div className={styles.pendingRejectionActions}>
+        <Button
+          disabled={isDiscarding}
+          onClick={() => void copyText()}
+          size="small"
+          variant="secondary"
+        >
+          <Icon name="copy" size={14} />
+          Copy text
+        </Button>
         <Button
           loading={isDiscarding}
           onClick={() => void discardCapture()}

@@ -1,6 +1,94 @@
-.entryList {
+.list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  border-block: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  list-style: none;
+}
+
+.list li + li {
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+.list a {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--mt-space-1) var(--mt-space-4);
+  padding: var(--mt-space-4) var(--mt-space-3);
+  border-radius: var(--mt-radius-medium);
+  color: var(--mt-color-ink);
+  text-decoration: none;
+  transition:
+    color var(--mt-motion-quick),
+    background var(--mt-motion-quick);
+}
+
+.list a:hover {
+  background: var(--mt-color-surface-raised);
+}
+
+.list a:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-inset);
+}
+
+.meta {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mt-space-4);
+}
+
+.badges {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: var(--mt-space-2);
+}
+
+.meta small {
+  margin-left: auto;
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+  white-space: nowrap;
+}
+
+.list strong {
   overflow: hidden;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--mt-font-size-title-small);
+  font-weight: var(--mt-font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.list p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+/* A row with a photo keeps its text in the first column and the photo beside it. */
+.list li[data-cover] a {
+  grid-template-columns: minmax(0, 1fr) 64px;
+}
+
+.list li[data-cover] a > :not(.cover) {
+  grid-column: 1;
+}
+
+.cover {
+  grid-column: 2;
+  grid-row: 1 / span 4;
+  width: 64px;
+  height: 64px;
+  align-self: center;
+  border-radius: var(--mt-radius-medium);
 }

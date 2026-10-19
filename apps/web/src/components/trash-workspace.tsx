@@ -25,7 +25,8 @@ import type {
   TrashWorkspace as TrashWorkspaceData,
 } from "@/lib/data/trash";
 import { TRASH_PAGE_SIZE, trashPageHref } from "@/lib/data/trash-input";
-import { wikiItemIdentityLabel } from "@/lib/data/wiki-item";
+import { trashDate, trashRetention } from "@/lib/data/trash-dates";
+import { wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
 
 type PendingAction = {
   action: "delete" | "restore";
@@ -125,6 +126,7 @@ export function TrashWorkspace({
         <div className={styles.actionRow}>
           <EmptyTrashControl
             disabled={Boolean(pending) || Boolean(confirmation)}
+            reviewsExist={workspace.reviewsExist}
             onBusy={setBatchBusy}
             onResult={announceResult}
             onFinish={() => {
@@ -199,16 +201,18 @@ export function TrashWorkspace({
                     <div className={styles.itemMeta}>
                       <Badge tone="warm">{labelForItem(item)}</Badge>
                       <time dateTime={item.deletedAt}>
-                        Removed {formatDate(item.deletedAt)}
+                        Removed {trashDate(item.deletedAt, workspace.timezone)}
                       </time>
                     </div>
                     <h2>{item.title}</h2>
                     {item.detail ? <p>{item.detail}</p> : null}
                     <div className={styles.retentionLine}>
                       <Icon name="clock" size={14} />
-                      <span>{retentionLabel(item.expiresAt)}</span>
+                      <span>
+                        {trashRetention(item.expiresAt, workspace.renderedAt)}
+                      </span>
                       <time dateTime={item.expiresAt}>
-                        {formatDate(item.expiresAt)}
+                        {trashDate(item.expiresAt, workspace.timezone)}
                       </time>
                     </div>
                   </div>
@@ -267,7 +271,13 @@ export function TrashWorkspace({
           title={<>Delete “{confirmation.title}” forever?</>}
           titleId="trash-confirmation-title"
           description={
-            <>{deletionDescription(confirmation)} This cannot be undone.</>
+            <>
+              {deletionDescription(confirmation)}
+              {workspace.reviewsExist && confirmation.kind !== "attachment"
+                ? " Reviews that read these Entries are deleted too."
+                : ""}{" "}
+              This cannot be undone.
+            </>
           }
           eyebrow={<>Permanent action</>}
           busy={Boolean(pending)}
@@ -317,27 +327,9 @@ function labelForItem(item: TrashItem) {
     return "Photo";
   }
 
-  return item.wikiItemKind && item.wikiItemSubtype
-    ? wikiItemIdentityLabel(item.wikiItemKind, item.wikiItemSubtype)
+  return item.wikiItemSubtype
+    ? wikiItemSubtypeLabel(item.wikiItemSubtype)
     : "Entry";
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(value));
-}
-
-function retentionLabel(value: string) {
-  const days = Math.ceil((new Date(value).getTime() - Date.now()) / 86_400_000);
-
-  if (days <= 0) {
-    return "Eligible for cleanup since";
-  }
-
-  return `${days} ${days === 1 ? "day" : "days"} to restore · through`;
 }
 
 function deletionDescription(item: TrashItem) {

@@ -1,6 +1,10 @@
 import type { WikiItemKind } from "./wiki-item";
-import type { MilestoneLane, MilestoneShape } from "./milestone";
-import { entryDisplayTitle, storedOccurrence } from "./occurrence";
+import {
+  entryDisplayTitle,
+  occurrenceDurationLabel,
+  occurrenceSpanLabel,
+  storedOccurrence,
+} from "./occurrence";
 
 /** The current Entry the Item page shows, as `entry_detail` returns it. */
 export type EntryDetail = {
@@ -9,6 +13,7 @@ export type EntryDetail = {
   body: string;
   item_kind: WikiItemKind;
   item_subtype: string;
+  is_first_time: boolean;
   revision: number;
   deleted_at: string | null;
   occurred_start: string | null;
@@ -25,11 +30,6 @@ export type EntryDetail = {
     latitude: number | null;
     longitude: number | null;
   }[];
-  milestone: {
-    shape: MilestoneShape;
-    lane: MilestoneLane;
-    is_first_time: boolean;
-  } | null;
   links: { target_entry_id: string; relationship: string }[];
 };
 
@@ -55,6 +55,36 @@ export function entryTitle(
       occurredTimezone: value.occurred_timezone,
     }),
   );
+}
+
+/**
+ * A Chapter's Date fact: the span it covers and how long that is. A Chapter without a calendar
+ * date shows its description alone, never a duration it cannot measure.
+ */
+export function chapterDateFacts(
+  value: Pick<
+    EntryDetail,
+    | "occurred_label"
+    | "occurred_start"
+    | "occurred_end"
+    | "occurred_timezone"
+    | "date_precision"
+  >,
+  now: Date,
+) {
+  const occurrence = storedOccurrence({
+    datePrecision: value.date_precision,
+    occurredEnd: value.occurred_end,
+    occurredLabel: value.occurred_label,
+    occurredStart: value.occurred_start,
+    occurredTimezone: value.occurred_timezone,
+  });
+  return {
+    duration: value.occurred_start
+      ? occurrenceDurationLabel(occurrence, now)
+      : null,
+    span: occurrenceSpanLabel(occurrence),
+  };
 }
 
 export function validEntryID(id: unknown): id is string {

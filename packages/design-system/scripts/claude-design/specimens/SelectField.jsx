@@ -14,7 +14,7 @@ export const specimens = {
         <SelectField defaultValue="all" label="Show records">
           <option value="all">All records</option>
           <option value="entries">Entries</option>
-          <option value="entities">Homes & vehicles</option>
+          <option value="chapters">Chapters</option>
         </SelectField>
         <SelectField defaultValue="timeline" label="Default view" size="large">
           <option value="dashboard">Dashboard</option>
@@ -32,12 +32,11 @@ export const specimens = {
           <option value="all">All records</option>
           <optgroup label="Records">
             <option value="entries">Entries</option>
-            <option value="entities">Entities</option>
-            <option value="goals">Goals</option>
+            <option value="chapters">Chapters</option>
           </optgroup>
-          <optgroup label="Focused records">
+          <optgroup label="Marks">
             <option value="first-times">First Times</option>
-            <option value="people">People</option>
+            <option value="favorites">Favorites</option>
           </optgroup>
         </SelectField>
       </Stack>

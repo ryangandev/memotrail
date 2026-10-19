@@ -3,8 +3,7 @@ name: FocusedRecord
 
 platforms:
   web:
-    path: apps/web/src/components/focused-record-detail.tsx
-    symbols: [FocusedRecordDetail, FocusedRecordView]
+    unavailable: Web has no separate focused record page. Every record is an Entry and opens on the Entry detail view, so a Chapter or First Time uses the Item page.
   ios:
     path: apps/ios/MemoTrail/DesignSystem/Components/MTRecordDetail.swift
     symbols:
@@ -19,8 +18,8 @@ platforms:
 purpose: A record's own page, with its Kind and title, an Edit action, its photos, its facts, its Story, and its tags.
 
 use:
-  - The page a Home, Vehicle, or Someday item opens to from its card.
-  - Any record whose page shows labeled facts and writing rather than an Entry's rich text.
+  - The native page a legacy record opens to from its card, until the native app moves to Entries.
+  - Any native record whose page shows labeled facts and writing rather than an Entry's rich text.
 
 avoid:
   - An Entry's Item page, which shows rich text, dates, and Location. Use the Entry detail view.
@@ -32,9 +31,9 @@ anatomy:
   body: The column under the header that holds the photos, facts, and sections.
   photos: The record's saved photos at 4:3 in columns at least 220 points wide, each opening the photo viewer.
   facts: Labeled values, each under a hairline; empty values are left out.
-  story: The record's writing under a rule and a Story section header, or Notes for a Someday item.
+  story: The record's writing under a rule and a Story section header.
   organize: The record's tags as neutral badges under a rule and an Organize section header.
-  extra: Further sections that belong to one Kind, such as the First Time a Someday item became.
+  extra: Further sections that belong to one Kind, such as the First Time a record became.
 
 props: {}
 
@@ -78,23 +77,15 @@ content:
 
 accessibility:
   role: A page whose title is its heading, with Story and Organize as section headings, and a description list of facts on Web.
-  label: The title; Edit names its record, such as Edit Home, and each photo button names its photo, such as Preview Blue Civic photo 2.
+  label: The title; Edit names its record, such as Edit Blue Civic, and each photo button names its photo, such as Preview Blue Civic photo 2.
   focus: Edit comes first, then each photo, then any links in the sections.
   minimumHitTarget: "{size.hitTarget}"
   dynamicType: Text scales with Dynamic Type on iOS and browser zoom on Web; photo columns reflow, and facts stack in one column on phones.
 
 platformDifferences:
-  - difference: Facts sit in two columns on Web wider than 600 px and in one column below it; iOS always uses one column.
-    reason: The iOS app runs only on iPhone, which is always the narrow layout.
-  - difference: Fact values and the Story are 17 pt body large text on iOS and the 16 px page text on Web.
-    reason: 17 pt is the iOS reading size at the default Dynamic Type setting, while Web pages read at the browser's 16 px default.
-  - difference: Selecting a photo opens a paged dialog with Previous, Next, and the arrow keys on Web and a full-screen sheet people swipe through on iOS.
-    reason: Each platform's own photo viewer; see the PhotoViewer spec.
-  - difference: iOS still offers Version history at the foot of the page; Web has none.
-    reason: docs/product.md retires version history. The iOS History screens read the retired schema and go with its move to the current one.
-  - difference: Edit opens the record's editor in place on Web and as a sheet on iOS.
-    reason: Each platform's own editing presentation, the same as for every other editor.
+  - difference: iOS only. Web has no focused record page.
+    reason: Web retired these separate records, and each is now an Entry on the Item page. The iOS page goes with the native move to Entries.
 
 specimens:
   - id: focused-record-home
-    description: A Home's page with its photos, facts, Story, and tags, and Edit beside the title.
+    description: A record page with its photos, facts, Story, and tags, and Edit beside the title.

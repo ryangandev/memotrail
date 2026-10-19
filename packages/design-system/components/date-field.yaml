@@ -12,7 +12,7 @@ platforms:
 purpose: A labeled, optional calendar value at day, month, or year precision, with an optional time, chosen from a calendar.
 
 use:
-  - Any date an Entry, Moment, or record keeps, such as a memory date, a birth date, or a Home's start date.
+  - Any date an Entry keeps, such as a memory date, a birth date, or a Chapter's start date.
   - Month or year precision when the person remembers only roughly when something happened.
   - Date filters, such as Library's From and To fields, at the small size.
 

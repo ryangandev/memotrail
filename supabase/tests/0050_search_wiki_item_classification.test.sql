@@ -24,9 +24,9 @@ insert into public.entry_tags(entry_id,tag_id,owner_id) values
   ('98300000-0000-4000-8000-000000000004','98300000-0000-4000-8000-000000000014','10000000-0000-0000-0000-000000000112');
 
 insert into public.entries(id,owner_id,title,body,item_kind,item_subtype) values
-  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111','Harbor flat','Lived by the marina.','entity','home');
-insert into public.homes(entry_id,owner_id) values
-  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111');
+  ('98300000-0000-4000-8000-000000000005','10000000-0000-0000-0000-000000000111','Harbor flat','Lived by the marina.','entry','chapter');
+update public.entries set is_first_time = true
+where id in ('98300000-0000-4000-8000-000000000002','98300000-0000-4000-8000-000000000005');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000111',true);
@@ -34,7 +34,32 @@ select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000111'
 select is(
   (select count(*) from public.search_wiki_items('',array['entry'])),
   3::bigint,
-  'Entry filtering returns every ordinary Entry'
+  'Entry filtering returns every ordinary Entry and no Chapter'
+);
+select is(
+  (select title from public.search_wiki_items('',array['chapter'])),
+  'Harbor flat',
+  'Chapter filtering returns Chapters'
+);
+select is(
+  (select array_agg(title order by title) from public.search_wiki_items('',array['first_time'])),
+  array['A good day','Harbor flat'],
+  'First Time filtering returns every Entry marked First Time, Chapters included'
+);
+select is(
+  (select count(*) from public.search_wiki_items('',array['entry','chapter'])),
+  4::bigint,
+  'Several classifications combine'
+);
+select is(
+  (select count(*) from public.search_wiki_items('',array['milestone'])),
+  0::bigint,
+  'An unknown classification matches nothing'
+);
+select is(
+  (select is_first_time from public.search_wiki_items('happy',array['entry'])),
+  true,
+  'Results carry the First Time mark'
 );
 select is(
   (select title from public.search_wiki_items('',array[]::text[],array['Memory'])),
@@ -57,12 +82,12 @@ select is(
   'Keyword search indexes descriptive tags'
 );
 select is(
-  public.archive_wiki_search_evidence(array['marina'],array['entity'])->'entries'->0->>'title',
+  public.archive_wiki_search_evidence(array['marina'],array['chapter'])->'entries'->0->>'title',
   'Harbor flat',
-  'AI Entity evidence includes matching Entities'
+  'AI evidence includes matching Chapters'
 );
 select ok(
-  not (public.archive_wiki_search_evidence(array['marina'],array['entity']) ? 'places'),
+  not (public.archive_wiki_search_evidence(array['marina'],array['chapter']) ? 'places'),
   'AI evidence has no authored Place source'
 );
 
@@ -77,7 +102,7 @@ reset role;
 select ok(
   not has_function_privilege(
     'anon',
-    'public.search_wiki_items(text,text[],text[],date,date,integer,integer,text)',
+    'public.search_wiki_items(text,text[],text[],date,date,integer,integer,text,real[],text,real)',
     'execute'
   ),
   'Anonymous semantic search is denied'

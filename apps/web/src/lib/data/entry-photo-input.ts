@@ -1,4 +1,4 @@
-// Photo uploads shared by every Entry with photos: Entries, Homes, Vehicles, and Goals.
+// Photo uploads shared by every Entry with photos.
 export const entryPhotoLimit = 12;
 export const entryPhotoSizeLimit = 50 * 1024 * 1024;
 

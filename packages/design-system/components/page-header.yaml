@@ -12,7 +12,7 @@ platforms:
 purpose: Opens a page with an optional eyebrow, a serif title, a description, and the page's own actions.
 
 use:
-  - The first element of every workspace page, such as Library, Homes, or Settings.
+  - The first element of every workspace page, such as Library, First Times, or Settings.
   - A focused record's page, with its Kind as the eyebrow and Edit as the action.
 
 avoid:

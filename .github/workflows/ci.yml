@@ -98,6 +98,11 @@ jobs:
           MEMOTRAIL_E2E_PRODUCTION: "1"
         run: pnpm --filter @memotrail/web test:e2e --reporter=github,line
 
+      # Search by meaning runs against a fake embedding service in its own development
+      # server, so the production suite above stays keyword-only.
+      - name: Run semantic search browser suite
+        run: pnpm --filter @memotrail/web test:e2e:semantic --reporter=github,line
+
       - name: Keep browser failure output
         if: failure()
         uses: actions/upload-artifact@v7

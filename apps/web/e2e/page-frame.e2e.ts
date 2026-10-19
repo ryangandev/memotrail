@@ -7,25 +7,16 @@ import { createClient } from "@supabase/supabase-js";
 const pageFamilies = [
   { path: "/library", variant: "standard", width: 960 },
   { path: "/settings", variant: "compact", width: 880 },
-  { path: "/settings/ai", variant: "compact", width: 880 },
   { path: "/settings/export", variant: "compact", width: 880 },
   { path: "/search", variant: "standard", width: 960 },
   { path: "/tags", variant: "standard", width: 960 },
   { path: "/trash", variant: "standard", width: 960 },
   { path: "/", variant: "wide", width: 1080 },
   { path: "/first-times", variant: "wide", width: 1080 },
-  { path: "/goals", variant: "wide", width: 1080 },
-  { path: "/homes", variant: "wide", width: 1080 },
-  { path: "/vehicles", variant: "wide", width: 1080 },
   { path: "/timeline", variant: "canvas", width: 1180 },
 ] as const;
 
-const focusedViewPaths = new Set([
-  "/first-times",
-  "/goals",
-  "/homes",
-  "/vehicles",
-]);
+const focusedViewPaths = new Set(["/first-times"]);
 
 test("authenticated pages use the shared responsive page frame", async ({
   context,

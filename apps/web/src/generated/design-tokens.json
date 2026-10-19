@@ -38,8 +38,6 @@
       "accentBorderStrong": "rgb(47 90 75 / 0.42)",
       "accentStripe": "rgb(47 90 75 / 0.62)",
       "accentHalo": "rgb(220 229 220 / 0.55)",
-      "accentPanel": "#ECEFE7",
-      "accentPanelBorder": "#9CA89A",
       "warmGlow": "rgb(241 226 216 / 0.78)",
       "warmWash": "rgb(241 226 216 / 0.65)",
       "captureQueued": "#F1F2EA",
@@ -66,9 +64,7 @@
         "canvas": "#F3F1EB",
         "grid": "#D9D5CA",
         "labelSurface": "#FFFFFF",
-        "labelInk": "#4C514B",
-        "pin": "#526F60",
-        "pinInk": "#FFFFFF"
+        "labelInk": "#4C514B"
       },
       "brand": {
         "ring": "#315E4F",
@@ -113,8 +109,6 @@
       "accentBorderStrong": "rgb(141 181 161 / 0.42)",
       "accentStripe": "rgb(141 181 161 / 0.62)",
       "accentHalo": "rgb(36 52 44 / 0.55)",
-      "accentPanel": "#212923",
-      "accentPanelBorder": "#54655A",
       "warmGlow": "rgb(67 46 37 / 0.78)",
       "warmWash": "rgb(67 46 37 / 0.65)",
       "captureQueued": "#202621",
@@ -141,9 +135,7 @@
         "canvas": "#252824",
         "grid": "#3E433F",
         "labelSurface": "#343A35",
-        "labelInk": "#E4E7DF",
-        "pin": "#526F60",
-        "pinInk": "#FFFFFF"
+        "labelInk": "#E4E7DF"
       },
       "brand": {
         "ring": "#315E4F",
@@ -228,14 +220,6 @@
       "textCase": "none"
     },
     "welcomeTitle": {
-      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
-      "fontSize": 28,
-      "fontWeight": 500,
-      "lineHeight": 1.15,
-      "letterSpacing": -0.7,
-      "textCase": "none"
-    },
-    "goalCardTitle": {
       "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
       "fontSize": 28,
       "fontWeight": 500,
@@ -747,8 +731,7 @@
       "dialog": 70,
       "popover": 80,
       "palette": 80,
-      "nestedPopover": 90,
-      "mapOverlay": 500
+      "nestedPopover": 90
     }
   },
   "motion": {
@@ -783,8 +766,6 @@
     "thumbStrong": "0 1px 3px rgb(37 36 31 / 0.12)",
     "lifted": "0 3px 12px rgb(37 36 31 / 0.06)",
     "menu": "0 16px 44px rgb(0 0 0 / 0.2)",
-    "mapNotice": "0 2px 10px rgb(0 0 0 / 0.08)",
-    "mapPin": "0 2px 8px rgb(0 0 0 / 0.25)",
     "mediaControl": "0 4px 18px rgb(0 0 0 / 0.24)"
   },
   "state": {
@@ -796,7 +777,6 @@
         "ringOffset": 3,
         "ringOffsetSnug": 2,
         "ringOffsetLoose": 4,
-        "ringOffsetHairline": 1,
         "ringOffsetInset": -2,
         "ringOffsetInsetDeep": -3,
         "haloWidth": 3
@@ -845,7 +825,6 @@
         "ringOffset": 3,
         "ringOffsetSnug": 2,
         "ringOffsetLoose": 4,
-        "ringOffsetHairline": 1,
         "ringOffsetInset": -2,
         "ringOffsetInsetDeep": -3,
         "haloWidth": 3
@@ -1103,7 +1082,7 @@
       "sfSymbol": "calendar"
     },
     "car": {
-      "description": "Vehicles.",
+      "description": "A car.",
       "platforms": [
         "web",
         "ios"
@@ -1366,7 +1345,7 @@
       "sfSymbol": "sparkles"
     },
     "star": {
-      "description": "Goals and favorites.",
+      "description": "Favorites and highlights.",
       "platforms": [
         "web",
         "ios"
@@ -1398,7 +1377,7 @@
       "sfSymbol": "tag"
     },
     "target": {
-      "description": "Goals and targets.",
+      "description": "Targets.",
       "platforms": [
         "web",
         "ios"
@@ -1474,8 +1453,6 @@
     "color.accentBorderStrong": "Borders of selected accent cards.",
     "color.accentStripe": "Dashed accent stripes, such as the timeline today rail.",
     "color.accentHalo": "Soft accent halo behind an icon.",
-    "color.accentPanel": "Opaque accent panel, such as a selected goal section.",
-    "color.accentPanelBorder": "Border of the accent panel.",
     "color.warmGlow": "Warm radial glow behind the sign-in story.",
     "color.warmWash": "Warm wash behind Trash previews.",
     "color.captureQueued": "Background of a queued capture.",
@@ -1497,8 +1474,6 @@
     "color.mediaControlBorder": "Border of controls over a selected photo.",
     "color.onInkKey": "Keyboard key inside a dark tooltip.",
     "color.onInkKeyBorder": "Border of a keyboard key inside a dark tooltip.",
-    "color.map.pin": "Interactive map pins and clusters.",
-    "color.map.pinInk": "Pin borders and counts.",
     "color.brand.ring": "The brand mark's outer ring.",
     "color.brand.accent": "The brand mark's clay arc.",
     "color.brand.innerRing": "The brand mark's inner ring.",
@@ -1526,8 +1501,7 @@
     "type.display": "Page titles.",
     "type.title": "Section and onboarding titles.",
     "type.welcomeTitle": "The sign-in welcome title.",
-    "type.goalCardTitle": "Goal card titles. iOS draws them at its title2 size in regular width.",
-    "type.recordCardTitle": "Large serif titles on Home, Vehicle, and First Time cards. iOS draws them at its title2 size in regular width.",
+    "type.recordCardTitle": "Large serif titles on First Time cards, and on native Home and Vehicle cards. iOS draws them at its title2 size in regular width.",
     "type.sheetTitle": "Sheet and dialog titles.",
     "type.recordTitle": "Record detail titles.",
     "type.titleSmall": "Card and panel titles.",
@@ -1545,7 +1519,7 @@
     "type.caption": "Metadata and helper text.",
     "type.tagline": "The tagline beside the sign-in wordmark.",
     "type.pageEyebrow": "The uppercase context above a page title, such as a date or area name.",
-    "type.legend": "The uppercase legend set into the border of a record group, such as a Home's details.",
+    "type.legend": "The uppercase legend set into the border of a record group, such as a native Home's details. Web has no record group.",
     "type.micro": "Dense badges and tooltips.",
     "type.signInEyebrow": "Uppercase eyebrows on the sign-in screens, such as the line above the story headline.",
     "type.menuHeading": "Uppercase group headings in the More menu.",
@@ -1631,7 +1605,6 @@
     "layout.layer.popover": "Menus and pickers above dialogs.",
     "layout.layer.palette": "The command palette.",
     "layout.layer.nestedPopover": "Popovers opened from popovers.",
-    "layout.layer.mapOverlay": "Overlays above the map library's own panes.",
     "motion.labelFade": "Sidebar labels fading, and the wait before a faded label hides.",
     "motion.quick": "Hover, press, and focus transitions.",
     "motion.composerEnter": "The bottom Quick Capture dialog rising into place.",
@@ -1659,8 +1632,6 @@
     "shadow.thumbStrong": "Switch thumbs on settings rows.",
     "shadow.lifted": "A hovered tag chip.",
     "shadow.menu": "The mobile navigation menu.",
-    "shadow.mapNotice": "Notices floating over the map.",
-    "shadow.mapPin": "Map pins and clusters.",
     "shadow.mediaControl": "Round controls over photos, such as the upload progress ring.",
     "state.focus.ring": "Keyboard focus outline.",
     "state.focus.halo": "Soft focus halo around fields.",
@@ -1668,7 +1639,6 @@
     "state.focus.ringOffset": "Gap between a control and its focus outline.",
     "state.focus.ringOffsetSnug": "Focus gap for links, photo tiles, checkboxes, and small choice controls.",
     "state.focus.ringOffsetLoose": "Focus gap around Home dashboard links.",
-    "state.focus.ringOffsetHairline": "Focus gap for map attribution links.",
     "state.focus.ringOffsetInset": "Focus outline inside list links, dock controls, and mobile navigation buttons.",
     "state.focus.ringOffsetInsetDeep": "Focus outline inside photo preview triggers.",
     "state.focus.haloWidth": "Width of the soft focus halo around fields.",

@@ -11,11 +11,11 @@ const labels = {
   warm: "First Time",
   success: "Connected",
   danger: "Upload failed",
-  outline: "Someday",
-  inverse: "Home",
-  solidAccent: "Achieved",
+  outline: "Draft",
+  inverse: "3 photos",
+  solidAccent: "Saved",
   glassAccent: "Current",
-  glassNeutral: "Vehicle",
+  glassNeutral: "Earlier",
 };
 
 const photo = {
@@ -94,10 +94,10 @@ export const specimens = {
           Current
         </Badge>
         <Badge size="micro" tone="glassNeutral" uppercase>
-          Vehicle
+          Earlier
         </Badge>
         <Badge size="micro" tone="inverse" uppercase>
-          Home
+          3 photos
         </Badge>
       </div>
     ),
