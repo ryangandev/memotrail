@@ -11,25 +11,27 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const workspace = await getHomeWorkspace();
-  if (!workspace) return null;
-
-  // Both are quiet: a notice only while reviews are on and one is due, and a check that a
-  // Chapter suggestion run is due only while Suggest Chapters is on.
+  // The review loads are quiet: a notice only while reviews are on and one is due, and a check
+  // that a Chapter suggestion run is due only while Suggest Chapters is on. They run beside the
+  // Dashboard snapshot and the First Time lookup that follows it.
   const context = await getAuthenticatedContext();
   const { localDate } = await reviewToday();
-  const [settings, reviewNotice] = context
-    ? await Promise.all([
-        loadReviewSettings(context.client),
-        loadReviewNotice(context.client, localDate),
-      ])
-    : [null, null];
-  const firstTimeIds = context
-    ? await loadFirstTimeIds(
-        context.client,
-        workspace.snapshot?.recentEntries.map((entry) => entry.id) ?? [],
-      )
-    : [];
+  const [home, settings, reviewNotice] = await Promise.all([
+    getHomeWorkspace().then(async (workspace) => ({
+      firstTimeIds:
+        workspace && context
+          ? await loadFirstTimeIds(
+              context.client,
+              workspace.snapshot?.recentEntries.map((entry) => entry.id) ?? [],
+            )
+          : [],
+      workspace,
+    })),
+    context ? loadReviewSettings(context.client) : null,
+    context ? loadReviewNotice(context.client, localDate) : null,
+  ]);
+  const { firstTimeIds, workspace } = home;
+  if (!workspace) return null;
 
   return (
     <>
