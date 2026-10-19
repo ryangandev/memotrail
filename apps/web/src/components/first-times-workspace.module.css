@@ -126,6 +126,9 @@
   border-radius: var(--mt-radius-xsmall);
   color: var(--mt-color-ink-faint);
   background: var(--mt-color-surface-subtle);
+  /* A hairline keeps a pale map apart from the page. */
+  outline: var(--mt-size-stroke-thin) solid var(--mt-color-border-faint);
+  outline-offset: calc(var(--mt-size-stroke-thin) * -1);
 }
 
 .thumbnail > img {
