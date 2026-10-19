@@ -10,6 +10,7 @@ private struct WorkspaceToolbar: ViewModifier {
   let signOut: @MainActor () async -> Void
   @State private var isShowingSettings = false
   @Environment(AppNavigator.self) private var navigator
+  @Environment(CaptureController.self) private var capture: CaptureController?
 
   func body(content: Content) -> some View {
     content
@@ -38,9 +39,17 @@ private struct WorkspaceToolbar: ViewModifier {
           .keyboardShortcut("j", modifiers: .command)
           .accessibilityIdentifier("workspace-new-entry")
         }
-        if let capture = CaptureController.workspace(for: user.id), capture.hasWaitingCaptures {
+        if let capture, capture.hasWaitingCaptures {
           ToolbarItem(placement: .topBarTrailing) {
-            CaptureSyncIndicator(controller: capture) { navigator.showPendingCaptures() }
+            // Tapping syncs what still can and opens Pending sync, like Web.
+            MTSyncStatusButton(
+              label: capture.indicatorLabel, needsAttention: capture.needsAttention,
+              isSyncing: capture.isSyncing
+            ) {
+              Task { await capture.retryNow() }
+              navigator.showPendingCaptures()
+            }
+            .accessibilityIdentifier("workspace-pending-sync")
           }
           if #available(iOS 26, *) {
             ToolbarSpacer(.fixed, placement: .topBarTrailing)
@@ -103,42 +112,6 @@ private struct WorkspaceToolbar: ViewModifier {
     .buttonStyle(.plain)
     .accessibilityLabel("Open Settings for \(user.name)")
     .accessibilityIdentifier("workspace-settings")
-  }
-}
-
-/// Web `SyncStatusButton` in the workspace header: the counts of captures waiting on this
-/// iPhone, refused by MemoTrail, or unreadable, drawn warm when one needs the person. Tapping
-/// it syncs what still can and opens Pending sync.
-private struct CaptureSyncIndicator: View {
-  @Bindable var controller: CaptureController
-  let open: () -> Void
-
-  var body: some View {
-    Button {
-      Task { await controller.retryNow() }
-      open()
-    } label: {
-      HStack(spacing: MTSpacing.s1_5) {
-        Circle()
-          .fill(MTColor.warm)
-          .frame(width: MTSpacing.s1_5, height: MTSpacing.s1_5)
-        Text(controller.indicatorLabel)
-          .font(MTFont.micro)
-          .lineLimit(1)
-      }
-      .foregroundStyle(controller.needsAttention ? MTColor.warm : MTColor.inkFaint)
-      .padding(.horizontal, MTSpacing.s2)
-      .frame(minHeight: MTSize.hitTarget)
-      .contentShape(Capsule())
-    }
-    .buttonStyle(.plain)
-    .accessibilityLabel("Pending sync, \(controller.indicatorLabel)")
-    .accessibilityValue(controller.isSyncing ? "Syncing" : "")
-    .accessibilityHint(
-      controller.needsAttention
-        ? "Review captures MemoTrail did not accept or could not read, and sync the rest"
-        : "Syncs now and lists captures waiting on this iPhone")
-    .accessibilityIdentifier("workspace-pending-sync")
   }
 }
 

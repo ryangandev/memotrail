@@ -75,7 +75,6 @@ final class CaptureController {
       isOnline: { [weak self] in self?.isNetworkAvailable == true && self?.isStopped == false },
       isSyncing: { [weak self] in self?.isSyncing == true },
       retry: { [weak self] in self?.synchronizeInBackground() })
-    Self.register(self)
     startWatching()
   }
 
@@ -278,22 +277,6 @@ final class CaptureController {
     }
     pendingEntries = nextQueue
     return true
-  }
-
-  // MARK: Workspace
-
-  private static var workspaces: [UUID: WeakCaptureController] = [:]
-
-  /// The capture controller of this person's workspace, like Web's one queue per person per
-  /// tab. SwiftUI can create a view's state more than once and keeps the first, so the earliest
-  /// controller still alive is the workspace's.
-  static func workspace(for ownerID: UUID) -> CaptureController? {
-    workspaces[ownerID]?.controller
-  }
-
-  private static func register(_ controller: CaptureController) {
-    guard workspaces[controller.ownerID]?.controller == nil else { return }
-    workspaces[controller.ownerID] = WeakCaptureController(controller: controller)
   }
 
   // MARK: Triggers
@@ -845,10 +828,6 @@ final class CaptureController {
 struct CapturePhotoProgress: Equatable, Sendable {
   let completed: Int
   let total: Int
-}
-
-private struct WeakCaptureController {
-  weak var controller: CaptureController?
 }
 
 /// Work a controller ends when it goes away. Deinit cannot reach main-actor state, so each

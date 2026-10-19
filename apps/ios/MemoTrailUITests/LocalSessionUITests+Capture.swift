@@ -203,6 +203,10 @@ extension LocalSessionUITests {
     let indicator = app.buttons["workspace-pending-sync"]
     XCTAssertTrue(indicator.waitForExistence(timeout: 20))
     XCTAssertEqual(indicator.label, "Pending sync, 1 unreadable")
+    // The Dashboard lists it too, though nothing waits to sync, like Web's pending notice.
+    let notice = app.buttons["home-pending-entries"]
+    XCTAssertTrue(notice.waitForExistence(timeout: 5))
+    XCTAssertTrue(notice.label.contains("1 saved Entry could not be read"))
     indicator.tap()
     let list = element("capture-pending-list", in: app)
     XCTAssertTrue(list.waitForExistence(timeout: 5))
@@ -235,6 +239,7 @@ extension LocalSessionUITests {
     XCTAssertTrue(text("Saved Entry discarded.", in: app).waitForExistence(timeout: 10))
     XCTAssertTrue(list.waitForNonExistence(timeout: 5))
     XCTAssertTrue(indicator.waitForNonExistence(timeout: 5))
+    XCTAssertFalse(notice.exists)
 
     // It stays gone after a relaunch.
     app.terminate()

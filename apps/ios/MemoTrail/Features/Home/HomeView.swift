@@ -76,12 +76,15 @@ struct HomeView: View {
           isSaving: captureController.isSaving,
           hasLocalDraft: hasLocalDraft,
           error: captureController.captureError,
+          uploadProgress: captureController.photoUploadProgress,
           addPhoto: addCapturePhoto,
           removePhoto: removeCapturePhoto,
           save: saveCapture
         )
 
-        if !captureController.pendingEntries.isEmpty {
+        // Like Web, a capture on its first attempt is progress, while one that waits, was
+        // refused, or could not be read is listed for the person.
+        if captureController.hasWaitingCaptures {
           pendingCaptureSection
         }
 

@@ -107,6 +107,8 @@ struct RootTabView: View {
       .tag(RootTabDestination.more)
     }
     .environment(navigator)
+    // The workspace header counts this person's waiting captures from the same queue.
+    .environment(captureController)
     .fullScreenCover(isPresented: $navigator.isShowingQuickCapture) {
       QuickCaptureView(
         controller: captureController,
