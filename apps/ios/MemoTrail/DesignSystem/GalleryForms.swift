@@ -28,7 +28,6 @@
     @State private var reminders = false
     @State private var withDescription = false
     @State private var tags = ["family", "travel"]
-    @State private var collections = ["Early years"]
     @State private var occurrence = FormSpecimens.dayOccurrence
     @State private var showingEditor = false
     @State private var moveInReason = "Closer to work"
@@ -329,8 +328,7 @@
             GalleryCaseSeparator()
             Text("MTOrganizationBadges").font(MTFont.identifier)
               .foregroundStyle(MTColor.ink)
-            MTOrganizationBadges(
-              collectionNames: ["Early years"], tagNames: ["family", "travel", "milestone", "home"])
+            MTOrganizationBadges(tagNames: ["family", "travel", "milestone", "home"])
           }
         }
 
@@ -340,18 +338,13 @@
 
         GallerySpecimen(
           title: "OrganizationEditor",
-          api: "kind: collection | tag · names · options · disabled",
+          api: "kind: tag · names · options · disabled",
           description:
             "Add opens a picker that finds existing names or creates one above the keyboard. Tags also add on a comma, and Done keeps text still in the search field."
         ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s5) {
-            MTOrganizationEditor(
-              kind: .tag, names: $tags,
-              options: ["family", "travel", "milestone", "home"])
-            MTOrganizationEditor(
-              kind: .collection, names: $collections,
-              options: ["Early years", "Family archive", "Travel journals"])
-          }
+          MTOrganizationEditor(
+            kind: .tag, names: $tags,
+            options: ["family", "travel", "milestone", "home"])
         }
 
         GallerySpecimen(
@@ -430,7 +423,7 @@
     var body: some View {
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(spacing: MTSpacing.s2) {
-          ForEach(["All records", "Entries", "Entities", "Goals"], id: \.self) { title in
+          ForEach(["All records", "Entries", "Chapters", "First Times"], id: \.self) { title in
             MTFilterChip(title: title, isSelected: selectedKind == title) { selectedKind = title }
           }
         }
@@ -442,7 +435,6 @@
     @State private var title = "A moment worth keeping"
     @State private var note = NSAttributedString(string: "")
     @State private var occurrence = FormSpecimens.dayOccurrence
-    @State private var collections: [String] = []
     @State private var tags = ["personal"]
     @Environment(\.dismiss) private var dismiss
 
@@ -457,9 +449,6 @@
               MTRichTextEditor(text: $note, accessibilityIdentifier: "design-editor-note")
             }
             OccurrenceEditor(value: $occurrence, defaultTimezone: "America/Los_Angeles")
-            MTOrganizationEditor(
-              kind: .collection, names: $collections,
-              options: ["Early years", "Family archive"])
             MTOrganizationEditor(
               kind: .tag, names: $tags, options: ["personal", "family"])
             Text("A form specimen with no backend writes.")

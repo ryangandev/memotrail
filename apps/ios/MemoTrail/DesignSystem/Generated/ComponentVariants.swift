@@ -358,7 +358,6 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
   case emptyStateWithAction = "empty-state-with-action"
   case emptyStateInformational = "empty-state-informational"
   case emptyStateButton = "empty-state-button"
-  case focusedRecordHome = "focused-record-home"
   case iconButtonVariants = "icon-button-variants"
   case iconButtonSizes = "icon-button-sizes"
   case iconButtonStates = "icon-button-states"
@@ -427,7 +426,6 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .emptyStateWithAction: "EmptyState"
     case .emptyStateInformational: "EmptyState"
     case .emptyStateButton: "EmptyState"
-    case .focusedRecordHome: "FocusedRecord"
     case .iconButtonVariants: "IconButton"
     case .iconButtonSizes: "IconButton"
     case .iconButtonStates: "IconButton"
@@ -525,8 +523,6 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .emptyStateInformational:
       "A title and a description without an icon or action, for a section that fills in on its own."
     case .emptyStateButton: "The whole state as one button that starts the missing record."
-    case .focusedRecordHome:
-      "A record page with its photos, facts, Story, and tags, and Edit beside the title."
     case .iconButtonVariants:
       "Every variant at the default medium size, with add, edit, more, and remove icons."
     case .iconButtonSizes:

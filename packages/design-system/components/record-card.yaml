@@ -12,12 +12,9 @@ platforms:
         MTRecordCard,
         MTRecordCardVisual,
         MTRecordCardBody,
+        MTRecordCardFooter,
         MTCardButtonStyle,
-        MTCollectionCard,
       ]
-    files:
-      - path: apps/ios/MemoTrail/DesignSystem/Components/MTRecordArchive.swift
-        symbols: [MTEntityCard, MTRecordCardFooter]
 
 purpose: The clickable card that opens one record, with a media band on top and the record's dates, name, facts, and organization below.
 
@@ -94,8 +91,6 @@ accessibility:
 platformDifferences:
   - difference: Web lifts the card 2 px with the stronger border and raised shadow while the pointer is over it; iOS shows the same border and shadow while the card is pressed and scales it to 99 percent.
     reason: A touch has no hover, and a slight press-in, the state.pressed.cardScale token, is the native feedback that a card responds.
-  - difference: iOS still draws Collections, as MTCollectionCard and as Collection badges in the footer; Web has no Collections and its footer shows only tags.
-    reason: docs/product.md turned every Collection into a tag. The iOS app still reads the retired schema, and its Collection views go when it moves to the current one.
 
 specimens:
   - id: record-card-photo

@@ -32,50 +32,6 @@ final class NativeWorkspaceUITests: XCTestCase {
     attach(app, "Sign in card")
   }
 
-  func testMapFiltersAreasClustersAndRecords() {
-    let app = launch("--review-map")
-    XCTAssertTrue(app.staticTexts["5 Entry Locations"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.staticTexts["Choose a map point"].exists)
-    attach(app, "Map")
-
-    // Category and years filter as they change, like Web.
-    app.buttons["Category"].tap()
-    app.buttons["Goals"].tap()
-    XCTAssertTrue(app.staticTexts["1 Entry Location"].waitForExistence(timeout: 3))
-    let fromYear = app.textFields["map-from-year"]
-    fromYear.tap()
-    fromYear.typeText("2027")
-    XCTAssertTrue(app.staticTexts["0 Entry Locations"].waitForExistence(timeout: 3))
-    XCTAssertTrue(
-      app.staticTexts[
-        "No current Entries match these filters. Add a Location in an Entry to place it on this map."
-      ].exists)
-    attach(app, "Filtered empty map")
-    fromYear.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 4) + "\n")
-    XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 3))
-    app.buttons["Category"].tap()
-    app.buttons["All records"].tap()
-    XCTAssertTrue(app.staticTexts["5 Entry Locations"].waitForExistence(timeout: 3))
-
-    // An area zooms the map, and a cluster lists its Entries below it, newest first.
-    app.buttons["map-city-Austin"].tap()
-    // MapKit exposes marker views as buttons on some OS versions.
-    let marker = app.descendants(matching: .any)["map-location-cluster"].firstMatch
-    XCTAssertTrue(
-      marker.waitForExistence(timeout: 5),
-      "MapKit should cluster the two overlapping Austin records.")
-    marker.tap()
-    XCTAssertTrue(app.staticTexts["2 Entries here"].waitForExistence(timeout: 3))
-    XCTAssertTrue(app.staticTexts["A new beginning"].exists)
-    for fact in ["First Time", "Austin, Texas", "Jun 1, 2022"] {
-      XCTAssertTrue(app.staticTexts[fact].exists, fact)
-    }
-    attach(app, "Cluster records")
-    app.buttons["map-record-99000000-0000-4000-8000-000000000001"].tap()
-    XCTAssertTrue(
-      app.staticTexts["This is a synthetic preview record."].waitForExistence(timeout: 3))
-  }
-
   func testPrimaryTabsMoreRoutesAndBackNavigation() {
     let app = launch("--review-navigation")
     for title in ["Dashboard", "Inbox", "Timeline", "Library", "More"] {
@@ -116,8 +72,8 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.buttons["Accessibility text"].tap()
     reveal(app.buttons["design-section-containers"], in: app).tap()
     XCTAssertTrue(app.navigationBars["Containers & data"].waitForExistence(timeout: 3))
-    reveal(app.buttons["Maple Street flat, Since Jun 1, 2021"], in: app).tap()
-    XCTAssertTrue(app.staticTexts["Opened the Maple Street flat."].waitForExistence(timeout: 3))
+    reveal(app.buttons["First sourdough loaf, September 18, 2026"], in: app).tap()
+    XCTAssertTrue(app.staticTexts["Opened the first sourdough loaf."].waitForExistence(timeout: 3))
     let summary = reveal(app.staticTexts["A quiet afternoon by the coast"], in: app)
     attach(app, "Dark records at accessibility text size")
     XCTAssertTrue(summary.isHittable)
@@ -400,7 +356,7 @@ final class NativeWorkspaceUITests: XCTestCase {
     let sections = [
       "Badge": "forms", "Button": "primitives", "CaptureComposer": "containers",
       "Checkbox": "forms", "DateField": "forms", "Dialog": "primitives",
-      "EmptyState": "primitives", "FocusedRecord": "containers", "Icon": "identity",
+      "EmptyState": "primitives", "Icon": "identity",
       "IconButton": "primitives", "Image": "feedback", "PageFrame": "layout",
       "PageHeader": "primitives", "PhotoViewer": "feedback", "RecordCard": "containers",
       "RichText": "writing", "SearchField": "forms", "SectionHeader": "containers",

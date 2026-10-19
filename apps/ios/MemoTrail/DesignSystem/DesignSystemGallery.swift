@@ -29,7 +29,7 @@
       case .layout: "Page widths, gutters, and section rhythm."
       case .forms: "Text, search, select, and date fields, organization, photos, and labels."
       case .writing: "Rich text, a collapsible Aa toolbar, and saved note previews."
-      case .containers: "Record and Collection cards, rich writing, and compact record summaries."
+      case .containers: "Record cards, rich writing, and compact record summaries."
       case .feedback: "Toasts, upload progress, remote images, and inline states."
       }
     }

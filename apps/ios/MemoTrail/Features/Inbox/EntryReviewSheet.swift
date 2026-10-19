@@ -211,3 +211,19 @@ struct EntryReviewSheet: View {
     if moved { dismiss() }
   }
 }
+
+extension View {
+  /// Web's recoverable Move to Trash confirmation for one capture, anchored to its button.
+  func captureTrashConfirmation(
+    _ title: String, isPresented: Binding<Bool>, confirm: @escaping () -> Void
+  ) -> some View {
+    confirmationDialog(
+      "Move “\(title)” to Trash?", isPresented: isPresented, titleVisibility: .visible
+    ) {
+      Button("Move to Trash", role: .destructive, action: confirm)
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("You can restore it later from Trash.")
+    }
+  }
+}

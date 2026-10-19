@@ -3,24 +3,12 @@
 
   struct ContainerSpecimens: View {
     @State private var recordMessage = "Interactive state has not been activated."
-    @State private var collectionMessage = "No Collection opened yet."
     @State private var chinese = false
     @State private var hasLocation = true
     @State private var captureNote = NSAttributedString(string: "")
     @State private var captureOccurrence: OccurrenceDraft?
     @State private var capturePhotos: [FirstTimePhotoDraft] = []
     @State private var captureMessage = "Nothing captured yet."
-
-    private let collections: [(name: String, entries: Int, inbox: Int, updated: String?)] = [
-      ("Early years", 12, 0, "Latest Sep 18"),
-      ("Homes and neighborhoods", 7, 0, "Latest Aug 30"),
-      ("First times", 19, 2, "Latest Sep 22"),
-      (
-        "Notes from my travels across three continents and many small towns", 24, 0,
-        "Latest Sep 12"
-      ),
-      ("To revisit", 0, 0, nil),
-    ]
 
     var body: some View {
       VStack(alignment: .leading, spacing: MTSpacing.s4) {
@@ -31,22 +19,58 @@
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             GalleryCase(.recordCardPhoto) {
-              MTEntityCard(
-                title: "Maple Street flat", range: "Since Jun 1, 2021", duration: "5 years",
-                isCurrent: true, coverURL: GallerySamples.artworkURL, photoCount: 3,
-                markIcon: .home, markTitle: "Portland",
-                facts: [MTEntityCard.Fact(icon: .map, text: "Portland, Oregon, United States")],
-                tagNames: ["home", "family"]
-              ) { recordMessage = "Opened the Maple Street flat." }
+              MTRecordCard(accessibilityLabel: "First sourdough loaf, September 18, 2026") {
+                recordMessage = "Opened the first sourdough loaf."
+              } content: {
+                MTRecordCardVisual {
+                  MTRemoteImage(url: GallerySamples.artworkURL)
+                }
+                .overlay(alignment: .bottomTrailing) {
+                  MTBadge(title: "3 photos", tone: .inverse, size: .micro, uppercase: true)
+                    .padding(MTSpacing.s3)
+                }
+                MTRecordCardBody {
+                  Text("September 18, 2026".uppercased())
+                    .mtTextRole(.firstTimeDate)
+                    .foregroundStyle(MTColor.warm)
+                  Text("First sourdough loaf")
+                    .mtTextRole(.recordCardTitle)
+                    .foregroundStyle(MTColor.ink)
+                    .padding(.top, MTSpacing.s1)
+                  Label("Portland, Oregon", icon: .map)
+                    .labelStyle(MTInlineIconLabelStyle())
+                    .font(MTFont.supporting)
+                    .foregroundStyle(MTColor.inkMuted)
+                    .padding(.top, MTSpacing.s2)
+                  Text("The crust cracked as it cooled, and the kitchen smelled like a bakery.")
+                    .font(MTFont.supporting)
+                    .foregroundStyle(MTColor.inkMuted)
+                    .mtLineSpacing(MTLineHeight.body)
+                    .lineLimit(2)
+                    .padding(.top, MTSpacing.s2)
+                  MTRecordCardFooter(tagNames: ["baking", "home"])
+                }
+              }
             }
             GalleryCaseSeparator()
             GalleryCase(.recordCardMark) {
-              MTEntityCard(
-                title: "Red touring bike", range: "2012 - 2016", duration: "About 4 years",
-                isCurrent: false, markIcon: .car, markTitle: "2012 Trek 520 · Red",
-                facts: [MTEntityCard.Fact(icon: .car, text: "2012 Trek 520 · Red")],
-                tagNames: ["cycling"]
-              ) { recordMessage = "Opened the red touring bike." }
+              MTRecordCard(accessibilityLabel: "First solo trip, Summer 2016") {
+                recordMessage = "Opened the first solo trip."
+              } content: {
+                MTRecordCardVisual {
+                  MTRecordMark(icon: .timeline, title: "Summer 2016")
+                }
+                MTRecordCardBody {
+                  Text("Summer 2016".uppercased())
+                    .mtTextRole(.firstTimeDate)
+                    .foregroundStyle(MTColor.warm)
+                  Text("First solo trip")
+                    .mtTextRole(.recordCardTitle)
+                    .foregroundStyle(MTColor.ink)
+                    .padding(.top, MTSpacing.s1)
+                  MTRecordCardFooter(tagNames: ["travel"])
+                }
+              }
             }
             Text(recordMessage).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
               .accessibilityIdentifier("design-record-status")
@@ -58,15 +82,15 @@
           api:
             "MTLocationSnapshot · latitude · longitude · fallback; MTRecordMark · icon · title; glass badges",
           description:
-            "Home, Vehicle, and First Time cards prefer a photo, then a map of their Location, then a mark. Glass badges stay legible over each."
+            "First Time cards prefer a photo, then a map of their Location, then a mark. Glass badges stay legible over each."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTRecordCard(accessibilityLabel: "Open sample Home with a map") {
-              recordMessage = "Opened the Home with a map."
+            MTRecordCard(accessibilityLabel: "Open sample First Time with a map") {
+              recordMessage = "Opened the First Time with a map."
             } content: {
               MTRecordCardVisual {
                 MTLocationSnapshot(latitude: 45.5231, longitude: -122.6765) {
-                  MTRecordMark(icon: .home, title: "Portland")
+                  MTRecordMark(icon: .map, title: "Portland")
                 }
               }
               .overlay(alignment: .topLeading) {
@@ -74,14 +98,14 @@
                   .padding(MTSpacing.s2)
               }
               MTRecordCardBody {
-                Text("Maple Street flat").font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
+                Text("First swim in the ocean").font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
               }
             }
-            MTRecordCard(accessibilityLabel: "Open sample Home without a Location") {
-              recordMessage = "Opened the Home without a Location."
+            MTRecordCard(accessibilityLabel: "Open sample First Time without a Location") {
+              recordMessage = "Opened the First Time without a Location."
             } content: {
               MTRecordCardVisual(height: MTLayout.Gallery.sampleVisual) {
-                MTRecordMark(icon: .home, title: "A place in your trail")
+                MTRecordMark(icon: .timeline, title: "A moment in your trail")
               }
               .overlay(alignment: .topLeading) {
                 MTBadge(title: "Earlier", tone: .glassNeutral, size: .micro, uppercase: true)
@@ -92,60 +116,9 @@
                   .padding(MTSpacing.s3)
               }
               MTRecordCardBody {
-                Text("Harbor Road cottage").font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
+                Text("First day of school").font(MTFont.cardTitle).foregroundStyle(MTColor.ink)
               }
             }
-          }
-        }
-
-        GallerySpecimen(
-          title: "Entity card",
-          api:
-            "MTRecordSection · title · detail; MTEntityCard · range · duration · isCurrent · coverURL · latitude · longitude · facts",
-          description:
-            "The Home and Vehicle archive: a section heading, then cards with a photo, map, or mark, the dates, facts, a short memory, and organization."
-        ) {
-          MTRecordSection(
-            "Vehicle archive", detail: "Current first, followed by earlier vehicles"
-          ) {
-            MTEntityCard(
-              title: "Blue hatchback", range: "Since Sep 15, 2019", duration: "7 years",
-              isCurrent: true, latitude: 45.512, longitude: -122.625, markIcon: .car,
-              markTitle: "2015 Honda Fit · Blue",
-              facts: [
-                MTEntityCard.Fact(icon: .car, text: "2015 Honda Fit · Blue"),
-                MTEntityCard.Fact(icon: .map, text: "Hawthorne Boulevard, Portland, OR"),
-              ],
-              memory: "Road trips, groceries, and one flat tire.", tagNames: ["car"]
-            ) { recordMessage = "Opened the current Vehicle." }
-            MTEntityCard(
-              title: "Red touring bike", range: "2012 - 2016", duration: "About 4 years",
-              isCurrent: false, markIcon: .car, markTitle: "Details not recorded",
-              facts: [MTEntityCard.Fact(icon: .car, text: "Details not recorded")],
-              collectionNames: ["Early years"]
-            ) { recordMessage = "Opened the earlier Vehicle." }
-          }
-        }
-
-        GallerySpecimen(
-          title: "FocusedRecord",
-          api:
-            "MTFocusedRecordView · kind · title · photos · facts · story · tagNames · edit · extra; MTFocusedRecordPage scrolls it",
-          description:
-            "The focused Home, Vehicle, First Time, and Goal page: photos, labeled facts that skip empty values, then Story and Organize."
-        ) {
-          GalleryCase(.focusedRecordHome) {
-            MTFocusedRecordView(
-              kind: "Home", title: "Maple Street flat",
-              photos: GallerySamples.homePhotos,
-              facts: [
-                ("When", "Since Jun 1, 2021"), ("Location", "Portland, Oregon, United States"),
-                ("Address", "120 Maple Street"), ("Why you moved in", "Closer to work"),
-                ("Why you left", nil),
-              ],
-              story: "Sunny kitchen, a creaky staircase, and the maple that turned red each October.",
-              tagNames: ["home", "family"],
-              edit: { recordMessage = "Edit Home activated." })
           }
         }
 
@@ -156,7 +129,7 @@
             "A saved Location in an editor, alone or in the Location panel. Remove clears it; editing the address by hand clears the coordinates."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            MTLocationPanel(message: "This Vehicle keeps its own Location.") {
+            MTLocationPanel(message: "This Entry keeps its own Location.") {
               if hasLocation {
                 MTLocationPreview(
                   label: "120 Maple Street, Portland, Oregon, United States", latitude: 45.5231,
@@ -168,49 +141,6 @@
               }
             }
             MTLocationPreview(label: "Portland, Oregon", latitude: nil, longitude: nil)
-          }
-        }
-
-        GallerySpecimen(
-          title: "Collection card",
-          api: "name · entryCount · inboxCount · updatedLabel · action · manage",
-          description:
-            "Compare occupied, empty, Inbox, and long-title states. Management stays a separate action."
-        ) {
-          VStack(alignment: .leading, spacing: MTSpacing.s3) {
-            LazyVGrid(
-              columns: [
-                GridItem(.adaptive(minimum: MTLayout.Gallery.sampleGrid), spacing: MTSpacing.s3)
-              ],
-              spacing: MTSpacing.s3
-            ) {
-              ForEach(collections, id: \.name) { collection in
-                MTCollectionCard(
-                  name: collection.name, entryCount: collection.entries,
-                  inboxCount: collection.inbox, updatedLabel: collection.updated
-                ) {
-                  collectionMessage = "Opened \(collection.name)."
-                } manage: {
-                  Menu {
-                    Button("Rename", systemImage: MTIcon.edit.systemName) {
-                      collectionMessage = "Rename \(collection.name): preview only."
-                    }
-                    Button("Delete", systemImage: MTIcon.trash.systemName, role: .destructive) {
-                      collectionMessage = "Delete \(collection.name): preview only."
-                    }
-                  } label: {
-                    Image(.more).font(.mtIcon(MTSize.Icon.s15, weight: .medium))
-                      .foregroundStyle(MTColor.inkMuted)
-                      .frame(
-                        width: MTLayout.InlineAction.height, height: MTLayout.InlineAction.height
-                      )
-                      .contentShape(Rectangle())
-                  }
-                  .accessibilityLabel("Manage \(collection.name)")
-                }
-              }
-            }
-            Text(collectionMessage).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
           }
         }
 
@@ -310,7 +240,7 @@
         GallerySpecimen(
           title: "RecordSummary",
           api: "kind · title · subtitle · status",
-          description: "The compact record identity used in Map results."
+          description: "The compact record identity, where a full record card is too large."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
             Toggle("Preview Chinese & long content", isOn: $chinese)
@@ -325,8 +255,8 @@
             }
             MTCard {
               MTRecordSummary(
-                title: "The next chapter", subtitle: "No occurred date · On this iPhone",
-                kind: "Entry", status: "In Inbox")
+                title: "The next chapter", subtitle: "Undated entry · On this iPhone",
+                kind: "Chapter", status: "Not accepted")
             }
           }
         }
@@ -345,7 +275,7 @@
           title: "List",
           api: "MTSectionHeader · variant: .list · detail · detailAlign; MTListSurface",
           description:
-            "The uppercase list heading and bordered row surface shared by the Inbox and Library, with pressable whole-row links."
+            "The uppercase list heading and bordered row surface shared by Library and Trash, with pressable whole-row links."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s3) {
             MTSectionHeader("Results", variant: .list, detail: "2 items")
@@ -374,7 +304,7 @@
           api:
             "CaptureCard · note · occurrence · photos · style: page | dialog · isSaving · hasLocalDraft · error · save",
           description:
-            "The Home Dashboard composer and the Quick Capture body. Both share this gallery's draft, and nothing is saved."
+            "The Dashboard composer and the Quick Capture body. Both share this gallery's draft, and nothing is saved."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
             GalleryCase(.captureComposerPage) { captureCard(.page) }

@@ -323,7 +323,7 @@
     /// Data that is not an image, like the error body of an expired photo link.
     static let missingImageURL = URL(string: "data:image/png;base64,bm90IGFuIGltYWdl")
 
-    /// A Home's three saved photos, for its focused page and the photo viewer.
+    /// A record's three saved photos, for the photo viewer.
     @MainActor static let homePhotos = ["kitchen-window.jpg", "maple-in-october.jpg", "front-steps.jpg"]
       .map { MTPhotoField.SavedPhoto(id: UUID(), url: artworkURL, name: $0) }
   }
