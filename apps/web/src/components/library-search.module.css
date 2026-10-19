@@ -200,6 +200,11 @@
   .show label > span {
     padding: 0 var(--mt-space-2-5);
   }
+
+  /* A date field's control is wider than half a phone's column, so From and To stack. */
+  .dateFields {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
