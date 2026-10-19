@@ -222,6 +222,30 @@ $$;
 revoke all on function public.import_job_overlap(uuid) from public, anon;
 grant execute on function public.import_job_overlap(uuid) to authenticated;
 
+-- A few scanned items as they will be imported, for the preview. The parsed text is only readable
+-- through this function, so the preview can show it and nothing else can.
+create function public.import_job_sample(p_job_id uuid, p_limit integer, p_warnings_only boolean)
+returns table(source_key text, folder_path text[], payload jsonb, media jsonb)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select item.source_key, item.folder_path, item.payload, item.media
+  from public.import_jobs as job
+  join public.import_items as item on item.job_id = job.id
+  where job.id = p_job_id and job.owner_id = auth.uid()
+    and item.status = 'pending' and item.selected and item.payload is not null
+    and (
+      not coalesce(p_warnings_only, false)
+      or jsonb_array_length(coalesce(item.payload->'warnings', '[]'::jsonb)) > 0
+    )
+  order by md5(item.source_key)
+  limit least(greatest(coalesce(p_limit, 20), 1), 50);
+$$;
+revoke all on function public.import_job_sample(uuid, integer, boolean) from public, anon;
+grant execute on function public.import_job_sample(uuid, integer, boolean) to authenticated;
+
 -- Starts the import. Folders the person unchecked are removed here, and never imported or kept.
 create function public.confirm_import_job(p_job_id uuid, p_options jsonb, p_excluded_folders jsonb)
 returns bigint
@@ -333,6 +357,7 @@ returns table(
   source_key text,
   folder_path text[],
   item_status text,
+  item_content_hash text,
   payload jsonb,
   media jsonb,
   item_entry_id uuid
@@ -374,10 +399,11 @@ begin
     set attempts = item.attempts + 1
     from picked
     where item.id = picked.id
-    returning item.id, item.source_key, item.folder_path, item.status, item.payload, item.media, item.entry_id
+    returning item.id, item.source_key, item.folder_path, item.status, item.content_hash,
+      item.payload, item.media, item.entry_id
   )
-  select counted.id, counted.source_key, counted.folder_path, counted.status, counted.payload,
-    counted.media, counted.entry_id
+  select counted.id, counted.source_key, counted.folder_path, counted.status, counted.content_hash,
+    counted.payload, counted.media, counted.entry_id
   from counted
   order by counted.id;
 end;
