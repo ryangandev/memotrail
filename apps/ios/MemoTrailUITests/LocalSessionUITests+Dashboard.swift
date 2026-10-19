@@ -35,7 +35,8 @@ extension LocalSessionUITests {
     // Recent Entries name an untitled Entry by its date, without repeating the date beside it.
     let recent = reveal(element("dashboard-recent", in: app), in: app)
     XCTAssertTrue(recent.waitForExistence(timeout: 10))
-    let rows = recent.buttons
+    // The section's "View all" link is a button too.
+    let rows = recent.buttons.matching(NSPredicate(format: "label != %@", "View all"))
     XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 5))
     XCTAssertLessThanOrEqual(rows.count, 5)
     // Other tests in a run can save newer Entries, so this row is checked when it is listed.
@@ -46,6 +47,17 @@ extension LocalSessionUITests {
       XCTAssertTrue(untitled.label.contains("Undated entry"), untitled.label)
     }
     attach(app, "Dashboard recent entries")
+
+    // The same screens in dark mode.
+    XCUIDevice.shared.appearance = .dark
+    defer { XCUIDevice.shared.appearance = .light }
+    attach(app, "Dashboard recent entries in dark mode")
+    reveal(element("dashboard-now", in: app), in: app)
+    attach(app, "Dashboard Now in dark mode")
+    app.swipeDown(velocity: .fast)
+    app.swipeDown(velocity: .fast)
+    app.swipeDown(velocity: .fast)
+    attach(app, "Dashboard top in dark mode")
 
     // A row opens the Entry's page.
     rows.firstMatch.tap()
