@@ -11,20 +11,10 @@ create function pg_temp.create_record(p_kind text)
 returns uuid language plpgsql as $$
 declare created uuid;
 begin
-  case p_kind
-    when 'home' then
-      select entry_id into created from public.save_home_entry_with_occurrence(
-        'Revision home', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC', '', '', '{}', null, null);
-    when 'vehicle' then
-      select entry_id into created from public.save_vehicle_entry_with_occurrence(
-        'Revision vehicle', 'Original writing', '2021-04-12T12:00:00Z', null, 'day', null, 'UTC',
-        'Honda', 'Civic', 2018, 'Blue', '{}', null, null);
-    when 'milestone' then
-      select entry_id into created from public.save_entry(
-        gen_random_uuid(), null, 'Revision milestone', 'Original writing', null,
-        '2021-04-12T12:00:00Z', null, 'UTC', null, 'day', '{}', null, null,
-        '{"shape":"moment","lane":"other","isFirstTime":true}');
-  end case;
+  select entry_id into created from public.save_entry(
+    gen_random_uuid(), null, 'Revision ' || p_kind, 'Original writing', null,
+    '2021-04-12T12:00:00Z', null, 'UTC', null, 'day', '{}', null, null,
+    p_kind = 'chapter', p_kind = 'first_time');
   return created;
 end;
 $$;
@@ -34,17 +24,10 @@ create function pg_temp.write(p_kind text, p_entry_id uuid, p_revision integer)
 returns integer language plpgsql as $$
 declare written integer;
 begin
-  case p_kind
-    when 'home' then
-      select revision into written from public.trash_home_entry(p_entry_id, p_revision);
-    when 'vehicle' then
-      select revision into written from public.trash_vehicle_entry(p_entry_id, p_revision);
-    when 'milestone' then
-      -- The Item page moves an Entry to Trash with a revision-checked update.
-      update public.entries set deleted_at = now()
-      where id = p_entry_id and revision = p_revision and deleted_at is null
-      returning revision into written;
-  end case;
+  -- The Item page moves an Entry to Trash with a revision-checked update.
+  update public.entries set deleted_at = now()
+  where id = p_entry_id and revision = p_revision and deleted_at is null
+  returning revision into written;
   return written;
 end;
 $$;
@@ -73,7 +56,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
 insert into fixtures(kind, outcome, id)
 select kind, outcome, pg_temp.create_record(kind)
-from unnest(array['home', 'vehicle', 'milestone']) as kind,
+from unnest(array['entry', 'chapter', 'first_time']) as kind,
   unnest(array['adopt', 'conflict']) as outcome;
 select is((select count(*) from fixtures where id is not null), 6::bigint, 'Every lifecycle writer has two fresh records');
 
@@ -117,17 +100,5 @@ select ok(pg_temp.written(kind, id), kind || ': The write from the current revis
 from fixtures where outcome = 'conflict' order by kind;
 reset role;
 
-select is(prosecdef, false, kind || ': Security mode is unchanged')
-from (values
-  ('home', 'public.trash_home_entry(uuid,integer)'::regprocedure),
-  ('vehicle', 'public.trash_vehicle_entry(uuid,integer)'::regprocedure)
-) as writers(kind, writer) join pg_proc on pg_proc.oid = writers.writer order by kind;
-select ok(not has_function_privilege('anon', writer, 'execute')
-    and has_function_privilege('authenticated', writer, 'execute'),
-  writer || ': Grants are unchanged')
-from unnest(array[
-  'public.trash_home_entry(uuid,integer)',
-  'public.trash_vehicle_entry(uuid,integer)'
-]) as writer order by writer;
 select * from finish();
 rollback;

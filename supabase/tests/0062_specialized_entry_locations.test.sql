@@ -27,7 +27,17 @@ language sql
 as $$
   select * from public.save_entry(
     p_id, p_revision, p_title, p_body, null, null, null, 'UTC', null, 'unknown', '{}',
-    p_location, null, '{"shape":"moment","lane":"other","isFirstTime":true}'
+    p_location, null, false, true
+  );
+$$;
+
+create function pg_temp.save_chapter(p_id uuid, p_revision integer, p_title text, p_body text, p_location jsonb)
+returns table(entry_id uuid, revision integer)
+language sql
+as $$
+  select * from public.save_entry(
+    p_id, p_revision, p_title, p_body, null, null, null, 'UTC', null, 'unknown', '{}',
+    p_location, null, true, false
   );
 $$;
 
@@ -44,15 +54,12 @@ select is(
 );
 
 select is(
-  (select count(*) from public.save_vehicle_with_location(
-    jsonb_build_object(
-      'title','Blue Civic','body','A memory','datePrecision','unknown',
-      'tagNames',jsonb_build_array()
-    ),
+  (select count(*) from pg_temp.save_chapter(
+    '99620000-0000-4000-8000-000000000003', null, 'Blue Civic', 'A memory',
     pg_temp.provider('specialized-pine-10','10 Pine Street, Philadelphia')
   )),
   1::bigint,
-  'A Vehicle independently saves the same provider result'
+  'A Chapter independently saves the same provider result'
 );
 
 select is(
@@ -96,7 +103,7 @@ select is(
     where entry.title='Blue Civic' and link.relationship='primary'
   ),
   'specialized-pine-10',
-  'The Vehicle retains its independent original snapshot'
+  'The Chapter retains its independent original snapshot'
 );
 
 set constraints all immediate;
@@ -109,17 +116,13 @@ select is(
 );
 
 select is(
-  (select count(*) from public.save_vehicle_with_location(
-    jsonb_build_object(
-      'title','Blue Civic','body','A later memory','datePrecision','unknown',
-      'tagNames',jsonb_build_array(),
-      'id',(select id from public.entries where title='Blue Civic'),
-      'revision',(select revision from public.entries where title='Blue Civic')
-    ),
-    null
+  (select count(*) from pg_temp.save_chapter(
+    (select id from public.entries where title='Blue Civic'),
+    (select revision from public.entries where title='Blue Civic'),
+    'Blue Civic', 'A later memory', null
   )),
   1::bigint,
-  'Removing a Vehicle Location saves atomically with its record'
+  'Removing a Chapter Location saves atomically with its record'
 );
 
 select is(
@@ -127,7 +130,7 @@ select is(
    join public.entries as entry on entry.id=link.entry_id
    where entry.title='Blue Civic' and link.relationship='primary'),
   0::bigint,
-  'Removing the active association clears the Vehicle primary link'
+  'Removing the active association clears the Chapter primary link'
 );
 
 set constraints all immediate;
@@ -136,7 +139,7 @@ select is(
   (select count(*) from public.locations
    where bound_entry_id=(select id from public.entries where title='Blue Civic')),
   0::bigint,
-  'The removed Vehicle snapshot is dropped'
+  'The removed Chapter snapshot is dropped'
 );
 
 select throws_ok(

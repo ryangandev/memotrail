@@ -25,7 +25,8 @@ from public.save_entry(
   array['Milestone','College'],
   null,
   null,
-  '{"shape":"moment","lane":"work_study","isFirstTime":false}'
+  true,
+  false
 );
 
 select is(

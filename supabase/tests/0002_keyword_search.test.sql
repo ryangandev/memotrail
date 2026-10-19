@@ -93,11 +93,11 @@ values
     '10000000-0000-0000-0000-000000000001',
     'My first car',
     'A practical daily driver.',
-    'entity',
-    'vehicle',
+    'entry',
+    'chapter',
     '2020-03-12T12:00:00Z',
     'America/New_York',
-    '{}'::jsonb,
+    '{"garage":"Tesla Model 3"}'::jsonb,
     null
   ),
   (
@@ -152,25 +152,9 @@ values
   )
 on conflict do nothing;
 
-insert into public.vehicles (entry_id, owner_id, make, model, model_year, color)
-values (
-  '50000000-0000-0000-0000-000000000003',
-  '10000000-0000-0000-0000-000000000001',
-  'Tesla',
-  'Model 3',
-  2020,
-  'Blue'
-)
-on conflict (entry_id) do nothing;
-
-insert into public.milestones (entry_id, owner_id, shape, lane, is_first_time)
-values (
-  '50000000-0000-0000-0000-000000000001',
-  '10000000-0000-0000-0000-000000000001',
-  'moment',
-  'other',
-  true
-);
+update public.entries
+set is_first_time = true
+where id = '50000000-0000-0000-0000-000000000001';
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '10000000-0000-0000-0000-000000000001', true);
