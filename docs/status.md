@@ -38,6 +38,8 @@ Open native gaps:
 - Command-Return saves a capture in a unit test, but it has not been tried on a hardware keyboard, because XCUITest does not deliver it on the Simulator.
 - The header's sync status draws the earlier Web look; it follows the Quiet ledger tokens once both branches merge.
 - The Today label can overlap a year label near the end of a year, as it does on Web.
+- The Timeline canvas draws its year labels at a fixed size, so they stay small at accessibility text sizes, and a point's label is clipped at the canvas edge when the point is scrolled out of view.
+- At accessibility text sizes the system shrinks a long search prompt, such as Library's, to fit its field.
 - Export shows "Downloading to disk…" instead of Web's received megabytes, and writes a plain space before AM or PM.
 - Web `getTagEntryPreviews` in `lib/data/search.ts` still rejects tag names over 60 characters, while saving allows 80, which iOS uses.
 
