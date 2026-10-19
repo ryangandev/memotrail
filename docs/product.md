@@ -104,7 +104,7 @@ Capture happens in two modes, and both must feel effortless: a mood or sudden re
   Its placeholder asks "What’s on your mind?", and below it sit a Today chip for the date, a Voice chip, a Photos chip, and Save with its Command Return shortcut beside it.
   The formatting toolbar appears when the person engages the editor or has written something.
   On a phone the Voice chip shows only its icon.
-- Away from the Dashboard, the Web New Entry composer expands from a floating input-style control at the bottom center of the workspace; its writing field grows with its content and does not expose native resize controls.
+- Away from the Dashboard, the Web dock's New Entry control opens Quick Capture, a dialog anchored to the bottom of the workspace; its writing field grows with its content and does not expose native resize controls.
   The Dashboard already holds a composer, so there the dock keeps Search alone and Command J opens the same Quick Capture dialog.
 - Entry writing offers lightweight rich text for emphasis, links, lists, quotes, inline code, and code blocks without turning capture into a document editor.
   Formatting survives later edits in the rich Entry editor and appears on full note surfaces.
@@ -187,7 +187,8 @@ Importing from Apple Journal, Apple Notes, and Notion gives a new user a past to
 - Opening an Entry shows its Entry page with its current content and primary actions.
   An Entry page shows its photos below its writing as soon as it opens; selecting one opens a preview that pages through them with Previous, Next, and the arrow keys.
   Photos are added and removed in the Entry editor, not on the Entry page.
-  A pencil-and-Edit action changes the fields on that page into an inline form; Add remains a modal creation flow.
+  Edit opens the Entry editor in a dialog over the page, the same editor that adds a new Entry.
+  Below the photos, each Chapter the Entry falls inside gets an In Chapter row, innermost first, with the Chapter's name, its span, and a link to its page.
 - A Chapter's Entry page also lists the Entries and overlapping Chapters described in [Chapters](#chapters), and its review when one exists.
 - Entry pages support moving the Entry to Trash, where it remains restorable.
 
@@ -332,11 +333,13 @@ The pending sync count appears beside the profile when captures are waiting on t
 A customizable Command Palette opens from the global search control or Command K, debounces live owner-scoped Entry results in place, supports keyboard navigation, and opens Library for full search with filters.
 It also starts a New Entry and goes to every destination, including Reviews, Import, and Export.
 Toasts appear above the dock and the mobile tab bar, never over them.
-On Web, the glass-effect bottom dock places the New Entry control labeled `What’s on your mind?` with a sparkle icon on the left and global Search on the right.
-The controls keep text and shortcut hints readable over page content, and hovering highlights the border with a subtle accent glow that fades back when the pointer leaves without changing the background color.
+On Web, the glass bottom dock holds the New Entry control, a sparkle beside `What’s on your mind?` and its Command J hint, and then Search everything with its Command K hint.
+On the Dashboard, whose page already holds the composer, the dock holds Search alone.
+On a phone the dock rests one gap above the tab bar, Search shrinks to a round icon button, the shortcut hints hide, and on the Dashboard Search sits alone at the trailing edge.
+The controls keep text and shortcut hints readable over page content.
 New Entry also opens with Command J (Control J on Windows) when focus is outside a text input or editor.
-It expands into a bottom-anchored composer with the editor below the prompt, keeping rich text, photos, dates, local drafts, and Save.
-The expanded composer uses one consistent frosted surface across its header, writing area, and action row.
+It opens Quick Capture, a bottom-anchored dialog headed `What’s on your mind?` with the composer below, keeping rich text, photos, dates, local drafts, and Save.
+The dialog uses one frosted surface across its header, writing area, and action row.
 Web Capture saves to Library with Command Return (Control Enter on Windows), using the same validation and offline behavior as the Save button.
 Hovering or focusing Save displays a tooltip with the Command Return shortcut.
 Enter starts a new paragraph, and Shift+Enter inserts a line break; input method composition and nested editing controls do not trigger the save shortcut.
