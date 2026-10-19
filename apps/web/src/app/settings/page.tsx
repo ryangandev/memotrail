@@ -12,11 +12,13 @@ import { TimezoneSetting } from "@/components/timezone-setting";
 import { PageFrame } from "@/components/page-frame";
 import { SectionHeader } from "@/components/section-header";
 import { PreferredNameSetting } from "@/components/preferred-name-setting";
+import { SemanticSearchSetting } from "@/components/semantic-search-setting";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   storedBirthDate,
   storedProfileTimezone,
 } from "@/lib/data/profile-input";
+import { storedSemanticSearchPreference } from "@/lib/search/semantic-preference";
 import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
@@ -60,6 +62,9 @@ export default async function SettingsPage() {
     .single();
   const birthDate = storedBirthDate(profile.error ? null : profile.data);
   const profileTimezone = storedProfileTimezone(
+    profile.error ? null : profile.data,
+  );
+  const semanticSearch = storedSemanticSearchPreference(
     profile.error ? null : profile.data,
   );
   const cookieStore = await cookies();
@@ -131,6 +136,10 @@ export default async function SettingsPage() {
 
         {profileTimezone.available ? (
           <TimezoneSetting initialTimezone={profileTimezone.timezone} />
+        ) : null}
+
+        {semanticSearch.available ? (
+          <SemanticSearchSetting initialEnabled={semanticSearch.enabled} />
         ) : null}
 
         <div className={pageStyles.preferenceList}>

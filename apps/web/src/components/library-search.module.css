@@ -78,6 +78,12 @@
   font-size: var(--mt-font-size-caption);
 }
 
+.statusNotice {
+  margin-top: var(--mt-space-3);
+  color: var(--mt-color-ink-faint);
+  font-size: var(--mt-font-size-caption);
+}
+
 .message {
   display: flex;
   min-height: 164px;
@@ -221,6 +227,25 @@
   min-width: 0;
   color: var(--mt-color-accent);
   font-size: var(--mt-font-size-caption);
+}
+
+.matchPassage {
+  display: grid;
+  gap: var(--mt-space-1);
+  margin-top: var(--mt-space-3);
+  padding-left: var(--mt-space-3);
+  border-left: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
+}
+
+.matchPassage p {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-caption);
+  line-height: var(--mt-line-height-body);
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
 }
 
 .pagination {
