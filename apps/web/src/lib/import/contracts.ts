@@ -24,6 +24,7 @@ export type ImportAction =
       jobId: string;
       warningsOnly: boolean;
       timezone: string | null;
+      notionDateProperty: string | null;
     }
   | {
       action: "confirm";
@@ -140,6 +141,11 @@ export function parseImportAction(value: unknown): ImportAction | null {
               validTimezone(input.timezone)
                 ? input.timezone
                 : null,
+            notionDateProperty:
+              typeof input.notionDateProperty === "string" &&
+              input.notionDateProperty.length <= 100
+                ? input.notionDateProperty
+                : null,
             warningsOnly: input.warningsOnly === true,
           }
         : null;
@@ -212,6 +218,8 @@ export function importErrorMessage(code: string | null | undefined): string {
       return "This export has more photos than one import can hold. Export fewer notes at a time.";
     case "empty_import":
       return "No notes MemoTrail can import were found in this ZIP. Check that you chose the right app.";
+    case "unsupported_source":
+      return "This kind of export cannot be imported yet.";
     case "storage_unavailable":
       return "The uploaded file could not be found. Choose the file and upload it again.";
     case "storage_full":

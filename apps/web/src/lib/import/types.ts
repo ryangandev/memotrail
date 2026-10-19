@@ -68,6 +68,8 @@ export type ImportCandidate = {
   fileModifiedAt: string | null;
   /** Stable codes such as date_unparsed, shown in the preview. */
   warnings: string[];
+  /** Notion database properties that read as dates, by name, for the date property choice. */
+  dateProperties?: Record<string, string>;
 };
 
 export const importWarnings = {

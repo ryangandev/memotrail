@@ -8,7 +8,8 @@ import {
   type ImportProgress,
   type ImportSample,
 } from "./contracts";
-import { resolveImportDate } from "./dates";
+import { dateWithProperty, resolveImportDate } from "./dates";
+import { availableSources } from "./adapters";
 import { archivePhotoReader, supabaseGateway } from "./gateway";
 import { importLimits, importMaxZipBytes } from "./limits";
 import { runImport } from "./run";
@@ -137,6 +138,12 @@ export async function createJob(
   client: SupabaseClient,
   input: Extract<ImportAction, { action: "create" }>,
 ) {
+  if (!availableSources().includes(input.source))
+    throw new ImportApiError(
+      "unsupported_source",
+      400,
+      "This kind of export cannot be imported yet.",
+    );
   const maxBytes = importMaxZipBytes();
   if (input.fileBytes > maxBytes) throw new ImportApiError("too_large", 413);
   const { data, error } = await client.rpc("create_import_job", {
@@ -212,13 +219,17 @@ function sampleOf(
     media: { photos?: unknown[] } | null;
   },
   timezone: string,
+  dateProperty: string | null,
 ): ImportSample {
   const payload = row.payload;
-  const resolved = resolveImportDate(payload.date, {
-    fileModifiedAt: null,
-    timezone,
-    undated: "leave",
-  });
+  const resolved = resolveImportDate(
+    dateWithProperty(payload.date, payload.dateProperties, dateProperty),
+    {
+      fileModifiedAt: null,
+      timezone,
+      undated: "leave",
+    },
+  );
   const text = plainTextFromDocument(payload.bodyRich);
   return {
     dateLabel: occurrenceLabel({
@@ -276,7 +287,11 @@ export async function previewJob(
       },
     },
     sample: (sample.data as Parameters<typeof sampleOf>[0][]).map((entry) =>
-      sampleOf(entry, timezone),
+      sampleOf(
+        entry,
+        timezone,
+        input.notionDateProperty ?? job.totals.notionDateProperty ?? null,
+      ),
     ),
   };
 }

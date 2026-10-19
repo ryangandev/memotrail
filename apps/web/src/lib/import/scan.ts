@@ -1,5 +1,9 @@
 import { adapterFor, detectSource, type ScanItem } from "./adapters";
-import { resolveImportDate } from "./dates";
+import {
+  dateWithProperty,
+  parseDatePropertyText,
+  resolveImportDate,
+} from "./dates";
 import { importLimits } from "./limits";
 import {
   importWarnings,
@@ -50,7 +54,24 @@ export function toScanRow(item: ScanItem): ScanRow {
   };
 }
 
+/** How many items a Notion property would date, so the best one can be offered first. */
+type PropertyStats = {
+  dated: number;
+  undatedCovered: number;
+  from: string | null;
+  to: string | null;
+};
+
+const preferredDateProperties = [
+  "date",
+  "created",
+  "created time",
+  "created at",
+  "day",
+];
+
 class Totals {
+  properties = new Map<string, PropertyStats>();
   entries = 0;
   photos = 0;
   photoBytes = 0;
@@ -81,7 +102,11 @@ class Totals {
       const day = resolved.occurredStart.slice(0, 10);
       if (!this.from || day < this.from) this.from = day;
       if (!this.to || day > this.to) this.to = day;
-    } else this.undated += 1;
+    } else {
+      this.undated += 1;
+      this.addProperties(candidate, true);
+    }
+    if (resolved.occurredStart) this.addProperties(candidate, false);
     if (candidate.warnings.includes(importWarnings.dateUnparsed))
       this.unparsedDates += 1;
     for (const warning of candidate.warnings)
@@ -111,14 +136,62 @@ class Totals {
     }
   }
 
+  private addProperties(candidate: ImportCandidate, undated: boolean) {
+    for (const [name, text] of Object.entries(candidate.dateProperties ?? {})) {
+      const resolved = resolveImportDate(
+        dateWithProperty({ precision: "unknown" }, { [name]: text }, name),
+        { fileModifiedAt: null, timezone: this.timezone, undated: "leave" },
+      );
+      if (!resolved.occurredStart || !parseDatePropertyText(text)) continue;
+      const stats = this.properties.get(name) ?? {
+        dated: 0,
+        from: null,
+        to: null,
+        undatedCovered: 0,
+      };
+      const day = resolved.occurredStart.slice(0, 10);
+      if (undated) {
+        stats.dated += 1;
+        stats.undatedCovered += 1;
+      }
+      if (!stats.from || day < stats.from) stats.from = day;
+      if (!stats.to || day > stats.to) stats.to = day;
+      this.properties.set(name, stats);
+    }
+  }
+
+  /** The date property that dates the most items, with a plain name as the tie breaker. */
+  private bestProperty(): string | null {
+    let best: string | null = null;
+    let bestScore = 0;
+    for (const [name, stats] of this.properties) {
+      const score =
+        stats.dated * 2 +
+        (preferredDateProperties.includes(name.trim().toLowerCase()) ? 1 : 0);
+      if (stats.dated > 0 && score > bestScore) {
+        best = name;
+        bestScore = score;
+      }
+    }
+    return best;
+  }
+
   addSkipped(reason: string) {
     this.skippedItems.set(reason, (this.skippedItems.get(reason) ?? 0) + 1);
   }
 
   toJson(detected: ImportScanTotals["detected"]): ImportScanTotals {
     const record = (map: Map<string, number>) => Object.fromEntries(map);
+    const property = this.bestProperty();
+    const stats = property ? this.properties.get(property) : undefined;
+    const from =
+      stats?.from && (!this.from || stats.from < this.from)
+        ? stats.from
+        : this.from;
+    const to =
+      stats?.to && (!this.to || stats.to > this.to) ? stats.to : this.to;
     return {
-      dateRange: this.from && this.to ? { from: this.from, to: this.to } : null,
+      dateRange: from && to ? { from, to } : null,
       detected,
       distinctParentFolders: this.parents.size,
       duplicateKeys: this.duplicateKeys,
@@ -127,8 +200,8 @@ class Totals {
         a.path.join("/").localeCompare(b.path.join("/")),
       ),
       foldersTruncated: this.foldersTruncated,
-      notionDateProperties: [],
-      notionDateProperty: null,
+      notionDateProperties: [...this.properties.keys()],
+      notionDateProperty: property,
       photoBytes: this.photoBytes,
       photos: this.photos,
       skippedItems: record(this.skippedItems),
@@ -136,7 +209,7 @@ class Totals {
         count,
         kind,
       })),
-      undated: this.undated,
+      undated: Math.max(0, this.undated - (stats?.undatedCovered ?? 0)),
       unparsedDates: this.unparsedDates,
       warnings: record(this.warnings),
     };

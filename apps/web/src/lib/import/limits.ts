@@ -35,6 +35,8 @@ export const importLimits = {
   maxPhotosPerEntry: entryPhotoLimit,
   maxTextFileBytes: 5 * mebibyte,
   maxCsvBytes: 20 * mebibyte,
+  /** A Day One journal is one JSON file holding every entry. */
+  maxJournalJsonBytes: 256 * mebibyte,
   maxZipMembers: 200_000,
   maxUncompressedBytes: 25 * gibibyte,
   /** A member this much larger than its compressed size, past the size below, is refused. */

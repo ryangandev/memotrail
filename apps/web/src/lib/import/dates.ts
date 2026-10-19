@@ -238,6 +238,20 @@ export function parseDatePropertyText(input: string): ImportDate | null {
   return parts.length === 1 ? parseDateText(parts[0]) : null;
 }
 
+/**
+ * The date an item gets once the person has chosen which Notion property carries it. A page
+ * without that property keeps the date it had.
+ */
+export function dateWithProperty(
+  date: ImportDate,
+  properties: Record<string, string> | undefined,
+  property: string | null | undefined,
+): ImportDate {
+  if (!property || !properties) return date;
+  const text = properties[property];
+  return (text ? parseDatePropertyText(text) : null) ?? date;
+}
+
 function calendarDayOf(date: ImportDate): string | null {
   if ("instant" in date) return date.instant.slice(0, 10);
   if (date.precision === "unknown" || date.precision === "range") return null;

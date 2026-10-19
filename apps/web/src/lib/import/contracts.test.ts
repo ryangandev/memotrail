@@ -39,6 +39,7 @@ describe("parseImportAction", () => {
     expect(parseImportAction({ action: "preview", jobId })).toEqual({
       action: "preview",
       jobId,
+      notionDateProperty: null,
       timezone: null,
       warningsOnly: false,
     });

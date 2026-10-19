@@ -14,7 +14,8 @@ export type ImportErrorCode =
   | "too_large"
   | "empty_import"
   | "too_many_entries"
-  | "too_many_photos";
+  | "too_many_photos"
+  | "unsupported_source";
 
 export class ImportError extends Error {
   constructor(

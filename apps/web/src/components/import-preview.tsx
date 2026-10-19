@@ -51,11 +51,18 @@ export function ImportPreview({
   const [error, setError] = useState("");
   const [allowMismatch, setAllowMismatch] = useState(false);
   const timezone = options?.timezone ?? null;
+  const notionDateProperty = options?.notionDateProperty ?? null;
 
   useEffect(() => {
     const controller = new AbortController();
     importRequest<PreviewResponse>(
-      { action: "preview", jobId: job.id, timezone, warningsOnly },
+      {
+        action: "preview",
+        jobId: job.id,
+        notionDateProperty,
+        timezone,
+        warningsOnly,
+      },
       controller.signal,
     ).then(
       (response) => {
@@ -73,7 +80,7 @@ export function ImportPreview({
       },
     );
     return () => controller.abort();
-  }, [job.id, timezone, warningsOnly]);
+  }, [job.id, notionDateProperty, timezone, warningsOnly]);
 
   const totals = data?.job.totals ?? job.totals;
   const folders = useMemo(() => totals.folders ?? [], [totals.folders]);

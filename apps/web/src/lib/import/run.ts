@@ -5,7 +5,7 @@ import {
   trimEntryNote,
 } from "@/lib/data/rich-text";
 import { createEntryObjectPath } from "@/lib/data/entry-photo-input";
-import { resolveImportDate } from "./dates";
+import { dateWithProperty, resolveImportDate } from "./dates";
 import { importAttachmentId, importEntryId } from "./identity";
 import { importLimits } from "./limits";
 import type { ImportPayload } from "./scan";
@@ -147,11 +147,18 @@ export function buildEntryArgs(
   payload: ImportPayload,
   input: Pick<RunInput, "ownerId" | "source" | "options">,
 ): ImportEntryArgs {
-  const date = resolveImportDate(payload.date, {
-    fileModifiedAt: payload.fileModifiedAt,
-    timezone: input.options.timezone,
-    undated: input.options.undated,
-  });
+  const date = resolveImportDate(
+    dateWithProperty(
+      payload.date,
+      payload.dateProperties,
+      input.options.notionDateProperty,
+    ),
+    {
+      fileModifiedAt: payload.fileModifiedAt,
+      timezone: input.options.timezone,
+      undated: input.options.undated,
+    },
+  );
   const rich = createEntryRichText(payload.bodyRich);
   const text = rich?.text ?? plainTextFromDocument(payload.bodyRich);
   const trimmed = trimEntryNote(text, rich);

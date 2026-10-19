@@ -53,6 +53,7 @@ export type EntryDraft = {
   warnings?: string[];
   /** Plain lines added after the writing, such as "State of Mind: Slightly Pleasant". */
   trailingLines?: string[];
+  dateProperties?: Record<string, string>;
 };
 
 function shorten(title: string): { title: string; cut: boolean } {
@@ -118,6 +119,9 @@ export function finalizeDraft(draft: EntryDraft): ScanItem[] {
     }
     const candidate: ImportCandidate = {
       bodyRich: part.document,
+      ...(draft.dateProperties && Object.keys(draft.dateProperties).length > 0
+        ? { dateProperties: draft.dateProperties }
+        : {}),
       date,
       fileModifiedAt: draft.fileModifiedAt ?? null,
       folderPath: draft.folderPath,

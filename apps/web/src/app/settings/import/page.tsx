@@ -3,12 +3,9 @@ import { getAuthenticatedContext } from "@/lib/data/inbox";
 import { latestJobView, progressOf } from "@/lib/import/jobs";
 import { importMaxZipBytes } from "@/lib/import/limits";
 import type { ImportJobView, ImportProgress } from "@/lib/import/contracts";
-import type { ImportSource } from "@/lib/import/types";
+import { availableSources } from "@/lib/import/adapters";
 
 export const dynamic = "force-dynamic";
-
-// The sources whose adapters are installed. A source is offered only when it can be read.
-const availableSources: ImportSource[] = ["markdown", "apple_notes"];
 
 export default async function ImportPage() {
   const context = await getAuthenticatedContext();
@@ -24,7 +21,7 @@ export default async function ImportPage() {
   }
   return (
     <ImportWorkspace
-      availableSources={availableSources}
+      availableSources={availableSources()}
       initialError={failed}
       initialJob={job}
       initialProgress={progress}
