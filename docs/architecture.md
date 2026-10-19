@@ -353,11 +353,18 @@ It lives in `lib/search`, outside `lib/ai`, and the AI pause gate does not apply
   Turning it off deletes the user's vectors and the server stops sending that user's queries to the model; turning it on queues every Entry again.
 - Search keeps one RPC, `search_wiki_items`.
   `lib/search/semantic-query.ts` decides per search whether to embed the query, and any doubt (no service, an opt-out, an outage, a query of one character or an exact quoted phrase) sends the keyword-only call.
-  Keyword and meaning candidates are fused by rank after the same Kind, tag, and date filters apply to both, so a rank-based score needs no calibration between scales.
-  `MERGED_SEARCH_AVAILABLE` in `semantic-config.ts` stays false until the database has the merged function; while false, no query vector is sent but indexing still runs.
+  The RPC takes an optional query vector, model label, and similarity floor (`p_query_embedding`, `p_embedding_model`, `p_semantic_min_similarity`).
+  Without a vector and a model label it returns exactly the keyword-only rows in the keyword-only order.
+  With them, `semantic_entry_matches` returns each Entry's closest current chunk of the caller's own index, above the floor and only while the Settings switch is on.
+  Those Entries join the keyword matches after the same Kind, tag, date, and Chapter filters apply to both, the closest 50 are kept, and the two rankings are fused by reciprocal rank (`1/(60 + rank)` summed), so no calibration between the two scales is needed.
+  A result matched by meaning lists `Meaning` last among its reasons and carries its closest chunk's similarity, range, and the Entry's chunk count.
+  `MERGED_SEARCH_AVAILABLE` in `semantic-config.ts` is the switch that sends the vector; it exists for a database that predates migration 202610190023.
+- Keyword search reads an Entry's `metadata` without its `body_rich` document, so rich text node and mark names never match; the plain body already carries the words.
 - Library says why meaning results are missing (`SemanticSearchStatus`): it shows a notice only when the service is unavailable or Entries are still being prepared, and nothing when search is keyword-only by configuration or by the user's choice.
   A result matched by meaning shows `Meaning` among its reasons and, for a long Entry, the closest passage cut from the body by the stored range.
 - The deterministic `apps/web/scripts/fake-embedding-server.mjs` stands in for the service in tests, and `scripts/semantic-eval.mjs` compares candidate models offline on a synthetic bilingual fixture.
+  Only `playwright.semantic.config.ts` (`test:e2e:semantic`, running `e2e/semantic-search.e2e.ts`) starts the fake service and points the app at it.
+  `scripts/e2e-server.mjs` clears `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` for every other browser suite, so those stay keyword-only whatever the developer's environment holds.
 
 ## Deletion, export, and recovery rules
 
