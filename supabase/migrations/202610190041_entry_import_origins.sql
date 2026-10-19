@@ -36,3 +36,19 @@ create policy "Owners read their import origins"
 on public.entry_import_origins for select
 to authenticated
 using (owner_id = (select auth.uid()));
+
+-- Where an Entry came from is part of the person's archive, so a complete export includes it.
+create or replace function public.export_dataset_names()
+returns text[]
+language sql
+immutable
+set search_path = ''
+as $$
+  select array[
+    'profiles','entries','tags','entry_tags',
+    'locations','entry_locations','attachments','entry_links',
+    'ai_preferences','ai_usage','ai_suggestions','ai_exploration_turns','ai_exploration_saves','media_objects',
+    'entry_reviews','entry_review_sources','chapter_suggestions',
+    'entry_import_origins'
+  ]::text[];
+$$;

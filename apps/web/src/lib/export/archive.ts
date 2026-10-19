@@ -169,6 +169,7 @@ entries/*.md contains original Entry writing with metadata; filenames use stable
 tables/*.csv contains readable structured views. Empty tables contain a header row only.
 A Chapter is an Entry whose item_subtype is chapter, and a First Time is an Entry whose is_first_time is true.
 ${REVIEWS_EXPORT_README_LINE}
+entry_import_origins lists which source app and source key each imported Entry came from.
 CSV string cells that could run spreadsheet formulas are prefixed with an apostrophe. JSON remains unchanged.
 media/* contains all registered attachment variants, including originals, named by attachment ID and variant.
 checksums.json maps each media file to its storage identity, byte count, and SHA-256 digest.
