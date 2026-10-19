@@ -1,6 +1,6 @@
-import { execFileSync } from "node:child_process";
 import { expect } from "@playwright/test";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sql } from "./database";
 
 /** Local synthetic accounts only; include uploads that finished before registration. */
 export async function cleanupMediaFixture(
@@ -17,20 +17,8 @@ export async function cleanupMediaFixture(
   await expect
     .poll(
       async () => {
-        const paths = execFileSync(
-          "docker",
-          [
-            "exec",
-            "supabase_db_memotrail",
-            "psql",
-            "-U",
-            "postgres",
-            "-d",
-            "postgres",
-            "-Atc",
-            `select name from storage.objects where bucket_id='entry-media' and split_part(name,'/',1)='${owner}'`,
-          ],
-          { encoding: "utf8" },
+        const paths = sql(
+          `select name from storage.objects where bucket_id='entry-media' and split_part(name,'/',1)='${owner}'`,
         )
           .trim()
           .split("\n")

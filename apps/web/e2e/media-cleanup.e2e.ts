@@ -4,6 +4,7 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
+import { sql } from "./helpers/database";
 
 test("Permanent photo removal includes interrupted unregistered previews", async ({
   page,
@@ -151,20 +152,8 @@ test("Permanent photo removal includes interrupted unregistered previews", async
       ).error,
     ).not.toBeNull();
   } finally {
-    const paths = execFileSync(
-      "docker",
-      [
-        "exec",
-        "supabase_db_memotrail",
-        "psql",
-        "-U",
-        "postgres",
-        "-d",
-        "postgres",
-        "-Atc",
-        `select name from storage.objects where bucket_id='entry-media' and split_part(name,'/',1)='${owner}'`,
-      ],
-      { encoding: "utf8" },
+    const paths = sql(
+      `select name from storage.objects where bucket_id='entry-media' and split_part(name,'/',1)='${owner}'`,
     )
       .trim()
       .split("\n")

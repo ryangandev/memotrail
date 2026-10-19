@@ -12,6 +12,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { clickUnlessSynced } from "./helpers/capture-sync";
+import { sql } from "./helpers/database";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
 // A pending capture stops for good, with a reason, when MemoTrail can never
@@ -490,20 +491,8 @@ async function deleteForever(client: SupabaseClient, entryId: string) {
 /** Counts every Storage object of one Entry. */
 function entryObjects(owner: string, entryId: string) {
   return Number(
-    execFileSync(
-      "docker",
-      [
-        "exec",
-        "supabase_db_memotrail",
-        "psql",
-        "-U",
-        "postgres",
-        "-d",
-        "postgres",
-        "-Atc",
-        `select count(*) from storage.objects where bucket_id='entry-media' and starts_with(name,'${owner}/${entryId}/')`,
-      ],
-      { encoding: "utf8" },
+    sql(
+      `select count(*) from storage.objects where bucket_id='entry-media' and starts_with(name,'${owner}/${entryId}/')`,
     ).trim(),
   );
 }
