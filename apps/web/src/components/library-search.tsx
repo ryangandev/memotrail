@@ -36,8 +36,18 @@ export function LibrarySearch({
   browse: ReactNode;
   workspace: SearchWorkspace;
 }) {
-  const { entries, filtersError, loadError, request, tagOptions, totalCount } =
-    workspace;
+  const {
+    entries,
+    filtersError,
+    loadError,
+    request,
+    semantic,
+    tagOptions,
+    totalCount,
+  } = workspace;
+  // Meaning is part of search whenever it is on, even if the service is down right now.
+  const searchesByMeaning =
+    semantic.state === "on" || semantic.state === "unavailable";
   const advancedFilterCount = [
     request.itemClassifications.length > 0,
     request.tagNames.length > 0,
@@ -57,7 +67,11 @@ export function LibrarySearch({
               label="Search your Life Wiki"
               maxLength={200}
               name="q"
-              placeholder="A phrase, date, or question about your life..."
+              placeholder={
+                searchesByMeaning
+                  ? "A word, a name, or what you remember about it..."
+                  : "A phrase, date, or question about your life..."
+              }
               size="large"
             />
             <Button variant="primary" type="submit">
@@ -66,8 +80,14 @@ export function LibrarySearch({
           </div>
 
           <div className={styles.searchScope}>
-            <Badge size="medium">Keyword search</Badge>
-            <p>Titles, notes, local dates, tags, and structured details</p>
+            <Badge size="medium">
+              {searchesByMeaning ? "Keyword and meaning" : "Keyword search"}
+            </Badge>
+            <p>
+              {searchesByMeaning
+                ? "Words, names, or a description of what you remember"
+                : "Titles, notes, local dates, tags, and structured details"}
+            </p>
             {request.hasCriteria ? (
               <Link className={styles.clearSearch} href="/library">
                 Clear all
@@ -143,6 +163,19 @@ export function LibrarySearch({
               {filtersError}
             </p>
           ) : null}
+          {request.query && semantic.state === "unavailable" ? (
+            <p className={styles.filterNotice} role="status">
+              Search by meaning is unavailable right now, so these results match
+              your words only.
+            </p>
+          ) : null}
+          {request.query && searchesByMeaning && semantic.pendingCount > 0 ? (
+            <p className={styles.statusNotice} role="status">
+              Still preparing {semantic.pendingCount}{" "}
+              {semantic.pendingCount === 1 ? "Entry" : "Entries"} for search by
+              meaning.
+            </p>
+          ) : null}
         </section>
       </form>
       {request.hasCriteria || loadError ? (
@@ -150,6 +183,7 @@ export function LibrarySearch({
           entries={entries}
           loadError={loadError}
           request={request}
+          searchesByMeaning={searchesByMeaning}
           totalCount={totalCount}
         />
       ) : (
@@ -163,11 +197,13 @@ function SearchResults({
   entries,
   loadError,
   request,
+  searchesByMeaning,
   totalCount,
 }: {
   entries: SearchEntry[];
   loadError: string | null;
   request: SearchRequest;
+  searchesByMeaning: boolean;
   totalCount: number;
 }) {
   if (loadError) {
@@ -188,7 +224,11 @@ function SearchResults({
         <Icon name="search" size={23} />
         <div>
           <strong>No matching items</strong>
-          <p>Try fewer words, remove a filter, or search for a broader date.</p>
+          <p>
+            {searchesByMeaning
+              ? "Try fewer words, describe it differently, remove a filter, or search a broader date."
+              : "Try fewer words, remove a filter, or search for a broader date."}
+          </p>
         </div>
       </div>
     );
@@ -297,6 +337,13 @@ function SearchResultCard({ entry }: { entry: SearchEntry }) {
           ))}
         </SeparatedList>
       </footer>
+
+      {entry.meaningPassage ? (
+        <div className={styles.matchPassage}>
+          <span className={styles.matchLabel}>Closest passage</span>
+          <p>{entry.meaningPassage}</p>
+        </div>
+      ) : null}
     </article>
   );
 }

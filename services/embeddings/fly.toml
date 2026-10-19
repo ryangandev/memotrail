@@ -1,0 +1,29 @@
+# Fly.io definition for MemoTrail's embedding service. Committed, not deployed.
+# Deploying needs the owner's approval of a new vendor and about $27 per month; see
+# README.md in this directory.
+app = "memotrail-embeddings"
+# Closest to Vercel Functions (default iad1) and the Supabase project; confirm both
+# regions before the first deploy.
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# The API key is a Fly secret named API_KEY, never a value in this file.
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = false
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/health"
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "60s"
+
+[[vm]]
+  size = "shared-cpu-4x"
+  memory = "4gb"

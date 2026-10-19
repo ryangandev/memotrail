@@ -29,6 +29,16 @@ import {
 } from "@/lib/data/wiki-item";
 
 import { isMilestoneShape, type MilestoneShape } from "@/lib/data/milestone";
+import {
+  matchPassage,
+  matchedByFromReasons,
+  MEANING_REASON,
+} from "@/lib/search/match-presentation";
+import { prepareSemanticSearch } from "@/lib/search/semantic-query";
+import {
+  KEYWORD_ONLY_STATUS,
+  type SemanticSearchStatus,
+} from "@/lib/search/semantic-state";
 
 export type SearchEntry = {
   body: string;
@@ -38,6 +48,8 @@ export type SearchEntry = {
   itemSubtype: string;
   isFirstTime: boolean;
   matchReasons: string[];
+  /** The closest passage of a long Entry that matched by meaning. */
+  meaningPassage: string | null;
   milestoneShape: MilestoneShape | null;
   occurredAt: string | null;
   occurredEnd: string | null;
@@ -54,6 +66,7 @@ export type SearchWorkspace = {
   filtersError: string | null;
   loadError: string | null;
   request: SearchRequest;
+  semantic: SemanticSearchStatus;
   tagOptions: string[];
   totalCount: number;
   viewer: Viewer;
@@ -72,6 +85,11 @@ type SearchRow = {
   occurred_end: string | null;
   date_precision: OccurrencePrecision;
   occurred_timezone: string | null;
+  // The merged keyword-and-meaning search adds these; the keyword-only function omits them.
+  semantic_char_end?: number | null;
+  semantic_char_start?: number | null;
+  semantic_chunk_count?: number | null;
+  semantic_similarity?: number | null;
   tag_names: string[] | null;
   title: string | null;
   total_count: number | string;
@@ -99,8 +117,25 @@ export async function getSearchWorkspace(
   }
 
   const shouldSearch = parsed.request.hasCriteria && !parsed.error;
-  const searchRequest = shouldSearch
-    ? context.client.rpc("search_wiki_items", {
+  const tagsRequest = context.client
+    .from("tags")
+    .select("name")
+    .eq("owner_id", context.userId)
+    .order("name")
+    .returns<NameRow[]>();
+  const [semantic, tags] = await Promise.all([
+    shouldSearch && parsed.request.query
+      ? prepareSemanticSearch(
+          context.client,
+          context.userId,
+          parsed.request.query,
+          "library",
+        )
+      : Promise.resolve({ arguments: null, status: KEYWORD_ONLY_STATUS }),
+    tagsRequest,
+  ]);
+  const search = shouldSearch
+    ? await context.client.rpc("search_wiki_items", {
         p_date_from: parsed.request.dateFrom,
         p_date_to: parsed.request.dateTo,
         p_item_classifications: parsed.request.itemClassifications,
@@ -109,18 +144,9 @@ export async function getSearchWorkspace(
         p_order: "relevance",
         p_query: parsed.request.query,
         p_tag_names: parsed.request.tagNames,
+        ...semantic.arguments,
       })
-    : Promise.resolve({ data: [] as SearchRow[], error: null });
-
-  const [search, tags] = await Promise.all([
-    searchRequest,
-    context.client
-      .from("tags")
-      .select("name")
-      .eq("owner_id", context.userId)
-      .order("name")
-      .returns<NameRow[]>(),
-  ]);
+    : { data: [] as SearchRow[], error: null };
 
   const parsedRows = search.error ? [] : searchRows(search.data);
   const malformedSearchResponse = shouldSearch && !search.error && !parsedRows;
@@ -144,6 +170,7 @@ export async function getSearchWorkspace(
         ? "MemoTrail could not search your Entries. Try again."
         : null),
     request: parsed.request,
+    semantic: semantic.status,
     tagOptions: tags.error ? [] : (tags.data ?? []).map((tag) => tag.name),
     totalCount: search.error ? 0 : countFromRows(rows),
     viewer: context.viewer,
@@ -159,6 +186,12 @@ export async function getQuickSearchResults(
   const normalizedQuery = query.trim().slice(0, 200);
   if (!normalizedQuery) return { error: null, items: [] };
 
+  const semantic = await prepareSemanticSearch(
+    context.client,
+    context.userId,
+    normalizedQuery,
+    "quick",
+  );
   const entrySearch = await context.client.rpc("search_wiki_items", {
     p_date_from: null,
     p_date_to: null,
@@ -168,6 +201,7 @@ export async function getQuickSearchResults(
     p_order: "relevance",
     p_query: normalizedQuery,
     p_tag_names: [],
+    ...semantic.arguments,
   });
 
   const entryRows = entrySearch.error ? null : searchRows(entrySearch.data);
@@ -226,6 +260,9 @@ function quickEntryItem(
   row: SearchRow,
   identity: ItemIdentity = identityFromSearchRow(row),
 ): QuickSearchItem {
+  const matchedBy = matchedByFromReasons(strings(row.match_reasons));
+  // A long Entry that matched only by meaning shows the passage that did.
+  const passage = matchedBy === "meaning" ? rowPassage(row) : null;
   return {
     href: wikiEntryHref({
       id: row.entry_id,
@@ -233,9 +270,19 @@ function quickEntryItem(
     }),
     id: row.entry_id,
     label: identityLabel(identity),
-    subtitle: compactText(row.body) || "Saved Entry",
+    matchedBy,
+    subtitle: compactText(passage ?? row.body) || "Saved Entry",
     title: rowTitle(row),
   };
+}
+
+function rowPassage(row: SearchRow) {
+  return matchPassage(
+    row.body,
+    row.semantic_char_start ?? null,
+    row.semantic_char_end ?? null,
+    row.semantic_chunk_count ?? null,
+  );
 }
 
 function tagEntryPreview(
@@ -287,6 +334,9 @@ function entryFromRow(
     itemSubtype: identity.itemSubtype,
     isFirstTime: identity.isFirstTime,
     matchReasons: strings(row.match_reasons),
+    meaningPassage: strings(row.match_reasons).includes(MEANING_REASON)
+      ? rowPassage(row)
+      : null,
     milestoneShape: identity.milestoneShape,
     occurredAt: stringValue(row.occurred_start),
     occurredEnd: stringValue(row.occurred_end),
@@ -366,6 +416,10 @@ function isSearchRow(value: unknown): value is SearchRow {
     nullableString(value.occurred_timezone) &&
     nullableStringArray(value.match_reasons) &&
     nullableStringArray(value.tag_names) &&
+    optionalNullableNumber(value.semantic_char_start) &&
+    optionalNullableNumber(value.semantic_char_end) &&
+    optionalNullableNumber(value.semantic_chunk_count) &&
+    optionalNullableNumber(value.semantic_similarity) &&
     (typeof value.total_count === "number" ||
       typeof value.total_count === "string")
   );
@@ -377,6 +431,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function nullableString(value: unknown) {
   return value === null || typeof value === "string";
+}
+
+function optionalNullableNumber(value: unknown) {
+  return value === undefined || value === null || typeof value === "number";
 }
 
 function nullableStringArray(value: unknown) {

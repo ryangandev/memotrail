@@ -1,0 +1,384 @@
+{
+  "note": "Synthetic bilingual fixture. Every Entry and query is invented; there is no real personal data. A query's expected list holds the Entries a person would accept as the answer. An empty list means nothing in the archive should match.",
+  "entries": [
+    {
+      "id": "bike-en",
+      "title": "Climbing gym",
+      "body": "Met a guy at the climbing gym today who fixes bikes on the side. He tuned up my commuter bike for free."
+    },
+    {
+      "id": "bike-zh",
+      "title": "攀岩馆",
+      "body": "今天在攀岩馆认识了一个会修自行车的人，他免费帮我调了通勤的车。"
+    },
+    {
+      "id": "interview-en",
+      "title": null,
+      "body": "The final round interview at the startup went well. The recruiter said I should hear about the offer by Friday."
+    },
+    {
+      "id": "interview-zh",
+      "title": null,
+      "body": "今天创业公司的终面结束了，面试官很友好，说周五之前会通知我 offer 的结果。"
+    },
+    {
+      "id": "lease-en",
+      "title": "New place",
+      "body": "Signed the lease on a small apartment in Philadelphia. Boxes are stacked all over the living room."
+    },
+    {
+      "id": "lease-zh",
+      "title": "新家",
+      "body": "在费城签下了一间小公寓的租约，客厅里堆满了搬家的箱子。"
+    },
+    {
+      "id": "dumplings-en",
+      "title": null,
+      "body": "Made grandma's dumpling recipe tonight and missed her so much."
+    },
+    {
+      "id": "dumplings-zh",
+      "title": null,
+      "body": "今晚按外婆的方子包了饺子，特别想她。"
+    },
+    {
+      "id": "marathon-en",
+      "title": "First half marathon",
+      "body": "Finished my first half marathon. My legs are destroyed but I am so proud."
+    },
+    {
+      "id": "marathon-zh",
+      "title": "半程马拉松",
+      "body": "第一次跑完了半程马拉松，腿酸得不行，但是特别自豪。"
+    },
+    {
+      "id": "interest-en",
+      "title": "Study notes",
+      "body": "Compound interest means your earnings also earn interest, so money grows faster over time."
+    },
+    {
+      "id": "interest-zh",
+      "title": "学习笔记",
+      "body": "复利就是利滚利，赚到的收益本身也会继续生息，所以钱越滚越多。"
+    },
+    {
+      "id": "anxious-en",
+      "title": null,
+      "body": "Felt anxious all afternoon and could not focus. A long walk helped a little."
+    },
+    {
+      "id": "anxious-zh",
+      "title": null,
+      "body": "整个下午都很焦虑，没办法集中精神，散了很久的步之后好了一点。"
+    },
+    {
+      "id": "ski-en",
+      "title": "First time skiing",
+      "body": "My first time skiing. I fell a dozen times on the bunny slope but loved it."
+    },
+    {
+      "id": "ski-zh",
+      "title": "第一次滑雪",
+      "body": "第一次滑雪，在新手坡上摔了十几次，不过玩得很开心。"
+    },
+    {
+      "id": "pasta-en",
+      "title": null,
+      "body": "Tried making fresh pasta from scratch today. The dough was far too sticky."
+    },
+    {
+      "id": "pasta-zh",
+      "title": null,
+      "body": "今天第一次自己做手擀面，面团黏得根本没法擀。"
+    },
+    {
+      "id": "novel-en",
+      "title": "Book",
+      "body": "Finished a novel about a lighthouse keeper. The ending stayed with me all evening."
+    },
+    {
+      "id": "novel-zh",
+      "title": "读书",
+      "body": "读完了一本关于灯塔守护人的小说，结局让我整个晚上都忘不掉。"
+    },
+    {
+      "id": "wedding-en",
+      "title": "Dana's wedding",
+      "body": "Flew to Seattle for Dana's wedding. The ceremony was held right by the water."
+    },
+    {
+      "id": "wedding-zh",
+      "title": "婚礼",
+      "body": "飞到西雅图参加 Dana 的婚礼，仪式就在水边举行。"
+    },
+    {
+      "id": "car-en",
+      "title": null,
+      "body": "The old Civic would not start this morning. The battery was dead again."
+    },
+    {
+      "id": "car-zh",
+      "title": null,
+      "body": "那辆旧的思域今天早上发动不了，电瓶又没电了。"
+    },
+    {
+      "id": "review-mixed",
+      "title": null,
+      "body": "今天的 code review 收到了很多 comment，but I learned a lot about error handling."
+    },
+    {
+      "id": "market-mixed",
+      "title": null,
+      "body": "周末和 Mia 去 farmers market 买了 tomatoes 和 basil，晚上做了 caprese salad。"
+    },
+    {
+      "id": "weekend-long",
+      "title": "Weekend recap",
+      "body": "We drove up to the lake on Saturday morning and set up the tent before noon. The water was cold, but we swam anyway and made a fire when it got dark.\n\nSunday I tried a pasta sauce on the camp stove and burned the garlic, which made everyone laugh. We ate it anyway, with too much cheese.\n\nOn the drive home I finished the last chapter of the lighthouse novel and stayed quiet for a while after."
+    },
+    {
+      "id": "dentist-en",
+      "title": null,
+      "body": "Dentist appointment moved to Thursday morning. Need to remember to floss more."
+    },
+    {
+      "id": "bills-en",
+      "title": null,
+      "body": "Paid the electricity bill and renewed the internet plan for another year."
+    },
+    {
+      "id": "weather-en",
+      "title": null,
+      "body": "Rainy again. The forecast says it will stay gray all week."
+    },
+    {
+      "id": "passport-en",
+      "title": null,
+      "body": "Dropped off my passport photos at the pharmacy for the renewal form."
+    },
+    {
+      "id": "plants-en",
+      "title": null,
+      "body": "Watered the plants and repotted the fern on the balcony."
+    },
+    {
+      "id": "haircut-en",
+      "title": null,
+      "body": "Got a haircut today, a bit shorter than I planned."
+    },
+    {
+      "id": "laundry-en",
+      "title": null,
+      "body": "Laundry day: three loads, folded everything before dinner."
+    },
+    {
+      "id": "parking-en",
+      "title": null,
+      "body": "Found a parking ticket on the windshield after the meeting downtown."
+    },
+    {
+      "id": "dentist-zh",
+      "title": null,
+      "body": "今天去牙科复诊，医生说要多用牙线。"
+    },
+    { "id": "bills-zh", "title": null, "body": "交了水电费，顺便续了宽带。" },
+    {
+      "id": "weather-zh",
+      "title": null,
+      "body": "又下雨了，天气预报说这周都是阴天。"
+    },
+    {
+      "id": "plants-zh",
+      "title": null,
+      "body": "给阳台的绿植浇了水，还给蕨类换了盆。"
+    }
+  ],
+  "queries": [
+    {
+      "id": "q01",
+      "category": "en",
+      "text": "the guy I met at the climbing gym who fixed bikes",
+      "expected": ["bike-en"]
+    },
+    {
+      "id": "q02",
+      "category": "en",
+      "text": "how did the job interview at the startup go",
+      "expected": ["interview-en"]
+    },
+    {
+      "id": "q03",
+      "category": "en",
+      "text": "the day I signed the lease for my new place",
+      "expected": ["lease-en"]
+    },
+    {
+      "id": "q04",
+      "category": "en",
+      "text": "cooking my grandmother's recipe and feeling sad",
+      "expected": ["dumplings-en"]
+    },
+    {
+      "id": "q05",
+      "category": "en",
+      "text": "when I finished my first long race",
+      "expected": ["marathon-en"]
+    },
+    {
+      "id": "q06",
+      "category": "en",
+      "text": "notes on how money grows over time with interest",
+      "expected": ["interest-en"]
+    },
+    {
+      "id": "q07",
+      "category": "en",
+      "text": "feeling nervous and unable to concentrate",
+      "expected": ["anxious-en"]
+    },
+    {
+      "id": "q08",
+      "category": "en",
+      "text": "learning to ski and falling down a lot",
+      "expected": ["ski-en"]
+    },
+    {
+      "id": "q09",
+      "category": "zh",
+      "text": "那个在攀岩馆认识的修车的人",
+      "expected": ["bike-zh"]
+    },
+    {
+      "id": "q10",
+      "category": "zh",
+      "text": "面试之后在等结果",
+      "expected": ["interview-zh"]
+    },
+    {
+      "id": "q11",
+      "category": "zh",
+      "text": "刚搬进新家的那天",
+      "expected": ["lease-zh"]
+    },
+    {
+      "id": "q12",
+      "category": "zh",
+      "text": "想念外婆的味道",
+      "expected": ["dumplings-zh"]
+    },
+    {
+      "id": "q13",
+      "category": "zh",
+      "text": "跑完人生第一个长距离比赛",
+      "expected": ["marathon-zh"]
+    },
+    {
+      "id": "q14",
+      "category": "zh",
+      "text": "利滚利是怎么回事",
+      "expected": ["interest-zh"]
+    },
+    {
+      "id": "q15",
+      "category": "zh",
+      "text": "心里很不安，静不下来",
+      "expected": ["anxious-zh"]
+    },
+    {
+      "id": "q16",
+      "category": "zh",
+      "text": "第一次去雪场",
+      "expected": ["ski-zh"]
+    },
+    {
+      "id": "q17",
+      "category": "cross",
+      "text": "在健身房遇到的会修自行车的人",
+      "expected": ["bike-en"]
+    },
+    {
+      "id": "q18",
+      "category": "cross",
+      "text": "making my grandma's dumplings",
+      "expected": ["dumplings-zh"]
+    },
+    {
+      "id": "q19",
+      "category": "cross",
+      "text": "意大利面的面团太黏了",
+      "expected": ["pasta-en"]
+    },
+    {
+      "id": "q20",
+      "category": "cross",
+      "text": "a book about a lighthouse",
+      "expected": ["novel-zh"]
+    },
+    {
+      "id": "q21",
+      "category": "cross",
+      "text": "朋友在海边的婚礼",
+      "expected": ["wedding-en"]
+    },
+    {
+      "id": "q22",
+      "category": "cross",
+      "text": "the car battery died",
+      "expected": ["car-zh"]
+    },
+    {
+      "id": "q23",
+      "category": "mixed",
+      "text": "code review 里学到的 error handling",
+      "expected": ["review-mixed"]
+    },
+    {
+      "id": "q24",
+      "category": "mixed",
+      "text": "和朋友逛 farmers market 买菜",
+      "expected": ["market-mixed"]
+    },
+    {
+      "id": "q25",
+      "category": "mixed",
+      "text": "Mia 和 caprese",
+      "expected": ["market-mixed"]
+    },
+    {
+      "id": "q26",
+      "category": "en",
+      "text": "the camping trip by the lake",
+      "expected": ["weekend-long"]
+    },
+    {
+      "id": "q27",
+      "category": "cross",
+      "text": "我在湖边露营的那个周末",
+      "expected": ["weekend-long"]
+    },
+    {
+      "id": "q28",
+      "category": "none",
+      "text": "volcano eruption near Reykjavik",
+      "expected": []
+    },
+    {
+      "id": "q29",
+      "category": "none",
+      "text": "how to train a parrot to talk",
+      "expected": []
+    },
+    {
+      "id": "q30",
+      "category": "none",
+      "text": "量子计算最新进展",
+      "expected": []
+    },
+    {
+      "id": "q31",
+      "category": "none",
+      "text": "violin lessons for beginners",
+      "expected": []
+    }
+  ]
+}

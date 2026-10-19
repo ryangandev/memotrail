@@ -31,15 +31,16 @@ A failed client request, such as saving Appearance offline, is handled where it 
 Use this table to find the first likely files, then search by the product term or RPC name.
 Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/MemoTrail`.
 
-| Request                                                  | Web                                                                                                                             | iOS                                                                                   | Shared data and tests                                                   |
-| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                          | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                 |
-| Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts` | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests      |
-| Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`  | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests              |
-| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                           | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                         |
-| Timeline, Homes, Vehicles, or First Times                | matching `app` route, workspace component, and `lib/data` module                                                                | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                   |
-| Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules           | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests |
-| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                    | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator      |
+| Request                                                  | Web                                                                                                                                          | iOS                                                                                   | Shared data and tests                                                              |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Authentication or environment                            | `app/auth`, `lib/auth`, `lib/supabase`, `src/proxy.ts`                                                                                       | `Features/Authentication`, `App/AppConfiguration.swift`                               | foundation and security migrations, `0001_rls.test.sql`                            |
+| Capture, drafts, dates, rich text, or offline sync       | `app/inbox`, capture, rich-text and occurrence components, `lib/data/inbox*`, `lib/data/rich-text.ts`, `lib/data/occurrence.ts`              | `Features/Inbox`, `Models/InboxEntry.swift`, `Models/EntryOccurrence.swift`           | Inbox, occurrence, review, and media migrations and matching tests                 |
+| Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`, `lib/search` | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                         |
+| Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                        | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                                    |
+| Import from another app                                  | `app/settings/import`, `app/api/import`, `components/import-*`, `lib/import`                                                                 | none yet                                                                              | import migrations `202610190040` to `202610190044` and `0081_import_jobs.test.sql` |
+| Timeline, Homes, Vehicles, or First Times                | matching `app` route, workspace component, and `lib/data` module                                                                             | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                              |
+| Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                        | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests            |
+| Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                 | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator                 |
 
 Native destinations and shared detail routing live in `App/WorkspaceRoute.swift`; the primary tabs live in `App/RootTabView.swift`.
 The More tab lays out `WorkspaceRoute.groups` like Web's mobile More menu, with the same groups, order, and icons.
@@ -307,6 +308,41 @@ Pair it with the test file carrying the same feature name.
   Native `LibraryController` runs the same relevance-ordered search as Web Library, with the grouped Record filter, Collection, tag, and local date filters, and loads each result's `body_rich` separately like Web `loadEntryRichTextMap`.
 - The persistent Web Command Palette debounces input before calling the dynamic, private, no-store `app/api/search/quick` route. That route returns one bounded owner-scoped canonical result stream and opens the Library page for filtered search. Legacy `/search` URLs redirect there with their query parameters.
 
+## Semantic search rules
+
+Semantic search is not a third-party AI capability.
+It lives in `lib/search`, outside `lib/ai`, and the AI pause gate does not apply to it.
+
+- The embedding model is MemoTrail's own copy of one open model, named in `lib/search/semantic-model.json` (model, pinned revision, vector size, similarity floor, query instruction).
+  `semantic-config.ts` derives `SEMANTIC_MODEL`, the label stored with every vector, so vectors from another model never match a query.
+  Switching models means editing that file, the image in `services/embeddings`, and the `halfvec` size when the dimension changes; a unit test checks that they agree.
+- The model runs only in the container defined in `services/embeddings` (Text Embeddings Inference with the weights baked in).
+  The container holds no database credentials and only turns text into vectors.
+  The Next.js server is the only caller, through `lib/search/embedding-client.ts` and the server-only `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY`.
+  Without both variables, or when they do not name an HTTPS or loopback URL, search is keyword-only and nothing is indexed.
+- The client logs only reason codes, never query or Entry text.
+  It validates every response (size, finiteness, model name), L2-normalizes vectors, caches query vectors in process memory for ten minutes, and stops calling a failing service for thirty seconds.
+- Vectors live in `entry_search_chunks` (`halfvec`) and indexing state in `entry_search_index_state`.
+  Neither table is granted to any client role; only `security definer` functions filtered by `auth.uid()` read or write them, and neither is exported.
+- Postgres decides what needs indexing.
+  A trigger on `entries` marks an Entry pending whenever its title or plaintext body changes, whichever client or RPC wrote it.
+  Trash keeps vectors so Restore is instant; Delete forever, Empty Trash, and account deletion remove them by cascade.
+- The Web server drains pending Entries with the signed-in user's session in `after()` callbacks, scheduled after a save and whenever a search sees pending work.
+  `lib/search/search-index.ts` claims leased jobs, chunks the plaintext body (`chunking.ts`, offsets in Unicode code points), embeds, and stores.
+  A store is refused when the Entry changed or the setting was switched off meanwhile.
+  An unavailable service stops the drain without counting a failure.
+  There is no cron, service-role key, or public webhook.
+  Indexing advances only while the user is active on Web.
+- `profiles.semantic_search_enabled` is the Settings switch, on by default.
+  Turning it off deletes the user's vectors and the server stops sending that user's queries to the model; turning it on queues every Entry again.
+- Search keeps one RPC, `search_wiki_items`.
+  `lib/search/semantic-query.ts` decides per search whether to embed the query, and any doubt (no service, an opt-out, an outage, a query of one character or an exact quoted phrase) sends the keyword-only call.
+  Keyword and meaning candidates are fused by rank after the same Kind, tag, and date filters apply to both, so a rank-based score needs no calibration between scales.
+  `MERGED_SEARCH_AVAILABLE` in `semantic-config.ts` stays false until the database has the merged function; while false, no query vector is sent but indexing still runs.
+- Library says why meaning results are missing (`SemanticSearchStatus`): it shows a notice only when the service is unavailable or Entries are still being prepared, and nothing when search is keyword-only by configuration or by the user's choice.
+  A result matched by meaning shows `Meaning` among its reasons and, for a long Entry, the closest passage cut from the body by the stored range.
+- The deterministic `apps/web/scripts/fake-embedding-server.mjs` stands in for the service in tests, and `scripts/semantic-eval.mjs` compares candidate models offline on a synthetic bilingual fixture.
+
 ## Deletion, export, and recovery rules
 
 - Ordinary deletion moves supported records to recoverable Trash.
@@ -322,6 +358,38 @@ Pair it with the test file carrying the same feature name.
 - Cross-device synchronization and an application export are not infrastructure backups.
 - Database and original Storage objects need separately protected backups and a tested non-production restore before MemoTrail can be considered recoverable.
 - Automatic 30-day cleanup is not active until its exact scope, backup prerequisites, and rollout are approved.
+
+## Import rules
+
+Import turns an export ZIP from another app into ordinary Entries.
+One engine reads every source, and each source is an adapter in `apps/web/src/lib/import/adapters` that turns a ZIP into candidates.
+The sources are a Markdown folder (which also reads Apple Notes Markdown exports), Apple Journal, Notion, and Day One.
+
+- The browser uploads the ZIP to the private `import-staging` bucket with resumable TUS, as the signed-in user, because a Vercel function body is capped at 4.5 MB.
+  Storage policies let a user write only the exact object of their own `uploading` job and read or delete only their own folder.
+  The size cap is `IMPORT_MAX_ZIP_BYTES` (default 50 MiB, ceiling 5 GiB); a larger cap also needs the hosted Storage file size limit raised.
+- The server never downloads the ZIP whole.
+  `lib/import/storage.ts` reads it through a signed URL by HTTP range requests, and `lib/import/zip.ts` caches 4 MiB blocks and refuses encrypted archives, path traversal, too many members, and extreme compression ratios.
+  Only a Notion export of part ZIPs is expanded, one level deep.
+- Import is a resumable job in Postgres (`import_jobs`, `import_items`) with one active job per user, driven by a single `app/api/import` action route.
+  A scan stores one item per candidate with its content hash and payload.
+  The preview reads totals and a sample, and the person's choices (time zone, tags, folders to leave out, a Notion date property) are stored on the job when it is confirmed.
+  The run action takes a lease, claims batches, writes Entries and photos until a 240 second budget ends, and returns so the page can call it again.
+  Reloading the page, losing the connection, or a function timeout only pauses the job.
+  A full Storage quota moves it to `paused_quota` until the person continues.
+- Imported Entries are created through `save_entry` (or the canonical insert for a photo-only Entry) inside `import_entry`, so later Entry rules apply to them.
+  Photos are uploaded to `entry-media` first and registered second with `register_entry_attachment`, like capture, and an Entry holds at most 12.
+- Imports are idempotent.
+  An Entry id is a version 5 UUID of the owner, source, and source key, and `entry_import_origins` records each source key with a content hash.
+  A repeated import reports each item as created, unchanged, changed in the source (left alone so edits are safe), or deleted earlier (`entry_tombstones`).
+- A date keeps the precision the source has.
+  A day, month, or year is stored at noon in the chosen zone like the editor does, an unreadable date becomes `unknown` with its text as the description, and an ambiguous slashed date is refused rather than guessed.
+  `created_at` stays the import time.
+- Import clients can select job and origin rows but not the `payload` or `media` columns of items, which are read only through `import_job_sample`.
+  The result report is a CSV of source keys, statuses, and reasons with no titles or text.
+  Staged ZIPs are removed when a job ends or goes stale (`expire_import_jobs`), and undo moves a job's untouched Entries to Trash for 30 days.
+- The Apple Journal and Notion adapters are built from third-party importers' reports and synthetic fixtures, so unknown markup degrades to plain text.
+  Change them only against a real export of the same app.
 
 ## Design-system rules
 
@@ -486,7 +554,7 @@ Pair it with the test file carrying the same feature name.
 
 - Production Web runs on Vercel from `apps/web`.
 - Production data changes are versioned Supabase migrations without development seed data.
-- Server-only Supabase, Geoapify, and AI credentials exist only in trusted environments.
+- Server-only Supabase, Geoapify, AI, and embedding-service credentials exist only in trusted environments.
 - Web address searches and static maps pass through authenticated route handlers, so `GEOAPIFY_API_KEY` is never exposed to the browser.
   The proxy sends only the requested search text or coordinates to Geoapify, not the signed-in user's identity.
 - The Web Map destination is retired along with its tile proxy and Leaflet; Web shows a Location only as an editor preview and on record cards.

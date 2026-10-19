@@ -33,6 +33,7 @@ import {
 } from "@/lib/data/capture-sync-messages";
 import { classifySyncFailure, type SyncFailure } from "@/lib/data/sync-failure";
 import { milestoneRow } from "@/lib/data/milestone";
+import { scheduleSearchIndexDrain } from "@/lib/search/search-index";
 
 /**
  * `retry` keeps a capture waiting for a later attempt; `rejected` means
@@ -191,6 +192,7 @@ export async function syncInboxEntry(
 
   revalidatePath("/");
   revalidatePath("/library");
+  scheduleSearchIndexDrain(context.client, context.userId);
 
   if (entry.attachments.length === 0) await finishInboxCapture(entry.id);
   return {
@@ -284,6 +286,7 @@ export async function reviewInboxEntry(
   revalidatePath("/");
   revalidatePath("/library");
   revalidatePath("/search");
+  scheduleSearchIndexDrain(context.client, context.userId);
   return {
     message: "Changes saved.",
     status: "saved",
