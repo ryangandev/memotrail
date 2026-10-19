@@ -1,58 +1,207 @@
-.message {
-  min-height: 190px;
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-}
+/* First Times read as Quiet ledger rows, the same row Library uses for an Entry: a muted date
+   column, a serif title, one line of writing, quiet details, and an optional 48 px photo or map. */
 
 .message {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--mt-space-4);
-  padding: var(--mt-space-8);
-  color: var(--mt-color-warm);
-}
-
-.message strong {
-  color: var(--mt-color-ink);
-  font-size: var(--mt-font-size-body-large);
-  font-weight: var(--mt-font-weight-medium);
-}
-
-.message p {
-  margin-top: var(--mt-space-1);
+  margin: 0;
   color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-body-small);
+  line-height: var(--mt-line-height-message);
 }
 
-.firstGrid {
+.rows {
+  /* TODO(WP0b): the 18 px and 17 px row titles become a type role. */
+  --row-title-size: 18px;
+  --row-title-size-stacked: var(--mt-font-size-body-large);
+  --row-date-column: 112px;
+  --row-thumbnail: 48px;
+
+  container-type: inline-size;
+  margin: 0;
+  padding: 0;
+  border-top: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+  list-style: none;
+}
+
+.item {
+  min-width: 0;
+  border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
+}
+
+.row {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--mt-space-5);
+  min-width: 0;
+  grid-template-columns: var(--row-date-column) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--mt-space-4);
+  padding: var(--mt-space-3-5) 0;
+  border-radius: var(--mt-radius-xsmall);
+  color: var(--mt-color-ink);
+  text-decoration: none;
 }
 
-@media (max-width: 1300px) {
-  .firstGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+.row[data-thumbnail] {
+  grid-template-columns:
+    var(--row-date-column) minmax(0, 1fr)
+    var(--row-thumbnail);
+}
+
+.row:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: var(--mt-state-focus-ring-offset-snug);
+}
+
+.date {
+  min-width: 0;
+  padding-top: var(--mt-space-1);
+  color: var(--mt-color-ink-muted);
+  font-size: var(--mt-font-size-label);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--mt-line-height-title-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.body {
+  display: grid;
+  min-width: 0;
+}
+
+.title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--mt-space-2);
+  margin: 0;
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--row-title-size);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-title);
+  transition: color var(--mt-motion-quick) var(--mt-motion-easing-standard);
+}
+
+.titleText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row:hover .title {
+  color: var(--mt-color-accent);
+}
+
+.mark {
+  flex: none;
+  width: var(--mt-size-icon-15);
+  height: var(--mt-size-icon-15);
+  color: var(--mt-color-accent);
+}
+
+.excerpt,
+.details {
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--mt-color-ink-muted);
+  line-height: var(--mt-line-height-message);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.excerpt {
+  margin-top: var(--mt-space-0-75);
+  font-size: var(--mt-font-size-body-small);
+}
+
+.details {
+  margin-top: var(--mt-space-1);
+  font-size: var(--mt-font-size-label);
+}
+
+.thumbnail {
+  display: grid;
+  overflow: hidden;
+  width: var(--row-thumbnail);
+  height: var(--row-thumbnail);
+  place-items: center;
+  border-radius: var(--mt-radius-xsmall);
+  color: var(--mt-color-ink-faint);
+  background: var(--mt-color-surface-subtle);
+}
+
+.thumbnail > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* In a narrow list the date sits above the title, and an untitled First Time has no date line. */
+@container (max-width: 620px) {
+  .row,
+  .row[data-thumbnail] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: var(--mt-space-3) 0;
+  }
+
+  .row[data-thumbnail] {
+    grid-template-columns: minmax(0, 1fr) var(--row-thumbnail);
+    column-gap: var(--mt-space-3);
+  }
+
+  .row[data-thumbnail] .date,
+  .row[data-thumbnail] .body {
+    grid-column: 1;
+  }
+
+  .row[data-thumbnail] .thumbnail {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+
+  .row[data-untitled] .date {
+    display: none;
+  }
+
+  .date {
+    padding-top: 0;
+    font-size: var(--mt-font-size-caption);
+  }
+
+  .title {
+    margin-top: var(--mt-space-0-5);
+    font-size: var(--row-title-size-stacked);
+  }
+
+  .row[data-untitled] .title {
+    margin-top: 0;
+  }
+
+  .excerpt {
+    margin-top: var(--mt-space-0-5);
+  }
+
+  /* Phone rows keep to the date, the title, and one line of writing. */
+  .details {
+    display: none;
   }
 }
 
-@media (max-width: 1050px) {
-  .firstGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+@media (prefers-reduced-motion: reduce) {
+  .title {
+    transition: none;
   }
+}
+
+/* The design gallery's RecordCard specimen borrows these card styles. The First Times page
+   itself no longer draws cards. */
+
+.firstCard {
+  min-width: 0;
 }
 
 .coverPhoto {
   color: var(--mt-color-ink-muted);
-}
-
-.coverFallback {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  justify-content: center;
-  gap: var(--mt-space-2);
-  font-size: var(--mt-font-size-caption);
 }
 
 .photoBadge {
@@ -128,101 +277,4 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--mt-space-1-25);
-}
-
-.formGrid {
-  composes: fields from "./editor-fields.module.css";
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--mt-space-5) var(--mt-space-4);
-  --editor-textarea-height: 122px;
-  --editor-field-surface: var(--mt-color-surface);
-}
-
-.fullField {
-  grid-column: 1 / -1;
-}
-
-.formMessage {
-  margin: var(--mt-space-3) 0;
-  padding: var(--mt-space-3);
-  border-radius: var(--mt-radius-small);
-  color: var(--mt-color-warm);
-  background: var(--mt-color-danger-tint);
-  font-size: var(--mt-font-size-caption);
-}
-
-@media (max-width: 780px) {
-  .firstGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .firstCard {
-    grid-template-columns: 108px minmax(0, 1fr);
-  }
-
-  .coverPhoto {
-    width: 108px;
-    height: 100%;
-    min-height: 156px;
-    border-right: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-    border-bottom: 0;
-  }
-
-  .cardBody {
-    padding: var(--mt-space-4);
-  }
-
-  .cardBody h2 {
-    font-size: var(--mt-font-size-title-small);
-  }
-
-  .cardBody > p {
-    -webkit-line-clamp: 2;
-  }
-
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .fullField {
-    grid-column: auto;
-  }
-}
-
-@media (max-width: 480px) {
-  .firstGrid {
-    gap: var(--mt-space-3);
-  }
-
-  .firstCard {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .coverPhoto {
-    width: 100%;
-    height: 148px;
-    min-height: 148px;
-    border-right: 0;
-    border-bottom: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  }
-
-  .cardBody footer span:nth-child(n + 3) {
-    display: none;
-  }
-
-  .formGrid {
-    width: 100%;
-  }
-
-  .formMessage {
-    margin-right: var(--mt-space-3) 0;
-    margin-left: var(--mt-space-3) 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .firstCard {
-    transition: none;
-  }
 }

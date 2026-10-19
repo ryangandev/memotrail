@@ -48,6 +48,8 @@ export type FirstTimeEntry = {
   tagNames: string[];
   /** Its title, or its date when it has none. */
   title: string;
+  /** True when the title is its date, so a row need not show the date twice. */
+  untitled: boolean;
   updatedAt: string;
 };
 
@@ -138,6 +140,7 @@ export async function getFirstTimesWorkspace(): Promise<FirstTimesWorkspace | nu
           occurredTimezone: row.occurred_timezone,
         }),
       ),
+      untitled: !row.title.trim(),
       updatedAt: row.updated_at,
     })),
     loadError: null,

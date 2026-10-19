@@ -22,7 +22,7 @@ platforms:
 purpose: The clickable card that opens one record, with a media band on top and the record's dates, name, facts, and organization below.
 
 use:
-  - A First Time in its workspace grid, opening the Entry's Item page.
+  - A First Time in the iOS First Times grid, opening the Entry's Item page. The Web First Times page lists rows instead.
   - Any record result shown as a card, where a photo or map helps people recognize it.
 
 avoid:
