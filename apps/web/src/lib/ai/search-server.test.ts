@@ -124,9 +124,7 @@ it("never retries or displays forged citations", async () => {
 });
 it("broadens an empty keyword match without discarding manual filters", async () => {
   generate
-    .mockResolvedValueOnce(
-      output({ ...plan, itemClassifications: ["entry"] }),
-    )
+    .mockResolvedValueOnce(output({ ...plan, itemClassifications: ["entry"] }))
     .mockResolvedValueOnce(
       output({ insufficientEvidence: true, findings: [] }),
     );
@@ -191,7 +189,9 @@ it("retains manual filters over inferred Chapter and First Time labels", async (
 it("tells the planner the three classifications and no before-move boundary", async () => {
   generate
     .mockResolvedValueOnce(output(plan))
-    .mockResolvedValueOnce(output({ insufficientEvidence: true, findings: [] }));
+    .mockResolvedValueOnce(
+      output({ insufficientEvidence: true, findings: [] }),
+    );
   await searchWithAI(client, "owner", input);
   const instructions = String(generate.mock.calls[0]?.[2]);
   expect(instructions).toContain(

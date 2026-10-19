@@ -71,4 +71,4 @@ platformDifferences:
 
 specimens:
   - id: photo-viewer-paged
-    description: Three saved Home photos that open on the second, with Previous, the position, and Next.
+    description: Three saved photos that open on the second, with Previous, the position, and Next.

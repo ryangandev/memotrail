@@ -100,7 +100,9 @@ export function entryTableHeader() {
   return ENTRY_TABLE_COLUMNS.map(csvCell).join(",") + "\r\n";
 }
 export function entryTableLine(entry: Record<string, unknown>) {
-  return ENTRY_TABLE_COLUMNS.map((key) => csvCell(entry[key])).join(",") + "\r\n";
+  return (
+    ENTRY_TABLE_COLUMNS.map((key) => csvCell(entry[key])).join(",") + "\r\n"
+  );
 }
 export function entryMarkdown(entry: Record<string, unknown>) {
   const fields = [

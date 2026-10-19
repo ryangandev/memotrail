@@ -92,7 +92,10 @@ export function TimelineWorkspace({
   const [selection, setSelection] = useState<EditorSelection | null>(null);
   const [birthDate, setBirthDate] = useState(serverBirthDate);
   const [showBirthDatePrompt, setShowBirthDatePrompt] = useState(false);
-  const items = useMemo(() => [...chapters, ...firstTimes], [chapters, firstTimes]);
+  const items = useMemo(
+    () => [...chapters, ...firstTimes],
+    [chapters, firstTimes],
+  );
   const labelProbe = useRef<HTMLSpanElement>(null);
   const measureLabel = useLabelMeasure(labelProbe);
   const viewport = useRef<HTMLDivElement>(null);
@@ -128,7 +131,11 @@ export function TimelineWorkspace({
     () => new Map(layout.positions.map((position) => [position.id, position])),
     [layout.positions],
   );
-  const bands: { band: TimelineBand; label: string; members: TimelineItem[] }[] = [
+  const bands: {
+    band: TimelineBand;
+    label: string;
+    members: TimelineItem[];
+  }[] = [
     { band: "chapters", label: "Chapters", members: chapters },
     { band: "first-times", label: "First Times", members: firstTimes },
   ];
@@ -292,10 +299,7 @@ export function TimelineWorkspace({
             ) : null}
           </section>
 
-          <section
-            className={styles.mobileTimeline}
-            aria-label="Timeline list"
-          >
+          <section className={styles.mobileTimeline} aria-label="Timeline list">
             {items.length === 0 ? (
               <p className={styles.mobileEmpty}>{emptyLabel}</p>
             ) : null}
@@ -306,7 +310,11 @@ export function TimelineWorkspace({
                     <h2>{label}</h2>
                     <span>{members.length}</span>
                   </header>
-                  <div aria-label={label} className={styles.mobileItems} role="list">
+                  <div
+                    aria-label={label}
+                    className={styles.mobileItems}
+                    role="list"
+                  >
                     {members.map((item) => {
                       const duration = timelineItemDurationLabel(item, now);
                       return (

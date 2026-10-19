@@ -12,9 +12,7 @@ describe("Entry identity and routing", () => {
     expect(wikiItemIdentityLabel("entry", false)).toBe("Entry");
     expect(wikiItemIdentityLabel("entry", true)).toBe("First Time");
     expect(wikiItemIdentityLabel("chapter", false)).toBe("Chapter");
-    expect(wikiItemIdentityLabel("chapter", true)).toBe(
-      "Chapter · First Time",
-    );
+    expect(wikiItemIdentityLabel("chapter", true)).toBe("Chapter · First Time");
   });
 
   it("labels a subtype as a Chapter or an Entry", () => {

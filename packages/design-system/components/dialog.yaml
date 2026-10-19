@@ -12,7 +12,7 @@ platforms:
 purpose: A focused task over the page, with an eyebrow, a serif title, an optional description, a close action, scrolling content, and a footer of actions that stays in reach.
 
 use:
-  - Creating or editing a record in a form, such as an Entry, a Home, or a Goal.
+  - Creating or editing a record in a form, such as an Entry, a Chapter, or a First Time.
   - A short choice that leads somewhere, such as what kind of record to add.
   - Confirming an action that deletes, discards, or moves something to Trash. Web uses ConfirmationDialog, a compact Dialog; iOS uses the system confirmation dialog.
   - Reading or reviewing longer content without leaving the page, such as pending captures.

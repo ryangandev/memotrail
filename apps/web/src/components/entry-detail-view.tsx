@@ -120,7 +120,9 @@ export function EntryDetailView({
         ← Library
       </Link>
       <PageHeader
-        eyebrow={<>{wikiItemIdentityLabel(entry.item_subtype, entry.is_first_time)}</>}
+        eyebrow={
+          <>{wikiItemIdentityLabel(entry.item_subtype, entry.is_first_time)}</>
+        }
         title={<>{entryTitle(entry)}</>}
       />
       <div className={styles.itemActions}>
@@ -317,7 +319,10 @@ function ChapterSections({
                 const title = entryDisplayTitle(item.title, item.occurrence);
                 return {
                   cover: item.coverPhoto
-                    ? { alt: item.coverPhoto.alt, src: item.coverPhoto.imageUrl }
+                    ? {
+                        alt: item.coverPhoto.alt,
+                        src: item.coverPhoto.imageUrl,
+                      }
                     : null,
                   date: item.title.trim()
                     ? occurrenceLabel(item.occurrence)

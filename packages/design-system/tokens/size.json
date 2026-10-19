@@ -444,7 +444,7 @@
       }
     },
     "focusedRecord": {
-      "$description": "Focused record geometry: Web FocusedRecordDetail and iOS MTFocusedRecordPage share it.",
+      "$description": "Focused record geometry for iOS MTFocusedRecordPage. Web has no focused record page.",
       "photoColumn": {
         "$description": "The narrowest a column of a focused record's photos gets.",
         "$value": {

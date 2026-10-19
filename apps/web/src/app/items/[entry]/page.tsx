@@ -81,9 +81,7 @@ export default async function WikiItemPage({
       ) : item ? (
         <EntryDetailView
           chapter={
-            isChapter
-              ? { contents, now: new Date().toISOString(), page }
-              : null
+            isChapter ? { contents, now: new Date().toISOString(), page } : null
           }
           entry={item}
           ownerId={context.viewer.id}

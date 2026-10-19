@@ -150,9 +150,7 @@ export function chapterEntryRows(value: unknown): ChapterEntryRow[] | null {
   return Array.isArray(value) && value.every(isChapterEntryRow) ? value : null;
 }
 
-export function chapterOverlapRows(
-  value: unknown,
-): ChapterOverlapRow[] | null {
+export function chapterOverlapRows(value: unknown): ChapterOverlapRow[] | null {
   return Array.isArray(value) && value.every(isChapterOverlapRow)
     ? value
     : null;

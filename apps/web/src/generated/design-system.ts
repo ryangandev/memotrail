@@ -1038,12 +1038,6 @@ export const componentSpecimens = [
     covers: {},
   },
   {
-    component: "FocusedRecord",
-    id: "focused-record-home",
-    description: "A Home's page with its photos, facts, Story, and tags, and Edit beside the title.",
-    covers: {},
-  },
-  {
     component: "IconButton",
     id: "icon-button-variants",
     description: "Every variant at the default medium size, with add, edit, more, and remove icons.",
@@ -1112,19 +1106,19 @@ export const componentSpecimens = [
   {
     component: "PhotoViewer",
     id: "photo-viewer-paged",
-    description: "Three saved Home photos that open on the second, with Previous, the position, and Next.",
+    description: "Three saved photos that open on the second, with Previous, the position, and Next.",
     covers: {},
   },
   {
     component: "RecordCard",
     id: "record-card-photo",
-    description: "A Home card with a cover photo and a Current badge, then its dates, name, a fact, and its organization.",
+    description: "A card with a cover photo and a photo count, then its date, name, a Location line, story, and tags.",
     covers: {},
   },
   {
     component: "RecordCard",
     id: "record-card-mark",
-    description: "A Vehicle card without a photo or map, showing its mark over a soft accent wash.",
+    description: "A card without a photo or map, showing its mark over a soft accent wash.",
     covers: {},
   },
   {

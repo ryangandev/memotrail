@@ -517,7 +517,7 @@ enum MTFont {
   static let welcomeTitle = Font.system(.title, design: .serif).weight(.medium)
   /// Goal card titles. iOS draws them at its title2 size in regular width.
   static let goalCardTitle = Font.system(.title2, design: .serif).weight(.medium)
-  /// Large serif titles on Home, Vehicle, and First Time cards. iOS draws them at its title2 size in regular width.
+  /// Large serif titles on First Time cards, and on native Home and Vehicle cards. iOS draws them at its title2 size in regular width.
   static let recordCardTitle = Font.system(.title2, design: .serif).weight(.medium)
   /// Sheet and dialog titles.
   static let sheetTitle = Font.system(.title2, design: .serif).weight(.medium)
@@ -545,7 +545,7 @@ enum MTFont {
   static let caption = Font.caption.weight(.medium)
   /// The uppercase context above a page title, such as a date or area name.
   static let pageEyebrow = Font.caption.weight(.semibold)
-  /// The uppercase legend set into the border of a record group, such as a Home's details.
+  /// The uppercase legend set into the border of a record group, such as a native Home's details. Web has no record group.
   static let legend = Font.caption.weight(.semibold)
   /// Dense badges and tooltips.
   static let micro = Font.caption2.weight(.semibold)

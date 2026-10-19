@@ -9,22 +9,22 @@ export const specimens = {
         actions={
           <Button>
             <Icon name="plus" size={16} />
-            Add Vehicle
+            Add First Time
           </Button>
         }
-        description="Every car, bike, and boat you have owned, with when you had it."
+        description="The small beginnings worth finding again."
         eyebrow="Focused view"
         summary={
           <SeparatedList>
-            <Badge tone="neutral">2 vehicles</Badge>
-            <Badge tone="accent">1 current</Badge>
+            <Badge tone="neutral">2 First Times</Badge>
+            <Badge tone="accent">1 this year</Badge>
           </SeparatedList>
         }
-        summaryLabel="Vehicle summary"
-        title="Vehicles"
+        summaryLabel="First Times summary"
+        title="First Times"
       >
         <EmptyState
-          description="Vehicles you add will appear here."
+          description="First Times you add will appear here."
           headingLevel={3}
           title="Nothing here yet"
         />

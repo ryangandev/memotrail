@@ -46,7 +46,9 @@ describe("Dashboard Now items", () => {
   it("rejects the retired lane and any other unexpected shape", () => {
     expect(parseNowItems([{ ...nowItem, lane: "homes" }])).toBeNull();
     expect(parseNowItems([{ ...nowItem, item_kind: "entity" }])).toBeNull();
-    expect(parseNowItems([{ ...nowItem, is_first_time: undefined }])).toBeNull();
+    expect(
+      parseNowItems([{ ...nowItem, is_first_time: undefined }]),
+    ).toBeNull();
     expect(parseNowItems([{ ...nowItem, occurred_start: null }])).toBeNull();
     expect(parseNowItems({})).toBeNull();
   });

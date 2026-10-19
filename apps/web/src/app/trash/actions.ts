@@ -157,7 +157,6 @@ function refreshTrashPaths() {
     "/",
     "/tags",
     "/first-times",
-    "/homes",
     "/search",
     "/timeline",
     "/trash",

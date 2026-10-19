@@ -96,7 +96,7 @@ content:
   lines: 2
   overflow: perPlatform
   casing: sentence
-  length: Labels name the choice in one to three words, such as Show records. Option titles are a few words each, and group titles name what their options share, such as Focused records.
+  length: Labels name the choice in one to three words, such as Show records. Option titles are a few words each, and group titles name what their options share, such as Marks.
   notes:
     - Put an option that applies to everything, such as All records, first and outside any group.
 

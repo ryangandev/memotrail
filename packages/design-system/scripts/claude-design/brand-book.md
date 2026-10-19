@@ -36,7 +36,7 @@ Real copy from the app:
 - "Could not connect. Your changes are still here to retry."
 - "MemoTrail could not save your preferred name. Try again."
 - "Export saved. Keep this private copy somewhere safe."
-- "This record may have moved to Trash or no longer be accessible."
+- "It may have moved to Trash or no longer be accessible."
 - "A phrase, date, or question about your life..."
 
 ## Visual foundations

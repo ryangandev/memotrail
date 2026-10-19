@@ -103,12 +103,14 @@ export async function getTimelineWorkspace(): Promise<TimelineWorkspace | null> 
  * date come last, in title order.
  */
 export function timelineItems(rows: TimelineRow[]) {
-  const items = rows.map(timelineItemFromRow).sort(
-    (a, b) =>
-      (a.windowStart ?? "9999-99-99").localeCompare(
-        b.windowStart ?? "9999-99-99",
-      ) || a.title.localeCompare(b.title),
-  );
+  const items = rows
+    .map(timelineItemFromRow)
+    .sort(
+      (a, b) =>
+        (a.windowStart ?? "9999-99-99").localeCompare(
+          b.windowStart ?? "9999-99-99",
+        ) || a.title.localeCompare(b.title),
+    );
   return {
     chapters: items.filter((item) => item.isChapter),
     firstTimes: items.filter((item) => item.isFirstTime && !item.isChapter),

@@ -4,7 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/media/urls", () => ({
   displayImageURLs: vi.fn(async (_client: unknown, paths: string[]) =>
-    paths.length ? new Map([[paths[0]!, "https://example.test/photo"]]) : new Map(),
+    paths.length
+      ? new Map([[paths[0]!, "https://example.test/photo"]])
+      : new Map(),
   ),
 }));
 
@@ -46,7 +48,10 @@ function client(entries: unknown, overlaps: unknown, error = false) {
     Promise.resolve(
       error
         ? { data: null, error: { message: "boom" } }
-        : { data: name === "chapter_entries" ? entries : overlaps, error: null },
+        : {
+            data: name === "chapter_entries" ? entries : overlaps,
+            error: null,
+          },
     ),
   );
   return { rpc, client: { rpc } as unknown as SupabaseClient };
@@ -87,7 +92,10 @@ describe("Chapter contents", () => {
       pixel_height: 10,
       pixel_width: 10,
     };
-    const { client: supabase } = client([{ ...entryRow, cover_photo: cover }], []);
+    const { client: supabase } = client(
+      [{ ...entryRow, cover_photo: cover }],
+      [],
+    );
 
     const contents = await loadChapterContents(supabase, "chapter-1", 1);
 

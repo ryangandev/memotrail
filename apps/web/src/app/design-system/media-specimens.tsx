@@ -9,7 +9,7 @@ import { ProgressiveImage } from "@/components/progressive-image";
 import { Skeleton } from "@/components/skeleton";
 import { imageFits, skeletonShapes } from "@/generated/design-system";
 import styles from "./page.module.css";
-import { homePhotos, loadedImage, tallImage } from "./samples";
+import { samplePhotos, loadedImage, tallImage } from "./samples";
 import { Specimen, SpecimenCase } from "./specimen";
 
 // The media and loading specimens, in the order of the iOS gallery's feedback section.
@@ -147,7 +147,7 @@ export function SkeletonSpecimen() {
 
 export function PhotoViewerSpecimen() {
   const [selected, setSelected] = useState<number | null>(null);
-  const photo = selected === null ? null : homePhotos[selected];
+  const photo = selected === null ? null : samplePhotos[selected];
   return (
     <Specimen
       api="PhotoPreviewDialog · name · src · position · onPrevious · onNext · onClose"
@@ -170,7 +170,7 @@ export function PhotoViewerSpecimen() {
             onClose={() => setSelected(null)}
             onNext={() => setSelected((index) => (index ?? 0) + 1)}
             onPrevious={() => setSelected((index) => (index ?? 0) - 1)}
-            position={{ index: selected!, total: homePhotos.length }}
+            position={{ index: selected!, total: samplePhotos.length }}
             src={photo.src}
           />
         ) : null}

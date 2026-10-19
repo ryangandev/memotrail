@@ -7,8 +7,8 @@ const {
   RecordCardVisual,
 } = MemoTrail;
 
-// The layout inside the card belongs to each record view. These styles follow the Homes and
-// Vehicles views, with the same tokens they use.
+// The layout inside the card belongs to each record view. These styles follow the First Times
+// view, with the same tokens it uses.
 const landscape = `data:image/svg+xml,${encodeURIComponent(
   `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360"><rect width="640" height="360" fill="#DDE8E1"/><path d="M0 285 190 115l112 95 90-72 248 147v75H0Z" fill="#82AD98"/><circle cx="492" cy="92" r="38" fill="#A76346"/></svg>`,
 )}`;
@@ -81,18 +81,19 @@ const corner = (place) => ({
     : { right: "var(--mt-space-3)", bottom: "var(--mt-space-3)" }),
 });
 
-function Fields({ duration, fact, range, tags, name }) {
+function Fields({ date, fact, tags, name }) {
   return (
     <RecordCardBody>
       <div style={dates}>
-        <time style={{ color: "var(--mt-color-accent)" }}>{range}</time>
-        <span>{duration}</span>
+        <time style={{ color: "var(--mt-color-accent)" }}>{date}</time>
       </div>
       <h3 style={title}>{name}</h3>
-      <p style={factStyle}>
-        <Icon name={fact.icon} size={14} />
-        {fact.text}
-      </p>
+      {fact ? (
+        <p style={factStyle}>
+          <Icon name={fact.icon} size={14} />
+          {fact.text}
+        </p>
+      ) : null}
       <div style={footer}>
         <div
           style={{
@@ -119,23 +120,18 @@ const cards = {
   gap: "var(--mt-space-5)",
 };
 
-// The same records the Web and iOS galleries show.
+// The same kind of records the Web gallery shows.
 export const specimens = {
   "record-card-photo": {
-    title: "A Home with a cover photo",
+    title: "A First Time with a cover photo",
     render: () => (
       <div style={cards}>
         <RecordCard
-          ariaLabel="Maple Street flat, Since Jun 1, 2021"
+          ariaLabel="First solo hike, Jun 12, 2021"
           onClick={() => {}}
         >
           <RecordCardVisual>
             <ProgressiveImage alt="" src={landscape} />
-            <span style={corner("top")}>
-              <Badge size="micro" tone="glassAccent" uppercase>
-                Current
-              </Badge>
-            </span>
             <span style={corner("bottom")}>
               <Badge size="micro" tone="inverse" uppercase>
                 3 photos
@@ -143,42 +139,27 @@ export const specimens = {
             </span>
           </RecordCardVisual>
           <Fields
-            duration="5 years"
-            fact={{ icon: "map", text: "Portland, Oregon, United States" }}
-            name="Maple Street flat"
-            range="Since Jun 1, 2021"
-            tags={["home", "family"]}
+            date="Jun 12, 2021"
+            fact={{ icon: "map", text: "Mount Hood, Oregon, United States" }}
+            name="First solo hike"
+            tags={["hiking"]}
           />
         </RecordCard>
       </div>
     ),
   },
   "record-card-mark": {
-    title: "A Vehicle with its mark",
+    title: "A First Time with its mark",
     render: () => (
       <div style={cards}>
-        <RecordCard
-          ariaLabel="Red touring bike, 2012 - 2016"
-          onClick={() => {}}
-        >
+        <RecordCard ariaLabel="First bike ride, 2012" onClick={() => {}}>
           <RecordCardVisual>
             <div style={mark}>
-              <Icon name="car" size={24} />
-              <span style={markLabel}>2012 Trek 520 · Red</span>
+              <Icon name="star" size={24} />
+              <span style={markLabel}>First bike ride</span>
             </div>
-            <span style={corner("top")}>
-              <Badge size="micro" tone="glassNeutral" uppercase>
-                Earlier
-              </Badge>
-            </span>
           </RecordCardVisual>
-          <Fields
-            duration="About 4 years"
-            fact={{ icon: "car", text: "2012 Trek 520 · Red" }}
-            name="Red touring bike"
-            range="2012 - 2016"
-            tags={["cycling"]}
-          />
+          <Fields date="2012" name="First bike ride" tags={["cycling"]} />
         </RecordCard>
       </div>
     ),

@@ -15,13 +15,11 @@ export function LocationPicker({
   allowRemove = true,
   disabled,
   onChange,
-  subject = "Entry",
   value,
 }: {
   allowRemove?: boolean;
   disabled: boolean;
   onChange: (value: LocationSelection | null) => void;
-  subject?: "Entry" | "Home";
   value: LocationSelection | null;
 }) {
   return (
@@ -33,8 +31,8 @@ export function LocationPicker({
         <div>
           <strong>Location</strong>
           <p>
-            Search for an address and preview its position. This {subject} keeps
-            its own Location.
+            Search for an address and preview its position. This Entry keeps its
+            own Location.
           </p>
         </div>
       </div>

@@ -93,9 +93,11 @@ describe("complete ZIP streaming", () => {
         ),
       ).arrayBuffer(),
     );
-    const names = [...data.toString("latin1").matchAll(/(?:tables|data)\/[a-z_]+\.(?:csv|json)/g)].map(
-      (match) => match[0],
-    );
+    const names = [
+      ...data
+        .toString("latin1")
+        .matchAll(/(?:tables|data)\/[a-z_]+\.(?:csv|json)/g),
+    ].map((match) => match[0]);
     expect(names).toContain("tables/entries.csv");
     expect(names).toContain("data/entries.json");
     expect(names.join(" ")).not.toMatch(/homes|vehicles|milestones/);

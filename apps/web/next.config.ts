@@ -16,8 +16,9 @@ const nextConfig: NextConfig = {
   // history, tags replaced Collections, and the Map was retired. Redirecting
   // here, before any rendering, keeps old links to one request instead of a
   // rendered page that then navigates again. Query values pass through to the
-  // destination. Old Someday addresses redirect from `app/goals`, which checks
-  // whether the item still exists.
+  // destination. Old Someday, Home, and Vehicle addresses redirect from
+  // `app/goals`, `app/homes`, and `app/vehicles`, which check whether the
+  // Entry still exists.
   async redirects() {
     return [
       { source: "/search", destination: "/library", permanent: false },

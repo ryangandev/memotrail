@@ -22,7 +22,7 @@ platforms:
 purpose: The clickable card that opens one record, with a media band on top and the record's dates, name, facts, and organization below.
 
 use:
-  - A Home, Vehicle, First Time, or Someday item in its workspace grid, opening the record's focused page.
+  - A First Time in its workspace grid, opening the Entry's Item page.
   - Any record result shown as a card, where a photo or map helps people recognize it.
 
 avoid:
@@ -81,7 +81,7 @@ content:
   casing: asWritten
   length: The title is the record's own name, wrapping to two lines; facts are one short line each.
   notes:
-    - Each record view lays out its own body inside the shared shell, so a Vehicle card and a Someday card can show different facts.
+    - Each record view lays out its own body inside the shared shell, so cards for different records can show different facts.
     - The visual prefers a photo, then a map when the Location has coordinates, then the record's mark.
 
 accessibility:
@@ -99,6 +99,6 @@ platformDifferences:
 
 specimens:
   - id: record-card-photo
-    description: A Home card with a cover photo and a Current badge, then its dates, name, a fact, and its organization.
+    description: A card with a cover photo and a photo count, then its date, name, a Location line, story, and tags.
   - id: record-card-mark
-    description: A Vehicle card without a photo or map, showing its mark over a soft accent wash.
+    description: A card without a photo or map, showing its mark over a soft accent wash.

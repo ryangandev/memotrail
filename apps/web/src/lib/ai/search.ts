@@ -92,13 +92,7 @@ const acceptedManualTypes = new Set(types);
 export const searchPlanSchema = {
   type: "object",
   additionalProperties: false,
-  required: [
-    "queries",
-    "itemClassifications",
-    "dateFrom",
-    "dateTo",
-    "order",
-  ],
+  required: ["queries", "itemClassifications", "dateFrom", "dateTo", "order"],
   properties: {
     queries: {
       type: "array",

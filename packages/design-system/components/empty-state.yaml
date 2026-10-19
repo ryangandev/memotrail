@@ -12,7 +12,7 @@ platforms:
 purpose: Explains why a region has nothing to show and, when there is one, offers the next step.
 
 use:
-  - A list, grid, or section with no records yet, such as an empty Library or a Homes page before the first Home.
+  - A list, grid, or section with no records yet, such as an empty Library or a First Times page before the first First Time.
   - A search or filter that matched nothing, with a way to widen it.
   - A section that is itself the way to start, such as an empty Home Dashboard card, as one whole-state button.
 

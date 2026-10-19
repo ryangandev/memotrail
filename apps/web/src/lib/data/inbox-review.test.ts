@@ -155,7 +155,8 @@ describe("Inbox Entry review", () => {
       occurredEnd: "2019-03-09T00:00:00.000Z",
     };
     expect(parseInboxReviewInput(dayWithEnd)).toEqual({
-      message: "Only ranges, ages, or approximate periods can have an end date.",
+      message:
+        "Only ranges, ages, or approximate periods can have an end date.",
       success: false,
     });
     expect(
@@ -179,10 +180,12 @@ describe("Inbox Entry review", () => {
         milestone: { isFirstTime: false, lane: "other", shape: "moment" },
       }),
     ).toEqual({ message: "This Entry review is invalid.", success: false });
-    const { isChapter: _chapter, ...withoutChapter } = validInput;
-    expect(parseInboxReviewInput(withoutChapter).success).toBe(false);
-    const { isFirstTime: _first, ...withoutFirstTime } = validInput;
-    expect(parseInboxReviewInput(withoutFirstTime).success).toBe(false);
+    expect(
+      parseInboxReviewInput({ ...validInput, isChapter: undefined }).success,
+    ).toBe(false);
+    expect(
+      parseInboxReviewInput({ ...validInput, isFirstTime: undefined }).success,
+    ).toBe(false);
   });
 
   it("accepts a provider Location and rejects incomplete coordinates", () => {

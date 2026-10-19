@@ -12,7 +12,6 @@ import type { OccurrenceDraft } from "@/lib/data/occurrence";
 import styles from "./page.module.css";
 import {
   CaptureComposerSpecimen,
-  FocusedRecordSpecimen,
   RecordCardSpecimen,
   RichTextSpecimen,
   SectionHeaderSpecimen,
@@ -217,13 +216,13 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
               names={tags}
               onChange={setTags}
               onInputChange={setTagInput}
-              options={["family", "travel", "milestone", "home"]}
+              options={["family", "travel", "first-time", "work"]}
             />
           </div>
         </Specimen>
 
         <Specimen
-          api="point · span · disabled · defaultTimezone · Day, Month, Year, Not sure"
+          api="span · disabled · defaultTimezone · Day, Month, Year, Not sure"
           title="OccurrenceEditor"
         >
           <div className={styles.occurrenceSpecimen}>
@@ -287,13 +286,12 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="RecordCard is the shared interactive record surface used by Homes, Vehicles, and First Times, and FocusedRecord is the page it opens. SeparatedList and SectionHeader organize the rows and headings around them, and CaptureComposer writes new Entries."
+        description="RecordCard is the shared interactive record surface used by First Times. SeparatedList and SectionHeader organize the rows and headings around them, and CaptureComposer writes new Entries."
         id="containers"
         index="05"
         title="Containers and data display"
       >
         <RecordCardSpecimen />
-        <FocusedRecordSpecimen />
         <SeparatedListSpecimen />
         <SectionHeaderSpecimen />
         <CaptureComposerSpecimen />

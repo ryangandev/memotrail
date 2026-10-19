@@ -27,13 +27,11 @@ import { SIDEBAR_COOKIE_NAME } from "@/lib/sidebar-preference";
 export type WorkspaceDestination =
   | "explore"
   | "home"
-  | "homes"
   | "library"
   | "settings"
   | "tags"
   | "timeline"
   | "trash"
-  | "vehicles"
   | "first-times";
 
 type NavigationItem = {
@@ -60,13 +58,6 @@ const primaryNavigation: NavigationItem[] = [
 ];
 
 const recordNavigation: NavigationItem[] = [
-  { destination: "homes", href: "/homes", icon: "home", label: "Homes" },
-  {
-    destination: "vehicles",
-    href: "/vehicles",
-    icon: "car",
-    label: "Vehicles",
-  },
   {
     destination: "first-times",
     href: "/first-times",
@@ -395,8 +386,6 @@ function destinationForPathname(pathname: string): WorkspaceDestination {
   if (pathname.startsWith("/explore")) return "explore";
   if (pathname.startsWith("/settings")) return "settings";
   if (pathname.startsWith("/timeline")) return "timeline";
-  if (pathname.startsWith("/homes")) return "homes";
-  if (pathname.startsWith("/vehicles")) return "vehicles";
   if (pathname.startsWith("/first-times")) return "first-times";
   if (pathname.startsWith("/tags")) return "tags";
   if (pathname.startsWith("/trash")) return "trash";

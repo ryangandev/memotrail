@@ -190,7 +190,7 @@ export const bundled = [
       },
     ],
     summary:
-      "RecordCard is the clickable card shell that Home, Vehicle, First Time, and Someday results share.",
+      "RecordCard is the clickable card shell that First Time results use.",
   },
   {
     name: "FocusedViewLayout",
@@ -199,14 +199,6 @@ export const bundled = [
     height: 520,
     summary:
       "FocusedViewLayout is the page pattern of a focused view: a wide frame, a page header, a summary row, and content.",
-  },
-  {
-    name: "FocusedDetailUnavailable",
-    source: "focused-detail-unavailable.tsx",
-    group: "Patterns",
-    height: 300,
-    summary:
-      "FocusedDetailUnavailable is the page shown when a focused record cannot be opened.",
   },
 ];
 
@@ -239,6 +231,10 @@ export const excluded = {
   "empty-trash-control.tsx": needsData,
   "entry-detail-view.tsx": featureView,
   "entry-editor-dialog.tsx": needsData,
+  "entry-list.tsx":
+    "Lists saved Entries with their photos and Location maps, which need app data.",
+  "entry-marks-fields.tsx":
+    "Edits the Chapter and First Time marks of an Entry form and is tied to its data model.",
   "entry-organization-editor.tsx": needsData,
   "entry-photo-dates.tsx":
     "Reads camera dates and GPS from an Entry's saved photos.",
@@ -248,15 +244,14 @@ export const excluded = {
     "Renders an Entry's stored rich-text document, which is app data rather than props a design can supply.",
   "export-settings.tsx": needsData,
   "first-times-workspace.tsx": featureView,
-  "focused-editor-surface.tsx": needsDialog,
-  "focused-record-detail.tsx": `${featureView} It also uses the router.`,
+  "import-preview.tsx": featureView,
+  "import-result.tsx": featureView,
+  "import-start.tsx": featureView,
+  "import-workspace.tsx": featureView,
   "home-dashboard.tsx": featureView,
-  "homes-workspace.tsx": featureView,
   "library-search.tsx": `${featureView} It also reads and writes the URL.`,
   "location-picker.tsx":
     "Searches and saves locations through the app's location API.",
-  "milestone-fields.tsx":
-    "Edits the milestone fields of an Entry form and is tied to its data model.",
   "occurrence-editor.tsx":
     "Edits an Entry's date and timezone model inside an editor form.",
   "overlay-container.tsx":
@@ -267,11 +262,13 @@ export const excluded = {
   "photo-preview-dialog.tsx": needsDialog,
   "preferred-name-setting.tsx": needsData,
   "quick-capture-dialog.tsx": needsCapture,
+  "route-fallback.tsx": needsRouting,
   "record-card-map.tsx":
     "Loads a server-rendered static map image for a saved location.",
   "rich-text-editor.tsx":
     "A Tiptap editor whose document, extensions, and shortcuts belong to the capture and Entry editors.",
   "search-shortcut-link.tsx": `${needsRouting} It installs a global keyboard shortcut and takes its look from the workspace shell.`,
+  "semantic-search-setting.tsx": needsData,
   "selected-photo-preview.tsx": needsDialog,
   "sync-status.tsx": needsCapture,
   "tag-control.tsx": needsData,
@@ -284,9 +281,7 @@ export const excluded = {
   "top-layer.ts":
     "Helpers that place Dialog and its overlays in the browser top layer; it renders nothing, and Dialog is not bundled.",
   "trash-workspace.tsx": featureView,
-  "use-confirmed-records.ts": "A hook, not a component.",
   "use-effective-theme.ts": "A hook, not a component.",
-  "vehicles-workspace.tsx": featureView,
   "workspace-action-dock.tsx": `${needsRouting} It opens Quick Capture and Search.`,
   "workspace-history-controls.tsx": needsRouting,
   "workspace-shell.tsx": needsRouting,

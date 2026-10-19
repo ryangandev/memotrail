@@ -6,7 +6,6 @@ import { Button } from "@/components/button";
 import { CaptureComposer } from "@/components/capture-composer";
 import { CaptureProvider } from "@/components/capture-provider";
 import { EntryRichTextContent } from "@/components/entry-rich-text-content";
-import { FocusedRecordView } from "@/components/focused-record-detail";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import {
@@ -14,13 +13,13 @@ import {
   RecordCardBody,
   RecordCardVisual,
 } from "@/components/record-card";
-import record from "@/components/record-workspace.module.css";
+import firstTimes from "@/components/first-times-workspace.module.css";
 import { RichTextEditor } from "@/components/rich-text-editor";
 import { SectionHeader } from "@/components/section-header";
 import { SeparatedList } from "@/components/separated-list";
 import type { EntryRichText } from "@/lib/data/rich-text";
 import styles from "./page.module.css";
-import { homePhotos, loadedImage, sampleRichText } from "./samples";
+import { loadedImage, sampleRichText } from "./samples";
 import { Specimen, SpecimenCase } from "./specimen";
 
 // The record, writing, and list specimens, with the same content as the iOS gallery.
@@ -89,22 +88,14 @@ export function RecordCardSpecimen() {
         <SpecimenCase id="record-card-photo">
           <div className={styles.cardSpecimen}>
             <RecordCard
-              ariaLabel="Maple Street flat, Since Jun 1, 2021"
-              className={record.homeCard}
-              onClick={() => setMessage("Opened the Maple Street flat.")}
+              ariaLabel="First solo hike, Jun 12, 2021"
+              className={firstTimes.firstCard}
+              onClick={() => setMessage("Opened the first solo hike.")}
             >
-              <RecordCardVisual className={record.homeVisual}>
+              <RecordCardVisual className={firstTimes.coverPhoto}>
                 <ProgressiveImage alt="" src={loadedImage} />
                 <Badge
-                  className={record.currentBadge}
-                  size="micro"
-                  tone="glassAccent"
-                  uppercase
-                >
-                  Current
-                </Badge>
-                <Badge
-                  className={record.photoBadge}
+                  className={firstTimes.photoBadge}
                   size="micro"
                   tone="inverse"
                   uppercase
@@ -112,14 +103,12 @@ export function RecordCardSpecimen() {
                   3 photos
                 </Badge>
               </RecordCardVisual>
-              <RecordCardFields
-                duration="5 years"
-                facts={[
-                  { icon: "map", text: "Portland, Oregon, United States" },
-                ]}
-                range="Since Jun 1, 2021"
-                tags={["home", "family"]}
-                title="Maple Street flat"
+              <FirstTimeFields
+                date="Jun 12, 2021"
+                location="Mount Hood, Oregon, United States"
+                story="Started before sunrise and reached the ridge as the clouds lifted."
+                tags={["hiking"]}
+                title="First solo hike"
               />
             </RecordCard>
           </div>
@@ -127,30 +116,18 @@ export function RecordCardSpecimen() {
         <SpecimenCase id="record-card-mark">
           <div className={styles.cardSpecimen}>
             <RecordCard
-              ariaLabel="Red touring bike, 2012 - 2016"
-              className={record.homeCard}
-              onClick={() => setMessage("Opened the red touring bike.")}
+              ariaLabel="First bike ride, 2012"
+              className={firstTimes.firstCard}
+              onClick={() => setMessage("Opened the first bike ride.")}
             >
-              <RecordCardVisual className={record.homeVisual}>
-                <div className={record.homeMark}>
-                  <Icon name="car" size={24} />
-                  <span>2012 Trek 520 · Red</span>
-                </div>
-                <Badge
-                  className={record.pastBadge}
-                  size="micro"
-                  tone="glassNeutral"
-                  uppercase
-                >
-                  Earlier
-                </Badge>
+              <RecordCardVisual className={firstTimes.coverPhoto}>
+                <span className={firstTimes.cardIndexFallback}>01</span>
               </RecordCardVisual>
-              <RecordCardFields
-                duration="About 4 years"
-                facts={[{ icon: "car", text: "2012 Trek 520 · Red" }]}
-                range="2012 - 2016"
+              <FirstTimeFields
+                date="2012"
+                story="Training wheels off, and a long coast down the driveway."
                 tags={["cycling"]}
-                title="Red touring bike"
+                title="First bike ride"
               />
             </RecordCard>
           </div>
@@ -163,33 +140,31 @@ export function RecordCardSpecimen() {
   );
 }
 
-// The Home and Vehicle card body, as their workspaces draw it.
-function RecordCardFields({
-  duration,
-  facts,
-  range,
+// The First Time card body, as its workspace draws it.
+function FirstTimeFields({
+  date,
+  location,
+  story,
   tags,
   title,
 }: {
-  duration: string;
-  facts: { icon: "car" | "map"; text: string }[];
-  range: string;
+  date: string;
+  location?: string;
+  story: string;
   tags: string[];
   title: string;
 }) {
   return (
-    <RecordCardBody className={record.cardBody}>
-      <div className={record.cardDates}>
-        <time>{range}</time>
-        <span>{duration}</span>
-      </div>
-      <h3>{title}</h3>
-      {facts.map((fact) => (
-        <p className={record.location} key={fact.text}>
-          <Icon name={fact.icon} size={14} />
-          {fact.text}
+    <RecordCardBody className={firstTimes.cardBody}>
+      <time>{date}</time>
+      <h2>{title}</h2>
+      {location ? (
+        <p className={firstTimes.locationLine}>
+          <Icon name="map" size={14} />
+          {location}
         </p>
-      ))}
+      ) : null}
+      <p>{story}</p>
       <footer>
         <div>
           {tags.map((name) => (
@@ -201,42 +176,6 @@ function RecordCardFields({
         <Icon name="chevron" size={15} />
       </footer>
     </RecordCardBody>
-  );
-}
-
-export function FocusedRecordSpecimen() {
-  const [message, setMessage] = useState("Edit has not been activated.");
-  return (
-    <Specimen
-      api="FocusedRecordView · kindLabel · title · photos · facts · story · tags · onEdit · children"
-      description="The focused Home and Vehicle page: photos, labeled facts that skip empty values, then Story and Organize."
-      id="focused-record"
-      title="FocusedRecord"
-    >
-      <SpecimenCase id="focused-record-home">
-        <div className={styles.focusedRecordFrame}>
-          <FocusedRecordView
-            facts={[
-              { label: "When", value: "Since Jun 1, 2021" },
-              { label: "Location", value: "Portland, Oregon, United States" },
-              { label: "Address", value: "120 Maple Street" },
-              { label: "Why you moved in", value: "Closer to work" },
-              { label: "Why you left", value: null },
-            ]}
-            headingLevel={2}
-            kindLabel="Home"
-            onEdit={() => setMessage("Edit Home activated.")}
-            photos={homePhotos}
-            story="Sunny kitchen, a creaky staircase, and the maple that turned red each October."
-            tags={["home", "family"]}
-            title="Maple Street flat"
-          />
-          <p className={styles.stateNote} role="status">
-            {message}
-          </p>
-        </div>
-      </SpecimenCase>
-    </Specimen>
   );
 }
 
@@ -269,9 +208,9 @@ export function SeparatedListSpecimen() {
         <SpecimenCase id="separated-list-default">
           <SeparatedFrames>
             <SeparatedList>
-              <a href="#separated-list">Manage tracks</a>
-              <span>8 tracks</span>
-              <span>12 moments</span>
+              <a href="#separated-list">Manage tags</a>
+              <span>8 tags</span>
+              <span>12 entries</span>
               <span>2017 to 2026</span>
             </SeparatedList>
           </SeparatedFrames>

@@ -60,7 +60,10 @@ describe("Life Wiki workspace data", () => {
       { ...item, item_subtype: "chapter", is_first_time: true },
     ])!;
     expect(wikiItemHref(entry!)).toBe(`/items/${entry!.id}`);
-    expect(chapter).toMatchObject({ isFirstTime: true, itemSubtype: "chapter" });
+    expect(chapter).toMatchObject({
+      isFirstTime: true,
+      itemSubtype: "chapter",
+    });
     expect(wikiItemHref(chapter!)).toBe(`/items/${chapter!.id}`);
   });
 

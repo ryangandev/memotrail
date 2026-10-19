@@ -56,7 +56,10 @@ describe("Timeline rows", () => {
       }),
     ]);
 
-    expect(result.chapters.map((item) => item.id)).toEqual(["bar-first", "bar"]);
+    expect(result.chapters.map((item) => item.id)).toEqual([
+      "bar-first",
+      "bar",
+    ]);
     expect(result.firstTimes.map((item) => item.id)).toEqual(["point"]);
   });
 

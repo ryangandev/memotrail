@@ -103,10 +103,9 @@ describe("createTimelineLayout", () => {
     )!.leftPercent;
 
     expect(position.labelPlacement).toBe("inside");
-    expect(position.leftPercent + (position.widthPixels / layout.canvasWidth) * 100).toBeCloseTo(
-      end2022,
-      5,
-    );
+    expect(
+      position.leftPercent + (position.widthPixels / layout.canvasWidth) * 100,
+    ).toBeCloseTo(end2022, 5);
   });
 
   it("extends an open bar to the reference date", () => {
