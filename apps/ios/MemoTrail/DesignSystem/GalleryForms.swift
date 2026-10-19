@@ -15,6 +15,7 @@
     @State private var month = "2026-09"
     @State private var year = "2026"
     @State private var dateTime = "2026-09-17T14:30:00"
+    @State private var dayWithoutTime = "2026-09-17"
     @State private var from = "2026-09-01"
     @State private var start = "2026-09-17"
     @State private var birthDate = "1990-04-12"
@@ -27,11 +28,22 @@
     @State private var smallUnchecked = false
     @State private var reminders = false
     @State private var withDescription = false
-    @State private var tags = ["family", "travel"]
+    @State private var tags: [String] = []
     @State private var occurrence = FormSpecimens.dayOccurrence
+    @State private var chapterOccurrence = FormSpecimens.presentChapter
     @State private var showingEditor = false
-    @State private var moveInReason = "Closer to work"
+    @State private var chapterTitle = "Living in Lisbon"
     @State private var homeCity = "Portland"
+
+    /// A Chapter that is still going on.
+    static var presentChapter: OccurrenceDraft {
+      var draft = OccurrenceDraft(
+        EntryOccurrence(
+          precision: .month, start: nil, end: nil, label: nil, timezone: "America/Los_Angeles"))
+      draft.start = "2024-03"
+      draft.endMode = .present
+      return draft
+    }
 
     static var dayOccurrence: OccurrenceDraft {
       var draft = OccurrenceDraft(
@@ -91,13 +103,13 @@
                 MTSearchField(
                   "Compact search", text: .constant(""), prompt: "Search your trail", size: .small)
                 HStack(alignment: .bottom, spacing: MTSpacing.s2) {
-                  MTSearchField("Search Locations", text: $search, prompt: "Search for an address")
+                  MTSearchField("Search Library", text: $search, prompt: "Search your trail")
                     .onSubmit(runSearch)
                   Button("Search", action: runSearch).mtButtonStyle(.secondary)
                 }
                 MTSearchField(
-                  "Search your Life Wiki", text: .constant(""),
-                  prompt: "A phrase, date, or question about your life...", size: .large)
+                  "Search everything", text: .constant(""),
+                  prompt: "A word or phrase from your Entries", size: .large)
               }
             }
             GalleryCaseSeparator()
@@ -135,7 +147,7 @@
                   title: { $0 }, size: .small)
                 MTSelectField(
                   label: "Show records", selection: $showRecords,
-                  options: ["All records", "Entries", "Homes & vehicles"], title: { $0 })
+                  options: ["All records", "Entries", "Chapters"], title: { $0 })
                 MTSelectField(
                   label: "Default view", selection: $defaultView,
                   options: ["Dashboard", "Timeline", "Library"], title: { $0 }, size: .large)
@@ -147,8 +159,8 @@
                 label: "Record", selection: $recordFilter,
                 groups: [
                   MTSelectGroup(options: ["All records"]),
-                  MTSelectGroup(title: "Records", options: ["Entries", "Entities", "Goals"]),
-                  MTSelectGroup(title: "Focused records", options: ["First Times", "People"]),
+                  MTSelectGroup(title: "Records", options: ["Entries", "Chapters", "First Times"]),
+                  MTSelectGroup(title: "In Trash", options: ["Removed Entries", "Removed photos"]),
                 ], title: { $0 }, isRequired: true)
             }
             GalleryCaseSeparator()
@@ -164,7 +176,7 @@
 
         GallerySpecimen(
           title: "Checkbox",
-          api: "title · detail · isOn · size: small | medium · disabled",
+          api: "title · detail · isOn · size: small | medium · identifier · disabled",
           description:
             "The whole row toggles the option. The title names it, and VoiceOver reads the detail after it."
         ) {
@@ -182,7 +194,9 @@
             GalleryCaseSeparator()
             GalleryCase(.checkboxStates) {
               VStack(alignment: .leading, spacing: 0) {
-                MTCheckbox(title: "Remind me", detail: "Controlled by this page", isOn: $reminders)
+                MTCheckbox(
+                  title: "Remind me", detail: "Controlled by this page", isOn: $reminders,
+                  identifier: "gallery-checkbox-remind")
                 MTCheckbox(
                   title: "With description",
                   detail:
@@ -215,7 +229,11 @@
             }
             GalleryCaseSeparator()
             GalleryCase(.dateFieldWithTime) {
-              MTDateField(label: "Exact date and time", value: $dateTime, includesTime: true)
+              MTFieldGrid {
+                MTDateField(label: "Exact date and time", value: $dateTime, includesTime: true)
+                // After Add time, the day stays and the time waits to be chosen.
+                MTDateField(label: "Day waiting for a time", value: $dayWithoutTime, includesTime: true)
+              }
             }
             GalleryCaseSeparator()
             GalleryCase(.dateFieldSizes) {
@@ -338,22 +356,33 @@
 
         GallerySpecimen(
           title: "OrganizationEditor",
-          api: "kind: tag · names · options · disabled",
+          api: "kind: tag · names · options, most used first · disabled",
           description:
-            "Add opens a picker that finds existing names or creates one above the keyboard. Tags also add on a comma, and Done keeps text still in the search field."
+            "The Entry editor's tag field. With no tags yet it offers the most used ones, and it counts tags only from 60 of 70. Add opens a picker that finds a name, reusing one that differs only by case, or creates it above the keyboard. Tags also add on a comma, and Done keeps text still in the search field."
         ) {
           MTOrganizationEditor(
             kind: .tag, names: $tags,
-            options: ["family", "travel", "milestone", "home"])
+            options: ["family", "travel", "coast", "milestone", "home", "work", "lisbon"])
         }
 
         GallerySpecimen(
           title: "OccurrenceEditor",
-          api: "point · span · defaultTimezone · eight Date types",
+          api:
+            "span · point · defaultTimezone · Day, Month, Year, Not sure · Add time, Add end date, Present, Add date description",
           description:
-            "The time zone appears for exact times and says whether the Entry overrides the Settings default."
+            "An Entry's date, then a Chapter's, which always ends on a date or is Present. An exact time in the Settings time zone is named as text with Change."
         ) {
-          OccurrenceEditor(value: $occurrence, defaultTimezone: "America/Los_Angeles")
+          VStack(alignment: .leading, spacing: MTSpacing.s5) {
+            OccurrenceEditor(value: $occurrence, defaultTimezone: "America/Los_Angeles")
+              .accessibilityElement(children: .contain)
+              .accessibilityIdentifier("gallery-occurrence-entry")
+            GalleryCaseSeparator()
+            OccurrenceEditor(
+              value: $chapterOccurrence, span: true, defaultTimezone: "America/Los_Angeles"
+            )
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("gallery-occurrence-chapter")
+          }
         }
 
         GallerySpecimen(
@@ -370,23 +399,21 @@
             "The Web editor fieldset: the legend sits in a gap in the border, and fields inside rise onto the raised surface. The accent tone marks a panel that acts on the saved record."
         ) {
           VStack(alignment: .leading, spacing: MTSpacing.s5) {
-            MTFormSection("Home details") {
-              MTTextField(label: "Why you moved in", text: $moveInReason)
+            MTFormSection("Chapter") {
+              MTTextField(label: "Chapter title", text: $chapterTitle, isRequired: true)
               MTDateField(label: "Start date", value: $date, isRequired: true)
             }
             MTFormSection("Location") {
               MTFormNote(
-                "Save an address or position for this Home. It can appear on a future map alongside memories and events from the same area."
+                "This Entry keeps its Location when you save. Change the address in MemoTrail on the Web."
               )
               MTTextField(label: "City", text: $homeCity)
             }
-            MTFormSection("Bucket List milestone", tone: .accent) {
-              MTFormNote(
-                "MemoTrail will mark the Goal Achieved and create a linked First Time with the same title."
-              )
+            MTFormSection("Camera dates", tone: .accent) {
+              MTFormNote("A photo in this Entry was taken on Sep 17, 2026.")
               Button {
               } label: {
-                Label("Mark achieved and create First Time", icon: .check)
+                Label("Use calendar date Sep 17, 2026", icon: .calendar)
               }
               .mtButtonStyle()
             }

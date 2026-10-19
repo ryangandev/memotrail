@@ -6,6 +6,7 @@
     @State private var uploaded = 3
     @State private var toastMessage = ""
     @State private var previewing: MTPhotoField.SavedPhoto?
+    @State private var syncStatus = "Tap a count to sync now."
 
     private func message(_ sample: String) -> String { toastMessage.trimmed.nonEmpty ?? sample }
 
@@ -70,6 +71,28 @@
               uploaded = uploaded >= 5 ? 0 : uploaded + 1
             }
             .mtButtonStyle(.secondary, size: .small)
+          }
+        }
+
+        GallerySpecimen(
+          title: "SyncStatus",
+          api: "MTSyncStatusButton · label · needsAttention · isSyncing · action",
+          description:
+            "The workspace header's count of captures waiting on this iPhone. It turns warm when MemoTrail refused or could not read one, and its dot pulses while a sync runs."
+        ) {
+          GalleryCase(.syncStatusCounts) {
+            VStack(alignment: .leading, spacing: MTSpacing.s2) {
+              MTFlowLayout(spacing: MTSpacing.s3) {
+                MTSyncStatusButton(label: "2 pending") { syncStatus = "Syncing 2 pending." }
+                MTSyncStatusButton(label: "2 pending · 1 not accepted", needsAttention: true) {
+                  syncStatus = "1 capture needs review."
+                }
+                MTSyncStatusButton(label: "3 pending", isSyncing: true) {
+                  syncStatus = "Already syncing."
+                }
+              }
+              Text(syncStatus).font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
+            }
           }
         }
 
@@ -187,7 +210,7 @@
         }
       }
       .sheet(item: $previewing) { photo in
-        MTPhotoPreview(saved: GallerySamples.homePhotos, recordLabel: "Home", selectedID: photo.id)
+        MTPhotoPreview(saved: GallerySamples.homePhotos, recordLabel: "Entry", selectedID: photo.id)
       }
     }
 

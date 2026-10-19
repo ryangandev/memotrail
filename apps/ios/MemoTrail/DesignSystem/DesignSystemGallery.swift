@@ -91,7 +91,7 @@
           .accessibilityIdentifier("design-section-\(section.rawValue)")
         }
         Text(
-          "Specimens use production components and local demo state only. Nothing is saved to your archive."
+          "Specimens use production components and local demo state only. Nothing is saved to MemoTrail."
         )
         .font(MTFont.caption).foregroundStyle(MTColor.inkMuted)
       }

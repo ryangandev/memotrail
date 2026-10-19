@@ -24,12 +24,6 @@ final class LocalSessionUITests: XCTestCase {
       ("Timeline", "Finished the first marathon"), ("Library", "Grandmother's recipe cards"),
     ] {
       app.tabBars.buttons[tab].tap()
-      if tab == "Timeline" {
-        dismissBirthDatePrompt(
-          once: app.buttons.matching(
-            NSPredicate(format: "label BEGINSWITH %@", expected)
-          ).firstMatch, in: app)
-      }
       XCTAssertTrue(text(expected, in: app).waitForExistence(timeout: 15), tab)
       // Each tab's header keeps New entry beside the mark, like Web's phone header.
       XCTAssertTrue(app.buttons["workspace-new-entry"].isHittable, tab)
@@ -65,14 +59,15 @@ final class LocalSessionUITests: XCTestCase {
       let app = try launchLocalSession(contentSize: size)
       XCTAssertTrue(app.tabBars.buttons["Timeline"].waitForExistence(timeout: 20))
       app.tabBars.buttons["Timeline"].tap()
-      dismissBirthDatePrompt(
-        once: app.buttons.matching(
-          NSPredicate(format: "label BEGINSWITH %@", "Finished the first marathon")
-        ).firstMatch, in: app)
       let timeline = app.otherElements["Timeline summary"]
-      XCTAssertTrue(timeline.waitForExistence(timeout: 5))
+      XCTAssertTrue(timeline.waitForExistence(timeout: 15))
       let lines = assertSeparatorsBetweenFacts(revealWhole(timeline, in: app), in: app)
-      XCTAssertGreaterThan(lines.count, 1, "\(lines)")
+      // Like Web, the Timeline summary is one short line that wraps only at accessibility sizes.
+      if size.contains("Accessibility") {
+        XCTAssertGreaterThan(lines.count, 1, "\(lines)")
+      } else {
+        XCTAssertEqual(lines.count, 1, "\(lines)")
+      }
       attach(app, "Timeline summary at \(size)")
       app.tabBars.buttons["More"].tap()
       reveal(app.buttons["more-firstTimes"], in: app).tap()
@@ -86,19 +81,6 @@ final class LocalSessionUITests: XCTestCase {
   }
 
   // MARK: Harness
-
-  /// Dismisses Timeline's birth date prompt if it opens before `loaded` appears. The seeded
-  /// account has a birth date, so the prompt normally stays closed.
-  func dismissBirthDatePrompt(once loaded: XCUIElement, in app: XCUIApplication) {
-    let notNow = app.buttons["Not now"]
-    let deadline = Date().addingTimeInterval(15)
-    while !notNow.exists, !loaded.exists, Date() < deadline {
-      Thread.sleep(forTimeInterval: 0.25)
-    }
-    // The prompt opens once the profile and the Timeline have both loaded.
-    if notNow.exists || notNow.waitForExistence(timeout: 3) { notNow.tap() }
-    XCTAssertTrue(loaded.waitForExistence(timeout: 5))
-  }
 
   /// `offline` fails every request once the session is open, like an iPhone with no network.
   /// `contentSize` names a text size category, such as `UICTContentSizeCategoryAccessibilityL`.

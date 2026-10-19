@@ -12,6 +12,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
+import random
 import secrets
 import socket
 import struct
@@ -29,7 +30,24 @@ from local_supabase import (
 )
 
 TIMEZONE = "America/Los_Angeles"
-WEB_PORT = int(os.environ.get("MEMOTRAIL_E2E_PORT", "3100"))
+
+
+def port_open(port):
+    with socket.socket() as sock:
+        return sock.connect_ex(("127.0.0.1", port)) == 0
+
+
+def free_port():
+    """A port nothing listens on now, so concurrent runs never share the Web server's port. The
+    Web runtime also reserves the port 100 above it, so both stay well inside the valid range."""
+    for port in random.sample(range(31000, 32000), 1000):
+        if not port_open(port) and not port_open(port + 100):
+            return port
+    raise RuntimeError("No free port from 31000 to 31999; set MEMOTRAIL_E2E_PORT.")
+
+
+# MEMOTRAIL_E2E_PORT pins the Web server's port; without it each run picks a free one.
+WEB_PORT = int(os.environ.get("MEMOTRAIL_E2E_PORT") or free_port())
 if not 1 <= WEB_PORT <= 65535:
     raise ValueError("MEMOTRAIL_E2E_PORT must be a port from 1 to 65535.")
 WEB_URL = f"http://127.0.0.1:{WEB_PORT}"
@@ -238,16 +256,12 @@ def seed(stack, user):
     rpc("trash_entry_attachment", p_attachment_id=removed_photo)
 
 
-def port_open(port):
-    with socket.socket() as sock:
-        return sock.connect_ex(("127.0.0.1", port)) == 0
-
-
 def start_web():
     if port_open(WEB_PORT):
         raise RuntimeError(f"Port {WEB_PORT} is in use; choose another MEMOTRAIL_E2E_PORT.")
     server = subprocess.Popen(
         ["node", "scripts/e2e-server.mjs"], cwd=ROOT / "apps/web",
+        env={**os.environ, "MEMOTRAIL_E2E_PORT": str(WEB_PORT)},
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
     for _ in range(90):
         if server.poll() is not None:

@@ -105,7 +105,7 @@
               recordMessage = "Opened the First Time without a Location."
             } content: {
               MTRecordCardVisual(height: MTLayout.Gallery.sampleVisual) {
-                MTRecordMark(icon: .timeline, title: "A moment in your trail")
+                MTRecordMark(icon: .star, title: "A First Time on your trail")
               }
               .overlay(alignment: .topLeading) {
                 MTBadge(title: "Earlier", tone: .glassNeutral, size: .micro, uppercase: true)
@@ -147,7 +147,7 @@
         GallerySpecimen(
           title: "SeparatedList",
           api:
-            "MTFlowLayout · align: start | end { MTFlowSeparator() } · MTWordFlow(textStyle, align:)",
+            "MTFlowLayout · align: start | end · rowAlignment: center | firstTextBaseline { MTFlowSeparator() } · MTWordFlow(textStyle, align:)",
           description:
             "Summary and metadata rows, like Web SeparatedList. As the frames narrow, facts wrap whole and a separator shows only between two facts on the same line."
         ) {
@@ -155,10 +155,10 @@
             GalleryCase(.separatedListDefault) {
               separatedFrames { name in
                 MTFlowLayout(spacing: MTSpacing.s2) {
-                  Button("Manage tracks") {}
+                  Button("Open Timeline") {}
                     .buttonStyle(.plain)
                     .foregroundStyle(MTColor.accent)
-                  ForEach(["8 tracks", "12 moments", "2017 to 2026"], id: \.self) { fact in
+                  ForEach(["4 Chapters", "3 First Times", "2017 to 2026"], id: \.self) { fact in
                     MTFlowSeparator()
                     Text(fact)
                   }
