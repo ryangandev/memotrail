@@ -169,10 +169,10 @@ test("Tags are first-class and organize generic Timeline moments", async ({
     await page.getByRole("button", { name: "Add to Timeline" }).click();
     await page
       .getByRole("dialog", { name: "What are you adding?" })
-      .getByRole("button", { name: "Add Milestone", exact: true })
+      .getByRole("button", { name: "Add First Time", exact: true })
       .click();
     const momentDialog = page.getByRole("dialog", {
-      name: "Add a milestone",
+      name: "Add a First Time",
     });
     await momentDialog
       .getByLabel("Title", { exact: true })

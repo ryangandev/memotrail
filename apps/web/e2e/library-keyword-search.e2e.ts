@@ -4,7 +4,10 @@ import { test, expect } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 
-test("Canonical keyword search finds Entities", async ({ page, context }) => {
+test("Canonical keyword search finds Entries and Chapters", async ({
+  page,
+  context,
+}) => {
   const env = JSON.parse(
     execFileSync("supabase", ["status", "-o", "json"], {
       encoding: "utf8",
@@ -56,16 +59,12 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
           id: home,
           owner_id: owner,
           title: "Learning 学习 flat",
-          body: "A standalone Home",
-          item_kind: "entity",
-          item_subtype: "home",
+          body: "A standalone Chapter",
+          item_kind: "entry",
+          item_subtype: "chapter",
           date_precision: "unknown",
         })
       ).error,
-    ).toBeNull();
-    expect(
-      (await client.from("homes").insert({ entry_id: home, owner_id: owner }))
-        .error,
     ).toBeNull();
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
@@ -89,8 +88,8 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
     await page
       .getByRole("link", { name: "Learning 学习 flat", exact: true })
       .click();
-    await expect(page).toHaveURL(new RegExp(`/homes/${home}$`));
-    await expect(page.getByRole("main")).toContainText("A standalone Home");
+    await expect(page).toHaveURL(new RegExp(`/items/${home}$`));
+    await expect(page.getByRole("main")).toContainText("A standalone Chapter");
     await expect(page.getByRole("textbox", { name: /^Story/ })).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("Paged Memory"));
     const results = page.getByRole("region", { name: "Results", exact: true });
@@ -148,21 +147,21 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
     expect(response.data[0].total_count).toBe(1);
     expect(
       response.data.map((item: { item_kind: string }) => item.item_kind),
-    ).toEqual(["entity"]);
-    const homeScope = await native.rpc("search_wiki_items", {
+    ).toEqual(["entry"]);
+    const chapterScope = await native.rpc("search_wiki_items", {
       p_date_from: null,
       p_date_to: null,
-      p_item_classifications: ["home"],
+      p_item_classifications: ["chapter"],
       p_query: "学习",
       p_tag_names: [],
       p_limit: 20,
       p_offset: 0,
     });
-    expect(homeScope.error).toBeNull();
-    expect(homeScope.data).toHaveLength(1);
-    expect(homeScope.data[0]).toMatchObject({
-      item_kind: "entity",
-      item_subtype: "home",
+    expect(chapterScope.error).toBeNull();
+    expect(chapterScope.data).toHaveLength(1);
+    expect(chapterScope.data[0]).toMatchObject({
+      item_kind: "entry",
+      item_subtype: "chapter",
     });
     expect(
       (
@@ -172,10 +171,13 @@ test("Canonical keyword search finds Entities", async ({ page, context }) => {
           .eq("id", home)
       ).error,
     ).toBeNull();
-    await page.goto(`/homes/${home}`);
+    await page.goto(`/items/${home}`);
     await expect(
-      page.getByRole("heading", { name: "Home unavailable" }),
+      page.getByText("This item is in Trash. Restore it there to change it."),
     ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Edit Chapter" }),
+    ).toHaveCount(0);
     await page.goto("/search?q=" + encodeURIComponent("学习"));
     await expect(
       page.getByRole("link", { name: "Learning 学习 flat", exact: true }),

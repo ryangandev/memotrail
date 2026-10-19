@@ -3,49 +3,18 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { displayImageURLs } from "@/lib/media/urls";
 import {
-  entryDisplayTitle,
-  storedOccurrence,
-  type Occurrence,
-} from "./occurrence";
+  chapterEntriesPageSize,
+  type ChapterContents,
+} from "./chapter-contents-types";
+import { entryDisplayTitle, storedOccurrence } from "./occurrence";
 
-/** How many Entries one page of a Chapter lists. */
-export const chapterEntriesPageSize = 50;
-
-export type ChapterCoverPhoto = {
-  alt: string;
-  /** Signed for display, or null when the photo cannot be shown. */
-  imageUrl: string | null;
-  objectPath: string;
-};
-
-/** An Entry dated inside a Chapter. */
-export type ChapterEntry = {
-  coverPhoto: ChapterCoverPhoto | null;
-  excerpt: string;
-  id: string;
-  isFirstTime: boolean;
-  occurrence: Occurrence;
-  tagNames: string[];
-  /** The stored title, blank when the Entry has none. */
-  title: string;
-};
-
-/** A Chapter or First Time whose days overlap this Chapter's. */
-export type ChapterOverlap = {
-  id: string;
-  isFirstTime: boolean;
-  occurrence: Occurrence;
-  /** Its title, or its date when it has none. */
-  title: string;
-};
-
-export type ChapterContents = {
-  entries: ChapterEntry[];
-  /** True when the Entries could not load. */
-  failed: boolean;
-  overlaps: ChapterOverlap[];
-  totalCount: number;
-};
+export {
+  chapterEntriesPageSize,
+  type ChapterContents,
+  type ChapterCoverPhoto,
+  type ChapterEntry,
+  type ChapterOverlap,
+} from "./chapter-contents-types";
 
 type ChapterEntryRow = {
   cover_photo: {

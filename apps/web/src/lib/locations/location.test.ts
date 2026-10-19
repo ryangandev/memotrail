@@ -106,12 +106,13 @@ describe("Location selections", () => {
     const saved = savedLocationSelection(
       provider,
       "95000000-0000-4000-8000-000000000002",
+      4,
     );
 
     expect(saved).toEqual({
       kind: "existing",
       id: "95000000-0000-4000-8000-000000000002",
-      revision: 1,
+      revision: 4,
       formattedAddress: "10 Pine Street, Philadelphia, PA",
       address: "10 Pine Street",
       city: "Philadelphia",

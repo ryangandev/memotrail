@@ -11,8 +11,8 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-// Photo changes leave the Entry's revision alone, so an editor that changed a
-// photo can still trash its record, while another device's writing still
+// Photo changes leave the Entry's revision alone, so a page whose editor changed a
+// photo can still move its Entry to Trash, while another device's writing still
 // conflicts.
 const test = base.extend<{
   account: { client: SupabaseClient; owner: string };
@@ -69,56 +69,23 @@ const test = base.extend<{
   },
 });
 
-const common = {
-  p_body: "Original writing",
-  p_entry_id: null,
-  p_expected_revision: null,
-  p_tag_names: [],
-};
-const dates = {
-  p_date_precision: "day",
-  p_occurred_end: null,
-  p_occurred_label: null,
-  p_occurred_start: "2017-07-08T12:00:00Z",
-  p_occurred_timezone: "UTC",
-};
-const records = {
-  home: {
-    label: "Home",
-    path: "/homes",
-    rpc: "save_home_entry_with_occurrence",
-    args: {
-      ...common,
-      ...dates,
-      p_move_in_reason: "",
-      p_move_out_reason: "",
-    },
-  },
-  vehicle: {
-    label: "Vehicle",
-    path: "/vehicles",
-    rpc: "save_vehicle_entry_with_occurrence",
-    args: {
-      ...common,
-      ...dates,
-      p_color: "",
-      p_make: "Test",
-      p_model: "Car",
-      p_model_year: null,
-    },
-  },
-} as const;
-type RecordKind = keyof typeof records;
-
-async function createRecord(
-  client: SupabaseClient,
-  kind: RecordKind,
-  title: string,
-) {
-  const config = records[kind];
-  const saved = await client.rpc(config.rpc, {
-    ...config.args,
+async function createChapter(client: SupabaseClient, title: string) {
+  const saved = await client.rpc("save_entry", {
+    p_entry_id: randomUUID(),
+    p_expected_revision: null,
     p_title: title,
+    p_body: "Original writing",
+    p_body_rich: null,
+    p_tag_names: [],
+    p_occurred_start: "2017-07-08T12:00:00Z",
+    p_occurred_end: null,
+    p_date_precision: "day",
+    p_occurred_label: null,
+    p_occurred_timezone: "UTC",
+    p_primary_location: null,
+    p_photo_location: null,
+    p_is_chapter: true,
+    p_is_first_time: false,
   });
   expect(saved.error).toBeNull();
   return saved.data[0].entry_id as string;
@@ -153,19 +120,19 @@ async function currentPhotos(client: SupabaseClient, entry: string) {
   return data!.length;
 }
 
-/** Adds one photo through the focused editor, then reopens the editor. */
+function openEditorButton(page: Page) {
+  return page.getByRole("button", { name: "Edit Chapter", exact: true });
+}
+
+/** Adds one photo through the Entry editor, then reopens the editor. */
 async function openWithSavedPhoto(
   page: Page,
   client: SupabaseClient,
-  kind: RecordKind,
   entry: string,
 ) {
-  const { label, path } = records[kind];
-  await page.goto(`${path}/${entry}`);
-  await page
-    .getByRole("button", { name: `Edit ${label}`, exact: true })
-    .click();
-  const editor = page.getByRole("main");
+  await page.goto(`/items/${entry}`);
+  await openEditorButton(page).click();
+  const editor = page.getByRole("dialog", { name: "Edit Entry" });
   await editor.locator('input[type="file"]').setInputFiles({
     name: "kept.png",
     mimeType: "image/png",
@@ -174,17 +141,13 @@ async function openWithSavedPhoto(
   await editor
     .getByRole("button", { name: "Save changes", exact: true })
     .click();
-  await expect(
-    page.getByRole("button", { name: `Edit ${label}`, exact: true }),
-  ).toBeVisible();
+  await expect(editor).toHaveCount(0);
   await expect.poll(() => currentPhotos(client, entry)).toBe(1);
   // The page shows the saved photo once it refreshes.
   await expect(
-    page.getByRole("main").getByRole("img", { name: "kept.png", exact: true }),
+    page.getByRole("button", { name: "Open kept.png", exact: true }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: `Edit ${label}`, exact: true })
-    .click();
+  await openEditorButton(page).click();
   await expect(
     editor.getByRole("button", { name: "Remove kept.png", exact: true }),
   ).toBeVisible();
@@ -204,8 +167,13 @@ async function removePhoto(page: Page, editor: Locator) {
   ).toHaveCount(0);
 }
 
-async function moveToTrash(page: Page, editor: Locator, title: string) {
-  await editor
+async function closeEditor(editor: Locator) {
+  await editor.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(editor).toHaveCount(0);
+}
+
+async function moveToTrash(page: Page, title: string) {
+  await page
     .getByRole("button", { name: "Move to Trash", exact: true })
     .click();
   await page
@@ -214,40 +182,34 @@ async function moveToTrash(page: Page, editor: Locator, title: string) {
     .click();
 }
 
-for (const kind of Object.keys(records) as RecordKind[]) {
-  test(`${records[kind].label} moves to Trash after removing a photo in the same editor`, async ({
-    page,
-    account: { client },
-  }) => {
-    const uiErrors: string[] = [];
-    page.on("pageerror", (error) => uiErrors.push(error.message));
-    const title = `Photo change ${kind}`;
-    const entry = await createRecord(client, kind, title);
-    const { editor, opened } = await openWithSavedPhoto(
-      page,
-      client,
-      kind,
-      entry,
-    );
+test("Chapter moves to Trash after removing a photo in its editor", async ({
+  page,
+  account: { client },
+}) => {
+  const uiErrors: string[] = [];
+  page.on("pageerror", (error) => uiErrors.push(error.message));
+  const title = "Photo change chapter";
+  const entry = await createChapter(client, title);
+  const { editor, opened } = await openWithSavedPhoto(page, client, entry);
 
-    await removePhoto(page, editor);
-    await expect.poll(() => currentPhotos(client, entry)).toBe(0);
-    expect((await entryRow(client, entry)).revision).toBe(opened);
-    await moveToTrash(page, editor, title);
+  await removePhoto(page, editor);
+  await expect.poll(() => currentPhotos(client, entry)).toBe(0);
+  expect((await entryRow(client, entry)).revision).toBe(opened);
+  await closeEditor(editor);
+  await moveToTrash(page, title);
 
-    await expect(page).toHaveURL(records[kind].path);
-    await expect(page.getByText(/changed on another device/)).toHaveCount(0);
-    expect((await entryRow(client, entry)).deleted_at).not.toBeNull();
-    expect(uiErrors).toEqual([]);
-  });
-}
+  await expect(page).toHaveURL("/library");
+  await expect(page.getByText(/changed on another device/)).toHaveCount(0);
+  expect((await entryRow(client, entry)).deleted_at).not.toBeNull();
+  expect(uiErrors).toEqual([]);
+});
 
-test("Home moves to Trash after a partial photo upload failure", async ({
+test("Chapter moves to Trash after a partial photo upload failure", async ({
   page,
   account: { client },
 }) => {
   const title = "Photo change partial upload";
-  const entry = await createRecord(client, "home", title);
+  const entry = await createChapter(client, title);
   let failed = false;
   await page.route("**/storage/v1/object/entry-media/**", async (route) => {
     if (!failed && route.request().method() === "POST") {
@@ -255,9 +217,9 @@ test("Home moves to Trash after a partial photo upload failure", async ({
       await route.abort("failed");
     } else await route.continue();
   });
-  await page.goto(`/homes/${entry}`);
-  await page.getByRole("button", { name: "Edit Home", exact: true }).click();
-  const editor = page.getByRole("main");
+  await page.goto(`/items/${entry}`);
+  await openEditorButton(page).click();
+  const editor = page.getByRole("dialog", { name: "Edit Entry" });
   const bytes = await photo();
   await editor.locator('input[type="file"]').setInputFiles([
     { name: "first.png", mimeType: "image/png", buffer: bytes },
@@ -269,21 +231,23 @@ test("Home moves to Trash after a partial photo upload failure", async ({
 
   await expect(editor.getByText(/1 photo could not be attached/)).toBeVisible();
   expect(await currentPhotos(client, entry)).toBe(1);
-  await moveToTrash(page, editor, title);
+  await closeEditor(editor);
+  await moveToTrash(page, title);
 
-  await expect(page).toHaveURL("/homes");
+  await expect(page).toHaveURL("/library");
   expect((await entryRow(client, entry)).deleted_at).not.toBeNull();
 });
 
-test("Home Trash still refuses another device's writing after a photo removal", async ({
+test("Chapter Trash still refuses another device's writing after a photo removal", async ({
   page,
   account: { client },
 }) => {
   const title = "Photo change conflict";
-  const entry = await createRecord(client, "home", title);
-  const { editor } = await openWithSavedPhoto(page, client, "home", entry);
+  const entry = await createChapter(client, title);
+  const { editor } = await openWithSavedPhoto(page, client, entry);
 
   await removePhoto(page, editor);
+  await closeEditor(editor);
   expect(
     (
       await client
@@ -292,12 +256,12 @@ test("Home Trash still refuses another device's writing after a photo removal", 
         .eq("id", entry)
     ).error,
   ).toBeNull();
-  await moveToTrash(page, editor, title);
+  await moveToTrash(page, title);
 
   await expect(
-    editor.getByText(
-      "This Home changed on another device. Close it, refresh, and try again.",
-    ),
+    page
+      .getByRole("alert")
+      .filter({ hasText: "This item changed on another device" }),
   ).toBeVisible();
   expect((await entryRow(client, entry)).deleted_at).toBeNull();
 });

@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { expect, test, type Locator } from "@playwright/test";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { test as workspaceTest } from "./helpers/workspace-test";
 
 type SidebarMotionFrame = {
   logoCenter: number;
@@ -291,6 +292,11 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       shell.getByText("Focused views", { exact: true }),
     ).toBeVisible();
+    // Homes and Vehicles are Chapters now, so the sidebar has no section for them.
+    for (const name of ["Homes", "Vehicles"])
+      await expect(shell.getByRole("link", { name, exact: true })).toHaveCount(
+        0,
+      );
     await expect(shell.getByText("Organize", { exact: true })).toBeVisible();
     await expect(shell.getByRole("button", { name: "New entry" })).toHaveCount(
       0,
@@ -571,6 +577,10 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       name: "More destinations",
     });
     await expect(moreDestinations).toBeVisible();
+    for (const name of ["Homes", "Vehicles"])
+      await expect(
+        moreDestinations.getByRole("link", { name, exact: true }),
+      ).toHaveCount(0);
     await moreDestinations.getByRole("link", { name: "Tags" }).click();
     await expect(page).toHaveURL(/\/tags$/);
     await expect(
@@ -1049,3 +1059,40 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }
 });
+
+workspaceTest(
+  "retired Homes and Vehicles addresses open Timeline or the Chapter's Item page",
+  async ({ page, workspace: { client, owner } }) => {
+    const chapter = randomUUID();
+    expect(
+      (
+        await client.from("entries").insert({
+          id: chapter,
+          owner_id: owner,
+          title: "Maple Street flat",
+          body: "",
+          item_kind: "entry",
+          item_subtype: "chapter",
+          occurred_start: "2021-06-01T12:00:00+00:00",
+          occurred_end: null,
+          occurred_timezone: "UTC",
+          date_precision: "day",
+        })
+      ).error,
+    ).toBeNull();
+
+    for (const path of ["/homes", "/vehicles", `/vehicles/${randomUUID()}`]) {
+      await page.goto(path);
+      await expect(page).toHaveURL(/\/timeline$/);
+    }
+    await page.goto("/homes/not-an-id");
+    await expect(page).toHaveURL(/\/timeline$/);
+    await page.goto(`/homes/${chapter}`);
+    await expect(page).toHaveURL(`/items/${chapter}`);
+    await expect(
+      page.getByRole("heading", { name: "Maple Street flat" }),
+    ).toBeVisible();
+    await page.goto(`/vehicles/${chapter}/edit`);
+    await expect(page).toHaveURL(/\/timeline$/);
+  },
+);

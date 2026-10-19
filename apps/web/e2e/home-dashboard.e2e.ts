@@ -385,7 +385,7 @@ test("Home uses the signed-in archive and support capture, navigation, and narro
     ]) {
       await page.goto(`/home-ideas/${removed}`);
       await expect(
-        page.getByText("This page could not be found."),
+        page.getByRole("heading", { name: "Page not found" }),
       ).toBeVisible();
     }
   } finally {

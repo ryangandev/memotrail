@@ -24,7 +24,7 @@ import {
 import {
   chapterEntriesPageSize,
   type ChapterContents,
-} from "@/lib/data/chapter-contents";
+} from "@/lib/data/chapter-contents-types";
 import {
   entryDisplayTitle,
   occurrenceLabel,
@@ -239,7 +239,7 @@ function CurrentItem({
         ) : entryDateAddsToTitle(value) ? (
           <div>
             <dt>Date</dt>
-            <dd>{entryDateLabel(value)}</dd>
+            <dd className={styles.dateValue}>{entryDateLabel(value)}</dd>
           </div>
         ) : null}
         {groups.map((group) => (
@@ -260,7 +260,7 @@ function ChapterDate({ now, value }: { now: Date; value: EntryDetail }) {
   return (
     <div>
       <dt>Date</dt>
-      <dd>
+      <dd className={styles.dateValue}>
         <SeparatedList>
           <span>{span}</span>
           {duration ? <span>{duration}</span> : null}

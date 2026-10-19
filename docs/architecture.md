@@ -1,6 +1,6 @@
 # MemoTrail Architecture
 
-Last reviewed: 2026-09-28.
+Last reviewed: 2026-10-18.
 
 ## System map
 
@@ -38,7 +38,7 @@ Web paths are relative to `apps/web/src`; iOS paths are relative to `apps/ios/Me
 | Library browsing, search, AI suggestions, or exploration | `app/library`, `components/library-search`, `/search` redirect, `app/explore`, `app/settings/ai`, `lib/ai`, `lib/data/search*`, `lib/search` | `Features/Library`, `Features/AI`                                                     | AI, evidence, exploration, and search migrations and tests                         |
 | Photos, metadata, or export                              | media and export API routes, `lib/media`, `lib/export`, gallery and export components                                                        | `Features/Inbox`, `Features/History`, `Features/Export`, `Models/MediaDelivery.swift` | media, cleanup, and export migrations and tests                                    |
 | Import from another app                                  | `app/settings/import`, `app/api/import`, `components/import-*`, `lib/import`                                                                 | none yet                                                                              | import migrations `202610190040` to `202610190044` and `0081_import_jobs.test.sql` |
-| Timeline, Homes, Vehicles, or First Times                | matching `app` route, workspace component, and `lib/data` module                                                                             | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                              |
+| Timeline, Chapters, or First Times                       | matching `app` route, workspace component, and `lib/data` module                                                                             | matching directory under `Features` and model under `Models`                          | matching contract and occurrence migrations and tests                              |
 | Tags, links, the Item page, or Trash                     | matching `app` route and component, shared Entry tag editor, `lib/data` organization, Entry detail, and Trash modules                        | matching directory under `Features`                                                   | organization, relationship, Trash, and Empty Trash migrations and tests            |
 | Visual system                                            | shared page frame and components, CSS modules, `styles/generated-tokens.css`                                                                 | `DesignSystem`, `DesignSystem/Generated`                                              | `packages/design-system/tokens`, `components` specs, and generator                 |
 
@@ -60,49 +60,62 @@ Pair it with the test file carrying the same feature name.
 - Row Level Security is the final owner-authorization boundary for exposed data.
 - Web cookies and native bearer sessions identify the same Supabase user.
 - `entries` is the canonical content table.
-- `entries.item_kind` distinguishes ordinary Entries and focused Entities.
-  Migration `202610190001` retired the Goal Kind with Someday: every Someday item became an ordinary Entry tagged `someday`, and `entries_item_kind_valid` allows only `entry` and `entity`.
-- `entries.item_subtype` is `entry` for every ordinary Entry and `home` or `vehicle` for an Entity; descriptive writing and event labels are tags.
+- `entries.item_kind` is `entry` for every row.
+  Migration `202610190001` retired the Goal Kind with Someday, and `202610190012` retired the Entity Kind with Homes and Vehicles, so `entries_item_kind_valid` allows only `entry`.
+- `entries.item_subtype` is `entry` or `chapter`, and `entries.is_first_time` flags a First Time.
+  A Chapter is a named stretch of time with a start and an optional end; a First Time is a flag any Entry can carry, a Chapter included.
+  Descriptive writing and event labels are tags.
 - Entries have no Inbox state.
   Migration `202610040004` retired Inbox, and `202610040005` dropped `entries.inbox_status`, `home_workspace.inbox_count`, and the organize flag on Entry review.
   Web `app/inbox/actions.ts` and the `lib/data/inbox*` modules keep their names but now serve capture, sync, and the Entry editor.
-- `milestones` marks an ordinary Entry as a life milestone: `shape` is `moment` or `period`, `lane` is `work_study` or `other`, and `is_first_time` flags a First Time.
-  A date on an ordinary Entry does not put it on Timeline, and `enforce_milestone_entry` rejects a milestone on a Home or Vehicle.
-  `timeline_workspace` returns every milestone plus every Home and Vehicle, which land in the `homes` and `vehicles` lanes as Periods without a milestone row.
-  `first_times_workspace` returns the Entries whose milestone is a First Time, and `home_workspace.now_items` the Periods, Homes, and Vehicles that started and have no end.
-  Migration `202610040009` created `milestones` and dropped `timeline_items`, `timeline_tracks`, their RPCs, and the First Time RPCs.
-  It made a milestone of every First Time, every Entry placed on a visible track, and every unplaced Moment or Period, and turned the `moment`, `period`, and `first_time` subtypes into `entry`.
-  Education and Career placements went to Work and study, and other custom track names became tags on their Entries.
+- A Chapter and a First Time are marks on an ordinary Entry, never separate records.
+  `save_entry` sets both marks, `entries_item_subtype_valid` limits the subtype to `entry` and `chapter`, and `invalid_entry_marks` and `chapter_requires_title` reject a Chapter without a title or a mark combination that is not allowed.
+  A date on an ordinary Entry does not put it on Timeline; a Chapter or a First Time with a calendar date does.
+- Which Entries sit inside a Chapter is computed, never stored.
+  `chapter_window` and `entry_date_window` turn a recorded date into the days it covers in its own time zone: a Chapter without an end has no upper bound, Month and Year cover the whole month or year, and Unknown dates have no window.
+  An Entry is inside a Chapter when the Chapter's days contain all of the Entry's days, so a year a Chapter covers only in part is not counted.
+  `chapter_entries` pages a Chapter's Entries, and `chapter_overlaps` lists the Chapters that share any day with it, so moving a Chapter to Trash or giving it an end changes no Entry.
+  A Chapter never lists another Chapter as an Entry inside it.
+- `timeline_workspace` returns every Chapter and every First Time with the days each covers; a Chapter that is also a First Time is one row.
+  `first_times_workspace` returns the Entries marked First Time, and `home_workspace.now_items` the Chapters that started and have no end.
+  A resurfaced memory is always an ordinary Entry.
+- Migrations `202610190010` through `202610190017` introduced Chapters, with `202610190045` carrying the marks through `import_entry`.
+  `202610190011` is the only one that depends on data: it turned every Period, Home, and Vehicle into a Chapter and every First Time Moment into an Entry marked First Time, kept each Entry ID, and checked its own result before committing.
+  A Home's or Vehicle's typed facts (reasons for moving, make, model, model year, color) became readable lines appended to the Chapter's note, and the Work and study lane became a `work and study` tag.
+  `202610190012` dropped the `homes`, `vehicles`, and `milestones` tables, their workspace and save RPCs, `enforce_milestone_entry`, and the Entity constraints.
+  `202610190013` replaced `save_entry`, `editable_entry`, and `entry_detail` with the two-mark contract, `202610190014` through `202610190016` added the Chapter, Timeline, First Times, and Dashboard reads, and `202610190017` reworked search.
+  Prepared export snapshots were discarded with the conversion; a new export works immediately.
 - `wiki_items_workspace` supplies one owner-scoped Library row per canonical Wiki Item before filtering and pagination, with each row's date fields.
   Migration `202610180087` dropped its `p_needs_organizing` filter with the Needs organizing view.
   It keeps the earlier six-argument `wiki_items_workspace`, with every argument required so PostgREST resolves each call to one function, for the Web deployed before it; a later migration removes it once the Web that names untitled Entries by date is deployed.
 - Web `lib/data/wiki-items.ts` and native `LibraryController` consume that same bounded workspace.
-  Web routes typed records to focused detail pages with inline editing and general items to `/items/[entry]`, which reads `entry_detail` for the current content, tags, Locations, Timeline placement, and provenance links.
-  Native Library routes Homes, Vehicles, First Times, Goals, and People to their focused pages like Web, other typed records to their focused editors, and other canonical items to the Item page, like Web `/items/[entry]`.
+  Web opens every Entry, Chapters and First Times included, on `/items/[entry]`, which reads `entry_detail` for the current content, tags, Locations, marks, and provenance links.
+  Native Library still routes Homes, Vehicles, First Times, Goals, and People to their focused pages, which no longer exist on Web, so native follows Web before it works against the current schema.
   It sends Moments and Periods to the Timeline, and still sends Entries it considers unreviewed to Inbox review until native follows Web.
   `App/WikiItemLink.swift` holds that routing for every native link to an Item, and `AppNavigator.openLibrary(collection:)` and `openLibrary(tag:)` open Library filtered to one Collection or tag, like Web `/library?tag=`.
-- The former `people`, `person_versions`, and `entry_people` tables and People RPCs were removed by `202610040002_remove_people.sql`; Entity Entries are limited to `home` and `vehicle`.
+- The former `people`, `person_versions`, and `entry_people` tables and People RPCs were removed by `202610040002_remove_people.sql`.
 - The former authored `places` and `place_versions` tables and Place-only RPCs were removed by `202609240002_remove_authored_places.sql`.
 - `locations` stores private per-Entry address and coordinate snapshots with provider provenance and revision state. It is not a Wiki Item or reusable catalog.
-- `entry_locations` links an Entry to its Locations with relationship `primary` (the Entry's own Location, including a Home's address) or `photo` (a position adopted from a photo's GPS).
-  Migration `202610040008` renamed it from `entry_places`, moved Home Locations off `homes.place_id` into `primary` links, turned `related` links into `photo` links, and dropped the `name`, `notes`, and `deleted_at` columns from `locations`.
+- `entry_locations` links an Entry to its Locations with relationship `primary` (the Entry's own Location, including a Chapter's address) or `photo` (a position adopted from a photo's GPS).
+  Migration `202610040008` renamed it from `entry_places`, moved Home Locations off `homes.place_id` into `primary` links, turned `related` links into `photo` links, and dropped the `name`, `notes`, and `deleted_at` columns from `locations`; the conversion to Chapters kept each converted Home's `primary` link.
 - Location rows are immutable through the authenticated table API.
   `resolve_selected_location` keeps the Entry's current snapshot, creates one from a Geoapify result, or creates one from a typed address without coordinates (`kind: "manual"`), and `replace_primary_location` swaps the `primary` link.
-  The Entry editor's `save_entry`, Home's `save_home_with_location`, and Vehicle's `save_vehicle_with_location` call it in the same transaction as the record save; focused editors keep their plain save when Location is untouched.
-  `save_home_with_location` also returns the linked Location's id, so the Home card shows the saved snapshot before the page refreshes.
+  `save_entry` calls it in the same transaction as the Entry save, and an editor that leaves the Location untouched sends the existing snapshot with its current `revision`.
+  An `existing` selection whose revision no longer matches fails with `primary_location_changed` (40001), so a retry must carry the snapshot the previous save created.
+  `reviewInboxEntry` returns the saved snapshot's id and revision, so the editor holds it before the page refreshes.
   `locations.bound_entry_id`, owner-scoped foreign keys, and deferred link constraints reject attempts to attach one snapshot to another Entry or commit an unbound snapshot. Provider identity is provenance, not a deduplication key.
   The deferred `entry_locations_discard_unlinked_location` trigger deletes a snapshot at commit once nothing links to it, so a save that relinks the same snapshot keeps it.
   Permanently deleting an Entry cascades its Location snapshots; moving an Entry to Trash does not.
   A Location's label is its formatted address, which `normalize_location_snapshot` derives from the address parts when the provider gave none; a photo position with no address reads as its coordinates.
-  Homes may omit a Location entirely, and typing an address part in the Home editor replaces any chosen search result, so an edited address never keeps old coordinates.
+  A Chapter may omit a Location entirely, and typing an address part in the editor replaces any chosen search result, so an edited address never keeps old coordinates.
   `coordinate_source` distinguishes manual, Geoapify, and explicitly adopted photo GPS coordinates; `source_attachment_id` points to the adopted original photo while it exists.
 - Quick Capture creates an organized `entry:entry` in Library; the Web Entry editor and iOS Inbox review save that same Entry without a Kind selector.
-- Home and Vehicle creation starts in Timeline or a focused view; a milestone is an Entry, created in the Entry editor from Timeline or First Times or marked later on its Item page.
-- Migration `202610040004` drops `organize_capture`, `extract_capture_item`, `capture_extraction_source`, and `extract_capture_to_goal`, `_home`, and `_vehicle`, so Captures no longer hand off to focused records.
-  Migration `202610040005` removed the Capture source parameter from the Home and Vehicle Location saves, and `202610040008` turned the `source_capture` subtype those handoffs left on a source Entry back into a plain `entry`.
+- A Chapter or a First Time is an Entry: it is created in the Entry editor from Timeline or First Times, or marked later on its Item page.
+- Migration `202610040004` dropped `organize_capture`, `extract_capture_item`, `capture_extraction_source`, and the Capture handoffs to Goals, Homes, and Vehicles, so Captures no longer hand off to focused records.
+  Migration `202610040008` turned the `source_capture` subtype those handoffs left on a source Entry back into a plain `entry`.
   Migration `202610190001` deleted the `derived` and `derived_from` provenance links those handoffs and Add to Someday left.
-- A focused-record save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
-  After a Home save, the editor holds the saved snapshot, so a retry leaves the Location unchanged instead of creating another one.
+- An Entry save that leaves some photos unattached keeps its editor open; later saves, including photo retries, are ordinary updates.
+  After a save that chose a provider or typed Location, the editor holds the saved snapshot with its revision (`savedLocationSelection`), so a retry leaves the Location unchanged instead of creating another one.
 - Someday and the Map destination are retired.
   Migration `202610190001` converted every Goal, including those in Trash, into an `entry:entry` that keeps its title, writing and formatting, photos, Location, tags, created and updated times, and Trash state.
   Each owner gains one `someday` tag, reusing a differently cased one, which the Entry receives unless it already holds 70 tags; the status and target date become readable lines appended to the writing, such as `Someday status: Done`.
@@ -111,16 +124,17 @@ Pair it with the test file carrying the same feature name.
   Migration `202610190002` removed the `tiles` provider quota, which only the Map's tile proxy used.
   Web `app/goals/[[...rest]]` redirects an old Someday address to `/items/[entry]` while the Entry exists and to Library otherwise, and `/map` redirects to Library in `next.config.ts`.
 - Migration `202610040006` deletes every general `related` link, scrubs them from version history, drops `entry_relations` and `set_entry_relation`, and limited `entry_links.relationship` to `achievement`, `derived`, `derived_from`, `exploration_conclusion`, and `exploration_source`; `202610190001` removed the first three, leaving only the exploration links.
-- `save_entry` is the Web Entry editor's only save, and it saves plain `entry:entry` Entries only; focused records keep their own editors and RPCs.
-  `p_milestone` (`{shape, lane, isFirstTime}` or null) is required, and saving null removes the Entry's milestone.
+- `save_entry` is the Web Entry editor's only save.
+  Its 15 arguments end in `p_is_chapter` and `p_is_first_time`, which are required; one save turns an Entry into a Chapter or back and checks or unchecks First Time while keeping its tags, Location, and photos.
+  A Chapter needs a title and may carry a Day, Month, or Year with an end.
   It writes plaintext and `body_rich` in one revision, and clears formatting when `p_body_rich` is null and the primary Location when `p_primary_location` is null.
   `p_photo_location` (`{attachmentId, latitude, longitude}`) adds the photo's GPS position as a `photo` Location, and fails with `photo_source_changed` if the photo is no longer the Entry's active original.
   Migration `202610040008` replaced `review_wiki_item_with_location_rich` and its nested review steps, which took a Kind that could only be `entry`, and dropped functions no client called: `save_home_entry`, `save_vehicle_entry`, `save_timeline_entry`, `mark_goal_achieved_with_first_time`, `library_text_matches`, and `save_location`.
-- Native iOS uses the canonical Entry, Entity, and Goal decoding and filter identities.
-  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040008` and `202610190001` removed, so it fails against them until it is rewritten to follow Web.
+- Native iOS uses the canonical Entry decoding and filter identities.
+  It still sends and reads the columns, parameters, and functions that migrations `202610040001` through `202610040008`, `202610190001`, and `202610190010` through `202610190017` removed, so it fails against them until it is rewritten to follow Web.
   Its ordinary Entry editor, `Features/Inbox/EntryReviewSheet.swift`, serves Inbox review and Edit Entry on the Item page and in version history through `InboxController.submitReview`; focused records keep their own editors and RPCs.
   Moving an Inbox capture to Trash sets `deleted_at` only at the reviewed revision, like Web `trashWikiItem`.
-  The retired Place surface and saved-Location catalog are removed, and Home Location is optional.
+  The retired Place surface and saved-Location catalog are removed, and a Chapter's Location is optional.
 - Specialized tables add typed facts without duplicating common writing, organization, dates, or media.
 - `entries.body` remains canonical plaintext. Optional validated rich content is versioned under `entries.metadata.body_rich` and carries the exact matching plaintext.
   The `discard_stale_entry_rich_text` trigger removes `body_rich` whenever a write leaves its text different from `body`, so plaintext focused editors, direct client writes, and restores cannot keep outdated formatted text for search or export.
@@ -136,9 +150,9 @@ Pair it with the test file carrying the same feature name.
   Native review opens editable emphasis in the same editor and saves the editor's document when the note changes.
   An untouched note resends its original `body_rich`, so Web-only lists, quotes, links, and code survive a review that does not edit the note.
 - Tags and Wiki Item links are owner-scoped reusable relationships. Locations are Entry-owned snapshots.
-- Focused forms own specialized structure, tags own grouping and descriptive labels, and a milestone owns only Timeline presentation.
-- Home and Vehicle are Entity subtypes whose occurrence range describes the user's relationship span.
-- Moment, Period, and First Time are milestone settings on an ordinary Entry, not forms; Memory and Story are optional descriptive tags.
+- Tags own grouping and descriptive labels, and the Chapter and First Time marks own how an Entry reads on Timeline and in Library.
+- A Chapter's occurrence range describes the stretch of time it names, such as a home, a job, or a school; typed facts about a home or vehicle are ordinary writing.
+- Chapter and First Time are marks on an ordinary Entry, not forms; Memory and Story are optional descriptive tags.
 - Web Entry editors reuse `components/entry-organization-editor.tsx`; their save RPC must atomically preserve tag memberships with the canonical Entry mutation.
   `replace_entry_tags` and `valid_tag_names` hold the shared tag write and the 70-name, 80-character limits, which Web `lib/data/organization.ts` mirrors.
 - Every Entry editor's tag choices come from `lib/data/tag-options.ts`, ordered by how many Entries outside Trash use each tag, so the editor's first options are its most used suggestions.
@@ -153,7 +167,7 @@ Pair it with the test file carrying the same feature name.
 - MemoTrail keeps no earlier versions.
   Migration `202610040007` dropped `entry_versions`, `entry_photo_changes`, the history and restore RPCs, and the archiving trigger, deleted every stored version, and purged prepared export snapshots that held them.
   Web `/history` redirects to `/items/[entry]` or `/library` in `next.config.ts`.
-- Save RPCs retain unchanged Location, Timeline, and Entry-link memberships and skip unchanged Home and Vehicle detail updates.
+- Save RPCs retain unchanged Location and Entry-link memberships.
 - Older clients must preserve fields they cannot represent or reject the write safely.
 - AI organization payloads offer optional title, tags, and occurrence suggestions without structural classification.
   The database rejects legacy `entryType`, `classification`, and `collections` payload keys.
@@ -168,10 +182,10 @@ Pair it with the test file carrying the same feature name.
 - Recorded timezone controls calendar interpretation and search overlap.
 - `profiles.timezone` supplies the default for new exact timestamps; an Entry stores its own timezone snapshot and may override that default.
 - Shared Web timezone options derive their displayed UTC offset from the edited occurrence date when available and otherwise from the current date, so daylight-saving changes remain explicit without replacing the stored IANA identifier.
-- Every Web date editor receives the Settings default through `lib/data/profile-timezone.ts`: the Entry editor, Timeline forms, and the Home and Vehicle editors on their own pages.
+- Every Web date editor receives the Settings default through `lib/data/profile-timezone.ts`: the Entry editor and the Timeline forms.
   They do not surface a timezone control for date-only, partial, and uncertain dates, but they preserve the stored timezone needed for stable calendar interpretation.
   `components/occurrence-editor.tsx` shows an exact time in that default as text with a Change action, and shows the select only when the profile cannot be read.
-- Timeline, search, Home, and specialized editors must use the same occurrence semantics.
+- Timeline, search, the Dashboard, and the Entry editor must use the same occurrence semantics.
 - Workspaces return an Entry's stored title, an empty string when it has none, and never a stand-in made from its writing.
   Migration `202610180087` made `home_workspace`, `home_resurfaced_memory`, `first_times_workspace`, `goals_workspace` (since dropped), and `wiki_items_workspace` follow that, with the date fields each needs to name an untitled Entry.
   It only adds fields, so the Web deployed before it keeps working whichever ships first.
@@ -179,14 +193,15 @@ Pair it with the test file carrying the same feature name.
 - Web `entryDisplayTitle` and `occurrenceTitle` in `lib/data/occurrence.ts` name an untitled Entry by its date at its recorded precision, read in its recorded time zone with the fixed `en-US` locale, so the server and every browser render the same text.
   Every Web surface that shows an Entry title goes through them: Dashboard, Library, Library search, the Command Palette, Pending sync, the Item page and its page title, Timeline, First Times, Trash, and AI search.
 - An optional private profile birth date establishes the Timeline's earliest boundary and remains editable through authenticated profile settings; without it, `createTimelineLayout` starts from the earliest dated item, padded.
-- Web Timeline lanes use each item's rendered pixel bounds, including titles beside a dot or bar, so non-overlapping items share a row without allowing visible items to collide.
-  `TimelineWorkspace` measures titles in the lane item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Period only when the bar holds it.
-  A shorter Period draws its bar alone with the title after it, or before it at the end of the Timeline, like a Moment; titles beside an item mask the year and Today lines and end in an ellipsis only past 180 pixels.
-  A dashed Today line uses the same reference instant as open Periods, whose bars end against it with a flat right edge.
-  The canvas is at least the width beside the lane labels, measured on the client, so a short Timeline fills its card and a long one scrolls.
-- Every Timeline item is a link to its Item page through `wikiEntryHref`. Creation routes by what is added, not by lane: a milestone or First Time opens `NewEntryDialog` from `components/entry-editor-dialog.tsx` with the milestone preset, and a Home or Vehicle reuses the exported Records editor in a lazy-loaded modal.
-- `components/milestone-fields.tsx` is the Entry editor's Timeline fieldset; turning a Period back into a Moment clears its end date.
-- Timeline server data loads the lanes, the profile's time zone and birth date, and tag choices in parallel.
+- Web Timeline draws two bands, Chapters and First Times, instead of lanes.
+  A Chapter is a bar from its window start to its window end, with an open Chapter running to Today, and a First Time is a point on its day; `createTimelineLayout` in `lib/data/timeline-layout.ts` stacks overlapping items in one band on separate rows from each item's rendered pixel bounds, including titles beside a dot or bar, so visible items never collide.
+  `TimelineWorkspace` measures titles in the band item font once fonts load, estimating on the server and first render, and `createTimelineLayout` puts a title inside a Chapter only when the bar holds it.
+  A shorter Chapter draws its bar alone with the title after it, or before it at the end of the Timeline, like a First Time; titles beside an item mask the year and Today lines and end in an ellipsis only past 180 pixels.
+  A dashed Today line uses the same reference instant as open Chapters, whose bars end against it with a flat right edge.
+  The canvas fills its card and a long Timeline scrolls; a Chapter or First Time with no calendar date is listed apart from the bands.
+- Every Timeline item is a link to its Item page through `wikiEntryHref`. Adding opens `NewEntryDialog` from `components/entry-editor-dialog.tsx` with the Add Chapter or Add First Time preset.
+- The Entry editor's Chapter and First Time checkboxes live in `components/entry-marks-fields.tsx` beside the date fields; a Chapter requires a title.
+- Timeline server data loads the bands, the profile's time zone and birth date, and tag choices in parallel.
 - Native `Features/Timeline`, paused before migration `202610040009`, still follows the earlier Web phone layout: track cards, the Moment, Home, Vehicle, and First Time chooser, the first-visit birth date prompt, and the Timeline editor with the Settings time zone, Collections, and tags through `save_timeline_entry_with_organization`.
   `TimelineWorkspace` in `Models/TimelineEntry.swift` ports the First Times projection and the summary's year range.
   Like Web, Homes, Vehicles, and First Times open their focused pages from the Timeline and their editors from a Dashboard or Library link.
@@ -202,6 +217,7 @@ Pair it with the test file carrying the same feature name.
   The list groups Goals by reflective state like Web `goalSections`, and a Goal's own page pages past the first 100 Goals to find it, like Web `getGoalsWorkspace(targetId)`.
   The editor keeps the Web Related Items picker and, for a saved Bucket List Goal, the milestone panel, which records the achievement through `achieve_goal_with_occurrence` and stays open.
   `App/ConnectedItemsSection.swift` lists a record's Connected Items and routes them like Web `wikiEntryHref`: Moments and Periods open on the Timeline, and other records open their own page through `WikiItemDestinationView`.
+- Native Timeline, Homes, Vehicles, and First Times code predates Chapters: it reads `milestones`, `homes`, `vehicles`, and the Home, Vehicle, and First Time save RPCs that migrations `202610190010` through `202610190012` dropped or replaced, so it fails until native follows Web.
 - Native Goals code predates the Web Someday simplification and now the Web removal of Someday: it calls the save, extraction, and achievement RPCs and reads the `goals` table that migrations `202610040003` and `202610190001` replaced or dropped, so it fails until native follows Web.
 - Native Inbox code predates the Web retirement of Inbox: its Inbox lists only `unreviewed` Entries, so it stays empty, and its Capture handoffs call `extract_capture_to_goal`, `_home`, and `_vehicle`, which migration `202610040004` drops, so they fail until native follows Web.
 - Native People code predates the Web removal of People and calls functions that migration `202610040002` drops; it is retired when native follows Web.
@@ -222,7 +238,7 @@ Pair it with the test file carrying the same feature name.
   New entry opens Quick Capture through `AppNavigator.startCapture()`, and Settings' Archive organization leaves the Settings sheet for Collections through `routeAfterSettings`, like Web's `/collections` link.
 - Native `Features/Trash` follows Web `/trash` over `TrashController`: the retention badge and note, Empty Trash, and cards that restore or delete forever through the Web RPCs and messages, with results as toasts.
   Delete forever and Empty Trash confirm in Web's Permanent action sheets, and Empty Trash keeps its prepared list and progress on screen until the run ends, like Web `EmptyTrashControl`.
-- Web Timeline has only the lane view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
+- Web Timeline has only the band view; the Vertical Spine and Sticky Year styles and their Settings cookie were removed so Timeline changes land in one layout. The original 20 HTML design studies remain under `timeline-ideas/`.
 - Web occurrence and profile date forms use `components/date-picker-field.tsx`; domain editors map their precision into its generic granularity, time, editability, and size props instead of duplicating picker UI.
   Its open calendar and time picker render in the top layer as manual popovers, so a scrolling or translucent container such as Quick Capture's native dialog cannot clip them.
 
@@ -431,7 +447,8 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   `image.yaml` pairs ProgressiveImage with `MTRemoteImage`, `skeleton.yaml` pairs Skeleton with `MTLoadingSkeleton`, and `upload-progress.yaml` pairs PhotoUploadProgress with `MTUploadProgress`.
   `separated-list.yaml` pairs SeparatedList with `MTFlowLayout` and `MTFlowSeparator`.
   `record-card.yaml` pairs RecordCard with `MTRecordCard`, `MTEntityCard`, and `MTCollectionCard`.
-  `capture-composer.yaml` pairs CaptureComposer with `CaptureCard`, `focused-record.yaml` pairs FocusedRecordDetail with `MTFocusedRecordPage`, and `photo-viewer.yaml` pairs PhotoPreviewDialog with `MTPhotoPreview`.
+  `capture-composer.yaml` pairs CaptureComposer with `CaptureCard`, and `photo-viewer.yaml` pairs PhotoPreviewDialog with `MTPhotoPreview`.
+  `focused-record.yaml` lists `MTFocusedRecordPage` as iOS-only, because Web opens every record on the Item page.
   `rich-text.yaml` pairs EntryRichTextContent and RichTextEditor with `MTRichTextContent` and `MTRichTextEditor`.
 - The generator writes each spec's enum values as lists and union types, its prop defaults, and the specimen list into `apps/web/src/generated/design-system.ts`, and the same as Swift enums, `MT<Name>Defaults`, and `MTComponentSpecimen` into `apps/ios/MemoTrail/DesignSystem/Generated/ComponentVariants.swift`.
   Web props and native parameters take those types and defaults, so a value removed from a spec stops both platforms compiling; component unit tests catch the other direction, a value the spec adds that a Web stylesheet does not draw.
@@ -460,10 +477,17 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
   A capture saved without a connection gets an info toast instead: Web checks the browser's connection before syncing, while `InboxController` confirms a capture once when its first sync cannot reach MemoTrail and keeps later offline retries quiet.
   Web `SyncStatus` in the workspace header counts waiting and refused captures separately; selecting it retries now and opens a compact Dialog with the same `PendingCaptureList` both composers render.
   A refused capture is announced with an error toast, and `PendingCaptureList` and native `PendingCaptureRow` give it Copy text and a confirmed Discard; Retry now appears only while a capture is still waiting.
-- Web `components/entry-editor-dialog.tsx` is the ordinary Entry editor on the Item page, with Cancel and Save changes, and its `NewEntryDialog` adds a milestone Entry from Timeline and First Times.
+- Web `components/entry-editor-dialog.tsx` is the Entry editor on the Item page, with Cancel and Save changes, and its `NewEntryDialog` adds a Chapter or First Time from Timeline and First Times.
   It edits photos through `EntryPhotoField`: new photos upload after the Entry saves, and a saved photo moves to Trash at once after confirmation.
   `EntryPhotoDates` reads camera dates and GPS from the Entry's saved photos.
 - The Web Item page loads its photos on the server with `lib/data/entry-photos.ts`, which also serves `/api/media/photos` for native, and `components/entry-photos.tsx` shows them read-only and pages through them in `PhotoPreviewDialog`.
+- A Chapter's Item page adds the Entries dated inside it and the Chapters that share days with it, read through `lib/data/chapter-contents.ts` (server-only; the client-safe types and page size live in `chapter-contents-types.ts`) over `chapter_entries` and `chapter_overlaps` and paged with `?page=`.
+  A Chapter with no calendar date has no days, so its page shows no contents; its Date fact reads the span and how long it lasted, or Undated.
+- Library and search classify by the marks: `search_wiki_items` and `archive_wiki_search_evidence` take classifications `entry`, `chapter`, and `first_time`, combined by OR, and a date filter treats a Chapter without an end as still going on.
+  `lib/data/search-input.ts` reads the older `home`, `vehicle`, `entity`, and `milestone` types as Chapters and First Times, and AI search has no "before the latest move" boundary.
+- The complete export lists Chapters and First Times as the Entries they are: `export_dataset_names` has no `homes`, `vehicles`, or `milestones`, and `tables/entries.csv` carries the two marks as columns.
+- Dashboard "Now" lists the Chapters that have started and not ended, and its First Time count comes from the mark.
+- `/homes`, `/vehicles`, and `/first-times/[id]` redirect through `redirectRetiredRecord` in `lib/data/retired-routes.ts`: an address that names an Entry opens its Item page while the Entry exists, and every other address opens Timeline (or First Times).
   `/inbox` redirects to `/library` and `/inbox?entry=` to `/items/[entry]` in `next.config.ts`; Library ignores the retired `show=needs-organizing` parameter.
   Native `Features/Inbox` still shows the retired list with `InboxCards.swift` and the dialog with `EntryReviewSheet.swift`, including its Save to Library footer, until native follows Web.
   Web captures from the bottom dock, and iOS from the Dashboard or New entry in the workspace header.
@@ -538,9 +562,9 @@ The sources are a Markdown folder (which also reads Apple Notes Markdown exports
 - Page frame variants are semantic: `compact` is 880px for forms and focused reading, `standard` is 960px for lists and search, `wide` is 1080px for dashboards and card grids, and `canvas` is 1180px for dense spatial views.
 - New route pages choose the narrowest variant that fits their content; feature grids and visualizations own their internal breakpoints instead of redefining the outer page geometry.
 - Web photo surfaces reuse `components/progressive-image.tsx` for a reserved skeleton, decode fade-in, failure fallback, and reduced-motion behavior while private expiring media URLs continue to bypass the public Next image cache.
-- Home, Vehicle, and First Time result layouts reuse `components/record-card.tsx`; subtype modules own only their visual, metadata, and responsive content rules.
+- Chapter and First Time result layouts reuse `components/record-card.tsx`; mark modules own only their visual, metadata, and responsive content rules.
   Noninteractive history, Collection, and Trash surfaces retain their distinct link or multi-action semantics instead of nesting actions inside a button card.
-- Specialized record editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
+- Entry editors reuse `components/entry-photo-field.tsx` for selected and existing previews, removal controls, limits, and upload progress.
 - Web domain editors own label-to-control spacing in their shared field wrapper; route forms reuse that wrapper and the spacing tokens instead of compensating field by field.
 - Quick Capture renders the shared draft from `CaptureProvider`, so its editor is ready before the dialog first opens and photo drafts load without moving it; its loading and editor geometries stay equal.
   Its editor remains mounted while the native dialog is closed and follows edits from the Dashboard composer; closing stops voice capture while pending captures keep syncing.

@@ -84,6 +84,9 @@
   font-size: var(--mt-font-size-caption);
   text-transform: capitalize;
 }
+.currentFacts dd.dateValue {
+  text-transform: none;
+}
 .detailUnavailable {
   display: grid;
   justify-items: start;

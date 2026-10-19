@@ -1,5 +1,6 @@
 "use server";
 
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { AI_CAPABILITIES_AVAILABLE } from "@/lib/ai/availability";
@@ -64,7 +65,13 @@ const isOriginalMissing = (error: MemoTrailError) =>
 
 export type ReviewInboxEntryResult =
   | { message: string; status: "conflict" | "error" }
-  | { message: string; status: "saved"; revision: number };
+  | {
+      message: string;
+      /** The saved primary Location, when the save chose one from a provider or by hand. */
+      savedLocation?: { id: string; revision: number } | null;
+      revision: number;
+      status: "saved";
+    };
 
 /**
  * Registers an uploaded original. Pass `originalOnDevice: false` when this
@@ -298,7 +305,34 @@ export async function reviewInboxEntry(
     message: "Changes saved.",
     status: "saved",
     revision: data[0].revision,
+    savedLocation: await chosenLocation(
+      context.client,
+      parsedInput.data.id,
+      parsedInput.data.location,
+    ),
   };
+}
+
+// A Location chosen from a provider or typed by hand becomes a snapshot this save created, so
+// the editor needs its id and revision to keep it on the next save instead of choosing it again.
+async function chosenLocation(
+  client: SupabaseClient,
+  entryId: string,
+  location: { kind: string } | null,
+) {
+  if (!location || location.kind === "existing") return null;
+  const { data } = await client
+    .from("entry_locations")
+    .select("location_id, locations(revision)")
+    .eq("entry_id", entryId)
+    .eq("relationship", "primary")
+    .maybeSingle();
+  const saved = data?.locations as
+    { revision?: number } | { revision?: number }[] | null | undefined;
+  const revision = Array.isArray(saved) ? saved[0]?.revision : saved?.revision;
+  return typeof data?.location_id === "string" && typeof revision === "number"
+    ? { id: data.location_id, revision }
+    : null;
 }
 
 function entrySyncFailure(failure: SyncFailure): SyncInboxEntryResult {

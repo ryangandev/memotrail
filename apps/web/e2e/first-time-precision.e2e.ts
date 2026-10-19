@@ -80,16 +80,6 @@ test("Editing a First Time keeps its original date range", async ({
           occurred_end: end,
           occurred_timezone: "UTC",
           date_precision: "range",
-        })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
-        await client.from("milestones").insert({
-          entry_id: id,
-          owner_id: owner,
-          shape: "period",
-          lane: "other",
           is_first_time: true,
         })
       ).error,
@@ -97,18 +87,14 @@ test("Editing a First Time keeps its original date range", async ({
     await page.goto("/library");
     await page.getByRole("link", { name: /First trip to Japan/ }).click();
     await expect(page).toHaveURL(`/items/${id}`);
-    await expect(
-      page.getByText("First Time · Period · Other milestones"),
-    ).toBeVisible();
+    await expect(page.getByText("First Time", { exact: true })).toBeVisible();
     await expect(page.getByRole("textbox", { name: "Title" })).toHaveCount(0);
     await page.getByRole("button", { name: "Edit Entry" }).click();
     const dialog = page.getByRole("dialog", { name: "Edit Entry" });
     await expect(
       dialog.getByRole("checkbox", { name: /First Time/ }),
     ).toBeChecked();
-    await expect(
-      dialog.getByRole("button", { name: "Period", exact: true }),
-    ).toHaveAttribute("aria-pressed", "true");
+    await expectOccurrencePrecision(dialog, "range");
     // A date without a time has no time zone to choose.
     await expect(
       dialog.getByRole("combobox", { name: "Time zone", exact: true }),
@@ -205,7 +191,6 @@ test("Editing a First Time keeps its original date range", async ({
           .single()
       ).data!.occurred_start,
     ).toBe(exact);
-    // A Period's Day has an end of its own, so it never needs the range precision.
     const samples: {
       precision: DatePrecision;
       start: string;
@@ -221,7 +206,7 @@ test("Editing a First Time keeps its original date range", async ({
         label: "Summer before college",
         end: "",
       },
-      { precision: "day", start: "2017-07-08", label: "", end: "2017-07-15" },
+      { precision: "range", start: "2017-07-08", label: "", end: "2017-07-15" },
       { precision: "unknown", start: "", label: "", end: "" },
     ];
     for (const sample of samples) {
@@ -230,10 +215,6 @@ test("Editing a First Time keeps its original date range", async ({
       if (sample.start) await fillOccurrenceStart(dialog, sample.start);
       else await occurrenceStartField(dialog).fill("");
       if (sample.end) await fillOccurrenceEnd(dialog, sample.end);
-      else
-        await dialog
-          .getByRole("checkbox", { name: "Present", exact: true })
-          .check();
       await setDateDescription(dialog, sample.label);
       await dialog.getByRole("button", { name: "Save changes" }).click();
       await expect(dialog).not.toBeVisible();
@@ -262,12 +243,12 @@ test("Editing a First Time keeps its original date range", async ({
     expect(
       (
         await client
-          .from("milestones")
-          .select("shape,lane,is_first_time")
-          .eq("entry_id", id)
+          .from("entries")
+          .select("item_subtype,is_first_time")
+          .eq("id", id)
           .single()
       ).data,
-    ).toEqual({ shape: "period", lane: "other", is_first_time: true });
+    ).toEqual({ item_subtype: "entry", is_first_time: true });
     expect(uiErrors).toEqual([]);
   } finally {
     await admin.auth.admin.deleteUser(owner);

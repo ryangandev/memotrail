@@ -22,61 +22,52 @@ test("Timeline adds without asking for a birth date and starts from the earliest
   await chooser.getByRole("button", { name: "Close Timeline chooser" }).click();
   await expect(chooser).toHaveCount(0);
 
-  // A lane shortcut goes straight to what it adds too.
+  // The empty Timeline offers the same chooser, so it never asks for a birth date either.
   await page
-    .getByRole("button", { name: "Add a milestone to Other milestones" })
+    .getByRole("button", {
+      name: "Add a Chapter or a First Time to start your Timeline.",
+    })
     .click();
-  const editor = page.getByRole("dialog", { name: "Add a milestone" });
-  await expect(editor).toBeVisible();
+  await expect(chooser).toBeVisible();
   await expect(prompt).toHaveCount(0);
-  await editor.getByRole("button", { name: "Cancel" }).click();
-  await expect(editor).toHaveCount(0);
+  await chooser.getByRole("button", { name: "Close Timeline chooser" }).click();
+  await expect(chooser).toHaveCount(0);
 
-  // An empty Timeline shows this year and the next, and its lanes fill the card.
+  // An empty Timeline shows this year and the next, with an axis that fills the card.
   const year = new Date().getUTCFullYear();
   const axis = page.getByTestId("timeline-axis").locator("span");
   await expect(axis.first()).toHaveText(String(year));
   await expect(axis.last()).toHaveText(String(year + 1));
-  await expectLanesFillTimeline(page);
+  await expectBandsFillTimeline(page, 0);
 
   // Without a birth date, Timeline starts from the earliest dated item.
-  const momentId = randomUUID();
+  const firstTimeId = randomUUID();
   expect(
     (
       await client.from("entries").insert({
-        id: momentId,
+        id: firstTimeId,
         owner_id: owner,
         title: "Moved into the studio",
         item_kind: "entry",
         item_subtype: "entry",
+        is_first_time: true,
         occurred_start: `${year - 3}-06-01T12:00:00Z`,
         occurred_timezone: "UTC",
         date_precision: "day",
       })
     ).error,
   ).toBeNull();
-  expect(
-    (
-      await client.from("milestones").insert({
-        entry_id: momentId,
-        owner_id: owner,
-        shape: "moment",
-        lane: "other",
-      })
-    ).error,
-  ).toBeNull();
   await page.reload();
   const summary = page.getByLabel("Timeline summary");
-  await expect(summary).toContainText("1 item");
+  await expect(summary).toContainText("1 First Time");
   await expect(summary).toContainText(new RegExp(`${year - 3} to \\d{4}`));
   await expect(axis.first()).toHaveText(String(year - 2));
   await expect(
     page
-      .getByRole("region", { name: "Timeline by lane" })
-      .first()
+      .getByRole("region", { name: "Timeline by year" })
       .getByRole("link", { name: /Moved into the studio/ }),
   ).toBeVisible();
-  await expectLanesFillTimeline(page);
+  await expectBandsFillTimeline(page, 1);
   await expect(prompt).toHaveCount(0);
 
   // Set birth date stays the way to begin Timeline at birth.
@@ -147,21 +138,21 @@ test("Timeline adds without asking for a birth date and starts from the earliest
   await expect(prompt).toHaveCount(0);
 });
 
-// The year axis and every lane row reach the right edge of the Timeline card.
-async function expectLanesFillTimeline(page: Page) {
+// The year axis and every band reach the right edge of the Timeline card.
+async function expectBandsFillTimeline(page: Page, bands: number) {
   await expect
     .poll(() =>
       page.getByTestId("timeline-viewport").evaluate((viewport) => {
         const edge = viewport.getBoundingClientRect().right;
         const rows = viewport.querySelectorAll(
-          '[data-testid="timeline-axis"], [data-testid="timeline-lane"]',
+          '[data-testid="timeline-axis"], [data-testid="timeline-band"]',
         );
         return Array.from(rows).map((row) =>
           Math.max(0, Math.round(edge - row.getBoundingClientRect().right)),
         );
       }),
     )
-    .toEqual([0, 0, 0, 0, 0]);
+    .toEqual(Array.from({ length: bands + 1 }, () => 0));
 }
 
 async function chooseBirthDate(page: Page, input: Locator, value: string) {

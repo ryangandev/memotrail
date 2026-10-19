@@ -25,7 +25,10 @@ import {
   EntryMarksFields,
   type EntryMarks,
 } from "@/components/entry-marks-fields";
-import type { LocationSelection } from "@/lib/locations/location";
+import {
+  savedLocationSelection,
+  type LocationSelection,
+} from "@/lib/locations/location";
 import {
   photoCalendarDateDraft,
   type EntryPhoto,
@@ -223,6 +226,16 @@ export function EntryEditorDialog({
 
       if (nextResult.status === "saved") {
         setRevision(nextResult.revision);
+        // The saved snapshot stands in for the choice, so a retry keeps it.
+        if (nextResult.savedLocation)
+          setLocation(
+            (current) =>
+              savedLocationSelection(
+                current,
+                nextResult.savedLocation!.id,
+                nextResult.savedLocation!.revision,
+              ) ?? current,
+          );
         const failedPhotos = await uploadEntryPhotos(
           ownerId,
           entry.id,

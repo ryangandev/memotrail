@@ -130,13 +130,19 @@ export function existingLocationFromRow(
 export function savedLocationSelection(
   selection: LocationSelection | null,
   savedId: string | null,
+  savedRevision?: number,
 ): ExistingLocation | null {
   if (!selection || !savedId) return null;
-  if (selection.kind === "existing") return { ...selection, id: savedId };
+  if (selection.kind === "existing")
+    return {
+      ...selection,
+      id: savedId,
+      revision: savedRevision ?? selection.revision,
+    };
   return {
     kind: "existing",
     id: savedId,
-    revision: 1,
+    revision: savedRevision ?? 1,
     formattedAddress: selection.formattedAddress,
     address: selection.address,
     city: selection.city,

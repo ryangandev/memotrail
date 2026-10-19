@@ -21,16 +21,7 @@ test("Timeline summary keeps its separators between facts on phones", async ({
         occurred_start: "2017-06-01T12:00:00Z",
         occurred_timezone: "America/Los_Angeles",
         date_precision: "day",
-      })
-    ).error,
-  ).toBeNull();
-  expect(
-    (
-      await client.from("milestones").insert({
-        entry_id: momentId,
-        owner_id: owner,
-        shape: "moment",
-        lane: "other",
+        is_first_time: true,
       })
     ).error,
   ).toBeNull();
@@ -40,7 +31,7 @@ test("Timeline summary keeps its separators between facts on phones", async ({
   // A production build streams the page into a hidden boundary before it moves
   // into the workspace, so read the copy that is actually shown.
   const summary = page.getByRole("main").getByLabel("Timeline summary");
-  await expect(summary).toContainText("1 item");
+  await expect(summary).toContainText("1 First Time");
   // The range ends a little past today, so its last year depends on the date.
   await expect(summary).toContainText(/2017 to \d{4}/);
   await expect(
@@ -80,24 +71,13 @@ test("Dot-separated rows across the workspace keep their separators between fact
         occurred_start: "2017-06-01T12:00:00Z",
         occurred_timezone: "America/New_York",
         date_precision: "day",
-      })
-    ).error,
-  ).toBeNull();
-  expect(
-    (
-      await client.from("milestones").insert({
-        entry_id: entryId,
-        owner_id: owner,
-        shape: "moment",
-        lane: "other",
+        is_first_time: true,
       })
     ).error,
   ).toBeNull();
   const pages: { path: string; rows: number }[] = [
     { path: "/timeline", rows: 1 },
     { path: "/library?q=lantern", rows: 1 },
-    { path: "/homes", rows: 1 },
-    { path: "/vehicles", rows: 1 },
     { path: "/first-times", rows: 1 },
   ];
   for (const { path, rows } of pages) {

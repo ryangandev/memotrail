@@ -25,7 +25,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
   });
   if (!created.data.user) throw new Error("Local Library fixture unavailable.");
   const ownerID = created.data.user.id;
-  const harborHome = randomUUID();
+  const harborChapter = randomUUID();
 
   try {
     const cookies: { name: string; value: string }[] = [];
@@ -107,21 +107,14 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     expect(
       (
         await client.from("entries").insert({
-          id: harborHome,
+          id: harborChapter,
           title: "Avery Street flat",
           body: "Lived by the marina.",
-          item_kind: "entity",
-          item_subtype: "home",
+          item_kind: "entry",
+          item_subtype: "chapter",
           date_precision: "unknown",
           owner_id: ownerID,
         })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
-        await client
-          .from("homes")
-          .insert({ entry_id: harborHome, owner_id: ownerID })
       ).error,
     ).toBeNull();
 
@@ -170,16 +163,16 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     await expect(
       showFilter.getByRole("option", { name: "People" }),
     ).toHaveCount(0);
-    for (const name of ["Homes", "Vehicles", "First Times"]) {
+    for (const name of ["Entries", "Chapters", "First Times"]) {
       await expect(showFilter.getByRole("option", { name })).toHaveCount(1);
     }
     await expect(
       page.getByRole("combobox", { name: "Collection" }),
     ).toHaveCount(0);
     await expect(page.getByRole("combobox", { name: "Tag" })).toBeVisible();
-    await showFilter.selectOption("entity");
+    await showFilter.selectOption("chapter");
     await page.getByRole("button", { name: "Search", exact: true }).click();
-    await expect(page).toHaveURL(/type=entity/);
+    await expect(page).toHaveURL(/type=chapter/);
     await expect(page.getByRole("heading", { name: "Results" })).toBeVisible();
     for (const path of ["/people", `/people/${randomUUID()}`]) {
       await page.goto(path);
@@ -192,7 +185,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByText("More views and tools", { exact: true }),
     ).toHaveCount(0);
     const reflectionLink = page.getByRole("link", {
-      name: /Entry.*Morning reflection/,
+      name: /Morning reflection/,
     });
     await expect(reflectionLink).toBeVisible();
     await expect(reflectionLink).toHaveAttribute(
@@ -201,10 +194,10 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
     );
     // A capture belongs to the Library as soon as it is saved.
     await expect(
-      page.getByRole("link", { name: /Entry.*Fresh thought/ }),
+      page.getByRole("link", { name: /Fresh thought/ }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Entity.*Home.*Avery Street flat/ }),
+      page.getByRole("link", { name: /Chapter.*Avery Street flat/ }),
     ).toBeVisible();
     await expect(
       page.getByRole("main").getByText("4 items", { exact: true }),
@@ -260,7 +253,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       }),
     ).toBeVisible();
     await expect(
-      page.getByRole("link", { name: /Entry.*Morning reflection/ }),
+      page.getByRole("link", { name: /Morning reflection/ }),
     ).toHaveCount(0);
     const trashedReflection = await client
       .from("entries")
@@ -272,9 +265,9 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
 
     await page.getByText("Filters", { exact: true }).click();
     const filters = page.locator('form:visible:has(select[name="type"])');
-    await filters.locator('select[name="type"]').selectOption("entity");
+    await filters.locator('select[name="type"]').selectOption("chapter");
     await filters.getByRole("button", { name: "Search", exact: true }).click();
-    await expect(page).toHaveURL(/type=entity/);
+    await expect(page).toHaveURL(/type=chapter/);
     await expect(
       page.getByRole("link", { name: "Avery Street flat", exact: true }),
     ).toBeVisible();

@@ -81,16 +81,6 @@ test("Private photo previews preserve originals across Web, native bearer access
           item_kind: "entry",
           item_subtype: "entry",
           date_precision: "unknown",
-        })
-      ).error,
-    ).toBeNull();
-    expect(
-      (
-        await client.from("milestones").insert({
-          entry_id: entry,
-          owner_id: owner,
-          shape: "moment",
-          lane: "other",
           is_first_time: true,
         })
       ).error,
