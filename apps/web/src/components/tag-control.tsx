@@ -82,7 +82,6 @@ export function TagControl({
       title: <>Delete the unused tag “{item.name}”?</>,
       description: <>This tag is unused and will be removed permanently.</>,
       confirmLabel: "Delete tag",
-      eyebrow: <>Permanent action</>,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -108,7 +107,6 @@ export function TagControl({
         </>
       ),
       confirmLabel: "Merge tags",
-      eyebrow: <>Permanent action</>,
       variant: "danger",
     });
     if (!confirmed) return;
@@ -187,7 +185,6 @@ export function TagControl({
           }}
           title={<>{item?.name ?? "Create a Tag"}</>}
           titleId={`tag-control-${item?.id ?? "new"}`}
-          eyebrow={<>{item ? "Edit Tag" : "New Tag"}</>}
           headerContent={
             <>
               {item ? (
@@ -249,6 +246,13 @@ export function TagControl({
                 />
               </fieldset>
             </form>
+            {item ? (
+              <TagEntryList
+                count={item.entry_count}
+                name={item.name}
+                preview={tagPreview}
+              />
+            ) : null}
             {item && item.entry_count > 0 ? (
               <div className={styles.mergePanel}>
                 <div>
@@ -280,13 +284,6 @@ export function TagControl({
                   Merge tag
                 </Button>
               </div>
-            ) : null}
-            {item ? (
-              <TagEntryList
-                count={item.entry_count}
-                name={item.name}
-                preview={tagPreview}
-              />
             ) : null}
           </div>
         </Dialog>

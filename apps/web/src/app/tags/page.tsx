@@ -27,10 +27,19 @@ export default async function TagsPage({
   const workspace = await getTagsWorkspace({ page, query });
   if (!workspace) return null;
 
+  const totalPages = Math.max(1, Math.ceil(workspace.totalCount / pageSize));
+
   return (
     <PageFrame width="list">
       <PageHeader
-        title={<>Tags</>}
+        title="Tags"
+        meta={
+          workspace.loadError || workspace.totalCount === 0
+            ? undefined
+            : query
+              ? `${countLabel(workspace.totalCount, "tag")} matching “${query}”`
+              : countLabel(workspace.totalCount, "tag")
+        }
         action={<TagControl items={workspace.items} />}
       />
 
@@ -46,82 +55,84 @@ export default async function TagsPage({
             placeholder="Search tag names"
             size="large"
           />
-          <Button variant="primary" type="submit">
-            <Icon name="search" size={17} />
+          <Button variant="secondary" type="submit">
             Search
           </Button>
         </div>
       </form>
 
       {workspace.loadError ? (
-        <div className={styles.message} role="alert">
-          <Icon name="tag" size={22} />
-          <div>
-            <strong>Tags unavailable</strong>
-            <p>{workspace.loadError}</p>
-          </div>
+        <div role="alert">
+          <EmptyState
+            title="Tags unavailable"
+            description={workspace.loadError}
+            icon={<Icon name="tag" size={20} />}
+          />
         </div>
       ) : workspace.items.length === 0 ? (
         <EmptyState
-          title={<>{query ? "No matching tags" : "No tags yet"}</>}
+          title={query ? "No matching tags" : "No tags yet"}
           description={
-            <>
-              <Icon name="tag" size={22} />
-              {query
-                ? "Try a different name or clear your search."
-                : "Add a tag here or while editing any Entry. It will become available everywhere."}
-            </>
+            query
+              ? "Try a different name or clear your search."
+              : "Add a tag here or while editing any Entry. It will become available everywhere."
           }
+          icon={<Icon name="tag" size={20} />}
         />
       ) : (
         <section className={styles.tagList} aria-label="Tags">
-          <div className={styles.summary}>
-            <span>{countLabel(workspace.totalCount, "tag")}</span>
-          </div>
-          <div className={styles.tagCloud}>
+          <ul className={styles.rows}>
             {workspace.items.map((item) => (
-              <article className={styles.tagBadge} key={item.id}>
+              <li className={styles.row} key={item.id}>
                 <TagControl
                   item={item}
                   items={workspace.items}
                   trigger={
                     <>
-                      <span className={styles.tagMark} aria-hidden="true">
-                        #
+                      <span className={styles.tagName}>
+                        <span aria-hidden="true" className={styles.tagMark}>
+                          #
+                        </span>
+                        {item.name}
                       </span>
-                      <span className={styles.tagName}>{item.name}</span>
-                      <span
-                        aria-label={countLabel(item.entry_count, "Entry")}
-                        className={styles.tagCount}
-                      >
-                        {item.entry_count}
+                      <span className={styles.tagCount}>
+                        {countLabel(item.entry_count, "Entry")}
                       </span>
                     </>
                   }
                   triggerClassName={styles.tagTrigger}
                 />
-              </article>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       )}
 
-      <Pagination page={page} query={query} totalCount={workspace.totalCount} />
+      <Pagination
+        page={page}
+        query={query}
+        totalCount={workspace.totalCount}
+        totalPages={totalPages}
+      />
     </PageFrame>
   );
 }
+
+const pageSize = 50;
 
 function Pagination({
   page,
   query,
   totalCount,
+  totalPages,
 }: {
   page: number;
   query: string;
   totalCount: number;
+  totalPages: number;
 }) {
   const hasPrevious = page > 1;
-  const hasNext = page * 50 < totalCount;
+  const hasNext = page * pageSize < totalCount;
   if (!hasPrevious && !hasNext) return null;
 
   const href = (nextPage: number) =>
@@ -130,7 +141,9 @@ function Pagination({
   return (
     <nav className={styles.pagination} aria-label="Tag pages">
       {hasPrevious ? <Link href={href(page - 1)}>Previous</Link> : <span />}
-      <span>Page {page}</span>
+      <span>
+        Page {page} of {totalPages}
+      </span>
       {hasNext ? <Link href={href(page + 1)}>Next</Link> : <span />}
     </nav>
   );
