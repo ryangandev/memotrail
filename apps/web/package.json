@@ -19,6 +19,7 @@
     "test:e2e:design": "playwright test --config playwright.design.config.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.135.0",
     "@ark-ui/react": "5.39.2",
     "@internationalized/date": "3.12.4",
     "@memotrail/media-runtime": "workspace:*",

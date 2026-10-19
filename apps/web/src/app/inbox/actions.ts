@@ -3,7 +3,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
-import { AI_CAPABILITIES_AVAILABLE } from "@/lib/ai/availability";
+import { aiFeatureAvailable } from "@/lib/ai/availability";
 import { suggestForEntry } from "@/lib/ai/suggestions-server";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
@@ -213,7 +213,7 @@ export async function syncInboxEntry(
 /** Runs once the capture's originals are registered, never once per photo. */
 export async function finishInboxCapture(entryId: string) {
   // Suggestions are this step's only work, so a paused capture ends here.
-  if (!AI_CAPABILITIES_AVAILABLE) return;
+  if (!aiFeatureAvailable("classification")) return;
   const context = await getAuthenticatedContext();
   if (!context) return;
   // Registering photos leaves the Entry at the revision its capture made.

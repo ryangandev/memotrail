@@ -30,12 +30,6 @@ const preferences: Array<{
   title: string;
 }> = [
   {
-    detail: "Off and unavailable while we rethink how AI can help.",
-    href: "/settings/ai",
-    icon: "sparkle",
-    title: "AI capabilities · Beta",
-  },
-  {
     detail: "Rename, merge, and clean up the tags across your archive.",
     href: "/tags",
     icon: "tag",

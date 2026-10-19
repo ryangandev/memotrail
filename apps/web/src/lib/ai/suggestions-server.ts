@@ -21,7 +21,7 @@ export async function suggestForEntry(
   retry = false,
 ): Promise<EntryAISuggestionResponse> {
   // Paused AI reads, prepares, and claims nothing, even with saved consent.
-  assertAIAvailable();
+  assertAIAvailable("classification");
   if (!aiProviderConfigured()) return { suggestion: null, disabled: true };
   const { data: preferences, error: preferencesError } = await client
     .from("ai_preferences")

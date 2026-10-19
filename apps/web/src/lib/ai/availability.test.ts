@@ -11,6 +11,11 @@ const capture = vi.hoisted(() => ({
   context: vi.fn(),
   photos: vi.fn(),
 }));
+const authenticateAPI = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/auth/api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/lib/auth/api")>()),
+  authenticateAPI,
+}));
 vi.mock("next/server", () => ({ after: capture.after }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/data/inbox", () => ({
@@ -18,12 +23,11 @@ vi.mock("@/lib/data/inbox", () => ({
 }));
 vi.mock("./suggestion-photos", () => ({ suggestionPhotos: capture.photos }));
 import { createClient } from "@supabase/supabase-js";
-import { authenticateAI, generateAI } from "./server";
+import { authenticateAI, generateAI, requestAI } from "./server";
 import { suggestForEntry } from "./suggestions-server";
-import { saveAISettings } from "@/app/settings/ai/actions";
 import { finishInboxCapture, syncInboxEntry } from "@/app/inbox/actions";
-import { AI_PAUSED_MESSAGE } from "./availability";
-import type { AIPreferences } from "./contracts";
+import { AI_PAUSED_MESSAGE, aiFeatureAvailable } from "./availability";
+import { aiFeatures, reviewFeatures } from "./contracts";
 
 const entryID = "f4d2df16-a506-4be6-a63e-b7b18afe3468";
 beforeEach(() => {
@@ -48,10 +52,36 @@ it("blocks direct generation and stale API requests before any provider or budge
   expect(createClient).not.toHaveBeenCalled();
 });
 
-it("does not allow a stale settings form to re-enable AI", async () => {
-  expect(await saveAISettings({ enabled: true } as AIPreferences)).toEqual({
-    error: AI_PAUSED_MESSAGE,
-  });
+it("offers reviews and Chapter suggestions and pauses every other feature", () => {
+  for (const feature of reviewFeatures)
+    expect(aiFeatureAvailable(feature)).toBe(true);
+  for (const feature of aiFeatures)
+    expect(aiFeatureAvailable(feature)).toBe(false);
+  expect(aiFeatureAvailable("connection")).toBe(false);
+});
+
+it("pauses every other feature for direct generation, even with a configured provider", async () => {
+  for (const feature of [...aiFeatures, "connection"] as const)
+    await expect(
+      generateAI("owner", feature, "system", "prompt"),
+    ).rejects.toMatchObject({ code: "ai_paused", status: 503 });
+  await expect(
+    requestAI({ ownerID: "owner", feature: "tagging", system: "s", input: "p" }),
+  ).rejects.toMatchObject({ code: "ai_paused", message: AI_PAUSED_MESSAGE });
+  expect(createClient).not.toHaveBeenCalled();
+});
+
+it("lets only review routes past the gate", async () => {
+  authenticateAPI.mockResolvedValue({ client: {}, ownerID: "owner" });
+  for (const feature of reviewFeatures)
+    await expect(
+      authenticateAI(new Request("http://localhost/api/reviews"), feature),
+    ).resolves.toMatchObject({ ownerID: "owner" });
+  for (const feature of [...aiFeatures, "connection"] as const)
+    await expect(
+      authenticateAI(new Request("http://localhost/api/ai"), feature),
+    ).rejects.toMatchObject({ code: "ai_paused" });
+  expect(authenticateAPI).toHaveBeenCalledTimes(reviewFeatures.length);
 });
 
 it("refuses Entry suggestions before reading settings, preparing photos, or claiming a row", async () => {
