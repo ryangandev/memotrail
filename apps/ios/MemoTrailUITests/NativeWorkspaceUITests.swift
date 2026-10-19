@@ -209,9 +209,11 @@ final class NativeWorkspaceUITests: XCTestCase {
     let app = launchSection("forms")
     let record = reveal(app.buttons["Record, required"], in: app)
     record.tap()
-    XCTAssertTrue(app.buttons["First Times"].waitForExistence(timeout: 3))
+    // The menu lists its options in a collection view; a First Times filter chip is on the page.
+    let firstTimes = app.collectionViews.buttons["First Times"]
+    XCTAssertTrue(firstTimes.waitForExistence(timeout: 3))
     attach(app, "Grouped select menu")
-    app.buttons["First Times"].tap()
+    firstTimes.tap()
     XCTAssertEqual(record.value as? String, "First Times")
 
     let emptyDate = reveal(app.buttons["Empty date"], in: app)
@@ -293,7 +295,7 @@ final class NativeWorkspaceUITests: XCTestCase {
     app.buttons["Dismiss notification"].firstMatch.tap()
     XCTAssertTrue(app.staticTexts["Changes saved."].waitForNonExistence(timeout: 3))
     XCTAssertTrue(app.staticTexts["Could not save. Try again."].exists)
-    reveal(app.staticTexts["Failure"], in: app)
+    reveal(app.staticTexts["Failed"], in: app)
     attach(app, "Media states")
     XCTAssertTrue(app.staticTexts["Photo unavailable"].exists)
     XCTAssertTrue(app.images["Coast"].exists)
