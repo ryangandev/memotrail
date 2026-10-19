@@ -215,13 +215,14 @@ const needsDialog = "Builds on Dialog, which is not bundled (see dialog.tsx).";
 export const excluded = {
   "address-search.tsx":
     "Searches addresses through the app's location API, so it needs the network and app data.",
-  "ai-paused-settings.tsx": needsData,
   "app-toast.tsx":
     "Toasts render through a global sonner Toaster and appear only in response to app events.",
   "appearance-setting.tsx": needsData,
   "auth-gate.tsx": "Signs in with Supabase Auth.",
   "birth-date-setting.tsx": needsData,
   "capture-composer.tsx": needsCapture,
+  "chapter-suggestion-card.tsx": `${needsData} It accepts or dismisses a suggested Chapter.`,
+  "chapter-suggestion-trigger.tsx": `${needsData} It starts a Chapter suggestion run.`,
   "capture-provider.tsx":
     "A context provider for the capture queue, not a visual component.",
   "command-palette.tsx": `${needsRouting} It also searches Entries through a server action.`,
@@ -265,6 +266,10 @@ export const excluded = {
   "route-fallback.tsx": needsRouting,
   "record-card-map.tsx":
     "Loads a server-rendered static map image for a saved location.",
+  "review-disclosure-dialog.tsx": needsDialog,
+  "review-notice-card.tsx": `${needsData} It resolves a Dashboard review notice.`,
+  "review-panel.tsx": `${needsData} It makes and polls Chapter and year reviews.`,
+  "reviews-setting.tsx": needsData,
   "rich-text-editor.tsx":
     "A Tiptap editor whose document, extensions, and shortcuts belong to the capture and Entry editors.",
   "search-shortcut-link.tsx": `${needsRouting} It installs a global keyboard shortcut and takes its look from the workspace shell.`,
