@@ -50,16 +50,43 @@ describe("entryRowDate", () => {
   it("keeps a month or a year at the precision it was recorded", () => {
     expect(
       entryRowDate(
-        occurrence({ datePrecision: "month", occurredAt: "2024-10-01T12:00:00Z" }),
+        occurrence({
+          datePrecision: "month",
+          occurredAt: "2024-10-01T12:00:00Z",
+        }),
         { now, year: "hide" },
       ),
     ).toBe("Oct 2024");
     expect(
       entryRowDate(
-        occurrence({ datePrecision: "year", occurredAt: "2019-01-01T12:00:00Z" }),
+        occurrence({
+          datePrecision: "year",
+          occurredAt: "2019-01-01T12:00:00Z",
+        }),
         { now },
       ),
     ).toBe("2019");
+  });
+
+  it("shows a Chapter's span, naming a shared year once", () => {
+    const chapter = (occurredAt: string, occurredEnd: string | null) =>
+      entryRowDate(
+        occurrence({ datePrecision: "day", occurredAt, occurredEnd }),
+        {
+          isChapter: true,
+          now,
+        },
+      );
+    expect(chapter("2026-01-05T12:00:00Z", null)).toBe("Jan 2026 - now");
+    expect(chapter("2025-03-01T12:00:00Z", "2025-06-30T12:00:00Z")).toBe(
+      "Mar - Jun 2025",
+    );
+    expect(chapter("2024-11-01T12:00:00Z", "2025-02-01T12:00:00Z")).toBe(
+      "Nov 2024 - Feb 2025",
+    );
+    expect(chapter("2025-03-01T12:00:00Z", "2025-03-20T12:00:00Z")).toBe(
+      "Mar 2025",
+    );
   });
 
   it("shows a remembered period as it was written", () => {
@@ -76,14 +103,18 @@ describe("entryRowDate", () => {
   });
 
   it("calls an Entry without a date Undated", () => {
-    expect(entryRowDate(occurrence({ datePrecision: "unknown" }), { now })).toBe(
-      "Undated",
-    );
+    expect(
+      entryRowDate(occurrence({ datePrecision: "unknown" }), { now }),
+    ).toBe("Undated");
   });
 
   it("shortens a range that stays inside a month or a year", () => {
     const range = (start: string, end: string | null) =>
-      occurrence({ datePrecision: "range", occurredAt: start, occurredEnd: end });
+      occurrence({
+        datePrecision: "range",
+        occurredAt: start,
+        occurredEnd: end,
+      });
     expect(
       entryRowDate(range("2026-10-17T12:00:00Z", "2026-10-20T12:00:00Z"), {
         now,
@@ -101,9 +132,9 @@ describe("entryRowDate", () => {
         year: "hide",
       }),
     ).toBe("Jan 1, 2016 - Feb 3, 2019");
-    expect(
-      entryRowDate(range("2026-10-17T12:00:00Z", null), { now }),
-    ).toBe("Oct 17 onward");
+    expect(entryRowDate(range("2026-10-17T12:00:00Z", null), { now })).toBe(
+      "Oct 17 onward",
+    );
   });
 
   it("gives a Chapter the months it covers", () => {
@@ -166,12 +197,18 @@ describe("entryRowDateTime", () => {
   it("matches the recorded precision", () => {
     expect(
       entryRowDateTime(
-        occurrence({ datePrecision: "month", occurredAt: "2024-10-01T12:00:00Z" }),
+        occurrence({
+          datePrecision: "month",
+          occurredAt: "2024-10-01T12:00:00Z",
+        }),
       ),
     ).toBe("2024-10");
     expect(
       entryRowDateTime(
-        occurrence({ datePrecision: "year", occurredAt: "2019-01-01T12:00:00Z" }),
+        occurrence({
+          datePrecision: "year",
+          occurredAt: "2019-01-01T12:00:00Z",
+        }),
       ),
     ).toBe("2019");
     expect(entryRowDateTime(occurrence({ datePrecision: "unknown" }))).toBe(

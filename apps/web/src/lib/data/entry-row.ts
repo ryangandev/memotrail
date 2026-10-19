@@ -72,7 +72,12 @@ export function entryRowDate(
     const from = coarse(start);
     if (!end) return `${from} - now`;
     const to = coarse(end);
-    return from === to ? from : `${from} - ${to}`;
+    if (from === to) return from;
+    // A span inside one year names the year once, so it fits the date column on one line.
+    if (occurrence.datePrecision !== "year" && start.year === end.year) {
+      return `${shortMonths[start.month - 1]} - ${to}`;
+    }
+    return `${from} - ${to}`;
   }
 
   if (occurrence.datePrecision === "year") return String(start.year);
