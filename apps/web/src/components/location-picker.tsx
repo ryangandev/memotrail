@@ -25,16 +25,8 @@ export function LocationPicker({
   return (
     <section aria-label="Location" className={styles.picker}>
       <div className={styles.heading}>
-        <div className={styles.headingIcon}>
-          <Icon name="map" size={18} />
-        </div>
-        <div>
-          <strong>Location</strong>
-          <p>
-            Search for an address and preview its position. This Entry keeps its
-            own Location.
-          </p>
-        </div>
+        <strong>Location</strong>
+        <p>Search for an address. This Entry keeps its own Location.</p>
       </div>
       {value ? (
         <SelectedLocation
@@ -45,6 +37,7 @@ export function LocationPicker({
       ) : null}
       <AddressSearch
         disabled={disabled}
+        hideLabel
         label={value ? "Change Location" : "Find a Location"}
         onSelect={onChange}
       />

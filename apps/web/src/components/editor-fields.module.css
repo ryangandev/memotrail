@@ -15,7 +15,7 @@
 
 /* The required mark, written as an aria-hidden asterisk after the label text. */
 .fields label:not(:where([data-ui-field] *)) > span > [aria-hidden="true"] {
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
 }
 
 .fields label:not(:where([data-ui-field] *)) > span small,

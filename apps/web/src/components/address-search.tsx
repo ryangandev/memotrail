@@ -19,10 +19,13 @@ type SearchResponse = {
 
 export function AddressSearch({
   disabled,
+  hideLabel = false,
   label,
   onSelect,
 }: {
   disabled: boolean;
+  /** Keeps the label for assistive technology when a heading above already shows it. */
+  hideLabel?: boolean;
   label: string;
   onSelect: (location: ProviderLocation) => void;
 }) {
@@ -150,6 +153,7 @@ export function AddressSearch({
           aria-controls={locations.length ? resultId : undefined}
           aria-expanded={locations.length > 0}
           disabled={disabled}
+          hideLabel={hideLabel}
           label={label}
           maxLength={200}
           onChange={(event) => changeQuery(event.target.value)}
