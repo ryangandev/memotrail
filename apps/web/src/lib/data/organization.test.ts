@@ -3,6 +3,7 @@ import {
   existingTagName,
   tagNamesIncludingDraft,
   validTagInput,
+  validTagName,
   type TagInput,
 } from "./organization";
 import { tagOptionsByUse } from "./tag-options";
@@ -27,6 +28,16 @@ describe("Tag settings", () => {
         revision: 2,
       }),
     ).toBe(true);
+  });
+});
+
+describe("Tag names", () => {
+  it("accepts every length a tag can be saved with, counted in characters", () => {
+    expect(validTagName(` ${"x".repeat(80)} `)).toBe("x".repeat(80));
+    expect(validTagName("学".repeat(80))).toBe("学".repeat(80));
+    expect(validTagName("😀".repeat(80))).toBe("😀".repeat(80));
+    expect(validTagName("x".repeat(81))).toBeNull();
+    expect(validTagName("  ")).toBeNull();
   });
 });
 

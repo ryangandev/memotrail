@@ -131,7 +131,7 @@ test("Permanent photo removal includes interrupted unregistered previews", async
       .getByRole("button", { name: "Delete forever", exact: true })
       .click();
     await expect(
-      page.getByText("Item permanently deleted.", { exact: true }),
+      page.getByText("Entry deleted forever.", { exact: true }),
     ).toBeVisible();
     expect(
       (await client.from("attachments").select("id").eq("entry_id", entry))

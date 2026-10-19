@@ -9,21 +9,12 @@ import {
   prepareEmptyTrash,
   type TrashActionResult,
 } from "@/app/trash/actions";
-import { emptyTrashResultMessage, runEmptyTrash } from "@/lib/data/empty-trash";
+import {
+  emptyTrashResultMessage,
+  runEmptyTrash,
+  trashContents,
+} from "@/lib/data/empty-trash";
 import type { TrashItemInput } from "@/lib/data/trash-input";
-import { countLabel } from "@/lib/count-label";
-
-/** What a prepared Trash list holds, such as "30 Entries and 1 photo". */
-function trashContents(snapshot: TrashItemInput[]) {
-  const photos = snapshot.filter((item) => item.itemKind === "attachment");
-  const entries = snapshot.length - photos.length;
-  return [
-    entries > 0 ? countLabel(entries, "Entry") : null,
-    photos.length > 0 ? countLabel(photos.length, "photo") : null,
-  ]
-    .filter(Boolean)
-    .join(" and ");
-}
 
 export function EmptyTrashControl({
   disabled,
@@ -78,7 +69,7 @@ export function EmptyTrashControl({
       if (result.error || !result.items?.length) {
         onResult({
           status: result.error ? "error" : "restored",
-          message: result.error ?? "Nothing in Trash. No items were deleted.",
+          message: result.error ?? "Trash is already empty.",
         });
         close();
         onFinish();
@@ -144,7 +135,17 @@ export function EmptyTrashControl({
         <Dialog
           open
           size="compact"
-          title={<>Delete {trashContents(snapshot)} forever?</>}
+          title={
+            <>
+              Delete{" "}
+              {trashContents(
+                snapshot.length,
+                snapshot.filter((item) => item.itemKind === "attachment")
+                  .length,
+              )}{" "}
+              forever?
+            </>
+          }
           titleId="empty-trash-title"
           description={
             <>

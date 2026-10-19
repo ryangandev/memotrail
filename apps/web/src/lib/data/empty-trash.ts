@@ -25,8 +25,21 @@ export function parseEmptyTrashSnapshot(
   return items;
 }
 
+/** What part of Trash holds, such as "30 Entries and 1 photo". */
+export function trashContents(total: number, photos: number) {
+  const entries = total - photos;
+  return [
+    entries > 0 ? countLabel(entries, "Entry") : null,
+    photos > 0 ? countLabel(photos, "photo") : null,
+  ]
+    .filter(Boolean)
+    .join(" and ");
+}
+
 export type EmptyTrashResult = {
   deleted: number;
+  /** How many of the deleted rows were photos; the rest were Entries. */
+  deletedPhotos: number;
   total: number;
   complete: boolean;
   /** The person left Trash, which stops the batch before its next deletion. */
@@ -42,6 +55,7 @@ export async function runEmptyTrash(
   shouldContinue: () => boolean = () => true,
 ): Promise<EmptyTrashResult> {
   let deleted = 0;
+  let deletedPhotos = 0;
   let left = false;
   for (const item of snapshot) {
     if (!shouldContinue()) {
@@ -53,10 +67,12 @@ export async function runEmptyTrash(
     } catch {
       break;
     }
+    if (item.itemKind === "attachment") deletedPhotos++;
     progress(++deleted);
   }
   return {
     deleted,
+    deletedPhotos,
     total: snapshot.length,
     complete: deleted === snapshot.length,
     left,
@@ -67,11 +83,11 @@ export function emptyTrashResultMessage(
   result: EmptyTrashResult,
   filesRemoved = true,
 ) {
-  const stopped = `${result.deleted} of ${countLabel(result.total, "item")} confirmed deleted.`;
+  const stopped = `${result.deleted} of ${result.total} confirmed deleted.`;
   const message = result.complete
-    ? `${countLabel(result.deleted, "confirmed item")} permanently deleted. Anything added to Trash later was not included.`
+    ? `${trashContents(result.deleted, result.deletedPhotos)} deleted forever. Anything added to Trash later was not included.`
     : result.left
       ? `${stopped} Stopped because you left Trash. Review Trash before trying again.`
-      : `${stopped} Stopped because an item changed or a request could not be confirmed. Refresh and review Trash before trying again.`;
+      : `${stopped} Stopped because an Entry or photo changed or a request could not be confirmed. Refresh and review Trash before trying again.`;
   return filesRemoved ? message : `${message} ${PENDING_MEDIA_PURGE_MESSAGE}`;
 }

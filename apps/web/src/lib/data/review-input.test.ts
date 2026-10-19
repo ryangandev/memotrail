@@ -72,7 +72,7 @@ describe("suggestions", () => {
     endPrecision: "month",
   } as const;
 
-  it("labels the span, with Present while it is going on", () => {
+  it("labels the span, ending now while it is going on", () => {
     expect(suggestionSpanLabel(month)).toBe("Mar 2026 - Jun 2026");
     expect(
       suggestionSpanLabel({
@@ -81,7 +81,7 @@ describe("suggestions", () => {
         endDate: null,
         endPrecision: null,
       }),
-    ).toBe("Mar 2026 - Present");
+    ).toBe("Mar 2026 - now");
   });
 
   it("builds month dates for a Chapter, and an open end for one still going", () => {

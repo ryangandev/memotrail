@@ -261,7 +261,7 @@ test("Chapter Trash still refuses another device's writing after a photo removal
   await expect(
     page
       .getByRole("alert")
-      .filter({ hasText: "This item changed on another device" }),
+      .filter({ hasText: "This Entry changed on another device" }),
   ).toBeVisible();
   expect((await entryRow(client, entry)).deleted_at).toBeNull();
 });

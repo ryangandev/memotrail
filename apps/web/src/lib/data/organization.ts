@@ -70,12 +70,17 @@ function isTagItem(value: unknown): value is TagItem {
   );
 }
 
+/** A trimmed tag name that a tag could have, or null when no tag can be named this. */
+export function validTagName(name: string) {
+  const trimmed = name.trim();
+  return trimmed && [...trimmed].length <= tagNameLengthLimit ? trimmed : null;
+}
+
 export function validTagInput(value: TagInput) {
   return (
     value &&
     typeof value.name === "string" &&
-    value.name.trim().length > 0 &&
-    [...value.name.trim()].length <= tagNameLengthLimit &&
+    validTagName(value.name) !== null &&
     (value.id === null
       ? value.revision === null
       : typeof value.id === "string" &&

@@ -32,8 +32,7 @@ test("Timeline summary keeps its separators between facts on phones", async ({
   // into the workspace, so read the copy that is actually shown.
   const summary = page.getByRole("main").getByLabel("Timeline summary");
   await expect(summary).toContainText("1 First Time");
-  // The range ends a little past today, so its last year depends on the date.
-  await expect(summary).toContainText(/2017 to \d{4}/);
+  await expect(summary).toContainText("2017 to today");
   await expect(
     summary.getByRole("button", { name: "Set birth date" }),
   ).toBeVisible();

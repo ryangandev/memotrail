@@ -6,7 +6,11 @@ import {
   storedOccurrence,
   type OccurrencePrecision,
 } from "./occurrence";
-import type { TagEntryPreview, TagEntryPreviewResult } from "./organization";
+import {
+  validTagName,
+  type TagEntryPreview,
+  type TagEntryPreviewResult,
+} from "./organization";
 
 import {
   getAuthenticatedContext,
@@ -215,8 +219,9 @@ export async function getQuickSearchResults(
 export async function getTagEntryPreviews(
   tagName: string,
 ): Promise<TagEntryPreviewResult> {
-  const normalizedName = tagName.trim();
-  if (!normalizedName || [...normalizedName].length > 60) {
+  // Any name a tag can be saved with can be browsed.
+  const normalizedName = validTagName(tagName);
+  if (!normalizedName) {
     return { entries: [], error: "Choose a valid tag." };
   }
 

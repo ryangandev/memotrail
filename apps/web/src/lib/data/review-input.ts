@@ -475,7 +475,7 @@ export function phasesSpanYears(
   return years.size > 1;
 }
 
-/** "Nov 2025 - Jan 2026" style span for a suggestion, with "Present" while it is going on. */
+/** "Nov 2025 - Jan 2026" style span for a suggestion, ending "now" while it is going on. */
 export function suggestionSpanLabel(
   suggestion: Pick<
     ChapterSuggestion,
@@ -496,7 +496,7 @@ export function suggestionSpanLabel(
   const end =
     suggestion.endDate && suggestion.endPrecision
       ? point(suggestion.endDate, suggestion.endPrecision)
-      : "Present";
+      : "now";
   return `${start} - ${end}`;
 }
 

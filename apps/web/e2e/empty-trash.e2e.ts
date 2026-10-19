@@ -159,9 +159,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     await dialog
       .getByRole("button", { name: "Delete forever", exact: true })
       .click();
-    await expect(
-      page.getByText(/0 of 31 items confirmed deleted/),
-    ).toBeVisible();
+    await expect(page.getByText(/0 of 31 confirmed deleted/)).toBeVisible();
     expect((await client.rpc("prepare_empty_trash")).data).toHaveLength(30);
     await page.setViewportSize({ width: 390, height: 844 });
     await page.emulateMedia({ colorScheme: "dark" });
@@ -195,7 +193,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       .click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: /30 confirmed items permanently deleted/,
+        hasText: /29 Entries and 1 photo deleted forever\./,
       }),
     ).toBeVisible({ timeout: 45000 });
     const remaining = await client.rpc("prepare_empty_trash");
@@ -226,7 +224,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
     expect(
       (await admin.storage.from("entry-media").download(photoPath)).error,
     ).not.toBeNull();
-    // The one item trashed after that list is counted as one item.
+    // The one Entry trashed after that list is counted on its own.
     await open.click();
     await expect(dialog).toContainText("Delete 1 Entry forever?");
     await dialog
@@ -234,7 +232,7 @@ test("Empty Trash confirms an exact cross-page snapshot and preserves later chan
       .click();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: /(^|\s)1 confirmed item permanently deleted\./,
+        hasText: /(^|\s)1 Entry deleted forever\./,
       }),
     ).toBeVisible({ timeout: 15000 });
     await expect(
@@ -314,7 +312,7 @@ workspaceTest(
     releaseCleanup();
     await expect(
       page.locator("[data-sonner-toast]").filter({
-        hasText: /(^|\s)1 confirmed item permanently deleted\./,
+        hasText: /(^|\s)1 Entry deleted forever\./,
       }),
     ).toBeVisible();
     // The finished batch does not take the person back to Trash.
