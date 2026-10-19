@@ -124,14 +124,13 @@ test("Timeline adds without asking for a birth date and starts from the earliest
   await expect(setting).not.toHaveAttribute("readonly", "");
   await setting.fill("1995abc05/19");
   await expect(setting).toHaveValue("1995-05-19");
-  await page
-    .getByRole("button", { name: "Save birth date", exact: true })
-    .click();
+  // A complete date saves on its own, with no button.
   await expect(
-    page
-      .locator("[data-sonner-toast]")
-      .filter({ hasText: "Birth date saved." }),
-  ).toBeVisible();
+    page.locator("[data-setting-row]").filter({ has: setting }),
+  ).toContainText("Saved");
+  await expect(
+    page.getByRole("button", { name: "Save birth date" }),
+  ).toHaveCount(0);
 
   await page.goto("/timeline");
   await expect(axis.first()).toHaveText("1995");

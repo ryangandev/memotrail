@@ -1,10 +1,10 @@
 "use client";
-import settingsFieldsStyles from "@/components/settings-fields.module.css";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { saveThemePreference } from "@/app/settings/actions";
 import { notify } from "@/components/app-toast";
-import { Icon } from "@/components/icon";
+import { SegmentedControl } from "@/components/segmented-control";
+import { SettingRow } from "@/components/setting-row";
 import { themePreferences, type ThemePreference } from "@/lib/theme";
 
 const labels: Record<ThemePreference, string> = {
@@ -13,21 +13,30 @@ const labels: Record<ThemePreference, string> = {
   dark: "Dark",
 };
 
+const options = themePreferences.map((value) => ({
+  label: labels[value],
+  value,
+}));
+
 export function AppearanceSetting({
   initialPreference,
 }: {
   initialPreference: ThemePreference;
 }) {
+  const id = useId();
   const [preference, setPreference] = useState(initialPreference);
   const [saved, setSaved] = useState(initialPreference);
   const [isPending, setIsPending] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
   async function choose(next: ThemePreference) {
     show(next);
+    setConfirmed(false);
     setIsPending(true);
     try {
       await saveThemePreference(next);
       setSaved(next);
+      setConfirmed(true);
     } catch {
       // The choice never reached MemoTrail, so the page goes back to the one
       // that is saved rather than showing a theme the next visit will not keep.
@@ -50,33 +59,20 @@ export function AppearanceSetting({
   }
 
   return (
-    <div className={settingsFieldsStyles.appearanceRow}>
-      <span className={settingsFieldsStyles.preferenceIcon}>
-        <Icon name="settings" size={20} />
-      </span>
-      <div>
-        <strong>Appearance</strong>
-        <p>Follow this device or choose a consistent light or dark theme.</p>
-      </div>
-      <fieldset
-        aria-busy={isPending}
-        className={settingsFieldsStyles.appearanceControl}
+    <SettingRow
+      help="System follows this device. Light and Dark stay the same everywhere."
+      id={id}
+      label="Theme"
+      saved={confirmed}
+    >
+      <SegmentedControl
         disabled={isPending}
-      >
-        <legend>Appearance mode</legend>
-        {themePreferences.map((option) => (
-          <label key={option}>
-            <input
-              checked={preference === option}
-              name="appearance"
-              onChange={() => void choose(option)}
-              type="radio"
-              value={option}
-            />
-            <span>{labels[option]}</span>
-          </label>
-        ))}
-      </fieldset>
-    </div>
+        label="Theme"
+        name="appearance"
+        onChange={(next) => void choose(next)}
+        options={options}
+        value={preference}
+      />
+    </SettingRow>
   );
 }

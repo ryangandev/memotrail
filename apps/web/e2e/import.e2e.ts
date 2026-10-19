@@ -103,7 +103,10 @@ test("A Markdown ZIP previews, imports with its photo and dates, and a second im
     );
 
     await page.goto("/settings");
-    await page.getByRole("link", { name: /Import notes/ }).click();
+    await page
+      .getByRole("main")
+      .getByRole("link", { name: "Import", exact: true })
+      .click();
     await expect(page.getByRole("heading", { name: "Import" })).toBeVisible();
 
     const choose = async () => {

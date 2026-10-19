@@ -1,16 +1,15 @@
 import pageStyles from "@/app/settings/page.module.css";
 import settingsFieldsStyles from "@/components/settings-fields.module.css";
 import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/button";
-import Link from "next/link";
+import { Button, ButtonLink } from "@/components/button";
 import { cookies } from "next/headers";
 import { signOut } from "@/app/auth/actions";
 import { AppearanceSetting } from "@/components/appearance-setting";
-import { Icon, type IconName } from "@/components/icon";
 import { BirthDateSetting } from "@/components/birth-date-setting";
 import { TimezoneSetting } from "@/components/timezone-setting";
 import { PageFrame } from "@/components/page-frame";
 import { SectionHeader } from "@/components/section-header";
+import { SettingRow } from "@/components/setting-row";
 import { PreferredNameSetting } from "@/components/preferred-name-setting";
 import { SemanticSearchSetting } from "@/components/semantic-search-setting";
 import { ReviewsSetting } from "@/components/reviews-setting";
@@ -25,32 +24,6 @@ import { storedSemanticSearchPreference } from "@/lib/search/semantic-preference
 import { storedThemePreference, THEME_COOKIE_NAME } from "@/lib/theme";
 
 export const dynamic = "force-dynamic";
-
-const preferences: Array<{
-  detail: string;
-  href: string;
-  icon: IconName;
-  title: string;
-}> = [
-  {
-    detail: "Rename, merge, and clean up the tags across your archive.",
-    href: "/tags",
-    icon: "tag",
-    title: "Archive organization",
-  },
-  {
-    detail: "Bring notes and journals from another app into your archive.",
-    href: "/settings/import",
-    icon: "plus",
-    title: "Import notes",
-  },
-  {
-    detail: "Create a complete portable copy of your private archive.",
-    href: "/settings/export",
-    icon: "archive",
-    title: "Export archive",
-  },
-];
 
 export default async function SettingsPage() {
   const context = await getAuthenticatedContext();
@@ -81,95 +54,152 @@ export default async function SettingsPage() {
     cookieStore.get(THEME_COOKIE_NAME)?.value,
   );
 
+  const showProfile = !profile.error || birthDate.available;
+
   return (
     <PageFrame className={pageStyles.content} width="reading">
       <PageHeader title={<>Settings</>} />
 
+      {showProfile ? (
+        <section aria-labelledby="profile-heading">
+          <SectionHeader
+            headingId="profile-heading"
+            title="Profile"
+            variant="section"
+          />
+          {!profile.error ? (
+            <PreferredNameSetting initialName={preferredName} />
+          ) : null}
+          {birthDate.available ? (
+            <BirthDateSetting
+              initialBirthDate={birthDate.birthDate}
+              maxValue={new Date().toISOString().slice(0, 10)}
+            />
+          ) : null}
+        </section>
+      ) : null}
+
+      {profileTimezone.available ? (
+        <section aria-labelledby="time-heading">
+          <SectionHeader
+            headingId="time-heading"
+            title="Time"
+            variant="section"
+          />
+          <TimezoneSetting initialTimezone={profileTimezone.timezone} />
+        </section>
+      ) : null}
+
+      <section aria-labelledby="appearance-heading">
+        <SectionHeader
+          headingId="appearance-heading"
+          title="Appearance"
+          variant="section"
+        />
+        <AppearanceSetting initialPreference={themePreference} />
+      </section>
+
+      {reviewSettings ? (
+        <section aria-labelledby="reviews-heading" id="reviews">
+          <SectionHeader
+            headingId="reviews-heading"
+            title="Reviews"
+            variant="section"
+          />
+          <ReviewsSetting initial={reviewSettings} />
+        </section>
+      ) : null}
+
+      {/* Without an embedding service search is keyword-only, so the switch would do nothing. */}
+      {semanticSearch.available && semanticSearchConfigured() ? (
+        <section aria-labelledby="search-heading">
+          <SectionHeader
+            headingId="search-heading"
+            title="Search"
+            variant="section"
+          />
+          <SemanticSearchSetting initialEnabled={semanticSearch.enabled} />
+        </section>
+      ) : null}
+
+      <section aria-labelledby="data-heading">
+        <SectionHeader
+          headingId="data-heading"
+          title="Your data"
+          variant="section"
+        />
+        <DataRow
+          action="Import"
+          detail="Bring notes and journals from another app."
+          href="/settings/import"
+          label="Import"
+        />
+        <DataRow
+          action="Export"
+          detail="A complete, portable copy of everything you have written."
+          href="/settings/export"
+          label="Export"
+        />
+        <DataRow
+          action="Open Tags"
+          detail="Rename, merge, and clean up tags."
+          href="/tags"
+          label="Tags"
+        />
+      </section>
+
       <section aria-labelledby="account-heading">
         <SectionHeader
-          action={<span className={pageStyles.connectedStatus}>Connected</span>}
-          className={pageStyles.sectionHeading}
-          description="Your current MemoTrail identity"
           headingId="account-heading"
           title="Account"
-          variant="list"
+          variant="section"
         />
-
-        <div className={pageStyles.accountCard}>
-          <span className={pageStyles.accountAvatar}>
-            {accountName.charAt(0).toUpperCase()}
-          </span>
-          <div className={pageStyles.accountIdentity}>
-            <strong>{accountName}</strong>
-            <span>{viewer.email}</span>
-            <small>Google Sign-In</small>
-          </div>
-          <form action={signOut}>
-            <Button variant="primary" type="submit">
-              Sign out
-            </Button>
-          </form>
-        </div>
-
-        {!profile.error ? (
-          <PreferredNameSetting initialName={preferredName} />
-        ) : null}
-
-        {birthDate.available ? (
-          <BirthDateSetting
-            initialBirthDate={birthDate.birthDate}
-            maxValue={new Date().toISOString().slice(0, 10)}
-          />
-        ) : null}
-      </section>
-
-      <section aria-labelledby="preferences-heading">
-        <SectionHeader
-          className={pageStyles.sectionHeading}
-          description="Controls already available in this version"
-          headingId="preferences-heading"
-          title="Preferences"
-          variant="list"
-        />
-
-        {profileTimezone.available ? (
-          <TimezoneSetting initialTimezone={profileTimezone.timezone} />
-        ) : null}
-
-        {/* Without an embedding service search is keyword-only, so the switch would do nothing. */}
-        {semanticSearch.available && semanticSearchConfigured() ? (
-          <SemanticSearchSetting initialEnabled={semanticSearch.enabled} />
-        ) : null}
-
-        {reviewSettings ? <ReviewsSetting initial={reviewSettings} /> : null}
-
-        <div className={pageStyles.preferenceList}>
-          <AppearanceSetting initialPreference={themePreference} />
-
-          {preferences.map((preference) => (
-            <Link href={preference.href} key={preference.href}>
-              <span className={settingsFieldsStyles.preferenceIcon}>
-                <Icon name={preference.icon} size={20} />
+        <SettingRow id="account" label="Signed in">
+          <div className={settingsFieldsStyles.account}>
+            <div className={settingsFieldsStyles.who}>
+              <span aria-hidden="true" className={settingsFieldsStyles.avatar}>
+                {accountName.charAt(0).toUpperCase()}
               </span>
-              <div>
-                <strong>{preference.title}</strong>
-                <p>{preference.detail}</p>
+              <div className={settingsFieldsStyles.identity}>
+                <strong>{accountName}</strong>
+                <span>{viewer.email}</span>
+                <span className={settingsFieldsStyles.provider}>
+                  Google Sign-In
+                </span>
               </div>
-              <Icon name="chevron" size={16} />
-            </Link>
-          ))}
-        </div>
+            </div>
+            <form action={signOut}>
+              <Button type="submit" variant="secondary">
+                Sign out
+              </Button>
+            </form>
+          </div>
+        </SettingRow>
       </section>
-
-      <aside className={pageStyles.privacyNote}>
-        <Icon name="check" size={18} />
-        <div>
-          <strong>Private by default</strong>
-          <p>
-            Your account and archive are not shared with other MemoTrail users.
-          </p>
-        </div>
-      </aside>
     </PageFrame>
+  );
+}
+
+/** A row that leads to another page: what it does, and a secondary button that goes there. */
+function DataRow({
+  action,
+  detail,
+  href,
+  label,
+}: {
+  action: string;
+  detail: string;
+  href: string;
+  label: string;
+}) {
+  return (
+    <SettingRow id={`data-${label}`} label={label}>
+      <div className={settingsFieldsStyles.linkControl}>
+        <span>{detail}</span>
+        <ButtonLink href={href} variant="secondary">
+          {action}
+        </ButtonLink>
+      </div>
+    </SettingRow>
   );
 }

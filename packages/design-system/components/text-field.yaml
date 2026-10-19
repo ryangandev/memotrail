@@ -12,7 +12,7 @@ platforms:
 purpose: A labeled single-line text input on the shared field surface, with a required mark and an inline error.
 
 use:
-  - Short free text in a form or settings card, such as a preferred name, a title, or a city.
+  - Short free text in a form or settings row, such as a preferred name, a title, or a city.
   - Any field whose value fails validation, by passing the message that says how to fix it.
 
 avoid:

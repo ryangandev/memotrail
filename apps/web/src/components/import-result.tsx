@@ -128,7 +128,7 @@ export function ImportResult({
             Import another file
           </Button>
           {created > 0 ? (
-            <Button disabled={busy} onClick={onUndo} variant="danger">
+            <Button disabled={busy} onClick={onUndo} variant="secondary">
               Undo this import
             </Button>
           ) : null}

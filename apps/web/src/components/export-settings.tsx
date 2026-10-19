@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/button";
 import { useEffect, useRef, useState } from "react";
 import { PageFrame } from "@/components/page-frame";
+import { SectionHeader } from "@/components/section-header";
 import { SeparatedList } from "@/components/separated-list";
 import {
   appendExportTail,
@@ -163,7 +164,7 @@ export function ExportSettings({
         );
         setDiscard(null);
         notify.success(
-          "Export discarded. Your records and downloaded files are unchanged.",
+          "Export discarded. Your Entries and downloaded files are unchanged.",
         );
         await refresh(controller.signal);
       } catch (error) {
@@ -193,7 +194,7 @@ export function ExportSettings({
         !response.body ||
         !response.headers.get("content-type")?.includes("application/zip")
       )
-        throw new Error("Invalid archive response.");
+        throw new Error("Invalid export response.");
       const reader = response.body.getReader();
       const chunks: ArrayBuffer[] = [];
       let tail: Uint8Array = new Uint8Array(),
@@ -248,35 +249,41 @@ export function ExportSettings({
 
   return (
     <PageFrame className={styles.content} width="reading">
-      <PageHeader back="settings" title={<>Export archive</>} />
-      <section aria-labelledby="export-everything" className={styles.card}>
-        <h2 id="export-everything">Export everything</h2>
-        <p>
-          One ZIP with complete JSON, readable Entry Markdown, CSV tables, and
-          your original photos. It includes Trash and AI conversations.
-        </p>
-        <p>
-          The ZIP is not encrypted, so anyone you share it with can read it.
-          Sync every device first; changes still waiting offline are not
-          included.
-        </p>
-        <div className={styles.actions}>
-          <Button
-            variant="primary"
-            type="button"
-            disabled={busy || full}
-            onClick={exportEverything}
-          >
-            {progress?.phase === "preparing"
-              ? "Preparing export…"
-              : "Export everything"}
-          </Button>
-        </div>
-        {full ? (
-          <p className={styles.footnote}>
-            Discard a recent export below to make a new one.
+      <PageHeader back="settings" title={<>Export</>} />
+      <section aria-labelledby="export-everything">
+        <SectionHeader
+          headingId="export-everything"
+          title="Export everything"
+          variant="section"
+        />
+        <div className={styles.body}>
+          <p>
+            One ZIP with complete JSON, readable Entry Markdown, CSV tables, and
+            your original photos. It includes Trash and AI conversations.
           </p>
-        ) : null}
+          <p>
+            The ZIP is not encrypted, so anyone you share it with can read it.
+            Sync every device first; changes still waiting offline are not
+            included.
+          </p>
+          <div className={styles.actions}>
+            <Button
+              variant="primary"
+              type="button"
+              disabled={busy || full}
+              onClick={exportEverything}
+            >
+              {progress?.phase === "preparing"
+                ? "Preparing export…"
+                : "Export everything"}
+            </Button>
+          </div>
+          {full ? (
+            <p className={styles.footnote}>
+              Discard a recent export below to make a new one.
+            </p>
+          ) : null}
+        </div>
       </section>
       {progress ? (
         <div className={styles.notice} role="status">
@@ -286,13 +293,15 @@ export function ExportSettings({
               : `Downloading · ${((progress.bytes ?? 0) / 1_048_576).toFixed(1)} MB received`}
           </p>
           {progress.phase === "downloading" ? (
-            <Button
-              variant="secondary"
-              type="button"
-              onClick={() => active.current?.abort()}
-            >
-              Cancel download
-            </Button>
+            <div className={styles.actions}>
+              <Button
+                variant="secondary"
+                type="button"
+                onClick={() => active.current?.abort()}
+              >
+                Cancel download
+              </Button>
+            </div>
           ) : null}
         </div>
       ) : null}
@@ -302,83 +311,91 @@ export function ExportSettings({
         </p>
       ) : null}
       {snapshots.length > 0 ? (
-        <section aria-labelledby="recent-exports" className={styles.snapshots}>
-          <div className={styles.sectionHeading}>
-            <h2 id="recent-exports">Recent exports</h2>
-            <p>
-              Each export can be downloaded again for 24 hours and keeps the
-              copy it made, even if you later edit or delete records. Discard
-              one to delete its copy sooner.
-            </p>
-          </div>
-          {snapshots.map((snapshot) => (
-            <article className={styles.card} key={snapshot.id}>
-              <h3>{exportTime(snapshot.captured_at, timezone)}</h3>
-              <p>
-                <SeparatedList spacing="word">
-                  <span>{countLabel(snapshot.row_count, "record")}</span>
-                  <span>
-                    {countLabel(snapshot.datasets.entries ?? 0, "Entry")}
-                  </span>
-                  <span>
-                    {countLabel(
-                      snapshot.datasets.media_objects ?? 0,
-                      "media file",
-                    )}
-                  </span>
-                </SeparatedList>
-              </p>
-              <p>Available until {exportTime(snapshot.expires_at, timezone)}</p>
-              <div className={styles.actions}>
-                <Button
-                  variant="secondary"
-                  type="button"
-                  disabled={busy}
-                  onClick={() => downloadAgain(snapshot)}
-                >
-                  Download again
-                </Button>
-                <Button
-                  variant="danger"
-                  type="button"
-                  disabled={busy}
-                  onClick={() => setDiscard(snapshot)}
-                >
-                  Discard
-                </Button>
-              </div>
-              {discard?.id === snapshot.id ? (
-                <div className={styles.notice}>
+        <section aria-labelledby="recent-exports">
+          <SectionHeader
+            headingId="recent-exports"
+            title="Recent exports"
+            variant="section"
+          />
+          <p className={styles.intro}>
+            Each export can be downloaded again for 24 hours and keeps the copy
+            it made, even if you later edit or delete Entries. Discard one to
+            delete its copy sooner.
+          </p>
+          <ul className={styles.rows}>
+            {snapshots.map((snapshot) => (
+              <li className={styles.row} key={snapshot.id}>
+                <div className={styles.rowCopy}>
+                  <h3>{exportTime(snapshot.captured_at, timezone)}</h3>
                   <p>
-                    Discard this export? Your records and any ZIP you already
-                    downloaded stay unchanged.
+                    <SeparatedList spacing="word">
+                      <span>
+                        {countLabel(snapshot.datasets.entries ?? 0, "Entry")}
+                      </span>
+                      <span>
+                        {countLabel(
+                          snapshot.datasets.media_objects ?? 0,
+                          "media file",
+                        )}
+                      </span>
+                      <span>
+                        Available until{" "}
+                        {exportTime(snapshot.expires_at, timezone)}
+                      </span>
+                    </SeparatedList>
                   </p>
-                  <div className={styles.actions}>
-                    <Button
-                      variant="danger"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => discardSnapshot(snapshot)}
-                    >
-                      Confirm discard
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => setDiscard(null)}
-                    >
-                      Keep export
-                    </Button>
-                  </div>
                 </div>
-              ) : null}
-            </article>
-          ))}
+                <div className={styles.actions}>
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => downloadAgain(snapshot)}
+                  >
+                    Download again
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setDiscard(snapshot)}
+                  >
+                    Discard
+                  </Button>
+                </div>
+                {discard?.id === snapshot.id ? (
+                  <div className={styles.notice}>
+                    <p>
+                      Discard this export? Your Entries and any ZIP you already
+                      downloaded stay unchanged.
+                    </p>
+                    <div className={styles.actions}>
+                      <Button
+                        variant="danger"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => discardSnapshot(snapshot)}
+                      >
+                        Confirm discard
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => setDiscard(null)}
+                      >
+                        Keep export
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
       <p className={styles.footnote}>
-        For large archives, use Chrome or Edge to stream directly to a file, or
+        For a large library, use Chrome or Edge to stream directly to a file, or
         the iOS app to download to disk. Other browsers may hold the ZIP in
         memory before saving. If a download exceeds the server time limit, it
         fails explicitly rather than leaving a falsely complete backup.
@@ -406,7 +423,7 @@ async function openSink(
     suggestedName: exportFilename(snapshot),
     types: [
       {
-        description: "ZIP archive",
+        description: "ZIP file",
         accept: { "application/zip": [".zip"] },
       },
     ],
