@@ -232,6 +232,17 @@ final class EntryDateTitleTests: XCTestCase {
     }
   }
 
+  /// Web `resolveOccurrenceDraft`: every caller, Capture included, stores an empty calendar
+  /// date as Unknown and keeps its description, instead of refusing it as missing.
+  func testEmptyCalendarDateResolvesToUnknownWithItsDescriptionLikeWeb() throws {
+    for precision in [DatePrecision.exact, .day, .month, .year, .range] {
+      let resolved = try draft(precision, label: " Sometime that spring ").resolve()
+      XCTAssertEqual(resolved.precision, .unknown, "\(precision)")
+      XCTAssertNil(resolved.start)
+      XCTAssertEqual(resolved.label, "Sometime that spring")
+    }
+  }
+
   // MARK: Helpers
 
   /// Web's `day` fixture.

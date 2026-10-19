@@ -87,7 +87,7 @@ struct EntryEditorDraft: Equatable, Sendable {
     if marks.isChapter && title.trimmed.isEmpty {
       throw SaveEntryError.invalid("Give this Chapter a title.")
     }
-    let resolved = try occurrence.resolvedForSave(
+    let resolved = try occurrence.resolve(
       original: original?.occurrence(fallbackTimezone: occurrence.timezone),
       span: marks.isChapter)
     return try SaveEntryParameters(
@@ -304,96 +304,5 @@ extension OccurrenceDraft {
     end = ""
     endMode = .date
     label = ""
-  }
-
-  /// Web `resolveOccurrenceDraft`: the stored occurrence for this draft. An empty calendar date
-  /// is stored as Unknown and keeps its description; unchanged fields keep their original
-  /// instant. Throws `SaveEntryError.invalid` with Web's message.
-  func resolvedForSave(original: EntryOccurrence? = nil, span: Bool = false) throws
-    -> EntryOccurrence
-  {
-    guard OccurrenceRules.validTimezone(timezone) else {
-      throw SaveEntryError.invalid(OccurrenceRules.timezoneMessage)
-    }
-    var draft = self
-    // A calendar date left empty means the date is not known.
-    if draft.start.isEmpty, [.exact, .day, .month, .year, .range].contains(draft.precision) {
-      draft.precision = .unknown
-      draft.end = span && draft.endMode != .present ? draft.end : ""
-    }
-    let previous = original.map { Self($0) }
-    func convert(_ text: String, isEnd: Bool) -> Date? {
-      guard !text.isEmpty else { return nil }
-      if let previous, previous.precision == draft.precision,
-        previous.timezone == draft.timezone, (isEnd ? previous.end : previous.start) == text
-      {
-        return isEnd ? original?.end : original?.start
-      }
-      let local =
-        draft.precision == .exact
-        ? text
-        : "\(text)\(draft.precision == .year ? "-01-01" : draft.precision == .month ? "-01" : "")T12:00:00"
-      return Self.wallTimeToDate(local, timezone: draft.timezone)
-    }
-    let start = draft.precision == .unknown ? nil : convert(draft.start, isEnd: false)
-    let bounded =
-      draft.precision != .unknown
-      && (span || [.range, .approximate, .age].contains(draft.precision))
-    let end = bounded && draft.endMode != .present ? convert(draft.end, isEnd: true) : nil
-    if (!draft.start.isEmpty && start == nil && draft.precision != .unknown)
-      || (!draft.end.isEmpty && end == nil && bounded)
-    {
-      throw SaveEntryError.invalid(
-        "Choose a valid calendar date and time. This time may not exist during a daylight-saving change."
-      )
-    }
-    if draft.start.isEmpty, !draft.end.isEmpty, draft.endMode != .present {
-      throw SaveEntryError.invalid("Add a start date before the end date.")
-    }
-    let label = draft.label.trimmed
-    let value = EntryOccurrence(
-      precision: draft.precision, start: start, end: end, label: label.isEmpty ? nil : label,
-      timezone: draft.timezone)
-    if let message = OccurrenceRules.problem(value, span: span) {
-      throw SaveEntryError.invalid(message)
-    }
-    return value
-  }
-}
-
-/// Web `validTimezone` and `validateOccurrence`, with Web's messages.
-enum OccurrenceRules {
-  static let timezoneMessage = "Choose a valid IANA time zone, for example America/Los_Angeles."
-
-  static func validTimezone(_ value: String) -> Bool {
-    value.count <= 100
-      && value.range(of: #"^[A-Za-z][A-Za-z0-9_+./-]*$"#, options: .regularExpression) != nil
-      && TimeZone(identifier: value) != nil
-  }
-
-  /// Why this occurrence cannot be stored, or nil.
-  static func problem(_ value: EntryOccurrence, span: Bool = false) -> String? {
-    guard validTimezone(value.timezone) else { return timezoneMessage }
-    if let label = value.label, label.count > 200 {
-      return "Keep the date description under 200 characters."
-    }
-    if [.exact, .day, .month, .year, .range].contains(value.precision), value.start == nil {
-      return "Add the known date, or choose Unknown."
-    }
-    if value.precision == .unknown, value.start != nil || value.end != nil {
-      return "Unknown dates cannot have calendar dates."
-    }
-    if [.age, .approximate].contains(value.precision), value.label?.trimmed.isEmpty != false {
-      return "Describe the age or approximate period you remember."
-    }
-    if let end = value.end {
-      guard let start = value.start, end >= start else {
-        return "The end date must be on or after the start date."
-      }
-      if !span, ![.range, .approximate, .age].contains(value.precision) {
-        return "Only ranges, ages, or approximate periods can have an end date."
-      }
-    }
-    return nil
   }
 }

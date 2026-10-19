@@ -203,9 +203,9 @@ struct EntryEditorSheet: View {
           set: { isOn in
             controller.draft.changeMarks(
               EntryMarks(isChapter: isOn, isFirstTime: draft.marks.isFirstTime))
-          })
+          }),
+        identifier: "editor-chapter"
       )
-      .accessibilityIdentifier("editor-chapter")
       MTCheckbox(
         title: "First Time", detail: "The first time you did something.",
         isOn: Binding(
@@ -213,9 +213,9 @@ struct EntryEditorSheet: View {
           set: { isOn in
             controller.draft.changeMarks(
               EntryMarks(isChapter: draft.marks.isChapter, isFirstTime: isOn))
-          })
+          }),
+        identifier: "editor-first-time"
       )
-      .accessibilityIdentifier("editor-first-time")
     }
   }
 

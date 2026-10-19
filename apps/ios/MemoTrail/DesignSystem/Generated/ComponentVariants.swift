@@ -262,9 +262,18 @@ enum MTSeparatedListAlign: String, CaseIterable, Sendable {
   case end
 }
 
+/// How children of different heights share a line. Center suits badges and buttons;
+/// firstTextBaseline lines up labels whose controls center themselves in a taller hit target, such
+/// as checkboxes where one has a detail line.
+enum MTSeparatedListRowAlignment: String, CaseIterable, Sendable {
+  case center
+  case firstTextBaseline
+}
+
 /// SeparatedList parameter defaults.
 enum MTSeparatedListDefaults {
   static let align = MTSeparatedListAlign.start
+  static let rowAlignment = MTSeparatedListRowAlignment.center
 }
 
 // Skeleton, from packages/design-system/components/skeleton.yaml.
@@ -390,6 +399,7 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
   case skeletonShapes = "skeleton-shapes"
   case skeletonStill = "skeleton-still"
   case skeletonComposed = "skeleton-composed"
+  case syncStatusCounts = "sync-status-counts"
   case textFieldSizes = "text-field-sizes"
   case textFieldStates = "text-field-states"
   case timeZoneFieldOffsets = "time-zone-field-offsets"
@@ -458,6 +468,7 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .skeletonShapes: "Skeleton"
     case .skeletonStill: "Skeleton"
     case .skeletonComposed: "Skeleton"
+    case .syncStatusCounts: "SyncStatus"
     case .textFieldSizes: "TextField"
     case .textFieldStates: "TextField"
     case .timeZoneFieldOffsets: "TimeZoneField"
@@ -589,6 +600,8 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
       "A block and two lines with the shimmer turned off, as reduced motion draws them."
     case .skeletonComposed:
       "A circle beside two lines and a block below them, the way a loading record row is built."
+    case .syncStatusCounts:
+      "Waiting captures, a refused capture beside waiting ones, and a sync in progress."
     case .textFieldSizes: "Every size, holding a nickname, a preferred name, and a full name."
     case .textFieldStates:
       "Empty with a placeholder, required, disabled, and invalid with its message."

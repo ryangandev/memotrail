@@ -89,17 +89,22 @@ extension MTPageFrameWidth {
 
 /// Wraps children onto new lines like Web `flex-wrap`, for badges, chips, and compact actions.
 /// An `MTFlowSeparator` child shows only between two items on one line, like Web `SeparatedList`.
-/// Lines share the leading edge, or the trailing edge with `align: .end`.
+/// Lines share the leading edge, or the trailing edge with `align: .end`. Children of one line
+/// share their vertical centers, or their first text baselines with
+/// `rowAlignment: .firstTextBaseline`.
 /// Specified in packages/design-system/components/separated-list.yaml.
 struct MTFlowLayout: Layout {
   var spacing: CGFloat = MTSpacing.s2
   var lineSpacing: CGFloat?
   var align = MTSeparatedListDefaults.align
+  var rowAlignment = MTSeparatedListDefaults.rowAlignment
 
   /// A child as line breaking sees it.
   struct Item: Equatable {
     var size: CGSize
     var isSeparator = false
+    /// The first text baseline, measured from the child's top.
+    var baseline: CGFloat = 0
   }
 
   /// A line's shown children, from its leading edge, and its size.
@@ -111,8 +116,11 @@ struct MTFlowLayout: Layout {
 
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
     let width = proposal.width ?? .infinity
-    let lines = Self.lines(for: items(subviews, width: width), width: width, spacing: spacing)
-    let height = lines.map(\.height).reduce(0, +) + CGFloat(max(lines.count - 1, 0)) * rowGap
+    let items = items(subviews, width: width)
+    let lines = Self.lines(for: items, width: width, spacing: spacing)
+    let height =
+      lines.map { Self.rowOffsets(of: $0, items: items, alignment: rowAlignment).height }
+      .reduce(0, +) + CGFloat(max(lines.count - 1, 0)) * rowGap
     return CGSize(width: proposal.width ?? lines.map(\.width).max() ?? 0, height: height)
   }
 
@@ -123,21 +131,20 @@ struct MTFlowLayout: Layout {
     var collapsed = Set(subviews.indices)
     var y = bounds.minY
     for line in Self.lines(for: items, width: bounds.width, spacing: spacing) {
+      let row = Self.rowOffsets(of: line, items: items, alignment: rowAlignment)
       var x =
         switch align {
         case .start: bounds.minX
         case .end: bounds.maxX - line.width
         }
-      for index in line.indices {
+      for (index, offset) in zip(line.indices, row.offsets) {
         let size = CGSize(
           width: min(items[index].size.width, bounds.width), height: items[index].size.height)
-        subviews[index].place(
-          at: CGPoint(x: x, y: y + (line.height - size.height) / 2),
-          proposal: ProposedViewSize(size))
+        subviews[index].place(at: CGPoint(x: x, y: y + offset), proposal: ProposedViewSize(size))
         collapsed.remove(index)
         x += size.width + spacing
       }
-      y += line.height + rowGap
+      y += row.height + rowGap
     }
     // A separator left out of every line gets no width, so it draws nothing.
     for index in collapsed { subviews[index].place(at: bounds.origin, proposal: .zero) }
@@ -170,13 +177,39 @@ struct MTFlowLayout: Layout {
     return lines
   }
 
+  /// Where each child of `line` sits below the line's top, in the line's order, and the
+  /// line's height once they are aligned.
+  static func rowOffsets(
+    of line: Line, items: [Item], alignment: MTSeparatedListRowAlignment
+  ) -> (offsets: [CGFloat], height: CGFloat) {
+    switch alignment {
+    case .center:
+      return (line.indices.map { (line.height - items[$0].size.height) / 2 }, line.height)
+    case .firstTextBaseline:
+      let baseline = line.indices.map { items[$0].baseline }.max() ?? 0
+      let offsets = line.indices.map { baseline - items[$0].baseline }
+      let height =
+        zip(line.indices, offsets).map { $1 + items[$0].size.height }.max() ?? 0
+      return (offsets, height)
+    }
+  }
+
   private var rowGap: CGFloat { lineSpacing ?? spacing }
 
   private func items(_ subviews: Subviews, width: CGFloat) -> [Item] {
-    subviews.map {
-      Item(
-        size: $0.sizeThatFits(ProposedViewSize(width: width, height: nil)),
-        isSeparator: $0[MTFlowSeparatorKey.self])
+    let proposal = ProposedViewSize(width: width, height: nil)
+    return subviews.map { subview in
+      let isSeparator = subview[MTFlowSeparatorKey.self]
+      switch rowAlignment {
+      case .center:
+        return Item(size: subview.sizeThatFits(proposal), isSeparator: isSeparator)
+      case .firstTextBaseline:
+        let dimensions = subview.dimensions(in: proposal)
+        return Item(
+          size: CGSize(width: dimensions.width, height: dimensions.height),
+          isSeparator: isSeparator,
+          baseline: dimensions[VerticalAlignment.firstTextBaseline])
+      }
     }
   }
 }

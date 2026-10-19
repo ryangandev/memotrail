@@ -50,7 +50,7 @@ final class EntryEditorDraftTests: XCTestCase {
   func testUnchangedInstantKeepsItsSecondsMillisecondsAndRepeatedHour() throws {
     let opened = OccurrenceDraft(original)
     XCTAssertEqual(opened.start, "2026-11-01T01:30:27")
-    XCTAssertEqual(try opened.resolvedForSave(original: original), original)
+    XCTAssertEqual(try opened.resolve(original: original), original)
     XCTAssertEqual(
       OccurrenceDraft.wallTimeToDate("2026-11-01T01:30:27", timezone: original.timezone),
       Date(timeIntervalSince1970: 1_793_521_827))
@@ -61,7 +61,7 @@ final class EntryEditorDraftTests: XCTestCase {
       (DatePrecision.year, "2017"), (.month, "2017-07"), (.day, "2017-07-08"),
     ] {
       let value = try draft(precision, start: start, timezone: "Pacific/Auckland")
-        .resolvedForSave()
+        .resolve()
       XCTAssertEqual(value.precision, precision)
       XCTAssertEqual(OccurrenceDraft(value).start, start)
       XCTAssertEqual(value.timezone, "Pacific/Auckland")
@@ -70,7 +70,7 @@ final class EntryEditorDraftTests: XCTestCase {
 
   func testAgesAndApproximateDatesStoreOnlyTheirDescription() throws {
     for precision in [DatePrecision.age, .approximate] {
-      let value = try draft(precision, label: "17岁，第一次去日本").resolvedForSave()
+      let value = try draft(precision, label: "17岁，第一次去日本").resolve()
       XCTAssertEqual(
         value,
         EntryOccurrence(
@@ -81,30 +81,30 @@ final class EntryEditorDraftTests: XCTestCase {
 
   func testOpenRangesSaveAndReversedOrUndescribedDatesDoNot() throws {
     let range = draft(.range, start: "2020-01-01")
-    XCTAssertNil(try range.resolvedForSave().end)
+    XCTAssertNil(try range.resolve().end)
     var reversed = range
     reversed.end = "2019-01-01"
     XCTAssertEqual(
-      message { _ = try reversed.resolvedForSave() },
+      message { _ = try reversed.resolve() },
       "The end date must be on or after the start date.")
     var age = range
     age.precision = .age
     age.start = ""
     XCTAssertEqual(
-      message { _ = try age.resolvedForSave() },
+      message { _ = try age.resolve() },
       "Describe the age or approximate period you remember.")
     var long = range
     long.label = String(repeating: "x", count: 201)
     XCTAssertEqual(
-      message { _ = try long.resolvedForSave() },
+      message { _ = try long.resolve() },
       "Keep the date description under 200 characters.")
   }
 
   func testAnEndDateIsOptionalAndPresentKeepsItOpen() throws {
-    XCTAssertNil(try draft(.range, start: "2020-01-01", endMode: .present).resolvedForSave().end)
-    XCTAssertNil(try draft(.range, start: "2020-01-01").resolvedForSave().end)
+    XCTAssertNil(try draft(.range, start: "2020-01-01", endMode: .present).resolve().end)
+    XCTAssertNil(try draft(.range, start: "2020-01-01").resolve().end)
     XCTAssertEqual(
-      try draft(.range, start: "2020-01-01", end: "2023-01-01").resolvedForSave().end,
+      try draft(.range, start: "2020-01-01", end: "2023-01-01").resolve().end,
       ISO8601DateFormatter().date(from: "2023-01-01T12:00:00Z"))
   }
 
@@ -115,7 +115,7 @@ final class EntryEditorDraftTests: XCTestCase {
       (.day, "2017-07-08", "2023-06-01"),
     ] {
       let value = try draft(precision, start: start, end: end, timezone: "Asia/Kathmandu")
-        .resolvedForSave(span: true)
+        .resolve(span: true)
       XCTAssertNotNil(value.end)
       XCTAssertNil(OccurrenceRules.problem(value, span: true))
       XCTAssertEqual(
@@ -123,7 +123,7 @@ final class EntryEditorDraftTests: XCTestCase {
         "Only ranges, ages, or approximate periods can have an end date.")
       XCTAssertNotNil(
         message {
-          _ = try self.draft(precision, start: end, end: start).resolvedForSave(span: true)
+          _ = try self.draft(precision, start: end, end: start).resolve(span: true)
         })
     }
   }
@@ -131,7 +131,7 @@ final class EntryEditorDraftTests: XCTestCase {
   func testAnEmptyCalendarDateIsStoredAsUnknownAndKeepsItsDescription() throws {
     for precision in [DatePrecision.exact, .day, .month, .year, .range] {
       XCTAssertEqual(
-        try draft(precision, label: "Sometime in childhood").resolvedForSave(),
+        try draft(precision, label: "Sometime in childhood").resolve(),
         EntryOccurrence(
           precision: .unknown, start: nil, end: nil, label: "Sometime in childhood",
           timezone: "UTC"),
@@ -139,7 +139,7 @@ final class EntryEditorDraftTests: XCTestCase {
     }
     // A Chapter still going on has no end either.
     XCTAssertEqual(
-      try draft(.day, endMode: .present).resolvedForSave(span: true).precision, .unknown)
+      try draft(.day, endMode: .present).resolve(span: true).precision, .unknown)
   }
 
   func testAnEndDateNeedsAStartDate() {
@@ -147,7 +147,7 @@ final class EntryEditorDraftTests: XCTestCase {
       XCTAssertEqual(
         message {
           _ = try draft(precision, end: "2023-01-01", label: "Around college")
-            .resolvedForSave(span: span)
+            .resolve(span: span)
         },
         "Add a start date before the end date.")
     }
@@ -158,12 +158,12 @@ final class EntryEditorDraftTests: XCTestCase {
       (DatePrecision.year, "20"), (.month, "2017-13"), (.day, "2017-02-30"),
     ] {
       XCTAssertEqual(
-        message { _ = try draft(precision, start: start).resolvedForSave() },
+        message { _ = try draft(precision, start: start).resolve() },
         "Choose a valid calendar date and time. This time may not exist during a daylight-saving change."
       )
     }
     XCTAssertEqual(
-      message { _ = try draft(.day, start: "2026-01-01", timezone: "Not/AZone").resolvedForSave() },
+      message { _ = try draft(.day, start: "2026-01-01", timezone: "Not/AZone").resolve() },
       OccurrenceRules.timezoneMessage)
   }
 
@@ -201,10 +201,10 @@ final class EntryEditorDraftTests: XCTestCase {
   func testAnEmptyDayIsUnknownUntilItIsEdited() throws {
     var value = draft(.unknown)
     XCTAssertEqual(value.segment, .day)
-    XCTAssertEqual(try value.resolvedForSave().precision, .unknown)
+    XCTAssertEqual(try value.resolve().precision, .unknown)
     value.edit { $0.start = "2024-02-03" }
     XCTAssertEqual(value.precision, .day)
-    XCTAssertEqual(try value.resolvedForSave().precision, .day)
+    XCTAssertEqual(try value.resolve().precision, .day)
   }
 
   func testNotSureKeepsAnAgeAndADayEndBecomesARange() {
