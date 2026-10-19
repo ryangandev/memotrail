@@ -213,7 +213,9 @@ const searchEntries = (extra: Partial<Record<number, string>> = {}) =>
     extra[index] ? { ...seed, body: `${seed.body} ${extra[index]}` } : seed,
   ) satisfies SeedEntry[];
 
-const panelOf = (page: Page) => page.locator("[data-ui-review-panel]");
+// While a refresh streams in, React can keep the previous panel in the page,
+// hidden, for a moment. Only the one on screen is the panel.
+const panelOf = (page: Page) => page.locator("[data-ui-review-panel]:visible");
 const disclosureOf = (page: Page) =>
   page.getByRole("dialog", { name: "Before Claude reads your Entries" });
 
