@@ -73,6 +73,32 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(
       main.getByText("Google Sign-In", { exact: true }),
     ).toBeVisible();
+    // Sign out is a secondary button in the last section, not the page's primary action.
+    await expect(
+      main.getByRole("button", { name: "Sign out", exact: true }),
+    ).toHaveAttribute("data-variant", "secondary");
+    await expect(main.getByRole("heading", { level: 2 })).toHaveText([
+      "Profile",
+      "Time",
+      "Appearance",
+      "Reviews",
+      "Your data",
+      "Account",
+    ]);
+    // Each row leads to its page with a secondary button.
+    await expect(main.getByRole("link", { name: "Import" })).toHaveAttribute(
+      "href",
+      "/settings/import",
+    );
+    await expect(main.getByRole("link", { name: "Export" })).toHaveAttribute(
+      "href",
+      "/settings/export",
+    );
+    await expect(main.getByRole("link", { name: "Open Tags" })).toHaveAttribute(
+      "href",
+      "/tags",
+    );
+    await expect(main).not.toContainText(/archive/i);
     // The paused AI capabilities row is gone; the review switches take its place.
     await expect(
       page.getByRole("link", { name: /AI capabilities/ }),
@@ -106,13 +132,17 @@ test("Settings is reachable from the sidebar and owns account controls", async (
         .info()
         .outputPath("memotrail-settings-preferred-name-desktop.png"),
     });
+    // A field saves when it loses focus, and says so beside itself.
+    const nameRow = main.locator("[data-setting-row]").filter({
+      has: page.getByRole("textbox", { name: "Preferred name" }),
+    });
+    await expect(nameRow).not.toContainText("Saved");
     await preferredName.fill("River");
-    await main.getByRole("button", { name: "Save name" }).click();
-    await expect(
-      page.locator("[data-sonner-toast]").filter({
-        hasText: "Preferred name saved.",
-      }),
-    ).toBeVisible();
+    await preferredName.press("Tab");
+    await expect(nameRow).toContainText("Saved");
+    await expect(main.getByRole("button", { name: "Save name" })).toHaveCount(
+      0,
+    );
     await expect
       .poll(
         async () =>
@@ -131,8 +161,8 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(main.getByText("River", { exact: true })).toBeVisible();
     await preferredName.fill("");
     await expect(preferredName).toHaveValue("");
-    await expect(main.getByRole("button", { name: "Save name" })).toBeEnabled();
-    await main.getByRole("button", { name: "Save name" }).click();
+    await preferredName.press("Enter");
+    await expect(nameRow).toContainText("Saved");
     await expect
       .poll(
         async () =>
@@ -151,7 +181,10 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     );
     await page.goto("/settings");
 
-    const appearance = main.getByRole("group", { name: "Appearance mode" });
+    const appearance = main.getByRole("group", { name: "Theme", exact: true });
+    const appearanceRow = main.locator("[data-setting-row]").filter({
+      has: page.getByRole("group", { name: "Theme", exact: true }),
+    });
     const systemTheme = appearance.getByRole("radio", { name: "System" });
     const lightTheme = appearance.getByRole("radio", { name: "Light" });
     const darkTheme = appearance.getByRole("radio", { name: "Dark" });
@@ -160,7 +193,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await darkTheme.check();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await expect(darkTheme).toBeChecked();
-    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await expect(appearanceRow).toContainText("Saved");
     await expect
       .poll(() =>
         page.evaluate(
@@ -173,7 +206,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     await lightTheme.check();
     await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
-    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await expect(appearance).toBeEnabled();
     await expect
       .poll(() =>
         page.evaluate(
@@ -184,7 +217,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await page.emulateMedia({ colorScheme: "dark" });
     await systemTheme.check();
     await expect(page.locator("html")).not.toHaveAttribute("data-theme");
-    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await expect(appearance).toBeEnabled();
     await expect
       .poll(() =>
         page.evaluate(
@@ -218,7 +251,7 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(page.getByText("This page couldn't load")).toHaveCount(0);
     await expect(systemTheme).toBeChecked();
     await expect(page.locator("html")).not.toHaveAttribute("data-theme");
-    await expect(appearance).toHaveAttribute("aria-busy", "false");
+    await expect(appearance).toBeEnabled();
     await context.setOffline(false);
 
     const timezone = main.getByRole("combobox", {
@@ -234,15 +267,16 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await expect(timezone.locator('option[value="UTC"]')).toHaveText(
       "(UTC+00:00) UTC",
     );
+    // Choosing a zone saves it, with no button.
     await timezone.selectOption("America/Los_Angeles");
-    await main
-      .getByRole("button", { name: "Save time zone", exact: true })
-      .click();
     await expect(
-      page.locator("[data-sonner-toast]").filter({
-        hasText: "Default time zone saved.",
+      main.locator("[data-setting-row]").filter({
+        has: page.getByRole("combobox", { name: "Default time zone" }),
       }),
-    ).toBeVisible();
+    ).toContainText("Saved");
+    await expect(
+      main.getByRole("button", { name: "Save time zone" }),
+    ).toHaveCount(0);
     await expect
       .poll(
         async () =>
@@ -276,7 +310,9 @@ test("Settings is reachable from the sidebar and owns account controls", async (
     await page.getByRole("button", { name: "Sign out", exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(
-      page.getByRole("heading", { name: "Welcome to MemoTrail" }),
+      page.getByRole("heading", {
+        name: "The one private place your life is written down.",
+      }),
     ).toBeVisible();
   } finally {
     await page.close();

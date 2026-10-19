@@ -4,19 +4,21 @@ import styles from "./page.module.css";
 
 export default function AuthErrorPage() {
   return (
-    <main className={styles.shell}>
-      <section className={styles.card}>
+    <div className={styles.shell}>
+      <header className={styles.header}>
         <BrandMark className={styles.mark} />
-        <p>Authentication</p>
+        <strong>MemoTrail</strong>
+      </header>
+      <main className={styles.main}>
         <h1>Sign-in did not finish.</h1>
-        <span>
-          Your private archive was not opened. Return to MemoTrail and try
-          Google Sign-In again.
-        </span>
+        <p>
+          Your Entries were not opened. Return to MemoTrail and try Google
+          Sign-In again.
+        </p>
         <ButtonLink className={styles.action} variant="primary" href="/">
           Return to MemoTrail
         </ButtonLink>
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }

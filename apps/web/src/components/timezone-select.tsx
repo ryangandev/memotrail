@@ -20,6 +20,7 @@ export function TimezoneSelect({
   ariaLabel,
   className,
   disabled = false,
+  id,
   onChange,
   referenceDate,
   value,
@@ -27,6 +28,8 @@ export function TimezoneSelect({
   ariaLabel: string;
   className?: string;
   disabled?: boolean;
+  /** Lets a visible label point at the select. */
+  id?: string;
   onChange: ChangeEventHandler<HTMLSelectElement>;
   referenceDate?: string;
   value: string;
@@ -50,6 +53,7 @@ export function TimezoneSelect({
       className={className}
       data-ui-time-zone-field
       disabled={disabled}
+      id={id}
       onChange={onChange}
       required
       value={value}

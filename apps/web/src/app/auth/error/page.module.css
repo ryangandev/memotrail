@@ -1,49 +1,77 @@
+/* The same single reading column as the signed-out page, with a title and one action. */
+
 .shell {
-  display: grid;
   min-height: 100dvh;
-  place-items: center;
-  padding: var(--mt-space-6);
   background: var(--mt-color-canvas);
 }
 
-.card {
-  width: min(100%, 440px);
-  padding: var(--mt-space-10);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border-strong);
-  border-radius: var(--mt-radius-xlarge);
-  background: var(--mt-color-surface-raised);
-  box-shadow: var(--mt-shadow-floating);
+.header:not([data-ui-page-header]) {
+  display: flex;
+  width: min(100% - 48px, 720px);
+  height: 72px;
+  align-items: center;
+  gap: var(--mt-space-2-75);
+  margin: 0 auto;
+  font-family: var(--mt-type-wordmark-font-family);
+  font-size: var(--mt-type-wordmark-font-size);
+  letter-spacing: var(--mt-type-wordmark-letter-spacing);
 }
 
-.mark {
-  width: 42px;
-  height: 42px;
-}
-
-.card p {
-  margin-top: var(--mt-space-8);
-  color: var(--mt-color-warm);
-  font-size: var(--mt-type-sign-in-eyebrow-font-size);
-  font-weight: var(--mt-type-sign-in-eyebrow-font-weight);
-  letter-spacing: var(--mt-type-sign-in-eyebrow-letter-spacing);
-  text-transform: var(--mt-type-sign-in-eyebrow-text-transform);
-}
-
-.card h1 {
-  margin-top: var(--mt-space-2-5);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-title);
+.header strong {
   font-weight: var(--mt-font-weight-medium);
 }
 
-.card > span:not(.mark) {
-  display: block;
-  margin-top: var(--mt-space-3);
+.mark {
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+
+.main {
+  display: grid;
+  width: min(100% - 48px, 720px);
+  justify-items: start;
+  gap: var(--mt-space-4);
+  margin: 0 auto;
+  padding: var(--mt-space-12) 0 var(--mt-space-18);
+}
+
+.main h1 {
+  margin: 0;
+  font-family: var(--mt-font-family-serif);
+  font-size: var(--page-title-size);
+  font-weight: var(--mt-font-weight-medium);
+  letter-spacing: var(--page-title-tracking);
+  line-height: var(--page-title-line-height);
+}
+
+.main p {
+  max-width: 540px;
+  margin: 0;
   color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-body-small);
-  line-height: var(--mt-line-height-body);
+  font-size: var(--mt-font-size-body-large);
+  line-height: var(--mt-line-height-relaxed);
 }
 
 .action {
-  margin-top: var(--mt-space-8);
+  margin-top: var(--mt-space-2);
+}
+
+@media (max-width: 540px) {
+  .header:not([data-ui-page-header]),
+  .main {
+    width: min(100% - 32px, 720px);
+  }
+
+  .header:not([data-ui-page-header]) {
+    height: 60px;
+  }
+
+  .main {
+    padding: var(--mt-space-8) 0 var(--mt-space-12);
+  }
+
+  .main p {
+    font-size: var(--mt-font-size-body);
+  }
 }

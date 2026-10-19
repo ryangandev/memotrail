@@ -144,6 +144,7 @@ Importing from Apple Journal, Apple Notes, and Notion gives a new user a past to
 - Nothing in the imported content is lost: anything without a direct place in an Entry is kept as text in its note.
 - Importing the same content again does not create duplicates.
 - Import never changes or removes the user's existing Entries.
+- Import opens from the sidebar, the More list, and Your data in Settings.
 
 ## Organization
 
@@ -300,6 +301,12 @@ Library opens with the same browser of every Entry as Web, including debounced s
 More opens a plain list of First Times, Reviews, Tags, Import, Trash, and Settings.
 On mobile Web, a 48px top bar shows the logo, the sync status, and the profile avatar, which opens Settings.
 Settings lets the user choose a preferred name for Dashboard greetings, or clear it to use the Google account name.
+Settings is one reading column of sections under serif titles and rules: Profile, Time, Appearance, Reviews, Your data, and Account.
+Each setting is a row with its label on the left and its control on the right, and a field saves as the user changes it and says Saved beside itself, with no Save buttons.
+Appearance is a System, Light, and Dark segmented choice, and the review switches stay switches.
+Search by meaning appears in its own Search section only while an embedding service is configured.
+Your data holds rows that open Import, Export, and Tags, and Account ends the page with Sign out as a secondary button.
+Import, Export, and the signed-out and sign-in error pages use the same reading column, with a title-only header and rows between rules instead of stacked cards.
 
 Desktop treats Library as a primary destination beside Dashboard and Timeline; Search is part of Library.
 Desktop Web has no top bar.

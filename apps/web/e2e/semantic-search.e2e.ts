@@ -263,3 +263,36 @@ test("Search keeps working with words alone when the service is down", async ({
   await expect(page.getByText("Meaning", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Search unavailable")).toHaveCount(0);
 });
+
+test("Settings offers the Search by meaning switch once a service is configured", async ({
+  page,
+  workspace,
+}) => {
+  await page.goto("/settings");
+  const main = page.getByRole("main");
+  const meaning = main.getByRole("checkbox", { name: "Search by meaning" });
+  const row = main.locator("[data-setting-row]").filter({
+    has: page.getByRole("checkbox", { name: "Search by meaning" }),
+  });
+  await expect(meaning).toBeChecked();
+  await expect(row).not.toContainText("Saved");
+
+  await meaning.click();
+  await expect(row).toContainText("Saved");
+  await expect(meaning).not.toBeChecked();
+  await expect
+    .poll(
+      async () =>
+        (
+          await workspace.client
+            .from("profiles")
+            .select("semantic_search_enabled")
+            .eq("user_id", workspace.owner)
+            .single()
+        ).data?.semantic_search_enabled,
+    )
+    .toBe(false);
+
+  await page.reload();
+  await expect(meaning).not.toBeChecked();
+});

@@ -71,7 +71,7 @@ accessibility:
 
 platformDifferences:
   - difference: Web TimezoneSelect is a bare select that the enclosing editor labels and styles, so it takes an ariaLabel and a className; iOS MTTimeZoneField draws its own label and the shared field surface.
-    reason: The Web Settings card and occurrence editor each style their inputs as one form, and the time zone select joins them; every native form uses the shared field surface.
+    reason: The Web Settings row and occurrence editor each style their inputs as one form, and the time zone select joins them; every native form uses the shared field surface.
   - difference: Web opens the browser's native select list; iOS opens a sheet with a search field above the sections.
     reason: Hundreds of zones are quick to scan with a keyboard in a native select, but on a phone people find a zone by typing its city.
   - difference: iOS MTTimeZoneField takes a note beside its label, such as Default from Settings; Web callers write that note inside their own label.

@@ -43,51 +43,17 @@ export function AuthGate({ configured }: AuthGateProps) {
     <div className={styles.shell}>
       <header className={styles.header}>
         <MemoTrailBrand />
-        <span>Private by design</span>
       </header>
 
       <main className={styles.main}>
-        <section className={styles.story} aria-labelledby="welcome-heading">
-          <p className={styles.eyebrow}>Your life, kept with context</p>
+        <section aria-labelledby="welcome-heading" className={styles.intro}>
           <h1 id="welcome-heading">
-            A quiet place for everything worth keeping.
+            The one private place your life is written down.
           </h1>
-          <p className={styles.intro}>
-            Capture thoughts, first times, places, and the chapters that connect
-            them. MemoTrail keeps the archive private and leaves the
-            organization in your hands.
+          <p>
+            Jot down a thought in seconds, find it again from any
+            half-remembered clue, and get each Chapter of your life back.
           </p>
-
-          <div className={styles.trail} aria-hidden="true">
-            <span />
-            <article>
-              <time>Today</time>
-              <strong>Why do people need to keep learning?</strong>
-              <small>Reflection · Learning</small>
-            </article>
-            <span />
-            <article>
-              <time>Jul 3, 2026</time>
-              <strong>First time skiing</strong>
-              <small>First time · Travel</small>
-            </article>
-            <span />
-            <article>
-              <time>2001 - 2012</time>
-              <strong>Growing up in China</strong>
-              <small>Life stage</small>
-            </article>
-          </div>
-        </section>
-
-        <section
-          className={styles.signInCard}
-          aria-labelledby="sign-in-heading"
-        >
-          <BrandMark className={styles.cardMark} />
-          <p className={styles.cardEyebrow}>Personal archive</p>
-          <h2 id="sign-in-heading">Welcome to MemoTrail</h2>
-          <p>Sign in to continue to your private space.</p>
 
           {configured ? (
             <button
@@ -122,6 +88,30 @@ export function AuthGate({ configured }: AuthGateProps) {
             password.
           </small>
         </section>
+
+        <ul aria-hidden="true" className={styles.sample}>
+          <li>
+            <time>Today</time>
+            <div>
+              <strong>Why do people need to keep learning?</strong>
+              <span>Learning</span>
+            </div>
+          </li>
+          <li>
+            <time>Jul 3, 2026</time>
+            <div>
+              <strong>First time skiing</strong>
+              <span>First Time</span>
+            </div>
+          </li>
+          <li>
+            <time>2001 - 2012</time>
+            <div>
+              <strong>Growing up in China</strong>
+              <span>Chapter</span>
+            </div>
+          </li>
+        </ul>
       </main>
     </div>
   );
