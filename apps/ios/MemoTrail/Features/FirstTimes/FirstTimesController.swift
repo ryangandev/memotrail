@@ -29,6 +29,12 @@ final class FirstTimesController {
     entries.reduce(0) { $0 + $1.attachments.count { $0.variant == "original" } }
   }
 
+  /// Web shows the counts beside its page header. iOS hides them until a load has worked, so a
+  /// failed load, or a retry after one, never reads as "0 First Times".
+  var showsSummary: Bool {
+    hasLoaded && loadErrorMessage == nil && !(isLoading && entries.isEmpty)
+  }
+
   func load() async {
     let generation = UUID()
     loadGeneration = generation

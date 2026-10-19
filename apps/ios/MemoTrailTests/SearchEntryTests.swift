@@ -209,6 +209,38 @@ final class SearchEntryTests: XCTestCase {
       EntryRecordFilter.allCases.map(\.title), ["Entries", "Chapters", "First Times"])
   }
 
+  func testRecordFilterSendsEntryChapterAndFirstTimeClassifications() throws {
+    for (record, classification) in [
+      (EntryRecordFilter.entry, "entry"), (.chapter, "chapter"), (.firstTime, "first_time"),
+    ] {
+      // A filter alone is a search, so Library never needs a phrase to apply it.
+      let request = try LibraryController.searchRequest(
+        query: "", record: record, tagName: nil, dateFrom: "", dateTo: "")
+      XCTAssertTrue(request.hasCriteria)
+      let json = try object(request.parameters)
+      XCTAssertEqual(json["p_item_classifications"] as? [String], [classification])
+      XCTAssertEqual(json["p_query"] as? String, "")
+      // iOS searches by keyword only, so no embedding argument is ever sent.
+      XCTAssertFalse(json.keys.contains { $0.contains("embedding") || $0.contains("semantic") })
+    }
+    let all = try LibraryController.searchRequest(
+      query: "", record: nil, tagName: nil, dateFrom: "", dateTo: "")
+    XCTAssertFalse(all.hasCriteria)
+    XCTAssertEqual(try object(all.parameters)["p_item_classifications"] as? [String], [])
+  }
+
+  func testSearchResultNamesAnUntitledEntryByItsDateOnly() throws {
+    let untitled = SearchEntry(
+      id: UUID(), title: nil, body: "Text", occurredAt: Date(timeIntervalSince1970: 1_700_000_000),
+      datePrecision: .day, occurredTimezone: "UTC")
+    XCTAssertEqual(untitled.accessibilityLabel, "Entry, Tuesday, November 14, 2023")
+    let titled = SearchEntry(
+      id: UUID(), title: "Lisbon", body: "Text", isFirstTime: true,
+      occurredAt: Date(timeIntervalSince1970: 1_700_000_000), datePrecision: .day,
+      occurredTimezone: "UTC")
+    XCTAssertEqual(titled.accessibilityLabel, "First Time, Lisbon, Nov 14, 2023")
+  }
+
   func testSearchParametersEncodeAbsentDatesExplicitly() throws {
     let json = try object(EntrySearchRequest.validate(query: "learning").parameters)
 

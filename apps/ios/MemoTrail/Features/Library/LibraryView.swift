@@ -1,8 +1,6 @@
 @preconcurrency import Supabase
 import SwiftUI
 
-// P7: Library polish (Record labels, match reasons, filter requests).
-
 /// Web `/library`: browse everything saved, or search it by keyword.
 struct LibraryView: View {
   private let client: SupabaseClient
@@ -94,8 +92,14 @@ struct LibraryView: View {
         searchSoon()
       }
       .onChange(of: controller.query) {
-        // Emptying the phrase with no filters returns to browsing, like "Clear all".
-        if !controller.hasCriteria, controller.isShowingResults { controller.clearAll() }
+        // Emptying the phrase with no filters returns to browsing, like "Clear all"; any other
+        // change searches once typing pauses.
+        if controller.hasCriteria {
+          searchSoon(after: LibraryView.typingPause)
+        } else if controller.isShowingResults {
+          pendingSearch?.cancel()
+          controller.clearAll()
+        }
       }
     }
   }
@@ -182,6 +186,7 @@ struct LibraryView: View {
           .foregroundStyle(MTColor.warm)
       }
     }
+    .frame(maxWidth: .infinity, alignment: .leading)
     .padding(.top, MTSpacing.s1)
     .overlay(alignment: .top) { MTListDivider() }
   }
@@ -193,11 +198,14 @@ struct LibraryView: View {
     pendingSearch = Task { await controller.search() }
   }
 
+  /// How long typing pauses before the phrase searches by itself; Search and Return search at once.
+  private static let typingPause = Duration.milliseconds(400)
+
   /// Filters apply as they change; a short pause lets date pickers settle first.
-  private func searchSoon() {
+  private func searchSoon(after delay: Duration = .milliseconds(300)) {
     pendingSearch?.cancel()
     pendingSearch = Task {
-      try? await Task.sleep(for: .milliseconds(300))
+      try? await Task.sleep(for: delay)
       guard !Task.isCancelled else { return }
       await controller.search()
     }
@@ -254,7 +262,7 @@ private struct LibraryBrowse: View {
       } else {
         VStack(spacing: 0) {
           ForEach(controller.items) { item in
-            LibraryItemRow(item: item) { open(ItemLink(entryID: item.id)) }
+            LibraryItemRow(item: item) { open(item.link) }
             MTListDivider()
           }
         }
@@ -266,7 +274,8 @@ private struct LibraryBrowse: View {
   }
 }
 
-/// One Web `wikiList` row: identity and date, then the serif title and a one-line excerpt.
+/// One Web `EntryList` row: a Chapter and First Time badge where they apply and the date, then
+/// the serif title and a one-line excerpt. An ordinary Entry carries no badge.
 private struct LibraryItemRow: View {
   let item: LibraryRow
   let action: () -> Void
@@ -274,14 +283,24 @@ private struct LibraryItemRow: View {
   var body: some View {
     Button(action: action) {
       VStack(alignment: .leading, spacing: MTSpacing.s1) {
-        HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s4) {
-          MTBadge(title: item.identityLabel, size: .micro, uppercase: true)
-          if let dateLabel = item.dateLabel {
-            Text(dateLabel)
-              .font(MTFont.detail)
-              .foregroundStyle(MTColor.inkFaint)
-              .lineLimit(1)
-              .fixedSize()
+        if item.hasMeta {
+          HStack(alignment: .firstTextBaseline, spacing: MTSpacing.s4) {
+            if item.marks.isChapter || item.marks.isFirstTime {
+              HStack(spacing: MTSpacing.s1_5) {
+                if item.marks.isChapter {
+                  MTBadge(title: "Chapter", size: .micro, uppercase: true)
+                }
+                if item.marks.isFirstTime {
+                  MTBadge(title: "First Time", tone: .neutral, size: .micro, uppercase: true)
+                }
+              }
+            }
+            if let dateLabel = item.dateLabel {
+              Text(dateLabel)
+                .font(MTFont.detail)
+                .foregroundStyle(MTColor.inkFaint)
+                .lineLimit(1)
+            }
           }
         }
         Text(item.displayTitle)
@@ -296,15 +315,14 @@ private struct LibraryItemRow: View {
             .lineLimit(1)
         }
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
       .padding(.horizontal, MTSpacing.s3)
       .padding(.vertical, MTSpacing.s4)
     }
     .buttonStyle(MTListRowButtonStyle())
     .accessibilityElement(children: .ignore)
-    .accessibilityLabel(
-      [item.identityLabel, item.displayTitle, item.dateLabel].compactMap(\.self).joined(
-        separator: ", "))
-    .accessibilityHint("Opens this record")
+    .accessibilityLabel(item.accessibilityLabel)
+    .accessibilityHint("Opens this item")
     .accessibilityAddTraits(.isButton)
   }
 }
@@ -340,7 +358,7 @@ private struct LibraryResults: View {
         }
         MTListSurface {
           ForEach(controller.results) { entry in
-            LibraryResultCard(entry: entry) { open(ItemLink(entryID: entry.id)) }
+            LibraryResultCard(entry: entry) { open(entry.link) }
             if entry.id != controller.results.last?.id { MTListDivider() }
           }
         }
@@ -363,9 +381,12 @@ private struct LibraryResultCard: View {
       Button(action: action) {
         VStack(alignment: .leading, spacing: MTSpacing.s1_5) {
           MTBadge(title: entry.identityLabel, tone: .neutral)
-          Text(entry.displayDate)
-            .font(MTFont.detail)
-            .foregroundStyle(MTColor.inkFaint)
+          // An untitled Entry is already named by its date.
+          if entry.title != nil {
+            Text(entry.displayDate)
+              .font(MTFont.detail)
+              .foregroundStyle(MTColor.inkFaint)
+          }
           Text(entry.displayTitle)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
@@ -379,8 +400,8 @@ private struct LibraryResultCard: View {
       }
       .buttonStyle(.plain)
       .accessibilityElement(children: .ignore)
-      .accessibilityLabel("\(entry.identityLabel), \(entry.displayTitle), \(entry.displayDate)")
-      .accessibilityHint("Opens this record")
+      .accessibilityLabel(entry.accessibilityLabel)
+      .accessibilityHint("Opens this item")
       .accessibilityAddTraits(.isButton)
 
       if !entry.note.isEmpty {

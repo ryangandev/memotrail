@@ -72,6 +72,9 @@ struct LibraryRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
     }
   }
 
+  /// Every row opens its Item page, like Web `wikiEntryHref`.
+  var link: ItemLink { ItemLink(entryID: id) }
+
   var marks: EntryMarks { EntryMarks(subtype: subtype, isFirstTime: isFirstTime) }
 
   var identityLabel: String { marks.identityLabel }
@@ -92,6 +95,15 @@ struct LibraryRow: Decodable, Equatable, Hashable, Identifiable, Sendable {
       return nil
     }
     return subtype == .chapter ? occurrence.spanLabel : occurrence.displayLabel
+  }
+
+  /// Web `EntryList` draws a meta line only for a Chapter or First Time badge or a date.
+  var hasMeta: Bool { marks.isChapter || marks.isFirstTime || dateLabel != nil }
+
+  /// What VoiceOver reads: the identity of a Chapter or First Time, the title, then the date.
+  var accessibilityLabel: String {
+    let identity = marks == .none ? nil : identityLabel
+    return [identity, displayTitle, dateLabel].compactMap(\.self).joined(separator: ", ")
   }
 }
 
