@@ -287,7 +287,7 @@ export function DesignSystemGallery({ tokens }: { tokens: TokenSet }) {
       </GallerySection>
 
       <GallerySection
-        description="EntryRow lists Entries, and RecordCard is the shared interactive card surface used by First Times. SeparatedList and SectionHeader organize the rows and headings around them, and CaptureComposer writes new Entries."
+        description="EntryRow lists Entries, and RecordCard is the shared interactive card that the native First Times grid uses. SeparatedList and SectionHeader organize the rows and headings around them, and CaptureComposer writes new Entries."
         id="containers"
         index="05"
         title="Containers and data display"

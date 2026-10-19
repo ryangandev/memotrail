@@ -266,8 +266,6 @@ export const excluded = {
   "empty-trash-control.tsx": needsData,
   "entry-detail-view.tsx": featureView,
   "entry-editor-dialog.tsx": needsData,
-  "entry-list.tsx":
-    "Lists saved Entries with their photos and Location maps, which need app data.",
   "entry-marks-fields.tsx":
     "Edits the Chapter and First Time marks of an Entry form and is tied to its data model.",
   "entry-organization-editor.tsx": needsData,

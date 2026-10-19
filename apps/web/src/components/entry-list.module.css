@@ -1,2 +1,0 @@
-/* EntryList now draws EntryRow, styled in entry-row.module.css. This file stays only because
-   pending-captures.tsx still imports it; remove it once that import is gone. */
