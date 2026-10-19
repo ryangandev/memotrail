@@ -123,7 +123,11 @@ extension LocalSessionUITests {
     app.navigationBars.firstMatch.buttons.element(boundBy: 0).tap()
 
     // Add opens the Entry editor with First Time already checked and Chapter not.
-    reveal(app.buttons["firsttimes-add"], in: app).tap()
+    // Add is in the page header, above the cards revealed earlier; more cards from earlier tests
+    // in the run can scroll it out of the lazy list, so scroll back up to it first.
+    let add = app.buttons["firsttimes-add"]
+    for _ in 0..<12 where !add.exists || !add.isHittable { app.swipeDown() }
+    add.tap()
     let firstTime = element("editor-first-time", in: app)
     XCTAssertTrue(firstTime.waitForExistence(timeout: 10))
     XCTAssertEqual(firstTime.value as? String, "On")
