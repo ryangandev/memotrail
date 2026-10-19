@@ -169,11 +169,11 @@ function LibraryPagination({ view }: { view: LibraryView }) {
   return (
     <nav aria-label="Library pages" className={styles.pagination}>
       {page > 1 ? (
-        <ButtonLink href={href(page - 1)} variant="ghost">
+        <ButtonLink href={href(page - 1)} variant="quiet">
           Previous
         </ButtonLink>
       ) : (
-        <Button disabled variant="ghost">
+        <Button disabled variant="quiet">
           Previous
         </Button>
       )}

@@ -166,7 +166,7 @@ export function TagControl({
       ) : item ? (
         <IconButton
           label={`Edit ${item.name}`}
-          variant="ghost"
+          variant="quiet"
           onClick={openEditor}
         >
           <Icon name="more" size={17} />

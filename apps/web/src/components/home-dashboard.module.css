@@ -143,11 +143,11 @@
   flex: none;
 }
 
-.nowName svg[data-mark="chapter"] {
+.nowName [data-mark="chapter"] {
   color: var(--mt-color-accent);
 }
 
-.nowName svg[data-mark="first-time"] {
+.nowName [data-mark="first-time"] {
   color: var(--mt-color-warm);
 }
 

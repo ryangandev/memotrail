@@ -105,7 +105,7 @@
               recordMessage = "Opened the First Time without a Location."
             } content: {
               MTRecordCardVisual(height: MTLayout.Gallery.sampleVisual) {
-                MTRecordMark(icon: .star, title: "A First Time on your trail")
+                MTRecordMark(icon: .star, title: "A First Time without a photo")
               }
               .overlay(alignment: .topLeading) {
                 MTBadge(title: "Earlier", tone: .glassNeutral, size: .micro, uppercase: true)

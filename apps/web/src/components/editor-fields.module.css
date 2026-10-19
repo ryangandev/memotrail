@@ -21,7 +21,7 @@
 .fields label:not(:where([data-ui-field] *)) > span small,
 .fields label:not(:where([data-ui-field] *)) > small {
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   font-weight: var(--mt-font-weight-regular);
 }
 

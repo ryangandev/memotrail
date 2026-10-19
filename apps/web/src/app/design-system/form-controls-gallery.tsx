@@ -96,7 +96,7 @@ function SearchFieldSpecimen() {
           <div className={controls.stack}>
             <SearchField
               label="Compact search"
-              placeholder="Search your trail"
+              placeholder="Search your Entries"
               size="small"
             />
             <form

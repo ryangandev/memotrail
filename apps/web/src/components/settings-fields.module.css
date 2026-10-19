@@ -47,7 +47,7 @@
   line-height: var(--mt-line-height-body);
 }
 
-/* The ghost button's own padding and border sit inside the column edge, so pull it back to it. */
+/* The quiet button's own padding and border sit inside the column edge, so pull it back to it. */
 .sectionNote {
   display: flex;
   padding-top: var(--mt-space-3);

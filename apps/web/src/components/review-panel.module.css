@@ -8,11 +8,10 @@
  */
 
 .panel {
-  /* TODO(WP0b): the 18px prose, 20px quote, and 17px row title sizes become type roles. */
-  --review-prose-size: 18px;
-  --review-prose-line-height: var(--mt-line-height-prose);
-  --review-quote-size: 20px;
-  --review-row-title-size: var(--mt-font-size-body-large);
+  --review-prose-size: var(--mt-type-prose-font-size);
+  --review-prose-line-height: var(--mt-type-prose-line-height);
+  --review-quote-size: var(--mt-type-quote-font-size);
+  --review-row-title-size: var(--mt-type-item-title-compact-font-size);
   --review-section-gap: var(--mt-space-11);
   --review-section-title-size: var(--section-title-size);
 
@@ -530,7 +529,7 @@
   .panel {
     --review-prose-size: var(--mt-font-size-callout);
     --review-prose-line-height: var(--mt-line-height-paragraph);
-    --review-quote-size: 18px;
+    --review-quote-size: var(--mt-type-prose-font-size);
     --review-section-gap: var(--mt-space-8);
   }
 

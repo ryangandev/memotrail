@@ -174,7 +174,7 @@
 
 .attribution {
   text-align: right;
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
 }
 
 .attribution a {
@@ -186,7 +186,7 @@
   --separated-list-row-gap: 0px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .searchRow {
     grid-template-columns: 1fr;
   }

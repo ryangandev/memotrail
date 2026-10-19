@@ -21,7 +21,7 @@ const cell = {
 const caption = {
   color: "var(--mt-color-ink-muted)",
   fontFamily: "var(--mt-font-family-mono)",
-  fontSize: "var(--mt-font-size-fine)",
+  fontSize: "var(--mt-font-size-micro)",
 };
 
 const label = {

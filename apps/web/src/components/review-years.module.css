@@ -1,7 +1,6 @@
 /* Reviews and a year's review page: quiet rows between hairlines, a year switcher under the
    year's title, and plain notes where a review cannot be made yet. */
 
-/* TODO(WP0b): the 17px row title becomes a type role. */
 .index {
   display: grid;
   gap: var(--mt-space-11);
@@ -41,7 +40,7 @@
   min-width: 0;
   color: var(--mt-color-ink);
   font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-body-large);
+  font-size: var(--mt-type-item-title-compact-font-size);
   line-height: var(--mt-line-height-title);
   overflow-wrap: anywhere;
   transition: color var(--mt-motion-quick) var(--mt-motion-easing-standard);
@@ -71,13 +70,11 @@
 /* On a year's page the note is the page's whole content, so it reads as a sentence. */
 .switcher + .note,
 [data-ui-page-header] + .note {
-  /* TODO(WP0b): the 18px serif note shares the review prose size, which becomes a type role. */
-  --review-note-size: 18px;
   margin-top: var(--mt-space-8);
   color: var(--mt-color-ink);
-  font-family: var(--mt-font-family-serif);
-  font-size: var(--review-note-size);
-  line-height: var(--mt-line-height-prose);
+  font-family: var(--mt-type-prose-font-family);
+  font-size: var(--mt-type-prose-font-size);
+  line-height: var(--mt-type-prose-line-height);
 }
 
 /* The years a review can be read or made for, oldest first. */

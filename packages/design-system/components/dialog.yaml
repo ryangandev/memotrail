@@ -29,7 +29,7 @@ anatomy:
   eyebrow: An optional short line above the title that names the context, such as the Chapter an Entry is added to. Web draws it muted, since warm is kept for the First Time mark and the logo; a confirmation needs none, because its title asks the question.
   title: The serif title that names the task.
   description: An optional sentence below the title that explains the task or its consequence.
-  close: The ghost IconButton that closes the dialog, disabled while busy.
+  close: The quiet IconButton that closes the dialog, disabled while busy.
   body: The scrolling content.
   message: A failure shown above the iOS footer actions, such as Add a title before saving.
   footer: The actions, with a destructive action leading and Cancel before the primary action.

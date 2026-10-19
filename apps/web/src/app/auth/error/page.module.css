@@ -57,7 +57,7 @@
   margin-top: var(--mt-space-2);
 }
 
-@media (max-width: 540px) {
+@media (max-width: 560px) {
   .header:not([data-ui-page-header]),
   .main {
     width: min(100% - 32px, 720px);

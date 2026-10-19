@@ -241,6 +241,37 @@
         }
       }
     },
+    "brick": {
+      "$description": "A redder clay for errors and destructive actions, so danger reads apart from the warm accent.",
+      "100": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.9608, 0.8824, 0.8627],
+          "hex": "#F5E1DC"
+        }
+      },
+      "300": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.8784, 0.5373, 0.4863],
+          "hex": "#E0897C"
+        }
+      },
+      "600": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.6392, 0.2706, 0.2275],
+          "hex": "#A3453A"
+        }
+      },
+      "900": {
+        "$value": {
+          "colorSpace": "srgb",
+          "components": [0.2706, 0.149, 0.1216],
+          "hex": "#45261F"
+        }
+      }
+    },
     "amber": {
       "400": {
         "$value": {

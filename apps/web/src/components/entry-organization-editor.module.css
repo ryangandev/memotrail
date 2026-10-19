@@ -246,7 +246,7 @@
   small,
 .options .statusOption small {
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
 }
 
 .options .statusOption {
@@ -272,7 +272,7 @@
 .limit {
   justify-self: end;
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
 }
 
 .editor:disabled

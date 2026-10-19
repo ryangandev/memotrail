@@ -48,7 +48,7 @@
   min-width: 0;
   overflow: hidden;
   font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-type-section-title-font-size);
+  font-size: var(--mt-type-item-title-font-size);
   line-height: var(--mt-line-height-tight);
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -94,7 +94,7 @@
   color: var(--mt-color-accent);
 }
 
-@media (max-width: 520px) {
+@media (max-width: 560px) {
   .search > div {
     align-items: stretch;
     flex-direction: column;

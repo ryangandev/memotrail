@@ -32,20 +32,6 @@
     "size": {
       "$type": "dimension",
       "$description": "Base font sizes that the text roles reference.",
-      "nano": {
-        "$description": "Tiny uppercase markers.",
-        "$value": {
-          "value": 9,
-          "unit": "px"
-        }
-      },
-      "fine": {
-        "$description": "The smallest readable text: attribution, counts, and helper notes.",
-        "$value": {
-          "value": 10,
-          "unit": "px"
-        }
-      },
       "micro": {
         "$description": "Dense metadata, tooltips, and key hints.",
         "$value": {
@@ -105,7 +91,7 @@
       },
       "display": {
         "$value": {
-          "value": 42,
+          "value": 32,
           "unit": "px"
         }
       },

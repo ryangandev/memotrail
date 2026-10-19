@@ -392,7 +392,7 @@ export function ReviewPanel({
                 loading={starting}
                 onClick={begin}
                 size="small"
-                variant="ghost"
+                variant="quiet"
               >
                 Write again
               </Button>

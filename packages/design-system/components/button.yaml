@@ -13,7 +13,7 @@ purpose: A labeled action, or navigation drawn as one, in one of four emphasis v
 
 use:
   - The actions of a page header, form, dialog footer, sheet, or empty state.
-  - One primary action per surface, with secondary and ghost actions beside it. Ghost is the quiet action.
+  - One primary action per surface, with secondary and quiet actions beside it. Quiet has no fill or border until hover.
   - Danger for actions that delete, discard, or move something to Trash. On Web it is a transparent button in the danger color.
   - On Web, ButtonLink for navigation that should look like an action, such as Back to Library.
 
@@ -32,8 +32,8 @@ anatomy:
 
 props:
   variant:
-    description: The action's emphasis. Primary is the main action, secondary an alternative, ghost a quiet one, and danger a destructive one.
-    values: [primary, secondary, ghost, danger]
+    description: The action's emphasis. Primary is the main action, secondary an alternative, quiet a low-emphasis one, and danger a destructive one.
+    values: [primary, secondary, quiet, danger]
     default: primary
   size:
     description: The control's height, padding, and text size. Small fits dense rows and toolbars, and large stands alone.
@@ -104,9 +104,9 @@ tokens:
         { web: "{state.hover.surface}", ios: "{state.hover.accentSurface}" }
       border: { web: "{color.borderStrong}", ios: "{color.accent}" }
     label: { color: { web: "{state.hover.ink}", ios: "{color.accent}" } }
-  - when: { variant: ghost }
+  - when: { variant: quiet }
     label: { color: "{color.inkMuted}" }
-  - when: { variant: ghost, state: hover }
+  - when: { variant: quiet, state: hover }
     container: { background: "{state.hover.surface}" }
     label: { color: "{state.hover.ink}" }
   - when: { variant: danger }
@@ -162,7 +162,7 @@ specimens:
     description: Every variant at the default medium size.
     covers: { variant: all }
   - id: button-disabled
-    description: Every variant disabled, faded to the disabled opacity.
+    description: Every variant disabled. Web draws a quiet faint surface and iOS fades the variant to the disabled opacity.
     covers: { variant: all }
   - id: button-loading
     description: Every variant loading, with the spinner before the label.

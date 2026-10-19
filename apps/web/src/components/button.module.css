@@ -1,5 +1,5 @@
 /* Values follow packages/design-system/components/button.yaml. Primary is the view's one main
-   action, secondary an alternative on a raised surface, ghost the quiet action, and danger a
+   action, secondary an alternative on a raised surface, quiet a text-weight action, and danger a
    transparent action in the danger color for what deletes or discards. */
 
 .button {
@@ -50,17 +50,16 @@
   background: var(--mt-state-hover-surface);
 }
 
-.button[data-variant="ghost"] {
+.button[data-variant="quiet"] {
   color: var(--mt-color-ink-muted);
   background: transparent;
 }
 
-.button[data-variant="ghost"]:not(:disabled):hover {
+.button[data-variant="quiet"]:not(:disabled):hover {
   color: var(--mt-state-hover-ink);
   background: var(--mt-state-hover-surface);
 }
 
-/* TODO(WP0b): the danger token still renders the warm clay; WP0b gives it its own redder value. */
 .button[data-variant="danger"] {
   color: var(--mt-color-danger);
   background: transparent;
@@ -101,7 +100,7 @@
   background: transparent;
 }
 
-.button[data-variant="ghost"]:disabled:not([aria-busy="true"]),
+.button[data-variant="quiet"]:disabled:not([aria-busy="true"]),
 .button[data-variant="danger"]:disabled:not([aria-busy="true"]) {
   background: transparent;
 }

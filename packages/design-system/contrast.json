@@ -63,6 +63,7 @@
       "text": "{color.danger}",
       "role": "{type.caption}",
       "on": [
+        "{color.canvas}",
         "{color.surface}",
         "{color.surfaceRaised}",
         "{color.dangerSubtle}",
@@ -154,19 +155,6 @@
       "themes": ["light"],
       "on": ["{color.canvas}", "{color.surface}", "{color.warmSubtle}"],
       "reason": "Warm eyebrows and dates use clay 600, which is 3.7 to 4.4:1 in light. Kept so no pixel changes; a later palette change should darken clay 600."
-    },
-    {
-      "name": "Danger text in light",
-      "text": "{color.danger}",
-      "themes": ["light"],
-      "on": [
-        "{color.surface}",
-        "{color.surfaceRaised}",
-        "{color.dangerSubtle}",
-        "{color.dangerTint} over {color.surface}",
-        "{color.dangerTint} over {color.surfaceRaised}"
-      ],
-      "reason": "Errors reuse the warm clay 600 palette, which is 3.7 to 4.4:1 in light on the paper surfaces, danger buttons, and error panels. A later palette change should give danger a darker light value."
     },
     {
       "name": "Warning text in light",

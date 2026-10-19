@@ -50,14 +50,14 @@ tokens:
       borderWidth: "{size.uploadProgress.stroke}"
       duration: "{motion.standard}"
     percentage:
-      fontSize: "{font.size.fine}"
+      fontSize: "{font.size.micro}"
       fontWeight: "{font.weight.semibold}"
       color: "{color.ink}"
     label:
       type: "{type.caption}"
       color: "{color.inkMuted}"
     count:
-      fontSize: { web: "{font.size.fine}" }
+      fontSize: { web: "{font.size.micro}" }
       type: { ios: "{type.note}" }
       color: "{color.inkFaint}"
   - when: { variant: overlay }

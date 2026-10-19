@@ -78,7 +78,7 @@
   color: var(--mt-color-ink-muted);
   background: var(--mt-color-surface-subtle);
   font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
 }
 
 .section {

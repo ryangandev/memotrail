@@ -259,7 +259,7 @@ export function QuickCaptureDialog({
           <IconButton
             label="Close quick capture"
             size="small"
-            variant="ghost"
+            variant="quiet"
             onClick={close}
             title="Collapse composer (Esc)"
             type="button"

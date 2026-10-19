@@ -45,7 +45,7 @@ props:
       ]
     default: accent
   size:
-    description: The badge's text size. Micro fits dense cards, small is the default, and medium sits beside 22 px controls.
+    description: The badge's text size. Micro and small both draw at the 11 px text floor, so they look alike; small is the default, and medium sits beside 22 px controls.
     values: [micro, small, medium]
     default: small
   uppercase:
@@ -127,8 +127,6 @@ accessibility:
   dynamicType: iOS scales micro and small with caption2 and medium with caption, and still truncates on one line at accessibility sizes. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
-  - difference: Micro and small labels are 9 and 10 px on Web but 11 pt on iOS, so micro and small look alike on iOS.
-    reason: 11 pt caption2 is the smallest Dynamic Type style iOS offers. Weight, tracking in em, and case still match.
   - difference: Glass tones blur with backdrop-filter on Web and with the ultraThin system material on iOS, so blur strength differs.
     reason: Each platform's native blur. The tint comes from the same material.chip tokens.
   - difference: The inverse tone blurs what is behind it on Web but not on iOS.

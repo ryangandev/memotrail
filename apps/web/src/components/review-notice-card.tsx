@@ -74,7 +74,7 @@ export function ReviewNoticeCard({ notice }: { notice: ReviewNotice }) {
           disabled={busy}
           onClick={() => void dismiss()}
           size="small"
-          variant="ghost"
+          variant="quiet"
         >
           Not now
         </Button>

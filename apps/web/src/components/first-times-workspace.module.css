@@ -9,9 +9,8 @@
 }
 
 .rows {
-  /* TODO(WP0b): the 18 px and 17 px row titles become a type role. */
-  --row-title-size: 18px;
-  --row-title-size-stacked: var(--mt-font-size-body-large);
+  --row-title-size: var(--mt-type-item-title-font-size);
+  --row-title-size-stacked: var(--mt-type-item-title-compact-font-size);
   --row-date-column: 112px;
   --row-thumbnail: 48px;
 
@@ -86,13 +85,6 @@
 }
 
 .row:hover .title {
-  color: var(--mt-color-accent);
-}
-
-.mark {
-  flex: none;
-  width: var(--mt-size-icon-15);
-  height: var(--mt-size-icon-15);
   color: var(--mt-color-accent);
 }
 

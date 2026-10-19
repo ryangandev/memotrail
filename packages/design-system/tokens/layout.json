@@ -86,107 +86,26 @@
       }
     },
     "breakpoint": {
-      "390": {
-        "$value": {
-          "value": 390,
-          "unit": "px"
-        }
-      },
-      "430": {
-        "$value": {
-          "value": 430,
-          "unit": "px"
-        }
-      },
-      "480": {
-        "$value": {
-          "value": 480,
-          "unit": "px"
-        }
-      },
-      "520": {
-        "$value": {
-          "value": 520,
-          "unit": "px"
-        }
-      },
-      "540": {
-        "$value": {
-          "value": 540,
-          "unit": "px"
-        }
-      },
       "560": {
         "$value": {
           "value": 560,
           "unit": "px"
-        }
-      },
-      "600": {
-        "$value": {
-          "value": 600,
-          "unit": "px"
-        }
-      },
-      "640": {
-        "$value": {
-          "value": 640,
-          "unit": "px"
-        }
-      },
-      "700": {
-        "$value": {
-          "value": 700,
-          "unit": "px"
-        }
+        },
+        "$description": "Narrow phones: forms and actions stack into one column."
       },
       "720": {
         "$value": {
           "value": 720,
           "unit": "px"
-        }
-      },
-      "780": {
-        "$value": {
-          "value": 780,
-          "unit": "px"
-        }
-      },
-      "800": {
-        "$value": {
-          "value": 800,
-          "unit": "px"
-        }
-      },
-      "820": {
-        "$value": {
-          "value": 820,
-          "unit": "px"
-        }
+        },
+        "$description": "Phones: the top bar and tab bar replace the sidebar, with compact gutters and titles."
       },
       "900": {
         "$value": {
           "value": 900,
           "unit": "px"
-        }
-      },
-      "1050": {
-        "$value": {
-          "value": 1050,
-          "unit": "px"
-        }
-      },
-      "1100": {
-        "$value": {
-          "value": 1100,
-          "unit": "px"
-        }
-      },
-      "1300": {
-        "$value": {
-          "value": 1300,
-          "unit": "px"
-        }
+        },
+        "$description": "Tablets: the sidebar narrows, frames tighten, and Timeline becomes a vertical list."
       },
       "$type": "dimension",
       "$description": "Viewport widths where Web layouts change, named by value. Media queries use max-width at the value and min-width one pixel above it. CSS cannot read variables in media queries, so these document and check the literals.",

@@ -4,6 +4,7 @@ import {
   entryRowDefaults,
   type EntryRowVariant,
 } from "@/generated/design-system";
+import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { SeparatedList } from "@/components/separated-list";
 import styles from "./entry-row.module.css";
@@ -196,38 +197,27 @@ export function EntryRowGroup({
 /** The green mark of a Chapter, named for assistive technology. */
 export function ChapterMark() {
   return (
-    <svg
+    <span
       aria-label="Chapter"
       className={styles.mark}
       data-mark="chapter"
       role="img"
-      viewBox="0 0 24 24"
     >
-      <path
-        d="M5 6v12M19 6v12M5 12h14"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-    </svg>
+      <Icon name="chapter" size={15} />
+    </span>
   );
 }
 
 /** The warm mark of a First Time, named for assistive technology. */
 export function FirstTimeMark() {
   return (
-    <svg
+    <span
       aria-label="First Time"
       className={styles.mark}
       data-mark="first-time"
       role="img"
-      viewBox="0 0 24 24"
     >
-      <path
-        d="M12 3.5l2 5.5 5.5 2-5.5 2-2 5.5-2-5.5-5.5-2 5.5-2z"
-        fill="currentColor"
-      />
-    </svg>
+      <Icon name="firstTime" size={15} />
+    </span>
   );
 }

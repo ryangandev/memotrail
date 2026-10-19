@@ -283,7 +283,7 @@
   color: inherit;
   background: var(--mt-color-on-ink-key);
   font: inherit;
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   white-space: nowrap;
 }
 

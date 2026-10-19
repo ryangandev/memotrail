@@ -6,7 +6,7 @@ platforms:
     path: apps/web/src/components/command-palette.tsx
     symbols: [CommandPalette]
   ios:
-    unavailable: iOS reaches search through the Search your trail action in each primary tab's header, which opens the Library's search, and moves between destinations with the tab bar, so a keyboard palette has nothing to add on a phone.
+    unavailable: iOS reaches search through the Search Library action in each primary tab's header, which opens the Library's search, and moves between destinations with the tab bar, so a keyboard palette has nothing to add on a phone.
 
 purpose: A keyboard-first search over Entries and the workspace's destinations, with New Entry, opened from anywhere with Command or Control K.
 
@@ -92,7 +92,7 @@ accessibility:
 
 platformDifferences:
   - difference: Web only. iOS has no command palette.
-    reason: Native screens reach search through the Search your trail action in each primary tab's header, and the tab bar already reaches every destination, so the palette's keyboard shortcut has no counterpart on a phone.
+    reason: Native screens reach search through the Search Library action in each primary tab's header, and the tab bar already reaches every destination, so the palette's keyboard shortcut has no counterpart on a phone.
 
 specimens:
   - id: command-palette-destinations

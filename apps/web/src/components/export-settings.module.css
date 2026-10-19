@@ -79,7 +79,7 @@
   font-size: var(--mt-font-size-caption);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 560px) {
   .row {
     grid-template-columns: minmax(0, 1fr);
   }

@@ -59,7 +59,7 @@
   height: 100%;
   place-items: center;
   padding: var(--mt-space-2);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   text-align: center;
 }
 

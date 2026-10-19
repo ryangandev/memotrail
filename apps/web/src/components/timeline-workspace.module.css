@@ -654,7 +654,7 @@
   gap: var(--mt-space-2);
 }
 
-@media (max-width: 780px) {
+@media (max-width: 720px) {
   .dialogBackdrop {
     align-items: end;
     padding: 0;

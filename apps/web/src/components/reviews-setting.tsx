@@ -169,7 +169,7 @@ export function ReviewsSetting({ initial }: { initial: ReviewSettings }) {
         <Button
           onClick={() => setDialog({ mode: "read" })}
           size="small"
-          variant="ghost"
+          variant="quiet"
         >
           What is sent and to whom
         </Button>

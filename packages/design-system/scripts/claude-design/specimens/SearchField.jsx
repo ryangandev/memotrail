@@ -9,7 +9,7 @@ const key = {
   color: "var(--mt-color-ink-muted)",
   background: "var(--mt-color-surface-subtle)",
   fontFamily: "var(--mt-font-family-sans)",
-  fontSize: "var(--mt-font-size-fine)",
+  fontSize: "var(--mt-font-size-micro)",
 };
 
 export const specimens = {
@@ -19,7 +19,7 @@ export const specimens = {
       <Stack width="420px">
         <SearchField
           label="Compact search"
-          placeholder="Search your trail"
+          placeholder="Search your Entries"
           size="small"
         />
         <SearchField

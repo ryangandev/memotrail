@@ -155,7 +155,7 @@
   text-decoration: none;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .editorActions {
     align-items: stretch;
     flex-direction: column-reverse;

@@ -29,7 +29,7 @@ anatomy:
 
 props:
   variant:
-    description: The heading's weight. Section is a serif title for a region of content; list is the small uppercase heading above a list.
+    description: The heading's weight. Section is a serif title for a region of content; list is the small heading above a list, in sentence case on Web and uppercase on iOS.
     values: [section, list]
     default: section
   detailAlign:

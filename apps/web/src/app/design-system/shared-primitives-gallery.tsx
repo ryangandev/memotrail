@@ -26,7 +26,7 @@ const iconButtonSamples: Record<
 > = {
   primary: { icon: "plus", label: "Add entry" },
   secondary: { icon: "edit", label: "Edit entry" },
-  ghost: { icon: "more", label: "More actions for Travel" },
+  quiet: { icon: "more", label: "More actions for Travel" },
   danger: { icon: "trash", label: "Move entry to Trash" },
 };
 

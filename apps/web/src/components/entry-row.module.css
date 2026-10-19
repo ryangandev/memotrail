@@ -1,9 +1,8 @@
 /* Values follow packages/design-system/components/entry-row.yaml. */
 
 .list {
-  /* TODO(WP0b): the 18px and 17px row titles become a type role. */
-  --entry-row-title-size: 18px;
-  --entry-row-title-size-stacked: var(--mt-font-size-body-large);
+  --entry-row-title-size: var(--mt-type-item-title-font-size);
+  --entry-row-title-size-stacked: var(--mt-type-item-title-compact-font-size);
   --entry-row-date-column: 112px;
   --entry-row-thumbnail: 48px;
 
@@ -89,6 +88,7 @@
 }
 
 .mark {
+  display: inline-flex;
   flex: none;
   width: var(--mt-size-icon-15);
   height: var(--mt-size-icon-15);

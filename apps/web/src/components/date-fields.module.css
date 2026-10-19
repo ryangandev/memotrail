@@ -62,7 +62,7 @@
 .timezoneSummary > span small {
   margin-left: var(--mt-space-2);
   color: var(--mt-color-ink-faint);
-  font-size: var(--mt-font-size-fine);
+  font-size: var(--mt-font-size-micro);
   font-weight: var(--mt-font-weight-regular);
 }
 
@@ -195,6 +195,11 @@
   gap: var(--mt-space-3);
 }
 
+/* One column that never grows past the field, so the control fits any column it is placed in. */
+.datePickerField {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .occurrenceDateRow {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
@@ -238,8 +243,10 @@
   opacity: var(--mt-state-disabled-opacity-field);
 }
 
+/* A zero basis keeps the input's intrinsic width out of the control's minimum, so the control
+   shrinks with its field instead of overflowing it. */
 .datePickerField .datePickerControl > input {
-  width: auto;
+  width: 0;
   height: 100%;
   min-width: 0;
   flex: 1;

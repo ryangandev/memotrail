@@ -17,8 +17,8 @@ enum MTBadgeTone: String, CaseIterable, Sendable {
   case glassNeutral
 }
 
-/// The badge's text size. Micro fits dense cards, small is the default, and medium sits beside 22
-/// px controls.
+/// The badge's text size. Micro and small both draw at the 11 px text floor, so they look alike;
+/// small is the default, and medium sits beside 22 px controls.
 enum MTBadgeSize: String, CaseIterable, Sendable {
   case micro
   case small
@@ -34,12 +34,12 @@ enum MTBadgeDefaults {
 
 // Button, from packages/design-system/components/button.yaml.
 
-/// The action's emphasis. Primary is the main action, secondary an alternative, ghost a quiet one,
-/// and danger a destructive one.
+/// The action's emphasis. Primary is the main action, secondary an alternative, quiet a
+/// low-emphasis one, and danger a destructive one.
 enum MTButtonVariant: String, CaseIterable, Sendable {
   case primary
   case secondary
-  case ghost
+  case quiet
   case danger
 }
 
@@ -130,13 +130,13 @@ enum MTDialogDefaults {
 
 // IconButton, from packages/design-system/components/icon-button.yaml.
 
-/// The action's emphasis, with Button's variants. Ghost is the default, because most icon actions
+/// The action's emphasis, with Button's variants. Quiet is the default, because most icon actions
 /// are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for
 /// a destructive one.
 enum MTIconButtonVariant: String, CaseIterable, Sendable {
   case primary
   case secondary
-  case ghost
+  case quiet
   case danger
 }
 
@@ -149,7 +149,7 @@ enum MTIconButtonSize: String, CaseIterable, Sendable {
 
 /// IconButton parameter defaults.
 enum MTIconButtonDefaults {
-  static let variant = MTIconButtonVariant.ghost
+  static let variant = MTIconButtonVariant.quiet
   static let size = MTIconButtonSize.medium
   static let isLoading = false
 }
@@ -217,7 +217,7 @@ enum MTSearchFieldDefaults {
 // SectionHeader, from packages/design-system/components/section-header.yaml.
 
 /// The heading's weight. Section is a serif title for a region of content; list is the small
-/// uppercase heading above a list.
+/// heading above a list, in sentence case on Web and uppercase on iOS.
 enum MTSectionHeaderVariant: String, CaseIterable, Sendable {
   case section
   case list
@@ -313,7 +313,7 @@ enum MTTextFieldDefaults {
 // Toast, from packages/design-system/components/toast.yaml.
 
 /// What happened. Success confirms a change, info reports a neutral outcome, and error reports a
-/// failure, in the warm color and for longer.
+/// failure, in the danger color and for longer.
 enum MTToastTone: String, CaseIterable, Sendable {
   case success
   case info
@@ -495,7 +495,11 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .badgePhotoOverlay:
       "Uppercase micro glass and inverse tones over a photo, where record cards place them."
     case .buttonVariants: "Every variant at the default medium size."
-    case .buttonDisabled: "Every variant disabled, faded to the disabled opacity."
+    case .buttonDisabled:
+      """
+      Every variant disabled. Web draws a quiet faint surface and iOS fades the variant to the \
+      disabled opacity.
+      """
     case .buttonLoading: "Every variant loading, with the spinner before the label."
     case .buttonSizes: "Every size in the secondary variant, each with a leading icon."
     case .buttonLink: "Navigation drawn as a button, with Web ButtonLink and an iOS NavigationLink."
@@ -537,9 +541,9 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .iconButtonVariants:
       "Every variant at the default medium size, with add, edit, more, and remove icons."
     case .iconButtonSizes:
-      "Every size in the ghost variant, with the close icon a dialog header uses."
+      "Every size in the quiet variant, with the close icon a dialog header uses."
     case .iconButtonStates:
-      "A ghost action at rest, disabled, and loading, where the spinner replaces the icon."
+      "A quiet action at rest, disabled, and loading, where the spinner replaces the icon."
     case .iconSet:
       """
       Every icon the platform draws, at 20, each with its name and a mark on those that draw on \
@@ -552,7 +556,11 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
       "A loaded photo, one still loading, and one that failed to load, side by side."
     case .imageFit: "The same tall photo cropped to fill a wide frame and shown whole inside it."
     case .pageFrameWidths: "Every width variant with its maximum width and the pages it suits."
-    case .pageHeaderFull: "An eyebrow, a title, a description, and two actions beside the copy."
+    case .pageHeaderFull:
+      """
+      A title, its meta line, and one action beside the copy; iOS also shows the eyebrow and \
+      description it keeps until its Quiet ledger pass.
+      """
     case .pageHeaderTitleOnly: "A title alone, as a focused page with nothing else to say opens."
     case .photoViewerPaged:
       "Three saved photos that open on the second, with Previous, the position, and Next."

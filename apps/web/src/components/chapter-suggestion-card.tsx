@@ -180,7 +180,7 @@ export function ChapterSuggestionCard({
           disabled={busy}
           loading={busy}
           onClick={() => void dismiss()}
-          variant="ghost"
+          variant="quiet"
         >
           Dismiss
         </Button>

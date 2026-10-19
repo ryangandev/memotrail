@@ -20,10 +20,10 @@
       "success": "#3F6A55",
       "warning": "#9B6A2F",
       "scrim": "#25241F",
-      "danger": "#A76346",
-      "dangerSubtle": "#F1E2D8",
-      "dangerBorder": "rgb(167 99 70 / 0.34)",
-      "dangerTint": "rgb(167 99 70 / 0.1)",
+      "danger": "#A3453A",
+      "dangerSubtle": "#F5E1DC",
+      "dangerBorder": "rgb(163 69 58 / 0.34)",
+      "dangerTint": "rgb(163 69 58 / 0.1)",
       "info": "#2F5A4B",
       "infoSubtle": "#DCE5DC",
       "successSubtle": "#DCE5DC",
@@ -91,10 +91,10 @@
       "success": "#8DB5A1",
       "warning": "#D3A360",
       "scrim": "#000000",
-      "danger": "#D49373",
-      "dangerSubtle": "#432E25",
-      "dangerBorder": "rgb(212 147 115 / 0.34)",
-      "dangerTint": "rgb(212 147 115 / 0.1)",
+      "danger": "#E0897C",
+      "dangerSubtle": "#45261F",
+      "dangerBorder": "rgb(224 137 124 / 0.34)",
+      "dangerTint": "rgb(224 137 124 / 0.1)",
       "info": "#8DB5A1",
       "infoSubtle": "#24342C",
       "successSubtle": "#24342C",
@@ -151,8 +151,6 @@
       "mono": "ui-monospace, \"SFMono-Regular\", Consolas, monospace"
     },
     "size": {
-      "nano": 9,
-      "fine": 10,
       "micro": 11,
       "caption": 12,
       "label": 13,
@@ -162,7 +160,7 @@
       "bodyLarge": 17,
       "titleSmall": 20,
       "title": 28,
-      "display": 42,
+      "display": 32,
       "inlineCode": "0.9em"
     },
     "weight": {
@@ -194,20 +192,27 @@
       "letterSpacing": -3.15,
       "textCase": "none"
     },
-    "heroCompact": {
-      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
-      "fontSize": 54,
-      "fluidFontSize": "clamp(40px, 13vw, 54px)",
-      "fontWeight": 500,
-      "lineHeight": 1.02,
-      "letterSpacing": -2.43,
-      "textCase": "none"
-    },
     "display": {
       "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
-      "fontSize": 42,
+      "fontSize": 32,
       "fontWeight": 500,
       "lineHeight": 1.15,
+      "letterSpacing": -0.32,
+      "textCase": "none"
+    },
+    "displayDetail": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 34,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": -0.34,
+      "textCase": "none"
+    },
+    "displayCompact": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 26,
+      "fontWeight": 500,
+      "lineHeight": 1.2,
       "letterSpacing": 0,
       "textCase": "none"
     },
@@ -243,14 +248,6 @@
       "letterSpacing": 0,
       "textCase": "none"
     },
-    "recordTitle": {
-      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
-      "fontSize": 26,
-      "fontWeight": 700,
-      "lineHeight": 1.15,
-      "letterSpacing": 0,
-      "textCase": "none"
-    },
     "titleSmall": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
       "fontSize": 20,
@@ -267,14 +264,6 @@
       "letterSpacing": 0,
       "textCase": "none"
     },
-    "composerTitle": {
-      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
-      "fontSize": 20,
-      "fontWeight": 500,
-      "lineHeight": 1.15,
-      "letterSpacing": -0.3,
-      "textCase": "none"
-    },
     "wordmark": {
       "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
       "fontSize": 19,
@@ -284,9 +273,17 @@
       "textCase": "none"
     },
     "sectionTitle": {
-      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 20,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "sectionTitleCompact": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
       "fontSize": 18,
-      "fontWeight": 700,
+      "fontWeight": 500,
       "lineHeight": 1.15,
       "letterSpacing": 0,
       "textCase": "none"
@@ -307,11 +304,27 @@
       "letterSpacing": 0,
       "textCase": "none"
     },
-    "subsectionTitle": {
-      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 16,
-      "fontWeight": 700,
-      "lineHeight": 1.15,
+    "reading": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 19,
+      "fontWeight": 400,
+      "lineHeight": 1.65,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "prose": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 18,
+      "fontWeight": 400,
+      "lineHeight": 1.65,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "quote": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 20,
+      "fontWeight": 400,
+      "lineHeight": 1.5,
       "letterSpacing": 0,
       "textCase": "none"
     },
@@ -353,14 +366,6 @@
       "fontWeight": 500,
       "lineHeight": 1.55,
       "letterSpacing": 0,
-      "textCase": "none"
-    },
-    "tagline": {
-      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 12,
-      "fontWeight": 400,
-      "lineHeight": 1.55,
-      "letterSpacing": 0.48,
       "textCase": "none"
     },
     "pageEyebrow": {
@@ -405,39 +410,15 @@
     },
     "eyebrow": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 600,
       "lineHeight": 1.15,
       "letterSpacing": 1,
       "textCase": "uppercase"
     },
-    "navigationLabel": {
-      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
-      "fontWeight": 600,
-      "lineHeight": 1.15,
-      "letterSpacing": 1.2,
-      "textCase": "uppercase"
-    },
-    "columnHeading": {
-      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
-      "fontWeight": 600,
-      "lineHeight": 1.15,
-      "letterSpacing": 0.8,
-      "textCase": "uppercase"
-    },
-    "statusLabel": {
-      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
-      "fontWeight": 600,
-      "lineHeight": 1.15,
-      "letterSpacing": 0.4,
-      "textCase": "uppercase"
-    },
     "factLabel": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 400,
       "lineHeight": 1.15,
       "letterSpacing": 0.6,
@@ -445,7 +426,7 @@
     },
     "fine": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 400,
       "lineHeight": 1.55,
       "letterSpacing": 0,
@@ -453,7 +434,7 @@
     },
     "stamp": {
       "fontFamily": "ui-monospace, \"SFMono-Regular\", Consolas, monospace",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 400,
       "lineHeight": 1.15,
       "letterSpacing": 0.25,
@@ -461,7 +442,7 @@
     },
     "dateStamp": {
       "fontFamily": "ui-monospace, \"SFMono-Regular\", Consolas, monospace",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 400,
       "lineHeight": 1.15,
       "letterSpacing": 0.25,
@@ -469,23 +450,15 @@
     },
     "firstTimeDate": {
       "fontFamily": "ui-monospace, \"SFMono-Regular\", Consolas, monospace",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 400,
       "lineHeight": 1.15,
       "letterSpacing": 0.35,
       "textCase": "uppercase"
     },
-    "nano": {
-      "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 9,
-      "fontWeight": 600,
-      "lineHeight": 1.15,
-      "letterSpacing": 0.36,
-      "textCase": "uppercase"
-    },
     "badgeMicro": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 9,
+      "fontSize": 11,
       "fontWeight": 400,
       "lineHeight": 1.2,
       "letterSpacing": 0,
@@ -493,7 +466,7 @@
     },
     "badgeSmall": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 400,
       "lineHeight": 1.2,
       "letterSpacing": 0,
@@ -509,18 +482,18 @@
     },
     "badgeMicroCaps": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 9,
+      "fontSize": 11,
       "fontWeight": 600,
       "lineHeight": 1.2,
-      "letterSpacing": 0.54,
+      "letterSpacing": 0.66,
       "textCase": "uppercase"
     },
     "badgeSmallCaps": {
       "fontFamily": "ui-sans-serif, -apple-system, BlinkMacSystemFont, \"Segoe UI\", sans-serif",
-      "fontSize": 10,
+      "fontSize": 11,
       "fontWeight": 600,
       "lineHeight": 1.2,
-      "letterSpacing": 0.6,
+      "letterSpacing": 0.66,
       "textCase": "uppercase"
     },
     "badgeMediumCaps": {
@@ -530,6 +503,22 @@
       "lineHeight": 1.2,
       "letterSpacing": 0.72,
       "textCase": "uppercase"
+    },
+    "itemTitle": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 18,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
+    },
+    "itemTitleCompact": {
+      "fontFamily": "ui-serif, \"Iowan Old Style\", \"Palatino Linotype\", Palatino, Georgia, serif",
+      "fontSize": 17,
+      "fontWeight": 500,
+      "lineHeight": 1.15,
+      "letterSpacing": 0,
+      "textCase": "none"
     }
   },
   "space": {
@@ -691,23 +680,9 @@
       "palette": 120
     },
     "breakpoint": {
-      "390": 390,
-      "430": 430,
-      "480": 480,
-      "520": 520,
-      "540": 540,
       "560": 560,
-      "600": 600,
-      "640": 640,
-      "700": 700,
       "720": 720,
-      "780": 780,
-      "800": 800,
-      "820": 820,
-      "900": 900,
-      "1050": 1050,
-      "1100": 1100,
-      "1300": 1300
+      "900": 900
     },
     "container": {
       "440": 440,
@@ -1089,6 +1064,14 @@
       ],
       "sfSymbol": "car"
     },
+    "chapter": {
+      "description": "A Chapter, a named stretch of time with a start and an end.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "arrow.left.and.right"
+    },
     "check": {
       "description": "Confirmed, selected, or done.",
       "platforms": [
@@ -1181,6 +1164,14 @@
         "ios"
       ],
       "sfSymbol": "square.and.arrow.up"
+    },
+    "firstTime": {
+      "description": "A First Time, the warm mark on an Entry that records a first.",
+      "platforms": [
+        "web",
+        "ios"
+      ],
+      "sfSymbol": "sparkle"
     },
     "history": {
       "description": "Version history.",
@@ -1435,7 +1426,7 @@
     "color.success": "Success text and marks, such as a synced capture.",
     "color.warning": "Text of setup warnings.",
     "color.scrim": "Base color of the scrims behind dialogs and sheets.",
-    "color.danger": "Errors and destructive actions. Uses the warm palette, as errors do today.",
+    "color.danger": "Errors and destructive actions, in a redder clay than the warm accent.",
     "color.dangerSubtle": "Background of danger buttons and error panels.",
     "color.dangerBorder": "Border of danger buttons.",
     "color.dangerTint": "Background of inline form errors.",
@@ -1480,8 +1471,6 @@
     "font.family.sans": "Interface text: labels, body, and controls.",
     "font.family.serif": "Page, section, card, and dialog titles, and the wordmark.",
     "font.family.mono": "Date stamps and code.",
-    "font.size.nano": "Tiny uppercase markers.",
-    "font.size.fine": "The smallest readable text: attribution, counts, and helper notes.",
     "font.size.micro": "Dense metadata, tooltips, and key hints.",
     "font.size.bodySmall": "Secondary paragraphs and compact editors.",
     "font.size.callout": "Small headings and emphasized lines; the iOS callout size.",
@@ -1497,48 +1486,47 @@
     "lineHeight.relaxed": "Long-form reading on the sign-in screen.",
     "lineHeight.story": "An Entry's story on its detail page.",
     "type.hero": "Sign-in story headline.",
-    "type.heroCompact": "Sign-in story headline on narrow screens.",
-    "type.display": "Page titles.",
+    "type.display": "Page titles. iOS draws them at its 34 pt large title size.",
+    "type.displayDetail": "Titles of detail pages, such as an Entry, a Chapter, or a year review.",
+    "type.displayCompact": "Page and detail page titles on phones.",
     "type.title": "Section and onboarding titles.",
     "type.welcomeTitle": "The sign-in welcome title.",
     "type.recordCardTitle": "Large serif titles on First Time cards, and on native Home and Vehicle cards. iOS draws them at its title2 size in regular width.",
     "type.sheetTitle": "Sheet and dialog titles.",
-    "type.recordTitle": "Record detail titles.",
     "type.titleSmall": "Card and panel titles.",
     "type.cardTitle": "Serif record, Collection, and empty-state titles.",
-    "type.composerTitle": "The serif title of the capture composer.",
     "type.wordmark": "The MemoTrail wordmark beside the brand mark.",
-    "type.sectionTitle": "Settings section headings.",
+    "type.sectionTitle": "Section titles over a hairline rule, such as Settings sections and a review's sections.",
+    "type.sectionTitleCompact": "Section titles on phones.",
     "type.heading": "Compact list and card headings.",
     "type.bodyLarge": "Reading text and primary inputs.",
-    "type.subsectionTitle": "Settings subsection headings.",
+    "type.reading": "An Entry's own writing on its page.",
+    "type.prose": "Serif reading text in reviews and notes, and an Entry's writing on phones.",
+    "type.quote": "The person's own words quoted in a review.",
     "type.body": "Default interface text.",
     "type.bodySmall": "Secondary paragraphs and compact editors.",
     "type.label": "Field labels, buttons, and navigation.",
     "type.listHeading": "Small uppercase headings above lists.",
     "type.caption": "Metadata and helper text.",
-    "type.tagline": "The tagline beside the sign-in wordmark.",
     "type.pageEyebrow": "The uppercase context above a page title, such as a date or area name.",
     "type.legend": "The uppercase legend set into the border of a record group, such as a native Home's details. Web has no record group.",
     "type.micro": "Dense badges and tooltips.",
     "type.signInEyebrow": "Uppercase eyebrows on the sign-in screens, such as the line above the story headline.",
     "type.menuHeading": "Uppercase group headings in the More menu.",
     "type.eyebrow": "Uppercase eyebrows above titles.",
-    "type.navigationLabel": "Uppercase section labels in the sidebar.",
-    "type.columnHeading": "Uppercase column headings in the Timeline grid.",
-    "type.statusLabel": "Uppercase connection status in Settings.",
-    "type.factLabel": "The uppercase label above a fact in record details. iOS draws it at its 11 pt caption2 minimum.",
+    "type.factLabel": "The uppercase label above a fact in record details.",
     "type.fine": "The smallest readable text, such as map attribution and inline actions.",
     "type.stamp": "Monospaced counts and dates.",
-    "type.dateStamp": "Uppercase monospaced dates on record cards, archive rows, and Goal targets. iOS draws them at its 11 pt caption2 minimum.",
-    "type.firstTimeDate": "The uppercase date above a First Time card title. iOS draws it at its 11 pt caption2 minimum.",
-    "type.nano": "Tiny uppercase markers, such as the timeline today label and micro badges.",
-    "type.badgeMicro": "Micro badge labels, such as tags in record card footers. iOS draws them at its 11 pt caption2 minimum.",
-    "type.badgeSmall": "Small badge labels, the default size for statuses and tags. iOS draws them at its 11 pt caption2 minimum.",
+    "type.dateStamp": "Uppercase monospaced dates on record cards, archive rows, and Goal targets.",
+    "type.firstTimeDate": "The uppercase date above a First Time card title.",
+    "type.badgeMicro": "Micro badge labels, such as tags in record card footers.",
+    "type.badgeSmall": "Small badge labels, the default size for statuses and tags.",
     "type.badgeMedium": "Medium badge labels, such as Dashboard tags.",
     "type.badgeMicroCaps": "Uppercase micro badge labels, such as record kinds over photos. Tracking is 0.06 em on both platforms.",
     "type.badgeSmallCaps": "Uppercase small badge labels. Tracking is 0.06 em on both platforms.",
     "type.badgeMediumCaps": "Uppercase medium badge labels. Tracking is 0.06 em on both platforms.",
+    "type.itemTitle": "Serif titles of Entries in lists, such as Library rows, First Times, Trash, and Tags. iOS draws them at 17 pt with the body text style.",
+    "type.itemTitleCompact": "Entry titles in narrow or stacked rows, and row titles inside a review.",
     "textSpace.paragraphGap": "Space after a paragraph or list in a saved story.",
     "textSpace.editorParagraphGap": "Space after a paragraph or list in the rich text editor.",
     "textSpace.listIndent": "Indent of a list in a saved story.",
@@ -1598,6 +1586,9 @@
     "layout.pageGutter.narrow": "The narrowest phones.",
     "layout.inset.dock": "Below the workspace, so the floating action dock never covers the last item.",
     "layout.inset.palette": "Most room above the command palette, which otherwise sits 14% down the viewport.",
+    "layout.breakpoint.560": "Narrow phones: forms and actions stack into one column.",
+    "layout.breakpoint.720": "Phones: the top bar and tab bar replace the sidebar, with compact gutters and titles.",
+    "layout.breakpoint.900": "Tablets: the sidebar narrows, frames tighten, and Timeline becomes a vertical list.",
     "layout.layer.header": "The sticky top bar.",
     "layout.layer.dock": "The floating workspace action dock.",
     "layout.layer.progress": "Upload progress over the workspace.",

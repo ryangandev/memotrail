@@ -37,6 +37,7 @@
 
 .header[data-detail] .title {
   font-size: var(--page-title-size-detail);
+  letter-spacing: var(--page-title-tracking-detail);
 }
 
 .meta {

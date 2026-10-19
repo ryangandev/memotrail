@@ -31,7 +31,7 @@ extension MTButtonSize {
   }
 }
 
-/// The shared action style: primary, secondary, ghost, and danger variants in three sizes.
+/// The shared action style: primary, secondary, quiet, and danger variants in three sizes.
 /// Pair `isLoading` with `.mtButtonStyle(_:size:isLoading:)` so the button is also disabled.
 /// Specified in packages/design-system/components/button.yaml.
 struct MTButtonStyle: ButtonStyle {
@@ -85,7 +85,7 @@ struct MTButtonStyle: ButtonStyle {
       pressed
         ? (MTColor.accent, MTState.Hover.accentSurface, MTColor.accent)
         : (MTColor.inkMuted, MTColor.surfaceRaised, MTColor.borderStrong)
-    case .ghost:
+    case .quiet:
       pressed
         ? (MTState.Hover.ink, MTState.Hover.surface, nil)
         : (MTColor.inkMuted, .clear, nil)
@@ -118,7 +118,7 @@ extension MTButtonVariant {
     switch variant {
     case .primary: self = .primary
     case .secondary: self = .secondary
-    case .ghost: self = .ghost
+    case .quiet: self = .quiet
     case .danger: self = .danger
     }
   }
@@ -134,7 +134,7 @@ extension MTButtonSize {
   }
 }
 
-/// A square icon action with a required accessibility label, ghost unless a variant is given.
+/// A square icon action with a required accessibility label, quiet unless a variant is given.
 /// Specified in packages/design-system/components/icon-button.yaml.
 struct MTIconButton: View {
   let label: String

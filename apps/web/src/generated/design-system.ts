@@ -9,6 +9,7 @@ export const iconNames = [
   "bulletList",
   "calendar",
   "car",
+  "chapter",
   "check",
   "chevron",
   "chevronDown",
@@ -19,6 +20,7 @@ export const iconNames = [
   "copy",
   "dashboard",
   "edit",
+  "firstTime",
   "home",
   "inbox",
   "italic",
@@ -126,6 +128,7 @@ export const iconElements: IconElements = {
       },
     ],
   ],
+  chapter: [["path", { d: "M5 6v12M19 6v12M5 12h14" }]],
   check: [["path", { d: "m5 12 4 4L19 6" }]],
   chevron: [["path", { d: "m9 18 6-6-6-6" }]],
   chevronDown: [["path", { d: "m7 10 5 5 5-5" }]],
@@ -157,6 +160,16 @@ export const iconElements: IconElements = {
     [
       "path",
       { d: "m10 14 1.8-4.4L18.7 2.7a2.1 2.1 0 0 1 3 3l-6.9 6.9L10 14Z" },
+    ],
+  ],
+  firstTime: [
+    [
+      "path",
+      {
+        d: "M12 3.5l2 5.5 5.5 2-5.5 2-2 5.5-2-5.5-5.5-2 5.5-2z",
+        fill: "currentColor",
+        stroke: "none",
+      },
     ],
   ],
   home: [
@@ -327,48 +340,47 @@ export const iconElements: IconElements = {
 /** Text roles; each has --mt-type-<role>-font-family, -font-size, -font-weight, -line-height, -letter-spacing, and -text-transform. */
 export const typeRoles = [
   "hero",
-  "heroCompact",
   "display",
+  "displayDetail",
+  "displayCompact",
   "title",
   "welcomeTitle",
   "recordCardTitle",
   "sheetTitle",
-  "recordTitle",
   "titleSmall",
   "cardTitle",
-  "composerTitle",
   "wordmark",
   "sectionTitle",
+  "sectionTitleCompact",
   "heading",
   "bodyLarge",
-  "subsectionTitle",
+  "reading",
+  "prose",
+  "quote",
   "body",
   "bodySmall",
   "label",
   "listHeading",
   "caption",
-  "tagline",
   "pageEyebrow",
   "legend",
   "micro",
   "signInEyebrow",
   "menuHeading",
   "eyebrow",
-  "navigationLabel",
-  "columnHeading",
-  "statusLabel",
   "factLabel",
   "fine",
   "stamp",
   "dateStamp",
   "firstTimeDate",
-  "nano",
   "badgeMicro",
   "badgeSmall",
   "badgeMedium",
   "badgeMicroCaps",
   "badgeSmallCaps",
   "badgeMediumCaps",
+  "itemTitle",
+  "itemTitleCompact",
 ] as const;
 
 export type TypeRole = (typeof typeRoles)[number];
@@ -384,25 +396,7 @@ export const pageWidths = {
 export type PageWidth = keyof typeof pageWidths;
 
 /** Layout breakpoints in px. Media queries use max-width at the value and min-width one pixel above it. */
-export const breakpoints = {
-  390: 390,
-  430: 430,
-  480: 480,
-  520: 520,
-  540: 540,
-  560: 560,
-  600: 600,
-  640: 640,
-  700: 700,
-  720: 720,
-  780: 780,
-  800: 800,
-  820: 820,
-  900: 900,
-  1050: 1050,
-  1100: 1100,
-  1300: 1300,
-} as const;
+export const breakpoints = { 560: 560, 720: 720, 900: 900 } as const;
 
 /** Container query widths in px. */
 export const containerWidths = { 440: 440, 620: 620, 1000: 1000 } as const;
@@ -467,10 +461,10 @@ export const themeColors = {
     success: "#3F6A55",
     warning: "#9B6A2F",
     scrim: "#25241F",
-    danger: "#A76346",
-    dangerSubtle: "#F1E2D8",
-    dangerBorder: "rgb(167 99 70 / 0.34)",
-    dangerTint: "rgb(167 99 70 / 0.1)",
+    danger: "#A3453A",
+    dangerSubtle: "#F5E1DC",
+    dangerBorder: "rgb(163 69 58 / 0.34)",
+    dangerTint: "rgb(163 69 58 / 0.1)",
     info: "#2F5A4B",
     infoSubtle: "#DCE5DC",
     successSubtle: "#DCE5DC",
@@ -534,10 +528,10 @@ export const themeColors = {
     success: "#8DB5A1",
     warning: "#D3A360",
     scrim: "#000000",
-    danger: "#D49373",
-    dangerSubtle: "#432E25",
-    dangerBorder: "rgb(212 147 115 / 0.34)",
-    dangerTint: "rgb(212 147 115 / 0.1)",
+    danger: "#E0897C",
+    dangerSubtle: "#45261F",
+    dangerBorder: "rgb(224 137 124 / 0.34)",
+    dangerTint: "rgb(224 137 124 / 0.1)",
     info: "#8DB5A1",
     infoSubtle: "#24342C",
     successSubtle: "#24342C",
@@ -602,7 +596,7 @@ export const badgeTones = [
 
 export type BadgeTone = (typeof badgeTones)[number];
 
-/** The badge's text size. Micro fits dense cards, small is the default, and medium sits beside 22 px controls. */
+/** The badge's text size. Micro and small both draw at the 11 px text floor, so they look alike; small is the default, and medium sits beside 22 px controls. */
 export const badgeSizes = ["micro", "small", "medium"] as const;
 
 export type BadgeSize = (typeof badgeSizes)[number];
@@ -616,11 +610,11 @@ export const badgeDefaults = {
 
 // Button, from packages/design-system/components/button.yaml.
 
-/** The action's emphasis. Primary is the main action, secondary an alternative, ghost a quiet one, and danger a destructive one. */
+/** The action's emphasis. Primary is the main action, secondary an alternative, quiet a low-emphasis one, and danger a destructive one. */
 export const buttonVariants = [
   "primary",
   "secondary",
-  "ghost",
+  "quiet",
   "danger",
 ] as const;
 
@@ -702,11 +696,11 @@ export const entryRowDefaults = { variant: "default" } as const;
 
 // IconButton, from packages/design-system/components/icon-button.yaml.
 
-/** The action's emphasis, with Button's variants. Ghost is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one. */
+/** The action's emphasis, with Button's variants. Quiet is the default, because most icon actions are quiet chrome; primary and secondary are for a standalone add or edit action, and danger for a destructive one. */
 export const iconButtonVariants = [
   "primary",
   "secondary",
-  "ghost",
+  "quiet",
   "danger",
 ] as const;
 
@@ -719,7 +713,7 @@ export type IconButtonSize = (typeof iconButtonSizes)[number];
 
 /** IconButton prop defaults. */
 export const iconButtonDefaults = {
-  variant: "ghost",
+  variant: "quiet",
   size: "medium",
   loading: false,
 } as const;
@@ -769,7 +763,7 @@ export const searchFieldDefaults = {
 
 // SectionHeader, from packages/design-system/components/section-header.yaml.
 
-/** The heading's weight. Section is a serif title for a region of content; list is the small uppercase heading above a list. */
+/** The heading's weight. Section is a serif title for a region of content; list is the small heading above a list, in sentence case on Web and uppercase on iOS. */
 export const sectionHeaderVariants = ["section", "list"] as const;
 
 export type SectionHeaderVariant = (typeof sectionHeaderVariants)[number];
@@ -843,7 +837,7 @@ export const textFieldDefaults = {
 
 // Toast, from packages/design-system/components/toast.yaml.
 
-/** What happened. Success confirms a change, info reports a neutral outcome, and error reports a failure, in the warm color and for longer. */
+/** What happened. Success confirms a change, info reports a neutral outcome, and error reports a failure, in the danger color and for longer. */
 export const toastTones = ["success", "info", "error"] as const;
 
 export type ToastTone = (typeof toastTones)[number];
@@ -910,19 +904,19 @@ export const componentSpecimens = [
     component: "Button",
     id: "button-variants",
     description: "Every variant at the default medium size.",
-    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+    covers: { variant: ["primary", "secondary", "quiet", "danger"] },
   },
   {
     component: "Button",
     id: "button-disabled",
-    description: "Every variant disabled, faded to the disabled opacity.",
-    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+    description: "Every variant disabled. Web draws a quiet faint surface and iOS fades the variant to the disabled opacity.",
+    covers: { variant: ["primary", "secondary", "quiet", "danger"] },
   },
   {
     component: "Button",
     id: "button-loading",
     description: "Every variant loading, with the spinner before the label.",
-    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+    covers: { variant: ["primary", "secondary", "quiet", "danger"] },
   },
   {
     component: "Button",
@@ -1048,19 +1042,19 @@ export const componentSpecimens = [
     component: "IconButton",
     id: "icon-button-variants",
     description: "Every variant at the default medium size, with add, edit, more, and remove icons.",
-    covers: { variant: ["primary", "secondary", "ghost", "danger"] },
+    covers: { variant: ["primary", "secondary", "quiet", "danger"] },
   },
   {
     component: "IconButton",
     id: "icon-button-sizes",
-    description: "Every size in the ghost variant, with the close icon a dialog header uses.",
+    description: "Every size in the quiet variant, with the close icon a dialog header uses.",
     covers: { size: ["small", "medium", "large"] },
   },
   {
     component: "IconButton",
     id: "icon-button-states",
-    description: "A ghost action at rest, disabled, and loading, where the spinner replaces the icon.",
-    covers: { variant: ["ghost"] },
+    description: "A quiet action at rest, disabled, and loading, where the spinner replaces the icon.",
+    covers: { variant: ["quiet"] },
   },
   {
     component: "Icon",
@@ -1101,7 +1095,7 @@ export const componentSpecimens = [
   {
     component: "PageHeader",
     id: "page-header-full",
-    description: "An eyebrow, a title, a description, and two actions beside the copy.",
+    description: "A title, its meta line, and one action beside the copy; iOS also shows the eyebrow and description it keeps until its Quiet ledger pass.",
     covers: {},
   },
   {

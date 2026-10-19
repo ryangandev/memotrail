@@ -210,8 +210,8 @@ struct HomeView: View {
     } content: {
       if entries.isEmpty {
         MTEmptyState(
-          title: "Your trail starts here",
-          message: "Entries you save to Library will appear here, ready to return to.",
+          title: "Nothing recent yet",
+          message: "Entries you save appear here, ready to return to.",
           icon: .archive)
       } else {
         VStack(spacing: 0) {

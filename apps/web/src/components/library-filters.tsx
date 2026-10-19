@@ -196,7 +196,7 @@ export function LibraryFilters({
             data-active={request.tagNames.length ? "true" : undefined}
             onClick={() => setPanel(panel === "tags" ? null : "tags")}
             size="small"
-            variant="ghost"
+            variant="quiet"
           >
             {request.tagNames.length
               ? `Tags · ${request.tagNames.length}`
@@ -209,7 +209,7 @@ export function LibraryFilters({
             data-active={datesActive ? "true" : undefined}
             onClick={() => setPanel(panel === "dates" ? null : "dates")}
             size="small"
-            variant="ghost"
+            variant="quiet"
           >
             {datesActive ? "Dates · 1" : "Dates"}
           </Button>
@@ -219,7 +219,7 @@ export function LibraryFilters({
               href="/library"
               scroll={false}
               size="small"
-              variant="ghost"
+              variant="quiet"
             >
               Clear all
             </ButtonLink>

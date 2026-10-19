@@ -44,8 +44,7 @@ tokens:
       type: { ios: "{type.pageEyebrow}" }
       color: { ios: "{color.warm}" }
     title:
-      type: { ios: "{type.title}" }
-      fontWeight: { web: "{font.weight.medium}" }
+      type: { web: "{type.display}", ios: "{type.title}" }
       color: "{color.ink}"
       minWidth: "{size.pageHeader.copyBasis}"
     meta:
@@ -77,8 +76,8 @@ accessibility:
   dynamicType: iOS scales every text role with Dynamic Type, and the actions move below the copy when the title cannot keep its 260 pt basis beside them. Web grows with browser zoom and wraps the same way.
 
 platformDifferences:
-  - difference: Web titles are 32 px, or 34 px on a detail page, and 26 px up to 720 px, from Web layout variables in globals.css; iOS uses the title size on iPhone.
-    reason: The Quiet ledger sizes have no type roles yet. WP0b adds them, and the iOS rewrite adopts them.
+  - difference: Web titles use the display role at 32 px, displayDetail at 34 px on a detail page, and displayCompact at 26 px up to 720 px; iOS uses the title role on iPhone.
+    reason: The Web workspace moved to the Quiet ledger titles first; iOS adopts the display roles in its Quiet ledger pass.
   - difference: Web has a meta line and a back link and no eyebrow or description; iOS keeps the eyebrow and description until its rewrite.
     reason: The Web workspace moved to the Quiet ledger header first, and the iOS app follows on its own branch.
   - difference: Web lets the caller choose an h1 or h2 title; iOS marks the title as a header without a level.
@@ -86,6 +85,6 @@ platformDifferences:
 
 specimens:
   - id: page-header-full
-    description: An eyebrow, a title, a description, and two actions beside the copy.
+    description: A title, its meta line, and one action beside the copy; iOS also shows the eyebrow and description it keeps until its Quiet ledger pass.
   - id: page-header-title-only
     description: A title alone, as a focused page with nothing else to say opens.

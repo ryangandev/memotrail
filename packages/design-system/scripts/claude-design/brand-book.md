@@ -27,12 +27,12 @@ Real copy from the app:
 - "Move to Trash"
 - "Retry now"
 - "What’s on your mind?"
-- "Life is still unfolding"
-- "Chapters you are in right now appear here."
+- "Nothing recent yet"
+- "Entries you save appear here, ready to return to."
 - "No Entries match yet."
 - "MemoTrail could not search your Entries. Try again."
 - "Changes saved."
-- "Entry moved to Trash."
+- "Photo moved to Trash."
 - "Saved on this device. Waiting for a connection."
 - "Could not connect. Your changes are still here to retry."
 - "MemoTrail could not save your preferred name. Try again."
@@ -70,6 +70,8 @@ MemoTrail loads no web fonts: it uses the system fonts, so text matches each pla
 Set titles of pages, sections, cards, and dialogs, and the wordmark, in the serif; set everything else in the sans; use the mono only for date stamps and code.
 Use the text roles below instead of picking sizes; on Web each role is the set of `--mt-type-<role>-*` variables in bundle.css.
 Keep one page title per page and few text roles on it: the title, an optional muted meta line, serif section titles, and body text.
+On Web a page title is `display` (32px), `displayDetail` (34px) on a detail page, and `displayCompact` (26px) on phones; Entry titles in lists are `itemTitle`, an Entry's writing is `reading`, and review prose is `prose`.
+No text is smaller than 11px.
 Pages have no eyebrows or descriptions above or under the title; on Web, avoid uppercase text, and on iOS use it only through the roles that set it.
 
 {{textRoles}}

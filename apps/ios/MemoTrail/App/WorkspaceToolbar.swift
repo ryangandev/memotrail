@@ -56,7 +56,7 @@ private struct WorkspaceToolbar: ViewModifier {
           }
         }
         ToolbarItem(placement: .topBarTrailing) {
-          Button("Search your trail", systemImage: MTIcon.search.systemName) {
+          Button("Search Library", systemImage: MTIcon.search.systemName) {
             navigator.searchLibrary()
           }
           .accessibilityIdentifier("workspace-search")

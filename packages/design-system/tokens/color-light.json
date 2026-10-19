@@ -74,19 +74,19 @@
       "$value": "{palette.paper.950}"
     },
     "danger": {
-      "$description": "Errors and destructive actions. Uses the warm palette, as errors do today.",
-      "$value": "{palette.clay.600}"
+      "$description": "Errors and destructive actions, in a redder clay than the warm accent.",
+      "$value": "{palette.brick.600}"
     },
     "dangerSubtle": {
       "$description": "Background of danger buttons and error panels.",
-      "$value": "{palette.clay.100}"
+      "$value": "{palette.brick.100}"
     },
     "dangerBorder": {
       "$description": "Border of danger buttons.",
       "$value": {
         "colorSpace": "srgb",
         "components": {
-          "$ref": "#/palette/clay/600/$value/components"
+          "$ref": "#/palette/brick/600/$value/components"
         },
         "alpha": 0.34
       },
@@ -104,7 +104,7 @@
       "$value": {
         "colorSpace": "srgb",
         "components": {
-          "$ref": "#/palette/clay/600/$value/components"
+          "$ref": "#/palette/brick/600/$value/components"
         },
         "alpha": 0.1
       },

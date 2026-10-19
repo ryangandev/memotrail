@@ -8,6 +8,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useState } from "react";
 import styles from "@/components/first-times-workspace.module.css";
+import { ChapterMark } from "@/components/entry-row";
 import { Icon } from "@/components/icon";
 import { ProgressiveImage } from "@/components/progressive-image";
 import { RecordCardMap } from "@/components/record-card-map";
@@ -170,25 +171,5 @@ function FirstTimeRow({
         ) : null}
       </Link>
     </li>
-  );
-}
-
-/** The green mark of a First Time that is also a Chapter. */
-function ChapterMark() {
-  return (
-    <svg
-      aria-label="Chapter"
-      className={styles.mark}
-      role="img"
-      viewBox="0 0 24 24"
-    >
-      <path
-        d="M5 6v12M19 6v12M5 12h14"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-    </svg>
   );
 }

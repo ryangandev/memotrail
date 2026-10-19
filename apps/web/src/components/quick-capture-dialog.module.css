@@ -165,7 +165,7 @@
   }
 }
 
-@media (max-width: 390px) {
+@media (max-width: 560px) {
   .dialogHeader h2 {
     font-size: var(--mt-font-size-body-large);
   }

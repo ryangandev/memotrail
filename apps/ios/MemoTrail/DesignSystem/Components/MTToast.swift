@@ -12,7 +12,7 @@ extension MTToastTone {
     }
   }
 
-  fileprivate var color: Color { self == .error ? MTColor.warm : MTColor.accent }
+  fileprivate var color: Color { self == .error ? MTColor.danger : MTColor.accent }
 
   /// How long a toast in this tone stays: errors stay longer, so there is time to read them.
   var duration: Duration {

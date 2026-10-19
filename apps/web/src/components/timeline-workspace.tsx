@@ -76,8 +76,7 @@ const zoomOptions = [
 // Where to scroll once the next layout is drawn: today at its anchor, or the date that was
 // under a given fraction of the view before the zoom changed.
 type ScrollTarget =
-  | { type: "today" }
-  | { fraction: number; time: number; type: "date" };
+  { type: "today" } | { fraction: number; time: number; type: "date" };
 
 type PositionedStyle = CSSProperties & {
   "--item-bar-width": string;
@@ -344,7 +343,7 @@ export function TimelineWorkspace({
               <Button
                 onClick={() => setSelection({ type: "chooser" })}
                 type="button"
-                variant="ghost"
+                variant="quiet"
               >
                 <Icon name="plus" />
                 <span>Add to Timeline</span>
@@ -383,20 +382,12 @@ export function TimelineWorkspace({
               data-testid="timeline-viewport"
               ref={viewport}
             >
-              <div
-                className={styles.canvas}
-                ref={canvas}
-                style={canvasStyle}
-              >
+              <div className={styles.canvas} ref={canvas} style={canvasStyle}>
                 <div className={styles.axis} data-testid="timeline-axis">
                   {ticks.map((tick) => (
                     <span
-                      data-edge={
-                        tick.leftPercent === 100 ? "end" : undefined
-                      }
-                      data-hidden={
-                        tickUnderToday(tick) ? "true" : undefined
-                      }
+                      data-edge={tick.leftPercent === 100 ? "end" : undefined}
+                      data-hidden={tickUnderToday(tick) ? "true" : undefined}
                       data-tick={tick.kind}
                       key={tick.key}
                       style={{ left: `${tick.leftPercent}%` }}
@@ -785,7 +776,11 @@ function BandRow({
       style={{ "--band-rows": rowCount } as CSSProperties}
     >
       <h2 className={styles.bandLabel}>{label}</h2>
-      <ul aria-label={label} className={styles.bandItems} data-testid="timeline-band">
+      <ul
+        aria-label={label}
+        className={styles.bandItems}
+        data-testid="timeline-band"
+      >
         {items.map((item) => {
           const position = positions.get(item.id);
 

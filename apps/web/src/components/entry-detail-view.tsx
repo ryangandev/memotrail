@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useId, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { EntryEditorDialog } from "./entry-editor-dialog";
+import { Icon } from "./icon";
 import { EntryPhotos } from "./entry-photos";
 import { EntryRichTextContent } from "./entry-rich-text-content";
 import { EntryRow, EntryRowList } from "./entry-row";
@@ -170,7 +171,9 @@ export function EntryDetailView({
     editButton || trashButton ? (
       <div className={styles.actions} data-entry-actions>
         {editButton}
-        {trashButton ? <span className={styles.trash}>{trashButton}</span> : null}
+        {trashButton ? (
+          <span className={styles.trash}>{trashButton}</span>
+        ) : null}
       </div>
     ) : null;
   const editor = editing ? (
@@ -265,10 +268,7 @@ function EntryFacts({ entry }: { entry: EntryDetail }) {
   // An untitled Entry is already headed by its date.
   if (entryDateAddsToTitle(entry)) {
     facts.push(
-      <time
-        dateTime={entryRowDateTime(occurrence) ?? undefined}
-        key="date"
-      >
+      <time dateTime={entryRowDateTime(occurrence) ?? undefined} key="date">
         {entryDateLabel(entry)}
       </time>,
     );
@@ -310,33 +310,16 @@ function TagLinks({ tags }: { tags: EntryDetail["tags"] }) {
 function FirstTimeMark() {
   return (
     <p className={styles.firstTime}>
-      <svg aria-hidden="true" viewBox="0 0 24 24">
-        <path
-          d="M12 3.5l2 5.5 5.5 2-5.5 2-2 5.5-2-5.5-5.5-2 5.5-2z"
-          fill="currentColor"
-        />
-      </svg>
+      <Icon name="firstTime" size={13} />
       First Time
     </p>
   );
 }
 
-function ChapterIcon({ className }: { className?: string }) {
-  return (
-    <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-      <path
-        d="M5 6v12M19 6v12M5 12h14"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-    </svg>
-  );
-}
-
 function SourceLinks({ entry }: { entry: EntryDetail }) {
-  const links = entry.links.filter((link) => sourceLinkLabels[link.relationship]);
+  const links = entry.links.filter(
+    (link) => sourceLinkLabels[link.relationship],
+  );
   if (!links.length) return null;
   return (
     <p className={styles.sources}>
@@ -371,7 +354,9 @@ function InChapter({ chapters }: { chapters: EntryChapter[] }) {
     <ul aria-label="Chapters this Entry is in" className={styles.inChapter}>
       {chapters.map((chapter) => (
         <li key={chapter.id}>
-          <ChapterIcon className={styles.chapterIcon} />
+          <span className={styles.chapterIcon}>
+            <Icon name="chapter" size={16} />
+          </span>
           <span className={styles.inChapterLabel}>In Chapter</span>
           <Link className={styles.inChapterTitle} href={wikiEntryHref(chapter)}>
             {chapter.title}
@@ -423,7 +408,7 @@ function ChapterHeader({
     <header className={styles.chapterHeader} data-ui-page-header>
       <PageBackLink destination={destinationForEntry(entry)} />
       <p className={styles.kind}>
-        <ChapterIcon />
+        <Icon name="chapter" size={15} />
         Chapter
       </p>
       <h1 className={styles.chapterTitle}>{entryTitle(entry)}</h1>
@@ -458,7 +443,10 @@ function ChapterSpanBar({ entry, now }: { entry: EntryDetail; now: Date }) {
   const trackEnd = Date.UTC(lastYear + 1, 0, 1);
   const position = (iso: string, endOfDay = false) => {
     const time = Date.parse(`${iso}T00:00:00Z`) + (endOfDay ? 86_400_000 : 0);
-    return Math.min(1, Math.max(0, (time - trackStart) / (trackEnd - trackStart)));
+    return Math.min(
+      1,
+      Math.max(0, (time - trackStart) / (trackEnd - trackStart)),
+    );
   };
   const left = position(days.first);
   const right = 1 - position(last, true);
@@ -531,7 +519,9 @@ function ChapterSections({
       >
         <SectionHeader
           detail={
-            contents && !contents.failed && total > 0 ? String(total) : undefined
+            contents && !contents.failed && total > 0
+              ? String(total)
+              : undefined
           }
           headingId={entriesHeadingId}
           title="Entries in this Chapter"
@@ -615,7 +605,10 @@ function ChapterSections({
 
       {overlaps.length > 0 ? (
         <section aria-labelledby={relatedHeadingId} className={styles.section}>
-          <SectionHeader headingId={relatedHeadingId} title="Related Chapters" />
+          <SectionHeader
+            headingId={relatedHeadingId}
+            title="Related Chapters"
+          />
           <ul aria-label="Related Chapters" className={styles.related}>
             {overlaps.map((overlap) => (
               <li key={overlap.id}>

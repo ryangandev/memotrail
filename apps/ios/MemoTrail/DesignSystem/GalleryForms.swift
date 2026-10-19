@@ -101,9 +101,9 @@
             GalleryCase(.searchFieldSizes) {
               VStack(alignment: .leading, spacing: MTSpacing.s4) {
                 MTSearchField(
-                  "Compact search", text: .constant(""), prompt: "Search your trail", size: .small)
+                  "Compact search", text: .constant(""), prompt: "Search your Entries", size: .small)
                 HStack(alignment: .bottom, spacing: MTSpacing.s2) {
-                  MTSearchField("Search Library", text: $search, prompt: "Search your trail")
+                  MTSearchField("Search Library", text: $search, prompt: "Search your Entries")
                     .onSubmit(runSearch)
                   Button("Search", action: runSearch).mtButtonStyle(.secondary)
                 }
