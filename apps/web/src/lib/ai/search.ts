@@ -87,15 +87,7 @@ export function retrievalTerms(queries: string[]) {
   return terms.slice(0, 6);
 }
 
-const types = [
-  "entry",
-  "entity",
-  "goal",
-  "milestone",
-  "first_time",
-  "home",
-  "vehicle",
-];
+const types = ["entry", "entity", "milestone", "first_time", "home", "vehicle"];
 const acceptedManualTypes = new Set(types);
 export const searchPlanSchema = {
   type: "object",

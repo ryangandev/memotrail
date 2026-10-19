@@ -14,18 +14,12 @@ const pageFamilies = [
   { path: "/trash", variant: "standard", width: 960 },
   { path: "/", variant: "wide", width: 1080 },
   { path: "/first-times", variant: "wide", width: 1080 },
-  { path: "/goals", variant: "wide", width: 1080 },
   { path: "/homes", variant: "wide", width: 1080 },
   { path: "/vehicles", variant: "wide", width: 1080 },
   { path: "/timeline", variant: "canvas", width: 1180 },
 ] as const;
 
-const focusedViewPaths = new Set([
-  "/first-times",
-  "/goals",
-  "/homes",
-  "/vehicles",
-]);
+const focusedViewPaths = new Set(["/first-times", "/homes", "/vehicles"]);
 
 test("authenticated pages use the shared responsive page frame", async ({
   context,

@@ -83,44 +83,7 @@
   gap: var(--mt-space-3);
   padding-top: var(--mt-space-12);
 }
-.controls {
-  display: flex;
-  align-items: end;
-  gap: var(--mt-space-4);
-}
-.conversion {
-  padding: var(--mt-space-5-5);
-  border: var(--mt-size-stroke-thin) solid var(--mt-color-border);
-  border-radius: var(--mt-radius-large);
-  background: var(--mt-color-surface);
-}
-.conversion fieldset {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--mt-space-4);
-  border: 0;
-  padding: 0;
-  margin: 0;
-  min-width: 0;
-}
-.conversion h3 {
-  margin: 0 0 var(--mt-space-2);
-}
-.conversion p {
-  margin: 0 0 var(--mt-space-5);
-}
-.conversion fieldset > :first-child,
-.conversion .controls {
-  grid-column: 1 / -1;
-}
 @media (max-width: 700px) {
-  .conversion fieldset {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
   .currentFacts {
     grid-template-columns: minmax(0, 1fr);
   }

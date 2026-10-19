@@ -7,7 +7,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { cleanupMediaFixture } from "./helpers/media-fixture";
 
-for (const kind of ["home", "vehicle", "goal"] as const) {
+for (const kind of ["home", "vehicle"] as const) {
   for (const interrupted of [
     "registration",
     "upload",
@@ -97,15 +97,6 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
               p_color: "",
             },
           },
-          goal: {
-            path: "/goals",
-            rpc: "save_goal_entry",
-            args: {
-              ...common,
-              p_status: "active",
-              p_target_date: null,
-            },
-          },
         };
         const config = configs[kind];
         const saved = await client.rpc(config.rpc, config.args);
@@ -153,7 +144,6 @@ for (const kind of ["home", "vehicle", "goal"] as const) {
         const label = {
           home: "Home",
           vehicle: "Vehicle",
-          goal: "Someday item",
         }[kind];
         await page.getByRole("button", { name: `Edit ${label}` }).click();
         const dialog = page.getByRole("main");

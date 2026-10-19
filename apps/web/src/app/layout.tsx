@@ -16,7 +16,6 @@ import {
   THEME_COOKIE_NAME,
 } from "@/lib/theme";
 import "./globals.css";
-import "leaflet/dist/leaflet.css";
 
 export const metadata: Metadata = {
   title: "MemoTrail",

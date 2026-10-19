@@ -33,10 +33,7 @@ declare
     'datePrecision','unknown',
     'tagNames','[]'::jsonb,'id',p_id,'revision',current_revision);
 begin
-  if p_kind = 'goal' then
-    select entry_id into result from public.save_goal_entry(
-      'Rich goal',p_body,'active',null,'{}',p_id,current_revision);
-  elsif p_kind = 'home' then
+  if p_kind = 'home' then
     select entry_id into result from public.save_home_entry_with_occurrence(
       'Rich home',p_body,null,null,'unknown',null,'UTC',null,null,'{}',p_id,current_revision);
   elsif p_kind = 'home_location' then
@@ -55,57 +52,10 @@ $$;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','10000000-0000-0000-0000-000000000141',true);
 
--- The reported path: a linked Goal copies an Item's formatting, then its focused editor
--- replaces the writing.
-insert into public.entries(id,owner_id,title,body,item_kind,item_subtype,date_precision,metadata)
-values ('96600000-0000-4000-8000-000000000001',auth.uid(),'Marathon plan','Run zebrafinch marathon',
-  'entry','entry','unknown',jsonb_build_object('body_rich',pg_temp.rich('Run zebrafinch marathon')));
-select is(
-  (select goal_entry_id from public.extract_goal_from_item('96600000-0000-4000-8000-000000000001',1,
-    '96600000-0000-4000-8000-000000000002','Marathon goal','active',null)),
-  '96600000-0000-4000-8000-000000000002'::uuid,
-  'A formatted Item creates a linked Goal'
-);
-select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
-  'The linked Goal copies formatting that matches its writing');
-select is(
-  (select revision from public.save_goal_entry('Renamed goal','Run zebrafinch marathon','active',
-    null,'{}','96600000-0000-4000-8000-000000000002',1)),
-  2,
-  'A Goal save with unchanged writing advances one revision'
-);
-select is(pg_temp.rich_text('96600000-0000-4000-8000-000000000002'),'Run zebrafinch marathon',
-  'A Goal save with unchanged writing keeps its formatting');
-select is(
-  (select revision from public.save_goal_entry('Renamed goal','Run a half marathon','active',
-    null,'{}','96600000-0000-4000-8000-000000000002',2)),
-  3,
-  'A Goal save with new writing advances one revision'
-);
-select is((select body from public.entries where id = '96600000-0000-4000-8000-000000000002'),
-  'Run a half marathon','The Goal stores the new writing');
-select ok(not (select metadata ? 'body_rich' from public.entries where id = '96600000-0000-4000-8000-000000000002'),
-  'The Goal drops formatting for writing it no longer has');
-select is(
-  (select count(*) from public.search_wiki_items('zebrafinch') where entry_id = '96600000-0000-4000-8000-000000000002'),
-  0::bigint,
-  'Search no longer finds the Goal by writing it removed'
-);
-select is(
-  (select count(*) from public.search_wiki_items('zebrafinch') where entry_id = '96600000-0000-4000-8000-000000000001'),
-  1::bigint,
-  'The source Item still matches its own writing'
-);
-select is(
-  (select count(*) from public.search_wiki_items('half marathon') where entry_id = '96600000-0000-4000-8000-000000000002'),
-  1::bigint,
-  'Search finds the Goal by its new writing'
-);
-
 -- Each focused writer keeps matching formatting and drops it once the writing changes.
 insert into writers
 select kind, pg_temp.save(kind,null,'Original words')
-from unnest(array['goal','home','home_location','vehicle','vehicle_location']) as kind;
+from unnest(array['home','home_location','vehicle','vehicle_location']) as kind;
 select isnt(id,null,kind || ' is created') from writers;
 -- Record formatting the way Capture and Inbox review store it.
 update public.entries

@@ -116,9 +116,9 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
   });
   expect(created.error).toBeNull();
   const owner = created.data.user!.id;
-  let releaseMapNavigation = () => {};
-  const mapNavigationGate = new Promise<void>((resolve) => {
-    releaseMapNavigation = resolve;
+  let releaseSlowNavigation = () => {};
+  const slowNavigationGate = new Promise<void>((resolve) => {
+    releaseSlowNavigation = resolve;
   });
 
   try {
@@ -152,17 +152,17 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       })),
     );
 
-    let mapNavigationStarted = false;
+    let slowNavigationStarted = false;
 
-    await page.route("**/map*", async (route) => {
+    await page.route("**/timeline*", async (route) => {
       const headers = route.request().headers();
       const isRscRequest =
         headers.rsc === "1" ||
         new URL(route.request().url()).searchParams.has("_rsc");
 
-      if (isRscRequest && !mapNavigationStarted) {
+      if (isRscRequest && !slowNavigationStarted) {
         await route.fulfill({
-          body: "Map prefetch intentionally unavailable during this test.",
+          body: "Timeline prefetch intentionally unavailable during this test.",
           contentType: "text/plain",
           status: 503,
         });
@@ -170,7 +170,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
       }
 
       if (isRscRequest) {
-        await mapNavigationGate;
+        await slowNavigationGate;
       }
 
       await route.continue();
@@ -551,7 +551,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await expect(
       page.getByRole("navigation", { name: "Mobile navigation" }),
     ).toBeVisible();
-    for (const label of ["Dashboard", "Timeline", "Library", "Map"]) {
+    for (const label of ["Dashboard", "Timeline", "Library"]) {
       await expect(
         page
           .getByRole("navigation", { name: "Mobile navigation" })
@@ -562,7 +562,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     const mobileNavigation = page.getByRole("navigation", {
       name: "Mobile navigation",
     });
-    await expect(mobileNavigation.locator(":scope > *")).toHaveCount(5);
+    await expect(mobileNavigation.locator(":scope > *")).toHaveCount(4);
     const moreButton = mobileNavigation.getByRole("button", {
       name: "More destinations",
     });
@@ -642,24 +642,24 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.keyboard.press("Escape");
     await expect(commandPalette).not.toBeVisible();
 
-    mapNavigationStarted = true;
+    slowNavigationStarted = true;
     await page
       .getByRole("navigation", { name: "Primary navigation" })
-      .getByRole("link", { name: "Map", exact: true })
+      .getByRole("link", { name: "Timeline", exact: true })
       .click({ noWaitAfter: true });
 
     await expect(
-      page.getByRole("status", { name: "Opening Map" }),
+      page.getByRole("status", { name: "Opening Timeline" }),
     ).toBeVisible();
     await page.screenshot({
       caret: "initial",
       path: test.info().outputPath("memotrail-navigation-loading.png"),
     });
     await expect(shell).toHaveAttribute("data-shell-instance", "kept");
-    releaseMapNavigation();
-    await expect(page).toHaveURL(/\/map$/);
+    releaseSlowNavigation();
+    await expect(page).toHaveURL(/\/timeline$/);
     await expect(
-      page.getByRole("heading", { name: "Map", exact: true }),
+      page.getByRole("heading", { name: "Timeline", exact: true }),
     ).toBeVisible();
 
     await shell
@@ -1044,7 +1044,7 @@ test("primary navigation keeps the app shell visible while fresh data loads", as
     await page.goBack();
     await expect(page).toHaveURL(/\/library$/);
   } finally {
-    releaseMapNavigation();
+    releaseSlowNavigation();
     await page.close();
     expect((await admin.auth.admin.deleteUser(owner)).error).toBeNull();
   }
