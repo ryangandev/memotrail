@@ -93,7 +93,7 @@ struct OccurrenceEditor: View {
 
   /// Web wraps the date toggles in one row where they fit.
   @ViewBuilder private var toggles: some View {
-    TopAlignedFlowLayout(spacing: MTSpacing.s5, lineSpacing: MTSpacing.s1) {
+    BaselineFlowLayout(spacing: MTSpacing.s5, lineSpacing: MTSpacing.s1) {
       Group {
         if timeToggleShown {
           MTCheckbox(
@@ -203,42 +203,68 @@ struct OccurrenceEditor: View {
   }
 }
 
-/// `MTFlowLayout` line breaking with each child at the top of its line, like Web flex rows
-/// whose checkboxes stretch to the line, so "Present" and its detail keep its box level with
-/// the one-line toggles beside it.
-private struct TopAlignedFlowLayout: Layout {
+/// `MTFlowLayout` line breaking with each line aligned on its children's first text
+/// baselines, like Web, where the toggles' labels share a line. A checkbox centers its
+/// content in the hit target, so "Present" with its detail would otherwise sit higher than the
+/// one-line toggles beside it.
+private struct BaselineFlowLayout: Layout {
   var spacing: CGFloat
   var lineSpacing: CGFloat
 
+  /// A child's size and first baseline, measured at the offered width.
+  private struct Measured {
+    var size: CGSize
+    var baseline: CGFloat
+  }
+
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
     let width = proposal.width ?? .infinity
-    let lines = MTFlowLayout.lines(
-      for: items(subviews, width: width), width: width, spacing: spacing)
+    let measured = measure(subviews, width: width)
+    let lines = lines(measured, width: width)
     let height =
-      lines.map(\.height).reduce(0, +) + CGFloat(max(lines.count - 1, 0)) * lineSpacing
+      lines.map { height(of: $0, measured) }.reduce(0, +)
+      + CGFloat(max(lines.count - 1, 0)) * lineSpacing
     return CGSize(width: proposal.width ?? lines.map(\.width).max() ?? 0, height: height)
   }
 
   func placeSubviews(
     in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()
   ) {
-    let items = items(subviews, width: bounds.width)
+    let measured = measure(subviews, width: bounds.width)
     var y = bounds.minY
-    for line in MTFlowLayout.lines(for: items, width: bounds.width, spacing: spacing) {
+    for line in lines(measured, width: bounds.width) {
+      let baseline = line.indices.map { measured[$0].baseline }.max() ?? 0
       var x = bounds.minX
       for index in line.indices {
         let size = CGSize(
-          width: min(items[index].size.width, bounds.width), height: items[index].size.height)
-        subviews[index].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+          width: min(measured[index].size.width, bounds.width), height: measured[index].size.height)
+        subviews[index].place(
+          at: CGPoint(x: x, y: y + baseline - measured[index].baseline),
+          proposal: ProposedViewSize(size))
         x += size.width + spacing
       }
-      y += line.height + lineSpacing
+      y += height(of: line, measured) + lineSpacing
     }
   }
 
-  private func items(_ subviews: Subviews, width: CGFloat) -> [MTFlowLayout.Item] {
+  private func measure(_ subviews: Subviews, width: CGFloat) -> [Measured] {
     subviews.map {
-      MTFlowLayout.Item(size: $0.sizeThatFits(ProposedViewSize(width: width, height: nil)))
+      let dimensions = $0.dimensions(in: ProposedViewSize(width: width, height: nil))
+      return Measured(
+        size: CGSize(width: dimensions.width, height: dimensions.height),
+        baseline: dimensions[VerticalAlignment.firstTextBaseline])
     }
+  }
+
+  private func lines(_ measured: [Measured], width: CGFloat) -> [MTFlowLayout.Line] {
+    MTFlowLayout.lines(
+      for: measured.map { MTFlowLayout.Item(size: $0.size) }, width: width, spacing: spacing)
+  }
+
+  /// A line's height once its children share a baseline.
+  private func height(of line: MTFlowLayout.Line, _ measured: [Measured]) -> CGFloat {
+    let baseline = line.indices.map { measured[$0].baseline }.max() ?? 0
+    return line.indices.map { baseline - measured[$0].baseline + measured[$0].size.height }.max()
+      ?? 0
   }
 }
