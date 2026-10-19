@@ -1108,7 +1108,8 @@ test("SectionHeader renders section and list headings at the level the caller pi
     (await end.getByRole("heading").boundingBox())!.x + 200,
   );
 
-  // A description reads under the title and the action centers on the block.
+  // A description reads under the title and the action centers on the title and description,
+  // above the section's rule.
   const described = header("section-description");
   const describedTitle = await described.getByRole("heading").boundingBox();
   const describedText = await described
@@ -1120,9 +1121,8 @@ test("SectionHeader renders section and list headings at the level the caller pi
   const edit = await described
     .getByRole("button", { name: "Edit" })
     .boundingBox();
-  const block = await described.boundingBox();
   expect(edit!.y + edit!.height / 2).toBeCloseTo(
-    block!.y + block!.height / 2,
+    (describedTitle!.y + describedText!.y + describedText!.height) / 2,
     0,
   );
 

@@ -222,14 +222,14 @@ const themeOptions = [
   { label: "Dark", value: "dark" },
 ] as const;
 
-const precisionOptions = [
-  { label: "Day", value: "day" },
-  { label: "Month", value: "month" },
+const scaleOptions = [
+  { label: "Years", value: "years" },
+  { label: "Months", value: "months" },
 ] as const;
 
 function SegmentedControlSpecimen() {
   const [theme, setTheme] = useState<string>("system");
-  const [precision, setPrecision] = useState<string>("day");
+  const [scale, setScale] = useState<string>("years");
   return (
     <Specimen
       api="label · options · value · onChange · name · disabled"
@@ -247,10 +247,10 @@ function SegmentedControlSpecimen() {
               value={theme}
             />
             <SegmentedControl
-              label="Date precision"
-              onChange={setPrecision}
-              options={precisionOptions}
-              value={precision}
+              label="Timeline scale"
+              onChange={setScale}
+              options={scaleOptions}
+              value={scale}
             />
             <SegmentedControl
               disabled
