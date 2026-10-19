@@ -144,7 +144,9 @@ export function ImportPreview({
             <dt>Dates</dt>
             <dd>
               {totals.dateRange
-                ? `${day(totals.dateRange.from)} to ${day(totals.dateRange.to)}`
+                ? totals.dateRange.from === totals.dateRange.to
+                  ? day(totals.dateRange.from)
+                  : `${day(totals.dateRange.from)} to ${day(totals.dateRange.to)}`
                 : "None found"}
             </dd>
           </div>
@@ -169,9 +171,10 @@ export function ImportPreview({
         ) : null}
         {(totals.undated ?? 0) > 0 ? (
           <p>
-            {countLabel(totals.undated ?? 0, "Entry")} have no date in the
-            export. They are imported without one rather than given a date that
-            did not happen
+            {countLabel(totals.undated ?? 0, "Entry")}{" "}
+            {totals.undated === 1 ? "has" : "have"} no date in the export.{" "}
+            {totals.undated === 1 ? "It is" : "They are"} imported without one
+            rather than given a date that did not happen
             {totals.unparsedDates
               ? `, including ${totals.unparsedDates} whose date could not be read`
               : ""}
