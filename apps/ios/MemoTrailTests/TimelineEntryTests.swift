@@ -70,6 +70,62 @@ final class TimelineEntryTests: XCTestCase {
     XCTAssertEqual(split.firstTimes, [firstTime, undatedA, undatedB])
   }
 
+  func testPresentationNamesItemsLikeWebTimelinePresentation() throws {
+    let chapter = try decodeItem(
+      title: "Living in Lisbon", isChapter: true, isFirstTime: false, precision: "month",
+      start: "2021-03-01T12:00:00+00:00", end: "2021-08-31T12:00:00+00:00",
+      windowStart: "2021-03-01", windowEnd: "2021-09-01")
+    XCTAssertEqual(chapter.accessibleName, "Living in Lisbon, Mar 2021 - Aug 2021")
+    XCTAssertEqual(chapter.durationLabel(now: Date()), "About 5 months")
+
+    let firstTime = try decodeItem(
+      title: "First swim", isChapter: false, isFirstTime: true, precision: "day",
+      start: "2021-05-10T12:00:00+00:00", windowStart: "2021-05-10", windowEnd: "2021-05-11")
+    XCTAssertEqual(firstTime.accessibleName, "First swim, May 10, 2021")
+    XCTAssertNil(firstTime.durationLabel(now: Date()))
+
+    let undatedChapter = try decodeItem(
+      title: "Back then", isChapter: true, isFirstTime: false, precision: "unknown")
+    XCTAssertNil(undatedChapter.durationLabel(now: Date()))
+  }
+
+  func testUndatedItemsSayRoughlyWhenTheyHaveADescription() throws {
+    let described = try decodeItem(
+      title: "Rode a bike", isChapter: false, isFirstTime: true, precision: "age",
+      label: "  Age 7  ")
+    XCTAssertEqual(described.undatedLabel, "Roughly: Age 7")
+
+    let blank = try decodeItem(
+      title: "Rode a bike", isChapter: false, isFirstTime: true, precision: "unknown",
+      label: "   ")
+    XCTAssertEqual(blank.undatedLabel, "Undated")
+    let plain = try decodeItem(
+      title: "Rode a bike", isChapter: false, isFirstTime: true, precision: "unknown")
+    XCTAssertEqual(plain.undatedLabel, "Undated")
+  }
+
+  func testLayoutSourceDrawsChaptersAsBarsAndFirstTimesAsPointsAndSkipsUndated() throws {
+    let chapter = item("Chapter", chapter: true, firstTime: false, window: "2020-01-01")
+    let source = try XCTUnwrap(chapter.layoutSource(titleWidth: 40))
+    XCTAssertEqual(source.band, .chapters)
+    XCTAssertEqual(source.shape, .bar)
+    XCTAssertEqual(source.labelWidthPixels, 40)
+    XCTAssertEqual(source.windowStart, "2020-01-01")
+    XCTAssertNil(source.windowEnd)
+    XCTAssertEqual(source.id, chapter.id.uuidString.lowercased())
+
+    // A Chapter that is also a First Time draws a star the measured title does not include.
+    let starred = item("Starred", chapter: true, firstTime: true, window: "2020-01-01")
+    XCTAssertEqual(starred.layoutSource(titleWidth: 40)?.labelWidthPixels, 58)
+
+    let point = item("Point", chapter: false, firstTime: true, window: "2020-01-01")
+    XCTAssertEqual(point.layoutSource(titleWidth: 40)?.band, .firstTimes)
+    XCTAssertEqual(point.layoutSource(titleWidth: 40)?.shape, .point)
+
+    XCTAssertNil(
+      item("Undated", chapter: false, firstTime: true, window: nil).layoutSource(titleWidth: 40))
+  }
+
   func testFirstTimeRowDecodesPhotosAndShowsAChaptersSpan() throws {
     let row = try decodeFirstTime(isChapter: true, precision: "month")
 
