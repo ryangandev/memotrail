@@ -3,6 +3,7 @@ import {
   entryDisplayTitle,
   occurrenceDurationLabel,
   occurrenceSpanLabel,
+  occurrenceTitle,
   storedOccurrence,
 } from "./occurrence";
 
@@ -127,40 +128,83 @@ export function entryDateAddsToTitle(
   }
 }
 
-export function entryDateLabel(
-  value: Pick<
-    EntryDetail,
-    | "occurred_label"
-    | "occurred_start"
-    | "occurred_end"
-    | "occurred_timezone"
-    | "date_precision"
-  >,
-) {
+type DateFields = Pick<
+  EntryDetail,
+  | "occurred_label"
+  | "occurred_start"
+  | "occurred_end"
+  | "occurred_timezone"
+  | "date_precision"
+>;
+
+/**
+ * The date in an Entry page's facts line, written out in full as the page reads it:
+ * "Tuesday, October 14, 2026", "Saturday, October 3, 2026 at 7:30 AM", "October 2026", or
+ * "2026", in the zone it was recorded in. A described date reads as its description.
+ */
+export function entryDateLabel(value: DateFields) {
   if (value.occurred_label?.trim()) return value.occurred_label.trim();
-  if (!value.occurred_start) return "Unknown";
-  let timeZone = value.occurred_timezone || "UTC";
-  try {
-    new Intl.DateTimeFormat("en-US", { timeZone }).format();
-  } catch {
-    timeZone = "UTC";
-  }
-  const options: Intl.DateTimeFormatOptions =
-    value.date_precision === "year"
-      ? { year: "numeric" }
-      : value.date_precision === "month"
-        ? { month: "short", year: "numeric" }
-        : value.date_precision === "exact"
-          ? { dateStyle: "medium", timeStyle: "short" }
-          : { dateStyle: "medium" };
-  const format = (raw: string) => {
-    const date = new Date(raw);
-    return Number.isNaN(date.getTime())
-      ? "Unknown"
-      : new Intl.DateTimeFormat("en-US", { ...options, timeZone }).format(date);
+  const occurrence = undescribed(value);
+  const { datePrecision: precision, occurredAt, occurredEnd } = occurrence;
+  if (!occurredAt || precision === "unknown" || !readable(occurredAt))
+    return "Undated";
+  if (precision === "range") return occurrenceTitle(occurrence);
+  const point = (iso: string) => {
+    const single = { ...occurrence, occurredAt: iso, occurredEnd: null };
+    if (precision === "month" || precision === "year")
+      return occurrenceTitle(single);
+    const day = occurrenceTitle({ ...single, datePrecision: "day" });
+    if (precision !== "exact") return day;
+    const time = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      timeZone: occurrence.occurredTimezone,
+    }).format(new Date(iso));
+    return `${day} at ${time}`;
   };
-  return (
-    format(value.occurred_start) +
-    (value.occurred_end ? ` to ${format(value.occurred_end)}` : "")
-  );
+  return occurredEnd && readable(occurredEnd)
+    ? `${point(occurredAt)} to ${point(occurredEnd)}`
+    : point(occurredAt);
+}
+
+/**
+ * A Chapter's span for its page's meta line, at the precision it was recorded: "January 2026 to
+ * now", "2017 to 2021", or its description. Null for a Chapter with no date.
+ */
+export function chapterSpanLabel(value: DateFields) {
+  if (value.occurred_label?.trim()) return value.occurred_label.trim();
+  const occurrence = undescribed(value);
+  const { datePrecision: precision, occurredAt, occurredEnd } = occurrence;
+  if (!occurredAt || precision === "unknown" || !readable(occurredAt))
+    return null;
+  const options: Intl.DateTimeFormatOptions =
+    precision === "year"
+      ? { year: "numeric" }
+      : precision === "month"
+        ? { month: "long", year: "numeric" }
+        : { day: "numeric", month: "long", year: "numeric" };
+  const format = (iso: string) =>
+    new Intl.DateTimeFormat("en-US", {
+      ...options,
+      timeZone: occurrence.occurredTimezone,
+    }).format(new Date(iso));
+  if (!occurredEnd || !readable(occurredEnd))
+    return `${format(occurredAt)} to now`;
+  const start = format(occurredAt);
+  const end = format(occurredEnd);
+  return start === end ? start : `${start} to ${end}`;
+}
+
+function undescribed(value: DateFields) {
+  return storedOccurrence({
+    datePrecision: value.date_precision,
+    occurredEnd: value.occurred_end,
+    occurredLabel: null,
+    occurredStart: value.occurred_start,
+    occurredTimezone: value.occurred_timezone,
+  });
+}
+
+function readable(iso: string) {
+  return Number.isFinite(Date.parse(iso));
 }

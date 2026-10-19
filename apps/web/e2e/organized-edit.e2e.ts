@@ -109,7 +109,7 @@ test("Organized Entries stay editable in place", async ({ page, context }) => {
     ).toBeNull();
     await page.goto(`/items/${id}`);
     const currentItem = page.getByRole("article", {
-      name: "Current item",
+      name: "Entry",
       exact: true,
     });
     await expect(

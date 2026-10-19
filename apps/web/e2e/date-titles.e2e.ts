@@ -166,15 +166,18 @@ test("untitled Entries are named by their date and never wait to be organized", 
       .getByText("Rain all morning, walked anyway.", { exact: true }),
   ).toHaveCount(1);
   // The heading already is the date, so the Date fact would only repeat it.
-  const facts = page.getByRole("article", { name: "Current item" });
-  await expect(facts.getByText("Date", { exact: true })).toHaveCount(0);
+  const facts = page
+    .getByRole("article", { name: "Entry", exact: true })
+    .locator("[data-entry-facts]");
+  await expect(facts.locator("time")).toHaveCount(0);
   await page.goto(`/items/${exactID}`);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText(
     "Saturday, October 3, 2026",
   );
   // An exact moment keeps its Date fact, which adds the time.
-  await expect(facts.getByText("Date", { exact: true })).toBeVisible();
-  await expect(facts).toContainText("Oct 3, 2026, 7:30 AM");
+  await expect(facts.locator("time")).toHaveText(
+    "Saturday, October 3, 2026 at 7:30 AM",
+  );
 
   // Links saved before Needs organizing was retired still open Library.
   for (const retired of ["/inbox", "/library?show=needs-organizing"]) {

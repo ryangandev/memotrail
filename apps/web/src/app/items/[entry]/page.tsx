@@ -11,7 +11,9 @@ import {
   validEntryID,
   type EntryDetail,
 } from "@/lib/data/entry-detail";
+import { loadEntryChapters } from "@/lib/data/entry-chapters";
 import { loadEntryPhotos } from "@/lib/data/entry-photos";
+import { storedOccurrence } from "@/lib/data/occurrence";
 import { chapterPage, loadChapterContents } from "@/lib/data/chapter-contents";
 import {
   loadChapterReview,
@@ -56,7 +58,8 @@ export default async function WikiItemPage({
   searchParams,
 }: ItemPageProps) {
   const { entry } = await params;
-  const page = chapterPage((await searchParams).page);
+  const pageParameter = (await searchParams).page;
+  const page = chapterPage(pageParameter);
   if (!validEntryID(entry)) {
     return (await getAuthenticatedContext()) ? <UnavailableItem /> : null;
   }
@@ -68,10 +71,24 @@ export default async function WikiItemPage({
   // A Chapter lists the Entries dated inside it. One with no calendar date has no days to hold any.
   const isChapter = active && item.item_subtype === "chapter";
   // Photos of an item in Trash show from Trash, where it can be restored.
-  const [photos, contents] = await Promise.all([
+  const [photos, contents, chapters] = await Promise.all([
     active ? loadEntryPhotos(context.client, context.userId, item.id) : null,
     isChapter && item.occurred_start
       ? loadChapterContents(context.client, item.id, page)
+      : null,
+    // An Entry names the Chapters it falls inside.
+    active && !isChapter
+      ? loadEntryChapters(
+          context.client,
+          context.userId,
+          storedOccurrence({
+            datePrecision: item.date_precision,
+            occurredEnd: item.occurred_end,
+            occurredLabel: item.occurred_label,
+            occurredStart: item.occurred_start,
+            occurredTimezone: item.occurred_timezone,
+          }),
+        )
       : null,
   ]);
   const review = isChapter ? await loadReview(context.client, item.id) : null;
@@ -83,16 +100,27 @@ export default async function WikiItemPage({
   if (!failed && !item) return <UnavailableItem />;
 
   return (
-    <PageFrame className={styles.workspace} width="reading">
+    // A Chapter's lists use the wider frame; its writing keeps the reading measure inside it.
+    <PageFrame width={isChapter ? "list" : "reading"}>
       {failed || !item ? (
-        <p role="alert">This Entry could not load. Refresh to try again.</p>
+        <p className={styles.alert} role="alert">
+          This Entry could not load. Refresh to try again.
+        </p>
       ) : (
         <EntryDetailView
           chapter={
             isChapter
-              ? { contents, now: new Date().toISOString(), page, review }
+              ? {
+                  contents,
+                  now: new Date().toISOString(),
+                  page,
+                  review,
+                  // A page number in the address lists every Entry, page by page.
+                  showAll: pageParameter !== undefined,
+                }
               : null
           }
+          chapters={chapters}
           entry={item}
           ownerId={context.viewer.id}
           photos={photos}

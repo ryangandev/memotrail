@@ -134,7 +134,7 @@ test("First Time and Chapter keep separate snapshots of one address", async ({
       .getByRole("button", { name: "Add", exact: true })
       .click();
     await expect(firstTimeEditor).not.toBeVisible();
-    const firstTimeCard = page.getByRole("button", { name: /First hike/ });
+    const firstTimeCard = page.getByRole("link", { name: /First hike/ });
     await expect(
       firstTimeCard.locator('[data-record-card-map="true"]'),
     ).toBeVisible();
@@ -246,7 +246,7 @@ test("First Time and Chapter keep separate snapshots of one address", async ({
     await page.goto("/first-times");
     await expect(
       page
-        .getByRole("button", { name: /First hike/ })
+        .getByRole("link", { name: /First hike/ })
         .locator('[data-record-card-map="true"]'),
     ).toHaveCount(0);
     const remaining = (

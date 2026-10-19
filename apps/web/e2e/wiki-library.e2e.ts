@@ -229,7 +229,7 @@ test("Library browses the complete Life Wiki by Kind and keyword", async ({
       page.getByRole("heading", { name: "Morning reflection", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("article", { name: "Current item" }),
+      page.getByRole("article", { name: "Entry", exact: true }),
     ).toContainText("The calm helped me notice what mattered.");
     await expect(
       page.getByRole("link", { name: /version history/i }),

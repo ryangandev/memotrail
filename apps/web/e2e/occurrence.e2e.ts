@@ -84,8 +84,8 @@ test("Entry editing preserves uncertain dates and edits calendar precision witho
       ).error,
     ).toBeNull();
     await page.goto(`/items/${entryID}`);
-    const card = page.getByRole("article", { name: "Current item" });
-    await expect(card).toContainText("Unknown");
+    const card = page.getByRole("article", { name: "Entry", exact: true });
+    await expect(card).toContainText("Undated");
     await page.getByRole("button", { name: "Edit Entry", exact: true }).click();
     await page
       .getByRole("textbox", { name: "Note", exact: true })
