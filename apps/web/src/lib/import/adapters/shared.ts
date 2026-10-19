@@ -2,11 +2,7 @@ import type { RichTextNode } from "@/lib/data/rich-text";
 import { dateFromTitle } from "../dates";
 import { candidateContentHash } from "../identity";
 import { importLimits } from "../limits";
-import {
-  bodyParts,
-  paragraph,
-  textNodes,
-} from "../rich";
+import { bodyParts, paragraph, textNodes } from "../rich";
 import {
   importWarnings,
   type ImportCandidate,
@@ -157,17 +153,41 @@ export function finalizeDraft(draft: EntryDraft): ScanItem[] {
 // Resources ---------------------------------------------------------------------------------
 
 const photoExtensions = new Set(["jpg", "jpeg", "png", "webp", "heic", "heif"]);
-const otherImageExtensions = new Set(["gif", "bmp", "tif", "tiff", "svg", "ico", "avif"]);
-const videoExtensions = new Set(["mp4", "mov", "m4v", "avi", "mkv", "webm", "mpg", "mpeg", "3gp"]);
-const audioExtensions = new Set(["mp3", "m4a", "wav", "aac", "caf", "ogg", "flac", "aif", "aiff", "amr"]);
+const otherImageExtensions = new Set([
+  "gif",
+  "bmp",
+  "tif",
+  "tiff",
+  "svg",
+  "ico",
+  "avif",
+]);
+const videoExtensions = new Set([
+  "mp4",
+  "mov",
+  "m4v",
+  "avi",
+  "mkv",
+  "webm",
+  "mpg",
+  "mpeg",
+  "3gp",
+]);
+const audioExtensions = new Set([
+  "mp3",
+  "m4a",
+  "wav",
+  "aac",
+  "caf",
+  "ogg",
+  "flac",
+  "aif",
+  "aiff",
+  "amr",
+]);
 
 export type ResourceKind =
-  | "photo"
-  | "image_unsupported"
-  | "video"
-  | "audio"
-  | "pdf"
-  | "file";
+  "photo" | "image_unsupported" | "video" | "audio" | "pdf" | "file";
 
 export function extensionOf(path: string) {
   const name = path.split("/").at(-1) ?? "";
@@ -202,7 +222,9 @@ export function stem(path: string) {
 
 /** Joins and cleans a relative reference against a folder, or null if it leaves the archive. */
 export function resolvePath(folder: string, reference: string): string | null {
-  const parts = (reference.startsWith("/") ? [] : folder.split("/").filter(Boolean));
+  const parts = reference.startsWith("/")
+    ? []
+    : folder.split("/").filter(Boolean);
   for (const segment of reference.split("/")) {
     if (segment === "" || segment === ".") continue;
     if (segment === "..") {
@@ -238,10 +260,7 @@ export class MemberIndex {
     }
   }
 
-  resolve(
-    from: ZipMember,
-    reference: string,
-  ): ZipMember | undefined {
+  resolve(from: ZipMember, reference: string): ZipMember | undefined {
     const decoded = decodeReference(reference.trim()).replaceAll("\\", "/");
     if (!decoded) return undefined;
     const container = from.container ?? "";
@@ -254,8 +273,11 @@ export class MemberIndex {
       if (found) return found;
     }
     if (!decoded.includes("/")) {
-      const matches = this.names.get(decoded.normalize("NFC").toLowerCase()) ?? [];
-      const inContainer = matches.filter((match) => (match.container ?? "") === container);
+      const matches =
+        this.names.get(decoded.normalize("NFC").toLowerCase()) ?? [];
+      const inContainer = matches.filter(
+        (match) => (match.container ?? "") === container,
+      );
       if (inContainer.length === 1) return inContainer[0];
     }
     return undefined;
@@ -282,7 +304,8 @@ export function resolveResources(
   const skipped = new Map(extraSkipped);
   const warnings: string[] = [];
   const seen = new Set<string>();
-  const bump = (kind: string) => skipped.set(kind, (skipped.get(kind) ?? 0) + 1);
+  const bump = (kind: string) =>
+    skipped.set(kind, (skipped.get(kind) ?? 0) + 1);
   for (const image of images) {
     const member = index.resolve(note, image.src);
     if (!member) {
@@ -326,12 +349,17 @@ export function resolveResources(
 export function commonRoot(paths: string[]): string {
   if (paths.length === 0) return "";
   const first = paths[0].split("/")[0];
-  return paths.every((path) => path.includes("/") && path.split("/")[0] === first)
+  return paths.every(
+    (path) => path.includes("/") && path.split("/")[0] === first,
+  )
     ? first
     : "";
 }
 
-export function fileTimeIso(member: ZipMember, exclude: Set<number>): string | null {
+export function fileTimeIso(
+  member: ZipMember,
+  exclude: Set<number>,
+): string | null {
   if (!member.modified) return null;
   const minute = Math.floor(member.modified.getTime() / 60_000);
   if (exclude.has(minute)) return null;

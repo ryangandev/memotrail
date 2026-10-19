@@ -57,15 +57,23 @@ function blocksOf(nodes: RootContent[], ctx: ConvertContext): RichTextNode[] {
 function blockOf(node: RootContent, ctx: ConvertContext): RichTextNode[] {
   switch (node.type) {
     case "paragraph":
-      return [paragraph(trimInline(mergeInline(inlineList(node.children, ctx, [], true))))];
+      return [
+        paragraph(
+          trimInline(mergeInline(inlineList(node.children, ctx, [], true))),
+        ),
+      ];
     case "heading":
       return [
         paragraph(
-          trimInline(mergeInline(inlineList(node.children, ctx, [bold], false))),
+          trimInline(
+            mergeInline(inlineList(node.children, ctx, [bold], false)),
+          ),
         ),
       ];
     case "blockquote":
-      return [blockquote(cleanBlocks(blocksOf((node as Blockquote).children, ctx)))];
+      return [
+        blockquote(cleanBlocks(blocksOf((node as Blockquote).children, ctx))),
+      ];
     case "list":
       return [listOf(node as List, ctx)];
     case "code":
@@ -87,9 +95,7 @@ function blockOf(node: RootContent, ctx: ConvertContext): RichTextNode[] {
 
 function listOf(list: List, ctx: ConvertContext): RichTextNode {
   const items = list.children.map((item) => itemBlocks(item, ctx));
-  return list.ordered
-    ? orderedList(items, list.start ?? 1)
-    : bulletList(items);
+  return list.ordered ? orderedList(items, list.start ?? 1) : bulletList(items);
 }
 
 function itemBlocks(item: ListItem, ctx: ConvertContext): RichTextNode[] {
@@ -109,7 +115,9 @@ function tableOf(table: Table, ctx: ConvertContext): RichTextNode[] {
     const line: RichTextNode[] = [];
     row.children.forEach((cell, index) => {
       if (index > 0) line.push(...textNodes("\t"));
-      line.push(...trimInline(mergeInline(inlineList(cell.children, ctx, [], false))));
+      line.push(
+        ...trimInline(mergeInline(inlineList(cell.children, ctx, [], false))),
+      );
     });
     return paragraph(line);
   });
@@ -188,7 +196,10 @@ function inlineOf(
         if (/^https?:\/\//i.test(src)) {
           // A picture hosted elsewhere is not copied. Its address stays as a link.
           const href = safeHref(src);
-          return textNodes(alt || src, href ? [...marks, linkMark(href)] : marks);
+          return textNodes(
+            alt || src,
+            href ? [...marks, linkMark(href)] : marks,
+          );
         }
         ctx.images.push({ alt, src });
       }

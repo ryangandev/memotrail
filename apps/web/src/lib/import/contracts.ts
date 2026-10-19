@@ -12,7 +12,12 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export type ImportAction =
   | { action: "state" }
-  | { action: "create"; source: ImportSource; fileName: string; fileBytes: number }
+  | {
+      action: "create";
+      source: ImportSource;
+      fileName: string;
+      fileBytes: number;
+    }
   | { action: "scan"; jobId: string }
   | {
       action: "preview";
@@ -94,7 +99,9 @@ export function parseImportAction(value: unknown): ImportAction | null {
   const input = record(value);
   if (!input || typeof input.action !== "string") return null;
   const jobId =
-    typeof input.jobId === "string" && uuid.test(input.jobId) ? input.jobId : null;
+    typeof input.jobId === "string" && uuid.test(input.jobId)
+      ? input.jobId
+      : null;
   switch (input.action) {
     case "state":
     case "cleanup":
@@ -129,7 +136,8 @@ export function parseImportAction(value: unknown): ImportAction | null {
             action: "preview",
             jobId,
             timezone:
-              typeof input.timezone === "string" && validTimezone(input.timezone)
+              typeof input.timezone === "string" &&
+              validTimezone(input.timezone)
                 ? input.timezone
                 : null,
             warningsOnly: input.warningsOnly === true,
@@ -162,6 +170,8 @@ export type ImportJobView = {
   finishedAt: string | null;
   /** Whether the staged ZIP is still there, which is what a retry needs. */
   staged: boolean;
+  /** Where the ZIP goes while it uploads, so an interrupted upload can continue. */
+  stagingPath: string | null;
 };
 
 export type ImportProgress = {

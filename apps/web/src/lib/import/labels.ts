@@ -31,6 +31,16 @@ export const importLabels = {
     photo_upload_failed: "Some photos did not upload",
     unexpected: "Something went wrong",
   } as Record<string, string>,
+  warnings: {
+    body_split: "Long text, split across several Entries",
+    date_unparsed: "Its date could not be read, so it is undated",
+    photo_limit: "Some photos beyond the twelve an Entry holds are left out",
+    photo_missing: "A photo was not found in the export",
+    photo_too_large: "A photo is over 50 MB and is left out",
+    photo_unsupported: "A photo is in a format MemoTrail does not keep",
+    tags_trimmed: "Some tags are left out because there were too many",
+    title_shortened: "A long title was shortened",
+  } as Record<string, string>,
   sources: {
     apple_journal: "Apple Journal",
     apple_notes: "Apple Notes",

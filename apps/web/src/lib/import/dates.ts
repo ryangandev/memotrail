@@ -22,8 +22,7 @@ const monthNames = [
 ];
 const monthPattern =
   "(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:t(?:ember)?)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)";
-const weekdayPattern =
-  "(?:(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*\\.?,?\\s+)?";
+const weekdayPattern = "(?:(?:mon|tue|wed|thu|fri|sat|sun)[a-z]*\\.?,?\\s+)?";
 
 function monthNumber(name: string) {
   const prefix = name.toLowerCase().slice(0, 3);
@@ -69,9 +68,10 @@ function parseClock(text: string): { hour: number; minute: number } | null {
 
 /** "(GMT-7)" or "GMT+5:30" as minutes east of UTC. */
 function parseGmtOffset(text: string): number | null {
-  const match = /^\(?\s*(?:GMT|UTC)\s*([+-])(\d{1,2})(?::?(\d{2}))?\s*\)?$/i.exec(
-    text.trim(),
-  );
+  const match =
+    /^\(?\s*(?:GMT|UTC)\s*([+-])(\d{1,2})(?::?(\d{2}))?\s*\)?$/i.exec(
+      text.trim(),
+    );
   if (!match) return null;
   const minutes = Number(match[2]) * 60 + Number(match[3] ?? 0);
   return (match[1] === "-" ? -1 : 1) * minutes;
@@ -101,10 +101,7 @@ function withClock(
  * is possible. Anything else is null, because a guessed date is worse than no date.
  */
 export function parseDateText(input: string): ImportDate | null {
-  const text = input
-    .replace(/[  ]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  const text = input.replace(/[  ]/g, " ").replace(/\s+/g, " ").trim();
   if (!text) return null;
 
   // 2026-10-18T15:45:00-07:00, with a zone designator: an instant.
@@ -113,7 +110,11 @@ export function parseDateText(input: string): ImportDate | null {
       text,
     );
   if (instant) {
-    const day = dayText(Number(instant[1]), Number(instant[2]), Number(instant[3]));
+    const day = dayText(
+      Number(instant[1]),
+      Number(instant[2]),
+      Number(instant[3]),
+    );
     const parsed = Date.parse(
       `${instant[1]}-${instant[2]}-${instant[3]}T${instant[4]}:${instant[5]}:${instant[6] ?? "00"}${
         instant[7].toUpperCase() === "Z"
@@ -132,13 +133,20 @@ export function parseDateText(input: string): ImportDate | null {
       text,
     );
   if (numeric) {
-    const day = dayText(Number(numeric[1]), Number(numeric[2]), Number(numeric[3]));
+    const day = dayText(
+      Number(numeric[1]),
+      Number(numeric[2]),
+      Number(numeric[3]),
+    );
     return day ? withClock(day, numeric[4], undefined) : null;
   }
 
   // 2026-10 and 2026.
   const monthOnly = /^(\d{4})-(\d{2})$/.exec(text);
-  if (monthOnly && validCalendarDay(Number(monthOnly[1]), Number(monthOnly[2]), 1))
+  if (
+    monthOnly &&
+    validCalendarDay(Number(monthOnly[1]), Number(monthOnly[2]), 1)
+  )
     return { precision: "month", local: `${monthOnly[1]}-${monthOnly[2]}` };
   if (/^\d{4}$/.test(text) && Number(text) >= 1000 && Number(text) <= 2999)
     return { precision: "year", local: text };
@@ -162,9 +170,8 @@ export function parseDateText(input: string): ImportDate | null {
   // The tail may carry a zone: "(GMT-7)".
   let body = text;
   let offsetText: string | undefined;
-  const zone = /\s*(\((?:GMT|UTC)[^)]*\)|(?:GMT|UTC)[+-]\d{1,2}(?::?\d{2})?)$/i.exec(
-    body,
-  );
+  const zone =
+    /\s*(\((?:GMT|UTC)[^)]*\)|(?:GMT|UTC)[+-]\d{1,2}(?::?\d{2})?)$/i.exec(body);
   if (zone) {
     offsetText = zone[1];
     body = body.slice(0, zone.index).trim();
@@ -330,7 +337,9 @@ export function resolveImportDate(
   date: ImportDate,
   options: DateResolutionOptions,
 ): ResolvedImportDate {
-  const fallbackZone = validTimezone(options.timezone) ? options.timezone : "UTC";
+  const fallbackZone = validTimezone(options.timezone)
+    ? options.timezone
+    : "UTC";
   const result = resolveKnownDate(date, fallbackZone);
   if (result) {
     const error = validateOccurrence({
@@ -389,7 +398,12 @@ function resolveKnownDate(
     if ("instant" in date) {
       const ms = Date.parse(date.instant);
       return Number.isFinite(ms)
-        ? finish("exact", new Date(ms).toISOString(), null, zoneOf(date.timezone))
+        ? finish(
+            "exact",
+            new Date(ms).toISOString(),
+            null,
+            zoneOf(date.timezone),
+          )
         : null;
     }
     const zone = fallbackZone;
@@ -401,7 +415,8 @@ function resolveKnownDate(
   }
   const zone = zoneOf(date.timezone);
   const noon = (local: string) => wallTimeToISO(`${local}T12:00:00`, zone);
-  if (date.precision === "day") return finish("day", noon(date.local), null, zone);
+  if (date.precision === "day")
+    return finish("day", noon(date.local), null, zone);
   if (date.precision === "month")
     return finish("month", noon(`${date.local}-01`), null, zone);
   if (date.precision === "year")

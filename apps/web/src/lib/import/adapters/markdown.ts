@@ -39,9 +39,10 @@ const dateNames = [
 ];
 
 /** The date a note's frontmatter states, or unknown with the text it used. */
-export function frontmatterDate(
-  data: Record<string, string | string[]>,
-): { date: ImportDate; unparsed: boolean } {
+export function frontmatterDate(data: Record<string, string | string[]>): {
+  date: ImportDate;
+  unparsed: boolean;
+} {
   const text = frontmatterText(data, dateNames);
   if (!text) return { date: { precision: "unknown" }, unparsed: false };
   const parsed = parseDateText(text);
@@ -80,7 +81,9 @@ export const markdownAdapter: ImportAdapter = {
       );
     const index = new MemberIndex(archive.members);
     const root = commonRoot(
-      archive.members.filter((member) => !member.container).map((member) => member.path),
+      archive.members
+        .filter((member) => !member.container)
+        .map((member) => member.path),
     );
     const clustered = exportTimeCluster(notes.map((note) => note.modified));
     for (const note of notes) {
@@ -115,7 +118,12 @@ async function* scanNote(
     text = await archive.readText(note, importLimits.maxTextFileBytes);
   } catch (error) {
     if (error instanceof ImportError && error.code === "file_too_large") {
-      yield { folderPath, kind: "skipped", reason: "file_too_large", sourceKey: relative };
+      yield {
+        folderPath,
+        kind: "skipped",
+        reason: "file_too_large",
+        sourceKey: relative,
+      };
       return;
     }
     throw error;
@@ -127,7 +135,12 @@ async function* scanNote(
     frontmatterTitle: frontmatterText(data, ["title"]),
   });
   const { date, unparsed } = frontmatterDate(data);
-  const resources = resolveResources(index, note, converted.images, converted.skipped);
+  const resources = resolveResources(
+    index,
+    note,
+    converted.images,
+    converted.skipped,
+  );
   if (
     converted.titleSource === "fallback" &&
     converted.blocks.length === 0 &&

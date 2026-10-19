@@ -76,7 +76,7 @@ class BlockCachedReader extends yauzl.RandomAccessReader {
 
   _readStreamForRange(start: number, end: number): Readable {
     let position = start;
-    const reader = this;
+    const block = (index: number) => this.block(index);
     return new Readable({
       read() {
         if (position >= end) {
@@ -84,7 +84,7 @@ class BlockCachedReader extends yauzl.RandomAccessReader {
           return;
         }
         const index = Math.floor(position / blockSize);
-        reader.block(index).then(
+        block(index).then(
           (data) => {
             const offset = position - index * blockSize;
             const slice = data.subarray(
@@ -126,7 +126,9 @@ const ignoredNames = new Set([".ds_store", "thumbs.db", "desktop.ini"]);
 
 function cleanPath(name: string): string | null {
   const normalized = name.replaceAll("\\", "/").normalize("NFC");
-  const segments = normalized.split("/").filter((segment) => segment !== "" && segment !== ".");
+  const segments = normalized
+    .split("/")
+    .filter((segment) => segment !== "" && segment !== ".");
   if (segments.length === 0 || segments.includes("..")) return null;
   return segments.join("/");
 }
@@ -222,8 +224,7 @@ export class ZipArchive {
       // The high bits of the external attributes hold the Unix file type; 0xA000 is a symlink.
       if (((entry.externalFileAttributes >>> 16) & 0xf000) === 0xa000) continue;
       if (ignoredMember(path)) continue;
-      if (entry.isEncrypted())
-        throw new ImportError("encrypted_archive");
+      if (entry.isEncrypted()) throw new ImportError("encrypted_archive");
       declared += entry.uncompressedSize;
       if (declared > importLimits.maxUncompressedBytes)
         throw new ImportError("archive_too_large");
@@ -254,16 +255,24 @@ export class ZipArchive {
   private async expandNested() {
     const top = this.members.filter((member) => !member.container);
     const zips = top.filter((member) => /\.zip$/i.test(member.path));
-    if (zips.length === 0 || top.some((member) => contentExtension.test(member.path)))
+    if (
+      zips.length === 0 ||
+      top.some((member) => contentExtension.test(member.path))
+    )
       return;
     for (const member of zips) {
       if (member.size > importLimits.maxNestedZipBytes)
         throw new ImportError("archive_too_large");
-      const bytes = await this.readBuffer(member, importLimits.maxNestedZipBytes);
+      const bytes = await this.readBuffer(
+        member,
+        importLimits.maxNestedZipBytes,
+      );
       await this.addContainer(member.path, bytes);
     }
     // The nested archives replace the ZIPs that held them.
-    const kept = this.members.filter((member) => member.container || !zips.includes(member));
+    const kept = this.members.filter(
+      (member) => member.container || !zips.includes(member),
+    );
     this.members.length = 0;
     this.members.push(...kept);
   }
@@ -288,7 +297,8 @@ export class ZipArchive {
   async readText(member: ZipMember, maxBytes: number): Promise<string> {
     const bytes = await this.readBuffer(member, maxBytes);
     // A byte order mark would end up in the first heading.
-    const start = bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? 3 : 0;
+    const start =
+      bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf ? 3 : 0;
     return bytes.toString("utf8", start);
   }
 
@@ -310,7 +320,10 @@ export class ZipArchive {
   }
 
   /** Streams a member into a callback. The callback throwing stops the read. */
-  private pipe(member: ZipMember, onChunk: (chunk: Buffer) => void): Promise<void> {
+  private pipe(
+    member: ZipMember,
+    onChunk: (chunk: Buffer) => void,
+  ): Promise<void> {
     const container = this.containers.get(member.container ?? "");
     const entry = container?.entries.get(member.path);
     if (!container || !entry) throw new ImportError("unsupported_archive");

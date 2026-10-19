@@ -2,7 +2,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { importMaxZipBytes } from "./limits";
 import { ImportError, ZipArchive, looksLikeZip, type RangeSource } from "./zip";
 
-export const stagingBucket = "import-staging";
+import { stagingBucket } from "./bucket";
+
+export { stagingBucket };
 
 type Fetch = typeof fetch;
 
@@ -34,7 +36,9 @@ export async function httpRangeSource(
       throw new ImportError("storage_unavailable");
     if (!response.ok) throw new Error(`storage ${response.status}`);
     await response.arrayBuffer();
-    const total = /\/(\d+)$/.exec(response.headers.get("content-range") ?? "")?.[1];
+    const total = /\/(\d+)$/.exec(
+      response.headers.get("content-range") ?? "",
+    )?.[1];
     const length = Number(total ?? response.headers.get("content-length"));
     if (!Number.isSafeInteger(length) || length < 1)
       throw new ImportError("storage_unavailable");
@@ -67,7 +71,10 @@ export async function openStagedArchive(
     .createSignedUrl(stagingPath, 3600);
   if (signed.error || !signed.data?.signedUrl)
     throw new ImportError("storage_unavailable");
-  const source = await httpRangeSource(signed.data.signedUrl, options.fetchImpl);
+  const source = await httpRangeSource(
+    signed.data.signedUrl,
+    options.fetchImpl,
+  );
   if (source.size > maxBytes) throw new ImportError("too_large");
   const head = await source.read(0, Math.min(4, source.size));
   if (!looksLikeZip(head)) throw new ImportError("unsupported_archive");
@@ -80,7 +87,9 @@ export async function removeStagedFiles(
   paths: string[],
 ): Promise<string[]> {
   if (paths.length === 0) return [];
-  const { data, error } = await client.storage.from(stagingBucket).remove(paths);
+  const { data, error } = await client.storage
+    .from(stagingBucket)
+    .remove(paths);
   if (error) return [];
   // Removing a file that is already gone is not an error, so every path counts as removed.
   void data;

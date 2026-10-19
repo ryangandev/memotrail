@@ -47,7 +47,9 @@ describe("scanArchive", () => {
       "Trips",
       "Trips/Rome",
     ]);
-    expect(totals.folders.find((f) => f.path.join("/") === "Trips")?.entries).toBe(2);
+    expect(
+      totals.folders.find((f) => f.path.join("/") === "Trips")?.entries,
+    ).toBe(2);
     expect(stored.every((row) => row.status === "pending")).toBe(true);
   });
 
@@ -67,7 +69,9 @@ describe("scanArchive", () => {
     await expect(scan({ "readme.txt": "not a note" })).rejects.toMatchObject({
       code: "empty_import",
     });
-    await expect(scan({ "readme.txt": "x" })).rejects.toBeInstanceOf(ImportError);
+    await expect(scan({ "readme.txt": "x" })).rejects.toBeInstanceOf(
+      ImportError,
+    );
   });
 
   it("counts a repeated source key once", async () => {

@@ -44,9 +44,7 @@ export function splitFrontmatter(text: string): {
     if (item && listKey) {
       const current = data[listKey];
       const value = unquote(item[1]);
-      data[listKey] = Array.isArray(current)
-        ? [...current, value]
-        : [value];
+      data[listKey] = Array.isArray(current) ? [...current, value] : [value];
       continue;
     }
     const pair = /^([A-Za-z0-9_][A-Za-z0-9_ .-]*?)\s*:\s*(.*)$/.exec(line);

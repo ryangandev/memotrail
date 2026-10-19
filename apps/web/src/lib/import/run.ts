@@ -47,10 +47,7 @@ export type ImportEntryArgs = {
 };
 
 export type ImportEntryOutcome =
-  | "created"
-  | "unchanged"
-  | "changed_in_source"
-  | "deleted_earlier";
+  "created" | "unchanged" | "changed_in_source" | "deleted_earlier";
 
 /** A failure with a code the item's result can carry. */
 export class ImportItemError extends Error {
@@ -122,7 +119,13 @@ export type RunResult =
 
 export function sniffImageMime(
   head: Uint8Array,
-): "image/jpeg" | "image/png" | "image/webp" | "image/heic" | "image/heif" | null {
+):
+  | "image/jpeg"
+  | "image/png"
+  | "image/webp"
+  | "image/heic"
+  | "image/heif"
+  | null {
   const ascii = (start: number, end: number) =>
     String.fromCharCode(...head.subarray(start, end));
   if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff)
@@ -151,8 +154,11 @@ export function buildEntryArgs(
   });
   const rich = createEntryRichText(payload.bodyRich);
   const text = rich?.text ?? plainTextFromDocument(payload.bodyRich);
-  let { body, bodyRich } = trimEntryNote(text, rich);
-  if (!bodyRich && body) bodyRich = createEntryRichText(plainTextDocument(body));
+  const trimmed = trimEntryNote(text, rich);
+  const { body } = trimmed;
+  const bodyRich =
+    trimmed.bodyRich ??
+    (body ? createEntryRichText(plainTextDocument(body)) : null);
   return {
     body,
     bodyRich,
@@ -217,13 +223,22 @@ export async function runImport(input: RunInput): Promise<RunResult> {
 }
 
 /** Returns true when storage is full and the job should pause. */
-async function processItem(item: ClaimedItem, input: RunInput): Promise<boolean> {
+async function processItem(
+  item: ClaimedItem,
+  input: RunInput,
+): Promise<boolean> {
   const { gateway } = input;
   let entryId = item.entryId;
   try {
     if (item.status === "pending") {
       if (!item.payload || !item.contentHash) {
-        await gateway.finishItem(item.itemId, "failed", "payload_missing", false, null);
+        await gateway.finishItem(
+          item.itemId,
+          "failed",
+          "payload_missing",
+          false,
+          null,
+        );
         return false;
       }
       const result = await gateway.importEntry(
@@ -235,7 +250,13 @@ async function processItem(item: ClaimedItem, input: RunInput): Promise<boolean>
       if (!item.media?.photos.length) return false;
     }
     if (!entryId) {
-      await gateway.finishItem(item.itemId, "failed", "entry_missing", false, null);
+      await gateway.finishItem(
+        item.itemId,
+        "failed",
+        "entry_missing",
+        false,
+        null,
+      );
       return false;
     }
     const media = item.media ?? { photos: [] };
@@ -294,7 +315,9 @@ async function importPhotos(
         } else {
           photo.status = "failed";
           photo.reason =
-            error instanceof ImportItemError ? error.code : "photo_upload_failed";
+            error instanceof ImportItemError
+              ? error.code
+              : "photo_upload_failed";
         }
       }
     }
@@ -338,7 +361,11 @@ async function importPhoto(
   if (!objectPath) throw new ImportItemError("photo_unsupported");
 
   let last: unknown;
-  for (let attempt = 0; attempt < importLimits.photoUploadAttempts; attempt += 1) {
+  for (
+    let attempt = 0;
+    attempt < importLimits.photoUploadAttempts;
+    attempt += 1
+  ) {
     try {
       await input.gateway.uploadOriginal(objectPath, bytes, mimeType);
       // Upload first, register second, like capture: no row ever points at missing bytes.
@@ -358,5 +385,7 @@ async function importPhoto(
       await sleep(250 * 2 ** attempt);
     }
   }
-  throw last instanceof Error ? last : new ImportItemError("photo_upload_failed", true);
+  throw last instanceof Error
+    ? last
+    : new ImportItemError("photo_upload_failed", true);
 }

@@ -102,7 +102,11 @@ class Totals {
         existing.entries += 1;
         existing.photos += candidate.photos.length;
       } else if (this.folders.size < importLimits.maxPreviewFolders) {
-        this.folders.set(key, { entries: 1, path, photos: candidate.photos.length });
+        this.folders.set(key, {
+          entries: 1,
+          path,
+          photos: candidate.photos.length,
+        });
       } else this.foldersTruncated = true;
     }
   }
@@ -172,8 +176,7 @@ export async function scanArchive(
     if (batch.length >= importLimits.scanBatch) await flush();
   }
   await flush();
-  if (totals.entries === 0)
-    throw new ImportError("empty_import");
+  if (totals.entries === 0) throw new ImportError("empty_import");
   const result = totals.toJson(detected);
   return result;
 }

@@ -46,15 +46,20 @@ export function textNodes(
   marks: RichTextMark[] = [],
 ): RichTextNode[] {
   const nodes: RichTextNode[] = [];
-  text.replace(/\r\n?/g, "\n").split("\n").forEach((line, index) => {
-    if (index > 0) nodes.push({ type: "hardBreak" });
-    if (line.length > 0)
-      nodes.push({
-        ...(marks.length > 0 ? { marks: marks.map((mark) => ({ ...mark })) } : {}),
-        text: line,
-        type: "text",
-      });
-  });
+  text
+    .replace(/\r\n?/g, "\n")
+    .split("\n")
+    .forEach((line, index) => {
+      if (index > 0) nodes.push({ type: "hardBreak" });
+      if (line.length > 0)
+        nodes.push({
+          ...(marks.length > 0
+            ? { marks: marks.map((mark) => ({ ...mark })) }
+            : {}),
+          text: line,
+          type: "text",
+        });
+    });
   return nodes;
 }
 
@@ -131,7 +136,10 @@ export function orderedList(items: RichTextNode[][], start = 1): RichTextNode {
 export function listItem(blocks: RichTextNode[]): RichTextNode {
   const content = blocks.length > 0 ? blocks : [{ type: "paragraph" }];
   return {
-    content: content[0].type === "paragraph" ? content : [{ type: "paragraph" }, ...content],
+    content:
+      content[0].type === "paragraph"
+        ? content
+        : [{ type: "paragraph" }, ...content],
     type: "listItem",
   };
 }
@@ -143,7 +151,10 @@ export function blockquote(blocks: RichTextNode[]): RichTextNode {
   };
 }
 
-export function codeBlock(text: string, language?: string | null): RichTextNode {
+export function codeBlock(
+  text: string,
+  language?: string | null,
+): RichTextNode {
   const attrs =
     language && /^[A-Za-z0-9_+#.-]{1,40}$/.test(language)
       ? { attrs: { language } }
@@ -162,7 +173,9 @@ export function paragraphsFromText(text: string): RichTextNode[] {
 }
 
 function countNodes(node: RichTextNode): number {
-  return 1 + (node.content ?? []).reduce((sum, child) => sum + countNodes(child), 0);
+  return (
+    1 + (node.content ?? []).reduce((sum, child) => sum + countNodes(child), 0)
+  );
 }
 
 function measure(block: RichTextNode) {
@@ -211,7 +224,8 @@ export function bodyParts(blocks: RichTextNode[]): BodyPart[] {
       size.bytes > importLimits.partBytes
     ) {
       const text = plainTextFromDocument(docOf([block]));
-      for (const chunk of chunkText(text)) fitted.push(...paragraphsFromText(chunk));
+      for (const chunk of chunkText(text))
+        fitted.push(...paragraphsFromText(chunk));
     } else fitted.push(block);
   }
 

@@ -48,7 +48,8 @@ describe("ZipArchive", () => {
 
   it("reads through ranged reads and only the blocks it needs", async () => {
     const files: Record<string, string> = {};
-    for (let i = 0; i < 50; i += 1) files[`n/${i}.md`] = `note ${i} `.repeat(20);
+    for (let i = 0; i < 50; i += 1)
+      files[`n/${i}.md`] = `note ${i} `.repeat(20);
     const bytes = await buildZip({ ...files, "photo.png": tinyPng });
     const calls: [number, number][] = [];
     const source: RangeSource = {
@@ -79,14 +80,20 @@ describe("ZipArchive", () => {
   });
 
   it("opens a ZIP of part ZIPs one level deep", async () => {
-    const part1 = await buildZip({ "Page aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md": "# A" });
-    const part2 = await buildZip({ "Page bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.md": "# B" });
+    const part1 = await buildZip({
+      "Page aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md": "# A",
+    });
+    const part2 = await buildZip({
+      "Page bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.md": "# B",
+    });
     const zip = await buildZip({
       "Export-Part-1.zip": part1,
       "Export-Part-2.zip": part2,
     });
     const archive = await ZipArchive.open(zip);
-    expect(archive.members.map((member) => [member.container, member.path])).toEqual([
+    expect(
+      archive.members.map((member) => [member.container, member.path]),
+    ).toEqual([
       ["Export-Part-1.zip", "Page aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md"],
       ["Export-Part-2.zip", "Page bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.md"],
     ]);
@@ -100,7 +107,10 @@ describe("ZipArchive", () => {
 
   it("leaves a ZIP attachment inside a notes export alone", async () => {
     const attachment = await buildZip({ "inner.md": "inside" });
-    const zip = await buildZip({ "notes.md": "text", "backup.zip": attachment });
+    const zip = await buildZip({
+      "notes.md": "text",
+      "backup.zip": attachment,
+    });
     const archive = await ZipArchive.open(zip);
     expect(archive.members.map((member) => member.path).sort()).toEqual([
       "backup.zip",

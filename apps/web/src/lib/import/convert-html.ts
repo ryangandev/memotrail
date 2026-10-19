@@ -116,7 +116,10 @@ function elementChildren(node: Node): Node[] {
  * scripts and styles are dropped, and nothing in the HTML survives as markup: only the node
  * kinds the Entry supports are produced.
  */
-export function htmlToBlocks(html: string, ctx: ConvertContext): RichTextNode[] {
+export function htmlToBlocks(
+  html: string,
+  ctx: ConvertContext,
+): RichTextNode[] {
   const fragment = parseFragment(html);
   return cleanBlocks(containerBlocks(fragment.childNodes, ctx, []));
 }
@@ -136,12 +139,18 @@ export function htmlText(html: string): string {
     }
   };
   walk(parseFragment(html).childNodes);
-  return out.join("").replace(/[ \t]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
+  return out
+    .join("")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n\s*\n+/g, "\n")
+    .trim();
 }
 
 /** Removes blocks with no words. Code blocks keep their blank lines. */
 export function cleanBlocks(blocks: RichTextNode[]): RichTextNode[] {
-  return blocks.filter((block) => block.type === "codeBlock" || !isBlankBlock(block));
+  return blocks.filter(
+    (block) => block.type === "codeBlock" || !isBlankBlock(block),
+  );
 }
 
 /** Children of a container: runs of inline content become paragraphs, blocks stay blocks. */
@@ -187,7 +196,9 @@ function blockElement(
     case "hr":
       return [];
     case "p":
-      return [paragraph(trimInline(mergeInline(inlineList(children, ctx, marks))))];
+      return [
+        paragraph(trimInline(mergeInline(inlineList(children, ctx, marks)))),
+      ];
     case "blockquote":
     case "aside":
     case "details":
@@ -200,13 +211,18 @@ function blockElement(
     case "ol": {
       const items = children
         .filter((child) => isElement(child) && child.tagName === "li")
-        .map((child) => cleanBlocks(containerBlocks(elementChildren(child), ctx, marks)));
+        .map((child) =>
+          cleanBlocks(containerBlocks(elementChildren(child), ctx, marks)),
+        );
       if (items.length === 0) return [];
       const start = Number(attribute(element, "start"));
       return [
         tag === "ul"
           ? bulletList(items)
-          : orderedList(items, Number.isInteger(start) && start > 0 ? start : 1),
+          : orderedList(
+              items,
+              Number.isInteger(start) && start > 0 ? start : 1,
+            ),
       ];
     }
     case "li":
@@ -235,8 +251,13 @@ function tableBlocks(
   find(elementChildren(table));
   return rows.map((row) => {
     const cells = elementChildren(row)
-      .filter((cell) => isElement(cell) && (cell.tagName === "td" || cell.tagName === "th"))
-      .map((cell) => trimInline(mergeInline(inlineList(elementChildren(cell), ctx, marks))));
+      .filter(
+        (cell) =>
+          isElement(cell) && (cell.tagName === "td" || cell.tagName === "th"),
+      )
+      .map((cell) =>
+        trimInline(mergeInline(inlineList(elementChildren(cell), ctx, marks))),
+      );
     const line: RichTextNode[] = [];
     cells.forEach((cell, index) => {
       if (index > 0) line.push(...textNodes("\t"));
@@ -306,7 +327,11 @@ function inlineNode(
       return inlineList(children, ctx, [...marks, codeMark]);
     case "a": {
       const href = safeHref(attribute(node, "href"));
-      const inner = inlineList(children, ctx, href ? [...marks, linkMark(href)] : marks);
+      const inner = inlineList(
+        children,
+        ctx,
+        href ? [...marks, linkMark(href)] : marks,
+      );
       return inner;
     }
     case "img": {

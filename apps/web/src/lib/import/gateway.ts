@@ -12,11 +12,18 @@ import type { ImportPayload } from "./scan";
 import type { ImportItemMedia, ImportPhotoState } from "./types";
 import type { ZipArchive } from "./zip";
 
-type DatabaseError = { code?: string; message?: string; status?: number } | null;
+type DatabaseError = {
+  code?: string;
+  message?: string;
+  status?: number;
+} | null;
 
 function failure(error: DatabaseError): Error {
   const message = error?.message ?? "";
-  if (message.includes("import_lease_lost") || message.includes("import_job_not_running"))
+  if (
+    message.includes("import_lease_lost") ||
+    message.includes("import_job_not_running")
+  )
     return new ImportLeaseLost();
   return new Error(message || "The import could not reach the database.");
 }
@@ -85,17 +92,20 @@ export function supabaseGateway(
       });
       if (error) {
         const message = error.message ?? "";
-        if (message.includes("import_job_not_running")) throw new ImportLeaseLost();
+        if (message.includes("import_job_not_running"))
+          throw new ImportLeaseLost();
         // The database refused this Entry's content. That is final for this item.
-        if (error.code === "22023" || message.includes("entry_content_too_long"))
+        if (
+          error.code === "22023" ||
+          message.includes("entry_content_too_long")
+        )
           throw new ImportItemError(
             /^[a-z][a-z0-9_]{0,63}$/.test(message) ? message : "invalid_entry",
           );
         throw failure(error);
       }
       const row = (Array.isArray(data) ? data[0] : data) as
-        | { saved_entry_id: string | null; outcome: string }
-        | undefined;
+        { saved_entry_id: string | null; outcome: string } | undefined;
       if (!row) throw new ImportItemError("entry_unavailable", true);
       return {
         entryId: row.saved_entry_id,
@@ -132,17 +142,24 @@ export function supabaseGateway(
     },
 
     async uploadOriginal(path, bytes, mimeType) {
-      const result = await client.storage.from("entry-media").upload(path, bytes, {
-        cacheControl: "3600",
-        contentType: mimeType,
-        upsert: false,
-      });
+      const result = await client.storage
+        .from("entry-media")
+        .upload(path, bytes, {
+          cacheControl: "3600",
+          contentType: mimeType,
+          upsert: false,
+        });
       if (!result.error) return;
-      const status = Number((result.error as { statusCode?: string }).statusCode);
+      const status = Number(
+        (result.error as { statusCode?: string }).statusCode,
+      );
       const message = result.error.message ?? "";
       // An interrupted upload may already be there. Registration checks the object.
       if (status === 409 || /already exists|duplicate/i.test(message)) return;
-      if (status === 507 || /quota|insufficient storage|storage limit/i.test(message))
+      if (
+        status === 507 ||
+        /quota|insufficient storage|storage limit/i.test(message)
+      )
         throw new ImportQuotaError(message);
       throw new Error(message);
     },
@@ -172,7 +189,10 @@ export function supabaseGateway(
 }
 
 /** Reads a job's photos out of its archive. */
-export function archivePhotoReader(archive: ZipArchive, maxBytes: number): PhotoReader {
+export function archivePhotoReader(
+  archive: ZipArchive,
+  maxBytes: number,
+): PhotoReader {
   return {
     async read(photo: ImportPhotoState) {
       const member = archive.find(photo.zipPath, photo.container);

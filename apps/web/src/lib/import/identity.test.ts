@@ -5,7 +5,12 @@ import {
   importEntryId,
   uuidV5,
 } from "./identity";
-import { defaultImportOptions, entryTagNames, normalizeTagName, uniqueTagNames } from "./tags";
+import {
+  defaultImportOptions,
+  entryTagNames,
+  normalizeTagName,
+  uniqueTagNames,
+} from "./tags";
 
 const owner = "10000000-0000-4000-8000-000000000001";
 
@@ -19,20 +24,28 @@ describe("deterministic identity", () => {
   it("gives the same Entry the same ID every time", () => {
     const id = importEntryId(owner, "markdown", "Notes/a.md");
     expect(importEntryId(owner, "markdown", "Notes/a.md")).toBe(id);
-    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    expect(id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
   });
 
   it("differs by owner, source, and key", () => {
     const id = importEntryId(owner, "markdown", "a");
-    expect(importEntryId("20000000-0000-4000-8000-000000000002", "markdown", "a")).not.toBe(id);
+    expect(
+      importEntryId("20000000-0000-4000-8000-000000000002", "markdown", "a"),
+    ).not.toBe(id);
     expect(importEntryId(owner, "notion", "a")).not.toBe(id);
     expect(importEntryId(owner, "markdown", "b")).not.toBe(id);
   });
 
   it("derives a photo's ID from its Entry and file", () => {
     const entry = importEntryId(owner, "markdown", "a");
-    expect(importAttachmentId(entry, "|p.png")).toBe(importAttachmentId(entry, "|p.png"));
-    expect(importAttachmentId(entry, "|p.png")).not.toBe(importAttachmentId(entry, "|q.png"));
+    expect(importAttachmentId(entry, "|p.png")).toBe(
+      importAttachmentId(entry, "|p.png"),
+    );
+    expect(importAttachmentId(entry, "|p.png")).not.toBe(
+      importAttachmentId(entry, "|q.png"),
+    );
   });
 });
 
@@ -62,10 +75,15 @@ describe("content hash", () => {
 
   it("changes when the writing, date, or title does", () => {
     const hash = candidateContentHash(base);
-    expect(candidateContentHash({ ...base, plainText: "Hello there" })).not.toBe(hash);
+    expect(
+      candidateContentHash({ ...base, plainText: "Hello there" }),
+    ).not.toBe(hash);
     expect(candidateContentHash({ ...base, title: "Other" })).not.toBe(hash);
     expect(
-      candidateContentHash({ ...base, date: { local: "2024-05-13", precision: "day" } }),
+      candidateContentHash({
+        ...base,
+        date: { local: "2024-05-13", precision: "day" },
+      }),
     ).not.toBe(hash);
   });
 });
@@ -79,7 +97,9 @@ describe("tags", () => {
 
   it("removes repeats ignoring case and limits the count", () => {
     expect(uniqueTagNames(["Trip", "trip", " TRIP "]).names).toEqual(["Trip"]);
-    const many = uniqueTagNames(Array.from({ length: 90 }, (_, i) => `tag ${i}`));
+    const many = uniqueTagNames(
+      Array.from({ length: 90 }, (_, i) => `tag ${i}`),
+    );
     expect(many.names).toHaveLength(70);
     expect(many.trimmed).toBe(true);
   });
@@ -91,7 +111,10 @@ describe("tags", () => {
       source: "notion" as const,
       tagNames: ["Trip"],
     };
-    const options = defaultImportOptions("UTC", { distinctParentFolders: 3, notionDateProperty: null });
+    const options = defaultImportOptions("UTC", {
+      distinctParentFolders: 3,
+      notionDateProperty: null,
+    });
     expect(entryTagNames(candidate, options).names).toEqual([
       "Trip",
       "Status",
@@ -100,15 +123,22 @@ describe("tags", () => {
     ]);
     expect(
       entryTagNames(candidate, {
-        tags: { folders: false, marker: false, properties: false, source: true },
+        tags: {
+          folders: false,
+          marker: false,
+          properties: false,
+          source: true,
+        },
       }).names,
     ).toEqual(["Trip"]);
   });
 
   it("turns folder tags off by default when there are too many folders", () => {
     expect(
-      defaultImportOptions("UTC", { distinctParentFolders: 31, notionDateProperty: null }).tags
-        .folders,
+      defaultImportOptions("UTC", {
+        distinctParentFolders: 31,
+        notionDateProperty: null,
+      }).tags.folders,
     ).toBe(false);
   });
 });

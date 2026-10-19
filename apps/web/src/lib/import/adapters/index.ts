@@ -30,13 +30,3 @@ export function detectSource(
   }
   return best;
 }
-
-/** Whether what was detected agrees with the source the person chose. */
-export function detectionAgrees(
-  chosen: ImportSource,
-  detected: { source: ImportSource; confidence: number } | null,
-) {
-  if (!detected || detected.confidence < 0.7) return true;
-  if (chosen === "apple_notes") return detected.source === "markdown";
-  return detected.source === chosen;
-}

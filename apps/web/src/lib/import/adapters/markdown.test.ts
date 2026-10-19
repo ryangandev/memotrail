@@ -72,17 +72,21 @@ describe("Markdown adapter", () => {
       }),
     );
     const odd = items.find((item) => item.sourceKey === "odd.md")!;
-    expect(odd.date).toEqual({ label: "sometime last spring", precision: "unknown" });
+    expect(odd.date).toEqual({
+      label: "sometime last spring",
+      precision: "unknown",
+    });
     expect(odd.warnings).toContain("date_unparsed");
-    expect(items.find((item) => item.sourceKey === "plain.md")!.date.precision).toBe(
-      "unknown",
-    );
+    expect(
+      items.find((item) => item.sourceKey === "plain.md")!.date.precision,
+    ).toBe("unknown");
   });
 
   it("flattens wikilinks and collects pictures from both syntaxes", async () => {
     const [note] = entries(
       await scan({
-        "Notes/Day.md": "See [[Other note|my friend]] and [[Plain]].\n\n![[pic one.png]]\n\n![Sunset over the bay with boats](../Assets/sun%20set.png)",
+        "Notes/Day.md":
+          "See [[Other note|my friend]] and [[Plain]].\n\n![[pic one.png]]\n\n![Sunset over the bay with boats](../Assets/sun%20set.png)",
         "Assets/sun set.png": tinyPng,
         "Notes/pic one.png": tinyPng,
       }),
@@ -100,7 +104,8 @@ describe("Markdown adapter", () => {
   it("counts videos and other files as not imported and keeps external pictures as links", async () => {
     const [note] = entries(
       await scan({
-        "a.md": "![clip](clip.mov)\n\n![](https://example.com/x.png)\n\n![doc](file.pdf)",
+        "a.md":
+          "![clip](clip.mov)\n\n![](https://example.com/x.png)\n\n![doc](file.pdf)",
         "clip.mov": "x",
         "file.pdf": "x",
       }),
@@ -115,7 +120,10 @@ describe("Markdown adapter", () => {
   });
 
   it("splits a very long body into parts with their own keys", async () => {
-    const paragraphs = Array.from({ length: 60 }, (_, i) => `Paragraph ${i}. ${"word ".repeat(200)}`);
+    const paragraphs = Array.from(
+      { length: 60 },
+      (_, i) => `Paragraph ${i}. ${"word ".repeat(200)}`,
+    );
     const items = entries(
       await scan({ "long.md": `# Long one\n\n${paragraphs.join("\n\n")}` }),
     );
@@ -124,7 +132,8 @@ describe("Markdown adapter", () => {
       items.map((_, i) => (i === 0 ? "long.md" : `long.md#${i + 1}`)),
     );
     expect(items[0].title).toBe(`Long one (1/${items.length})`);
-    for (const item of items) expect(text(item).length).toBeLessThanOrEqual(50_000);
+    for (const item of items)
+      expect(text(item).length).toBeLessThanOrEqual(50_000);
   });
 
   it("skips an empty note and keeps a photo-only note", async () => {
@@ -144,10 +153,7 @@ describe("Markdown adapter", () => {
 
   it("keys Apple Notes by content and Markdown by an explicit id when there is one", async () => {
     const notes = entries(
-      await scan(
-        { "Recipes/Soup.md": "# Soup\n\nBoil water." },
-        "apple_notes",
-      ),
+      await scan({ "Recipes/Soup.md": "# Soup\n\nBoil water." }, "apple_notes"),
     );
     expect(notes[0].sourceKey).toMatch(/^note:[a-f0-9]{32}$/);
     expect(notes[0].folderPath).toEqual(["Recipes"]);

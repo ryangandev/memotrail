@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createEntryRichText, plainTextFromDocument } from "@/lib/data/rich-text";
+import {
+  createEntryRichText,
+  plainTextFromDocument,
+} from "@/lib/data/rich-text";
 import { htmlToBlocks, newContext } from "./convert-html";
 import { markdownToBlocks } from "./convert-markdown";
 import { bodyParts, docOf, paragraph, safeHref, textNodes } from "./rich";
@@ -75,12 +78,18 @@ describe("rich text for imports", () => {
   it("cuts a single enormous paragraph into pieces", () => {
     const parts = bodyParts([paragraph(textNodes("word ".repeat(30_000)))]);
     expect(parts.length).toBeGreaterThan(1);
-    for (const part of parts) expect(part.body.length).toBeLessThanOrEqual(50_000);
+    for (const part of parts)
+      expect(part.body.length).toBeLessThanOrEqual(50_000);
   });
 
   it("falls back to plain text when there are too many formatted runs", () => {
-    const runs = Array.from({ length: 5_000 }, (_, i) =>
-      textNodes(`w${i}`, i % 2 ? [{ type: "bold" }] : [{ type: "italic" }])[0],
+    const runs = Array.from(
+      { length: 5_000 },
+      (_, i) =>
+        textNodes(
+          `w${i}`,
+          i % 2 ? [{ type: "bold" }] : [{ type: "italic" }],
+        )[0],
     );
     const parts = bodyParts([paragraph(runs)]);
     for (const part of parts) expect(part.richText).not.toBeNull();

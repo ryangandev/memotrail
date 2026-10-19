@@ -1,4 +1,7 @@
-import { entryPhotoLimit, entryPhotoSizeLimit } from "@/lib/data/entry-photo-input";
+import {
+  entryPhotoLimit,
+  entryPhotoSizeLimit,
+} from "@/lib/data/entry-photo-input";
 import { entryBodyLimit, entryTitleLimit } from "@/lib/data/inbox-input";
 import { tagNameCountLimit, tagNameLengthLimit } from "@/lib/data/organization";
 

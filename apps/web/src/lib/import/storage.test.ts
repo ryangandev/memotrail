@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { httpRangeSource, openStagedArchive, removeStagedFiles } from "./storage";
+import {
+  httpRangeSource,
+  openStagedArchive,
+  removeStagedFiles,
+} from "./storage";
 import { buildZip } from "./test-zip";
 
 /** A server that honors Range, like Supabase Storage. */
@@ -36,7 +40,10 @@ describe("httpRangeSource", () => {
   it("learns the size from Content-Range and reads exact ranges", async () => {
     const bytes = Buffer.from("0123456789abcdef");
     const log: string[] = [];
-    const source = await httpRangeSource("https://x.test/f", rangeFetch(bytes, log));
+    const source = await httpRangeSource(
+      "https://x.test/f",
+      rangeFetch(bytes, log),
+    );
     expect(source.size).toBe(16);
     expect((await source.read(4, 8)).toString()).toBe("4567");
     expect(log).toEqual(["bytes=0-0", "bytes=4-7"]);
@@ -58,8 +65,11 @@ describe("httpRangeSource", () => {
   });
 
   it("reports a missing object as unavailable without retrying forever", async () => {
-    const fetchImpl = (async () => new Response("", { status: 404 })) as unknown as typeof fetch;
-    await expect(httpRangeSource("https://x.test/f", fetchImpl)).rejects.toMatchObject({
+    const fetchImpl = (async () =>
+      new Response("", { status: 404 })) as unknown as typeof fetch;
+    await expect(
+      httpRangeSource("https://x.test/f", fetchImpl),
+    ).rejects.toMatchObject({
       code: "storage_unavailable",
     });
   });
@@ -97,15 +107,20 @@ describe("openStagedArchive", () => {
   });
 
   it("reports an object it cannot sign", async () => {
-    await expect(openStagedArchive(clientFor(null), "p")).rejects.toMatchObject({
-      code: "storage_unavailable",
-    });
+    await expect(openStagedArchive(clientFor(null), "p")).rejects.toMatchObject(
+      {
+        code: "storage_unavailable",
+      },
+    );
   });
 });
 
 describe("removeStagedFiles", () => {
   it("does nothing for no paths and reports removed paths", async () => {
     expect(await removeStagedFiles(clientFor(null), [])).toEqual([]);
-    expect(await removeStagedFiles(clientFor(null), ["a", "b"])).toEqual(["a", "b"]);
+    expect(await removeStagedFiles(clientFor(null), ["a", "b"])).toEqual([
+      "a",
+      "b",
+    ]);
   });
 });

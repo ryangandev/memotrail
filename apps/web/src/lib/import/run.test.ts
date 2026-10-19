@@ -148,7 +148,10 @@ const photos = {
     photo.zipPath.startsWith("bad") ? Buffer.from("not an image") : tinyPng,
 };
 
-function run(gateway: ImportGateway, extra: Partial<Parameters<typeof runImport>[0]> = {}) {
+function run(
+  gateway: ImportGateway,
+  extra: Partial<Parameters<typeof runImport>[0]> = {},
+) {
   return runImport({
     gateway,
     options,
@@ -193,7 +196,10 @@ describe("buildEntryArgs", () => {
       }),
     });
     const base = { ownerId, source: "markdown" } as const;
-    const left = buildEntryArgs(claimed, claimed.payload!, { ...base, options });
+    const left = buildEntryArgs(claimed, claimed.payload!, {
+      ...base,
+      options,
+    });
     expect(left.datePrecision).toBe("unknown");
     expect(left.occurredStart).toBeNull();
     const withFile = buildEntryArgs(claimed, claimed.payload!, {
@@ -204,13 +210,18 @@ describe("buildEntryArgs", () => {
   });
 
   it("passes a location as a manual address", () => {
-    const claimed = item(3, { payload: payload({ locationLabel: "Lisbon, Portugal" }) });
+    const claimed = item(3, {
+      payload: payload({ locationLabel: "Lisbon, Portugal" }),
+    });
     const args = buildEntryArgs(claimed, claimed.payload!, {
       options,
       ownerId,
       source: "markdown",
     });
-    expect(args.primaryLocation).toEqual({ address: "Lisbon, Portugal", kind: "manual" });
+    expect(args.primaryLocation).toEqual({
+      address: "Lisbon, Portugal",
+      kind: "manual",
+    });
   });
 });
 
@@ -225,7 +236,11 @@ describe("runImport", () => {
   it("imports text-only items and finishes the job when nothing is left", async () => {
     const { gateway, log } = fakeGateway([[item(1), item(2)]]);
     const result = await run(gateway);
-    expect(result).toEqual({ kind: "finished", processed: 2, status: "completed" });
+    expect(result).toEqual({
+      kind: "finished",
+      processed: 2,
+      status: "completed",
+    });
     expect(log.imported).toHaveLength(2);
     // import_entry settles a text-only item itself, so the run does not finish it again.
     expect(log.finished).toEqual([]);
@@ -272,8 +287,15 @@ describe("runImport", () => {
     expect(log.registered).toHaveLength(2);
     expect(log.uploads[0]).toContain(ownerId);
     expect(log.finished).toHaveLength(1);
-    expect(log.finished[0]).toMatchObject({ reason: null, retryable: false, status: "imported" });
-    expect(log.finished[0].media?.photos.map((p) => p.status)).toEqual(["done", "done"]);
+    expect(log.finished[0]).toMatchObject({
+      reason: null,
+      retryable: false,
+      status: "imported",
+    });
+    expect(log.finished[0].media?.photos.map((p) => p.status)).toEqual([
+      "done",
+      "done",
+    ]);
   });
 
   it("picks up an Entry whose photos were left half done without importing it again", async () => {
@@ -315,11 +337,16 @@ describe("runImport", () => {
   });
 
   it("skips a photo that is not an image without failing the Entry", async () => {
-    const media = { photos: [photo("p1"), { ...photo("bad"), zipPath: "bad.png" }] };
+    const media = {
+      photos: [photo("p1"), { ...photo("bad"), zipPath: "bad.png" }],
+    };
     const { gateway, log } = fakeGateway([[item(1, {}, media)]]);
     await run(gateway);
     expect(log.finished[0].status).toBe("imported");
-    const states = log.finished[0].media?.photos.map((p) => [p.status, p.reason]);
+    const states = log.finished[0].media?.photos.map((p) => [
+      p.status,
+      p.reason,
+    ]);
     expect(states).toEqual([
       ["done", undefined],
       ["skipped", "photo_unsupported"],
@@ -341,7 +368,9 @@ describe("runImport", () => {
   it("records a final failure with its reason and keeps going", async () => {
     const { gateway, log } = fakeGateway([[item(1), item(2)]], {
       importError: (args) =>
-        args.itemId === "item-1" ? new ImportItemError("entry_content_too_long") : null,
+        args.itemId === "item-1"
+          ? new ImportItemError("entry_content_too_long")
+          : null,
     });
     const result = await run(gateway);
     expect(result.kind).toBe("finished");

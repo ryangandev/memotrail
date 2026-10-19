@@ -1,8 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  occurrenceLabel,
-  validTimezone,
-} from "@/lib/data/occurrence";
+import { occurrenceLabel, validTimezone } from "@/lib/data/occurrence";
 import { plainTextFromDocument } from "@/lib/data/rich-text";
 import {
   importErrorMessage,
@@ -63,19 +60,24 @@ function view(row: JobRow): ImportJobView {
     options: row.options ?? {},
     source: row.source,
     staged: row.staging_path !== null,
+    stagingPath: row.status === "uploading" ? row.staging_path : null,
     status: row.status,
     totals: row.totals ?? {},
   };
 }
 
-async function loadJobRow(client: SupabaseClient, jobId: string): Promise<JobRow> {
+async function loadJobRow(
+  client: SupabaseClient,
+  jobId: string,
+): Promise<JobRow> {
   const { data, error } = await client
     .from("import_jobs")
     .select(jobColumns)
     .eq("id", jobId)
     .maybeSingle();
   if (error) throw new ImportApiError("unavailable", 503);
-  if (!data) throw new ImportApiError("not_found", 404, "This import was not found.");
+  if (!data)
+    throw new ImportApiError("not_found", 404, "This import was not found.");
   return data as unknown as JobRow;
 }
 
@@ -97,7 +99,9 @@ export async function progressOf(
   client: SupabaseClient,
   jobId: string,
 ): Promise<ImportProgress | null> {
-  const { data, error } = await client.rpc("import_job_progress", { p_job_id: jobId });
+  const { data, error } = await client.rpc("import_job_progress", {
+    p_job_id: jobId,
+  });
   if (error) throw new ImportApiError("unavailable", 503);
   return (data as ImportProgress | null) ?? null;
 }
@@ -150,8 +154,7 @@ export async function createJob(
     throw new ImportApiError("unavailable", 503);
   }
   const row = (Array.isArray(data) ? data[0] : data) as
-    | { job_id: string; staging_path: string }
-    | undefined;
+    { job_id: string; staging_path: string } | undefined;
   if (!row) throw new ImportApiError("unavailable", 503);
   return { jobId: row.job_id, maxBytes, stagingPath: row.staging_path };
 }
@@ -162,8 +165,7 @@ export async function scanJob(
   jobId: string,
 ): Promise<ImportJobView> {
   const row = await loadJobRow(client, jobId);
-  if (!["uploading", "scanning"].includes(row.status))
-    return view(row);
+  if (!["uploading", "scanning"].includes(row.status)) return view(row);
   if (!row.staging_path) throw new ImportApiError("storage_unavailable", 409);
   if (!(await transition(client, jobId, ["uploading", "scanning"], "scanning")))
     throw new ImportApiError("unavailable", 409);
@@ -193,7 +195,9 @@ export async function scanJob(
     });
   } catch (error) {
     const code = error instanceof ImportError ? error.code : "unexpected";
-    await transition(client, jobId, ["scanning"], "failed", { error_code: code });
+    await transition(client, jobId, ["scanning"], "failed", {
+      error_code: code,
+    });
   } finally {
     archive?.close();
   }
@@ -201,7 +205,12 @@ export async function scanJob(
 }
 
 function sampleOf(
-  row: { source_key: string; folder_path: string[]; payload: ImportPayload; media: { photos?: unknown[] } | null },
+  row: {
+    source_key: string;
+    folder_path: string[];
+    payload: ImportPayload;
+    media: { photos?: unknown[] } | null;
+  },
   timezone: string,
 ): ImportSample {
   const payload = row.payload;
@@ -244,8 +253,11 @@ export async function previewJob(
     }),
     client.rpc("import_job_overlap", { p_job_id: input.jobId }),
   ]);
-  if (sample.error || overlap.error) throw new ImportApiError("unavailable", 503);
-  const overlapRow = (overlap.data as { unchanged: number; changed: number; in_trash: number }[])?.[0];
+  if (sample.error || overlap.error)
+    throw new ImportApiError("unavailable", 503);
+  const overlapRow = (
+    overlap.data as { unchanged: number; changed: number; in_trash: number }[]
+  )?.[0];
   const job = view(row);
   return {
     defaults: defaultImportOptions(timezone, {
@@ -280,7 +292,11 @@ export async function confirmJob(
   });
   if (error) {
     if (error.message?.includes("import_job_not_ready"))
-      throw new ImportApiError("not_ready", 409, "This import is not ready to start.");
+      throw new ImportApiError(
+        "not_ready",
+        409,
+        "This import is not ready to start.",
+      );
     throw new ImportApiError("unavailable", 503);
   }
   return { selected: Number(data ?? 0) };
@@ -293,7 +309,10 @@ export async function runJob(
 ) {
   const row = await loadJobRow(client, jobId);
   if (!["running", "paused_quota"].includes(row.status))
-    return { progress: await progressOf(client, jobId), run: { kind: "stopped" as const } };
+    return {
+      progress: await progressOf(client, jobId),
+      run: { kind: "stopped" as const },
+    };
   if (!row.staging_path) throw new ImportApiError("storage_unavailable", 409);
   const options = defaultedOptions(row, await profileTimezone(client, ownerId));
   const { archive } = await openStagedArchive(client, row.staging_path);
@@ -316,18 +335,26 @@ function defaultedOptions(row: JobRow, timezone: string) {
     distinctParentFolders: 0,
     notionDateProperty: null,
   });
-  return { ...defaults, ...row.options, tags: { ...defaults.tags, ...row.options.tags } };
+  return {
+    ...defaults,
+    ...row.options,
+    tags: { ...defaults.tags, ...row.options.tags },
+  };
 }
 
 export async function cancelJob(client: SupabaseClient, jobId: string) {
-  const { data, error } = await client.rpc("cancel_import_job", { p_job_id: jobId });
+  const { data, error } = await client.rpc("cancel_import_job", {
+    p_job_id: jobId,
+  });
   if (error) throw new ImportApiError("unavailable", 503);
   await cleanupStaging(client);
   return { cancelled: data === true };
 }
 
 export async function retryJob(client: SupabaseClient, jobId: string) {
-  const { data, error } = await client.rpc("retry_import_items", { p_job_id: jobId });
+  const { data, error } = await client.rpc("retry_import_items", {
+    p_job_id: jobId,
+  });
   if (error) {
     if (error.message?.includes("import_job_not_retryable"))
       throw new ImportApiError(
@@ -336,14 +363,20 @@ export async function retryJob(client: SupabaseClient, jobId: string) {
         "This import can no longer be retried. Import the file again to pick up what is missing.",
       );
     if (error.message?.includes("import_job_active"))
-      throw new ImportApiError("import_job_active", 409, "Another import is still open.");
+      throw new ImportApiError(
+        "import_job_active",
+        409,
+        "Another import is still open.",
+      );
     throw new ImportApiError("unavailable", 503);
   }
   return { retried: Number(data ?? 0) };
 }
 
 export async function undoJob(client: SupabaseClient, jobId: string) {
-  const { data, error } = await client.rpc("trash_import_job", { p_job_id: jobId });
+  const { data, error } = await client.rpc("trash_import_job", {
+    p_job_id: jobId,
+  });
   if (error) {
     if (error.message?.includes("import_undo_expired"))
       throw new ImportApiError(
@@ -351,12 +384,18 @@ export async function undoJob(client: SupabaseClient, jobId: string) {
         409,
         "This import is more than 30 days old. Move its Entries to Trash from Library.",
       );
-    throw new ImportApiError("not_undoable", 409, "This import cannot be undone.");
+    throw new ImportApiError(
+      "not_undoable",
+      409,
+      "This import cannot be undone.",
+    );
   }
   const row = (Array.isArray(data) ? data[0] : data) as
-    | { trashed: number; edited: number }
-    | undefined;
-  return { edited: Number(row?.edited ?? 0), trashed: Number(row?.trashed ?? 0) };
+    { trashed: number; edited: number } | undefined;
+  return {
+    edited: Number(row?.edited ?? 0),
+    trashed: Number(row?.trashed ?? 0),
+  };
 }
 
 function csvCell(value: string | null) {
@@ -384,7 +423,9 @@ export async function reportJob(client: SupabaseClient, jobId: string) {
     entry_id: string | null;
   }[])
     lines.push(
-      [item.source_key, item.status, item.reason, item.entry_id].map(csvCell).join(","),
+      [item.source_key, item.status, item.reason, item.entry_id]
+        .map(csvCell)
+        .join(","),
     );
   return lines.join("\n") + "\n";
 }
@@ -414,7 +455,6 @@ export async function handleImportAction(
   const json = (body: unknown): ImportActionResult => ({ body, kind: "json" });
   switch (action.action) {
     case "state": {
-      await cleanupStaging(client);
       const job = await latestJobView(client);
       return json({
         job,

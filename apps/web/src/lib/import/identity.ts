@@ -57,11 +57,7 @@ export function canonicalJson(value: unknown): string {
 export function candidateContentHash(
   candidate: Pick<
     ImportCandidate,
-    | "title"
-    | "date"
-    | "tagNames"
-    | "propertyTagNames"
-    | "locationLabel"
+    "title" | "date" | "tagNames" | "propertyTagNames" | "locationLabel"
   > & { plainText: string; photoNames: string[] },
 ) {
   return sha256Hex(
