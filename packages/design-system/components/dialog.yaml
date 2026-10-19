@@ -26,7 +26,7 @@ avoid:
 anatomy:
   scrim: The tinted, blurred layer that dims the page behind a Web dialog.
   container: The raised surface that holds the dialog, a centered card on Web and a sheet on iOS.
-  eyebrow: An optional short line above the title that names the context, such as New memory or Please confirm.
+  eyebrow: An optional short line above the title that names the context, such as the Chapter an Entry is added to. Web draws it muted, since warm is kept for the First Time mark and the logo; a confirmation needs none, because its title asks the question.
   title: The serif title that names the task.
   description: An optional sentence below the title that explains the task or its consequence.
   close: The ghost IconButton that closes the dialog, disabled while busy.
@@ -66,10 +66,10 @@ tokens:
       duration: { web: "{motion.standard}" }
       easing: { web: "{motion.easing.enter}" }
     eyebrow:
-      color: "{color.warm}"
+      color: { web: "{color.inkMuted}", ios: "{color.warm}" }
       type: { ios: "{type.listHeading}" }
       fontSize: { web: "{font.size.caption}" }
-      fontWeight: { web: "{font.weight.semibold}" }
+      fontWeight: { web: "{font.weight.medium}" }
     title:
       color: "{color.ink}"
       type: { ios: "{type.sheetTitle}" }

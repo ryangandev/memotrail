@@ -57,16 +57,8 @@ export default async function LibraryPage({
   }
 
   return (
-    <PageFrame className={styles.content} variant="standard">
-      <PageHeader
-        title={<>Library</>}
-        eyebrow={<>Your Life Wiki</>}
-        description={
-          <>
-            Browse everything you have saved, or search across your Life Wiki.
-          </>
-        }
-      />
+    <PageFrame className={styles.content} width="list">
+      <PageHeader title={<>Library</>} />
 
       <LibrarySearch
         browse={

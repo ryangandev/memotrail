@@ -13,8 +13,8 @@ purpose: A labeled action, or navigation drawn as one, in one of four emphasis v
 
 use:
   - The actions of a page header, form, dialog footer, sheet, or empty state.
-  - One primary action per surface, with secondary and ghost actions beside it.
-  - Danger for actions that delete, discard, or move something to Trash.
+  - One primary action per surface, with secondary and ghost actions beside it. Ghost is the quiet action.
+  - Danger for actions that delete, discard, or move something to Trash. On Web it is a transparent button in the danger color.
   - On Web, ButtonLink for navigation that should look like an action, such as Back to Library.
 
 avoid:
@@ -54,17 +54,17 @@ states: [default, hover, pressed, focus, disabled, loading]
 
 tokens:
   - container:
-      radius: { web: "{radius.control}", ios: "{radius.medium}" }
+      radius: { web: "{radius.small}", ios: "{radius.medium}" }
       minHeight: "{size.control.medium}"
-      paddingInline: "{space.4}"
+      paddingInline: { web: "{space.3-5}", ios: "{space.4}" }
       paddingBlock: { web: "{space.2}" }
-      gap: "{space.2}"
+      gap: { web: "{space.1-5}", ios: "{space.2}" }
       borderWidth: "{size.stroke.thin}"
       duration: "{motion.quick}"
       easing: "{motion.easing.standard}"
     label:
       fontFamily: "{font.family.sans}"
-      fontSize: "{font.size.label}"
+      fontSize: { web: "{font.size.bodySmall}", ios: "{font.size.label}" }
       fontWeight: "{font.weight.medium}"
       lineHeight: { web: "{lineHeight.tight}" }
     spinner:
@@ -76,11 +76,12 @@ tokens:
       offset: { web: "{state.focus.ringOffset}" }
   - when: { size: small }
     container:
-      radius: { web: "{radius.control}", ios: "{radius.small}" }
+      radius: "{radius.small}"
       minHeight: "{size.control.small}"
       paddingInline: "{space.3}"
       paddingBlock: { web: "{space.1}" }
-    label: { fontSize: "{font.size.caption}" }
+    label:
+      { fontSize: { web: "{font.size.label}", ios: "{font.size.caption}" } }
   - when: { size: large }
     container:
       minHeight: "{size.control.large}"
@@ -95,13 +96,14 @@ tokens:
   - when: { variant: secondary }
     container:
       background: "{color.surfaceRaised}"
-      border: "{color.borderStrong}"
-    label: { color: "{color.inkMuted}" }
+      border: { web: "{color.border}", ios: "{color.borderStrong}" }
+    label: { color: { web: "{color.ink}", ios: "{color.inkMuted}" } }
   - when: { variant: secondary, state: hover }
     container:
-      background: "{state.hover.accentSurface}"
-      border: "{color.accent}"
-    label: { color: "{color.accent}" }
+      background:
+        { web: "{state.hover.surface}", ios: "{state.hover.accentSurface}" }
+      border: { web: "{color.borderStrong}", ios: "{color.accent}" }
+    label: { color: { web: "{state.hover.ink}", ios: "{color.accent}" } }
   - when: { variant: ghost }
     label: { color: "{color.inkMuted}" }
   - when: { variant: ghost, state: hover }
@@ -109,13 +111,18 @@ tokens:
     label: { color: "{state.hover.ink}" }
   - when: { variant: danger }
     container:
-      background: "{color.dangerSubtle}"
-      border: "{color.dangerBorder}"
+      background: { ios: "{color.dangerSubtle}" }
+      border: { ios: "{color.dangerBorder}" }
     label: { color: "{color.danger}" }
   - when: { variant: danger, state: hover }
-    container: { border: "{color.danger}" }
+    container:
+      background: { web: "{color.dangerTint}" }
+      border: { ios: "{color.danger}" }
   - when: { state: disabled }
-    container: { opacity: "{state.disabled.opacity.button}" }
+    container:
+      background: { web: "{color.surfaceSubtle}" }
+      opacity: { ios: "{state.disabled.opacity.button}" }
+    label: { color: { web: "{color.inkFaint}" } }
 
 content:
   lines: 1
@@ -133,8 +140,10 @@ accessibility:
   dynamicType: iOS labels follow Dynamic Type through the label, caption, and body text roles and keep one line, so the control grows taller with the text. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
-  - difference: Controls are 32, 36, and 44 px tall with 6 px corners on Web, and 34, 44, and 52 pt tall with 12 and 8 pt corners on iOS.
-    reason: The size.control tokens raise iOS toward the 44 pt touch target while keeping the Web proportions. The Web radius.control token tightens pointer-sized controls; native work is paused, so iOS keeps its radii until its next design pass.
+  - difference: Controls are 32, 36, and 44 px tall with 8 px corners and 14 px labels on Web, and 34, 44, and 52 pt tall with 12 and 8 pt corners and 13 pt labels on iOS.
+    reason: The size.control tokens raise iOS toward the 44 pt touch target while keeping the Web proportions. Native work is paused, so iOS keeps its radii and label size until its next design pass.
+  - difference: On Web, secondary is a raised button with a hairline border and ink text, danger is transparent with danger-colored text, and disabled is a quiet faint surface rather than a faded variant; iOS keeps the bordered danger fill and the disabled opacity.
+    reason: The Web Quiet ledger pass keeps destructive actions from shouting and makes a disabled primary unmistakable; iOS takes the same change in its token pass.
   - difference: Web shows hover colors on pointer hover; iOS shows the same colors while pressed.
     reason: Touch has no hover, so iOS gives the hover colors to the press; Web has no separate pressed style.
   - difference: A label that does not fit wraps onto more lines on Web and truncates at the tail on iOS, which also has no vertical padding.

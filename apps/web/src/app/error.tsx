@@ -25,12 +25,11 @@ export default function RouteError({
         <>
           <Button onClick={() => retry()}>Try again</Button>
           <ButtonLink href="/" variant="secondary">
-            Go to Home
+            Go to Dashboard
           </ButtonLink>
         </>
       }
       description="Something went wrong while showing this page. Nothing you saved was changed."
-      icon="refresh"
       title="This page could not load"
     />
   );

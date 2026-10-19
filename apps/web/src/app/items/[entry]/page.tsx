@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { ButtonLink } from "@/components/button";
-import { PageHeader } from "@/components/page-header";
 import { EntryDetailView } from "@/components/entry-detail-view";
 import { PageFrame } from "@/components/page-frame";
+import { RouteFallback } from "@/components/route-fallback";
 import { getAuthenticatedContext } from "@/lib/data/inbox";
 import {
   entryTitle,
@@ -80,11 +80,13 @@ export default async function WikiItemPage({
     if (contents.entries.length === 0) redirect(`/items/${item.id}`);
   }
 
+  if (!failed && !item) return <UnavailableItem />;
+
   return (
-    <PageFrame className={styles.workspace} variant="compact">
-      {failed ? (
-        <p role="alert">This item could not load. Refresh to try again.</p>
-      ) : item ? (
+    <PageFrame className={styles.workspace} width="reading">
+      {failed || !item ? (
+        <p role="alert">This Entry could not load. Refresh to try again.</p>
+      ) : (
         <EntryDetailView
           chapter={
             isChapter
@@ -95,8 +97,6 @@ export default async function WikiItemPage({
           ownerId={context.viewer.id}
           photos={photos}
         />
-      ) : (
-        <UnavailableItem />
       )}
     </PageFrame>
   );
@@ -119,17 +119,20 @@ async function loadReview(
     : null;
 }
 
+/** An Entry that is gone or was never there: the same page as any missing address. */
 function UnavailableItem() {
   return (
-    <section className={styles.detailUnavailable}>
-      <PageHeader
-        eyebrow="Life Wiki"
-        title="Item unavailable"
-        description="It may have moved to Trash or no longer be accessible."
-      />
-      <ButtonLink href="/library" variant="secondary">
-        Back to Library
-      </ButtonLink>
-    </section>
+    <RouteFallback
+      actions={
+        <>
+          <ButtonLink href="/library">Open Library</ButtonLink>
+          <ButtonLink href="/trash" variant="secondary">
+            Open Trash
+          </ButtonLink>
+        </>
+      }
+      description="It may have moved to Trash, or it no longer exists."
+      title="Entry unavailable"
+    />
   );
 }

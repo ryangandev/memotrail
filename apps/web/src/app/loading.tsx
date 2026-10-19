@@ -1,33 +1,35 @@
-import pageStyles from "@/app/page.module.css";
 import { PageFrame } from "@/components/page-frame";
 import { Skeleton } from "@/components/skeleton";
+import styles from "./loading.module.css";
 
+/**
+ * The route loading fallback. It holds the shape of a PageHeader (a title line and a meta line)
+ * above a few list rows, in the list frame, so the page settles without the title jumping.
+ * Heights come from the Web layout variables in globals.css that size the real header.
+ */
 export default function Loading() {
   return (
     <PageFrame
       aria-label="Loading page"
       aria-live="polite"
-      className={pageStyles.routeLoading}
       role="status"
-      variant="wide"
+      width="list"
     >
-      <Skeleton height="11px" width="112px" />
-      <Skeleton
-        className={pageStyles.loadingTitle}
-        height="42px"
-        width="min(68%, 460px)"
-      />
-      <Skeleton
-        className={pageStyles.loadingIntro}
-        height="16px"
-        width="min(82%, 620px)"
-      />
-      <div className={pageStyles.loadingCards}>
-        <Skeleton height="auto" />
-        <Skeleton height="auto" />
-        <Skeleton height="auto" />
+      <div className={styles.header}>
+        <Skeleton
+          height="calc(var(--page-title-size) * var(--page-title-line-height))"
+          width="min(60%, 320px)"
+        />
+        <Skeleton
+          height="calc(var(--page-meta-size) * var(--mt-line-height-message))"
+          width="min(40%, 200px)"
+        />
       </div>
-      <span className={pageStyles.loadingLabel}>Loading your trail...</span>
+      <div className={styles.rows}>
+        <Skeleton height="var(--mt-size-control-large)" />
+        <Skeleton height="var(--mt-size-control-large)" />
+        <Skeleton height="var(--mt-size-control-large)" />
+      </div>
     </PageFrame>
   );
 }

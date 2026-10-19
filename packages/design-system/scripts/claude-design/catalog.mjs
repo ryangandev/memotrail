@@ -92,6 +92,14 @@ export const bundled = [
       "Checkbox is a native checkbox in two sizes with a visible label and an optional explanation.",
   },
   {
+    name: "SegmentedControl",
+    source: "segmented-control.tsx",
+    group: "Inputs",
+    height: 300,
+    summary:
+      "SegmentedControl is one choice among a few short options, a subtle track with the selected segment raised.",
+  },
+  {
     name: "DatePickerField",
     spec: "DateField",
     source: "date-picker-field.tsx",
@@ -131,7 +139,7 @@ export const bundled = [
     group: "Layout",
     height: 370,
     summary:
-      "PageFrame sets a page's maximum width, centering, responsive gutters, and vertical rhythm.",
+      "PageFrame sets a page's maximum width (reading, list, or full) from one fixed left edge, with responsive gutters and vertical rhythm.",
   },
   {
     name: "PageHeader",
@@ -139,7 +147,7 @@ export const bundled = [
     group: "Layout",
     height: 320,
     summary:
-      "PageHeader opens a page with an optional eyebrow, a serif title, a description, and actions.",
+      "PageHeader opens a page with a serif title, an optional muted meta line, at most one primary action, and a back link on a detail page.",
   },
   {
     name: "SectionHeader",
@@ -155,7 +163,7 @@ export const bundled = [
     group: "Content",
     height: 580,
     summary:
-      "Badge is a noninteractive single-line label for a status, type, or tag.",
+      "Badge is a noninteractive single-line label for a status, such as Written by AI or On this device.",
   },
   {
     name: "SeparatedList",
@@ -198,7 +206,7 @@ export const bundled = [
     group: "Patterns",
     height: 520,
     summary:
-      "FocusedViewLayout is the page pattern of a focused view: a wide frame, a page header, a summary row, and content.",
+      "FocusedViewLayout is the page pattern of a focused view: a list frame, a page header with one action, a summary row, and content.",
   },
 ];
 
@@ -288,7 +296,7 @@ export const excluded = {
   "trash-workspace.tsx": featureView,
   "use-effective-theme.ts": "A hook, not a component.",
   "workspace-action-dock.tsx": `${needsRouting} It opens Quick Capture and Search.`,
-  "workspace-history-controls.tsx": needsRouting,
+  "workspace-destination.tsx": `${needsRouting} It draws PageHeader's back link and tells the shell which destination is active.`,
   "workspace-shell.tsx": needsRouting,
 };
 

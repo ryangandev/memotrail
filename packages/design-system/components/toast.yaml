@@ -70,9 +70,9 @@ tokens:
     container:
       duration: "{motion.toastError}"
     stripe:
-      color: "{color.warm}"
+      color: { web: "{color.danger}", ios: "{color.warm}" }
     icon:
-      color: "{color.warm}"
+      color: { web: "{color.danger}", ios: "{color.warm}" }
 
 content:
   lines: unlimited
@@ -97,8 +97,10 @@ platformDifferences:
     reason: A pointer needs a smaller target, and the native target stays comfortable to tap without growing the toast.
   - difference: Web draws Sonner's tone icons at the icon column's size; iOS draws filled SF Symbols at 15 pt inside the same column.
     reason: Each uses its platform's own status glyphs, and the shared column keeps messages aligned.
-  - difference: iOS toasts also dismiss with a downward swipe and sit above the keyboard, the tab bar, and a sheet's footer; Web toasts sit above the page and pause while hovered.
-    reason: Swipes and the keyboard are touch interactions, and hover is a pointer one.
+  - difference: iOS toasts also dismiss with a downward swipe and sit above the keyboard, the tab bar, and a sheet's footer; Web toasts stack above the workspace dock and the phone tab bar and pause while hovered.
+    reason: Swipes and the keyboard are touch interactions, and hover is a pointer one. On Web the dock and tab bar are always on screen, so a toast that covered them would hide Search and navigation.
+  - difference: A Web error toast draws its stripe and icon in the danger color; iOS still draws them warm.
+    reason: On Web, warm is kept for the First Time mark and the logo, and danger marks errors and destructive actions. The shared tone description changes with the iOS token pass.
 
 specimens:
   - id: toast-tones

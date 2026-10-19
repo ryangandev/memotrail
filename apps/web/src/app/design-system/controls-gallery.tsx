@@ -82,7 +82,7 @@ export function ToastSpecimen() {
           Show info
         </Button>
         <Button
-          variant="danger"
+          variant="secondary"
           onClick={() => notify.error("Could not save. Try again.")}
         >
           Show error
@@ -102,8 +102,8 @@ export function WorkspaceSpecimens() {
   return (
     <>
       <Specimen
-        api="open · onClose"
-        description="Opens from the dock's search shortcut or Command K. Destinations navigate; a query searches the archive."
+        api="open · onClose · onNewEntry"
+        description="Opens from the dock's search shortcut or Command K. Destinations navigate, New Entry opens Quick Capture, and a query searches Entries."
         title="CommandPalette"
       >
         <div className={styles.specimenCases}>
@@ -118,6 +118,7 @@ export function WorkspaceSpecimens() {
             </Button>
             <CommandPalette
               onClose={() => setPaletteOpen(false)}
+              onNewEntry={() => setMessage("New Entry opens Quick Capture.")}
               open={paletteOpen}
             />
           </SpecimenCase>
@@ -125,7 +126,7 @@ export function WorkspaceSpecimens() {
       </Specimen>
       <Specimen
         api="SyncStatus reads the capture queue · SyncStatusButton: waiting · rejected · busy"
-        description="Appears in the top bar only while captures wait on this device. Pressing it syncs and lists what is waiting."
+        description="Appears beside the account in the sidebar, or in the phone top bar, only while captures wait on this device. Pressing it syncs and lists what is waiting."
         title="SyncStatus"
       >
         <div className={styles.specimenCases}>

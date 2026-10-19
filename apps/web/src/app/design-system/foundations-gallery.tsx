@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import type tokenCatalog from "@/generated/design-tokens.json";
 import { Icon, iconNames } from "@/components/icon";
 import { PageFrame } from "@/components/page-frame";
-import { iconSizes, pageFrameVariants } from "@/generated/design-system";
+import { iconSizes, pageFrameWidths } from "@/generated/design-system";
 import styles from "./page.module.css";
 import controls from "./controls-gallery.module.css";
 import { capitalize, kebab, Specimen, SpecimenCase } from "./specimen";
@@ -493,33 +493,35 @@ export function IconTokens({ tokens }: { tokens: TokenSet }) {
   );
 }
 
+const pageFrameWidthNotes = {
+  reading: "720 px · an Entry page, a review, Settings, Import, and Export",
+  list: "960 px · Dashboard, Library, First Times, Tags, Trash, and Reviews",
+  full: "The whole workspace · Timeline",
+} as const;
+
 export function LayoutTokens({ tokens }: { tokens: TokenSet }) {
   const descriptions: Record<string, string | undefined> = tokens.descriptions;
-  const { breakpoint, container, inset, layer, pageGutter, pageWidth } =
-    tokens.layout;
+  const { breakpoint, container, inset, layer, pageGutter } = tokens.layout;
   return (
     <>
       <Specimen
-        api="variant: compact | standard | wide | canvas · className · div props"
-        description="The centered column that holds a page. Phones use the full width inside the page gutters; wider windows center the page at its variant width. This gallery uses canvas."
+        api="width: reading | list | full · className · div props"
+        description="The column that holds a page. Every width starts at the workspace's fixed left edge, so titles never move sideways between pages; reading and list stop at their maximum width and full fills the workspace."
         id="page-frame"
         title="PageFrame"
       >
         <SpecimenCase id="page-frame-widths">
           <div className={styles.pageFrameTrack}>
             <div>
-              {pageFrameVariants.map((variant) => (
+              {pageFrameWidths.map((width) => (
                 <PageFrame
                   className={styles.pageFrameSample}
-                  data-page-width={variant}
-                  key={variant}
-                  variant={variant}
+                  data-page-width={width}
+                  key={width}
+                  width={width}
                 >
-                  <strong>{variant}</strong>
-                  <span>
-                    {pageWidth[variant]}px ·{" "}
-                    {descriptions[`layout.pageWidth.${variant}`]}
-                  </span>
+                  <strong>{width}</strong>
+                  <span>{pageFrameWidthNotes[width]}</span>
                 </PageFrame>
               ))}
             </div>

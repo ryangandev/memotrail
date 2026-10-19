@@ -12,7 +12,7 @@ platforms:
 purpose: Captures one formatted note with an optional date, voice dictation, and photos, kept as a local draft until it is saved.
 
 use:
-  - The Home Dashboard's composer, as a raised card under the question What's on your mind?
+  - The Dashboard's composer, as a raised card under the question What's on your mind?
   - The body of Quick Capture, opened from the action dock, without a card of its own.
 
 avoid:
@@ -110,7 +110,7 @@ platformDifferences:
     reason: docs/product.md asks for the dialog on Web, where hover and a large window make checking a photo before saving useful. On iPhone the thumbnail is the photo the person just picked from their library.
   - difference: The draft message names this device on Web and this iPhone on iOS.
     reason: Each names where the draft is kept in words people use on that platform.
-  - difference: Web's embedded composer on the Home Dashboard fits its tools to the card's own width; iOS always fits the phone width.
+  - difference: Web's embedded composer on the Dashboard fits its tools to the card's own width; iOS always fits the phone width.
     reason: The Web Dashboard places the composer in a column narrower than the window, while iOS shows it at the full width of the screen.
 
 specimens:

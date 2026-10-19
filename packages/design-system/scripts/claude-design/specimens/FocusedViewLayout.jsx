@@ -1,4 +1,4 @@
-const { Badge, Button, EmptyState, FocusedViewLayout, Icon, SeparatedList } =
+const { Button, EmptyState, FocusedViewLayout, Icon, SeparatedList } =
   MemoTrail;
 
 export const specimens = {
@@ -6,18 +6,16 @@ export const specimens = {
     title: "A focused view with a summary and content",
     render: () => (
       <FocusedViewLayout
-        actions={
+        action={
           <Button>
             <Icon name="plus" size={16} />
             Add First Time
           </Button>
         }
-        description="The small beginnings worth finding again."
-        eyebrow="Focused view"
         summary={
           <SeparatedList>
-            <Badge tone="neutral">2 First Times</Badge>
-            <Badge tone="accent">1 this year</Badge>
+            <span>2 First Times</span>
+            <span>1 this year</span>
           </SeparatedList>
         }
         summaryLabel="First Times summary"

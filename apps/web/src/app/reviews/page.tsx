@@ -22,17 +22,8 @@ export default async function YearReviewsPage() {
   });
 
   return (
-    <PageFrame variant="compact">
-      <PageHeader
-        description={
-          <>
-            Look back on a year: how it felt, what kept coming back, and your
-            own words.
-          </>
-        }
-        eyebrow={<>Given back</>}
-        title={<>Year reviews</>}
-      />
+    <PageFrame width="list">
+      <PageHeader title={<>Year reviews</>} />
       {failed ? (
         <p role="alert">Year reviews could not load. Refresh to try again.</p>
       ) : years.length === 0 ? (

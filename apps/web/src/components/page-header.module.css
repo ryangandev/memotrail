@@ -1,45 +1,54 @@
+/* Values follow packages/design-system/components/page-header.yaml. The title and meta sizes are
+   the Web variables in app/globals.css until WP0b adds their type roles. */
+
 .header {
+  display: grid;
+  min-width: 0;
+  justify-items: start;
+}
+
+.row {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  width: 100%;
+  min-width: 0;
   flex-wrap: wrap;
-  gap: var(--mt-space-5);
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--mt-space-3) var(--mt-space-5);
 }
 
 .copy {
   display: grid;
   min-width: 0;
   flex: 1 1 var(--mt-size-page-header-copy-basis);
-  gap: var(--mt-space-2);
-}
-
-.eyebrow {
-  margin: 0;
-  color: var(--mt-color-warm);
-  font-size: var(--mt-type-page-eyebrow-font-size);
-  font-weight: var(--mt-type-page-eyebrow-font-weight);
-  letter-spacing: var(--mt-type-page-eyebrow-letter-spacing);
-  text-transform: var(--mt-type-page-eyebrow-text-transform);
+  gap: var(--mt-space-1-5);
 }
 
 .title {
   margin: 0;
   color: var(--mt-color-ink);
   font-family: var(--mt-font-family-serif);
-  font-size: var(--mt-font-size-display);
+  font-size: var(--page-title-size);
   font-weight: var(--mt-font-weight-medium);
-  line-height: var(--mt-line-height-tight);
+  line-height: var(--page-title-line-height);
+  letter-spacing: var(--page-title-tracking);
   overflow-wrap: anywhere;
 }
 
-.description {
-  max-width: var(--mt-size-page-header-description-width);
-  color: var(--mt-color-ink-muted);
-  font-size: var(--mt-font-size-body);
-  line-height: var(--mt-line-height-body);
+.header[data-detail] .title {
+  font-size: var(--page-title-size-detail);
 }
 
-.actions {
+.meta {
+  min-width: 0;
+  color: var(--mt-color-ink-muted);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--page-meta-size);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-message);
+}
+
+.action {
   display: flex;
   min-width: 0;
   flex-wrap: wrap;
@@ -47,8 +56,45 @@
   gap: var(--mt-space-2);
 }
 
-@media (max-width: 560px) {
-  .title {
-    font-size: var(--mt-font-size-title);
+/* The back link sits 12 px above the title; its padding gives it a target without moving it. */
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mt-space-1-5);
+  margin: calc(var(--mt-space-1) * -1) 0 var(--mt-space-2)
+    calc(var(--mt-space-1) * -1);
+  padding: var(--mt-space-1);
+  border-radius: var(--mt-radius-small);
+  color: var(--mt-color-ink-muted);
+  font-family: var(--mt-font-family-sans);
+  font-size: var(--mt-font-size-label);
+  font-weight: var(--mt-font-weight-regular);
+  line-height: var(--mt-line-height-tight);
+  text-decoration: none;
+  transition: color var(--mt-motion-quick) var(--mt-motion-easing-standard);
+}
+
+.back:hover {
+  color: var(--mt-color-ink);
+}
+
+.back:focus-visible {
+  outline: var(--mt-state-focus-ring-width) solid var(--mt-state-focus-ring);
+  outline-offset: 0;
+}
+
+@media (max-width: 720px) {
+  .copy {
+    gap: var(--mt-space-1);
+  }
+
+  .back {
+    margin-bottom: var(--mt-space-1-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back {
+    transition: none;
   }
 }

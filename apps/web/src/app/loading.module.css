@@ -1,0 +1,23 @@
+/* The skeleton keeps the PageHeader's rhythm: the gap between the title and meta lines, then the
+   distance to the page's first content. */
+
+.header {
+  display: grid;
+  gap: var(--mt-space-1-5);
+}
+
+.rows {
+  display: grid;
+  gap: var(--mt-space-3);
+  margin-top: var(--mt-space-10);
+}
+
+@media (max-width: 720px) {
+  .header {
+    gap: var(--mt-space-1);
+  }
+
+  .rows {
+    margin-top: var(--mt-space-8);
+  }
+}

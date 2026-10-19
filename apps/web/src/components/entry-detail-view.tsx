@@ -31,11 +31,8 @@ import {
   occurrenceLabel,
   occurrenceSpanLabel,
 } from "@/lib/data/occurrence";
-import {
-  wikiEntryHref,
-  wikiItemIdentityLabel,
-  wikiItemSubtypeLabel,
-} from "@/lib/data/wiki-item";
+import { wikiEntryHref, wikiItemSubtypeLabel } from "@/lib/data/wiki-item";
+import { destinationForEntry } from "@/lib/workspace-destinations";
 import type { EntryPhotos as EntryPhotoList } from "@/lib/data/entry-photos";
 import type { ReviewPageData, ReviewSettings } from "@/lib/data/review-input";
 import { locationDisplayLabel } from "@/lib/locations/location";
@@ -125,13 +122,8 @@ export function EntryDetailView({
   }
   return (
     <>
-      <Link className={styles.backLink} href="/library">
-        ← Library
-      </Link>
       <PageHeader
-        eyebrow={
-          <>{wikiItemIdentityLabel(entry.item_subtype, entry.is_first_time)}</>
-        }
+        back={destinationForEntry(entry)}
         title={<>{entryTitle(entry)}</>}
       />
       <div className={styles.itemActions}>

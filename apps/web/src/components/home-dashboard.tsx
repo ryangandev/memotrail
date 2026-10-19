@@ -44,7 +44,7 @@ export function HomeDashboard({
     "there";
   const greeting = (
     <PageHeader
-      eyebrow={new Intl.DateTimeFormat("en-US", {
+      meta={new Intl.DateTimeFormat("en-US", {
         weekday: "long",
         month: "long",
         day: "numeric",
@@ -55,7 +55,6 @@ export function HomeDashboard({
           {greetingInTimezone(now, timezone)}, {name}.
         </>
       }
-      description="A calm view of what is going on and what you have kept."
     />
   );
   const capture = <CaptureComposer embedded idPrefix="capture" />;
@@ -101,7 +100,7 @@ export function HomeDashboard({
   );
 
   return (
-    <PageFrame variant="wide" className={styles.page}>
+    <PageFrame width="list" className={styles.page}>
       {content}
     </PageFrame>
   );

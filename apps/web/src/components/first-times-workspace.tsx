@@ -51,16 +51,12 @@ export function FirstTimesWorkspace({
 
   return (
     <FocusedViewLayout
-      actions={
+      action={
         <Button variant="primary" onClick={() => setAdding(true)} type="button">
           <Icon name="plus" />
           <span>Add First Time</span>
         </Button>
       }
-      description={
-        <>Keep the small beginnings and big firsts worth finding again.</>
-      }
-      eyebrow={<>A record of beginnings</>}
       summary={
         <SeparatedList>
           <span>{countLabel(entries.length, "First Time")}</span>

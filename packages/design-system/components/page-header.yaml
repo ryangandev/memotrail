@@ -9,22 +9,26 @@ platforms:
     path: apps/ios/MemoTrail/DesignSystem/Components/MTHeaders.swift
     symbols: [MTPageHeader, MTEyebrow]
 
-purpose: Opens a page with an optional eyebrow, a serif title, a description, and the page's own actions.
+purpose: Opens a page with a serif title, one optional muted meta line, and at most one primary action; a detail page adds a back link to where it belongs.
 
 use:
   - The first element of every workspace page, such as Library, First Times, or Settings.
-  - A focused record's page, with its Kind as the eyebrow and Edit as the action.
+  - A detail page, such as an Entry, a year review, or Export, with a back link to the destination it belongs to.
 
 avoid:
   - Headings inside a page. Use SectionHeader.
   - Dialog and sheet titles. Use the Dialog title on Web and the sheet's navigation title on iOS.
+  - Explaining the page. A page explains itself through its content, so Web has no eyebrow or description.
+  - More than one action. Put secondary actions in the page's content.
 
 anatomy:
-  container: The row that holds the copy and the actions, and wraps the actions below the copy when they do not fit beside it.
-  eyebrow: Optional uppercase warm context above the title, such as a Kind or an area name.
+  container: The row that holds the copy and the action, and wraps the action below the copy when it does not fit beside it.
+  back: On a Web detail page, a quiet link with a back arrow that names the destination the page belongs to, such as Library, 12 px above the title.
+  eyebrow: On iOS only, until its rewrite, optional uppercase warm context above the title. Web has no eyebrow.
   title: The page's serif title.
-  description: An optional explanation under the title, kept to a readable width.
-  actions: Optional controls at the trailing edge, such as Edit or New.
+  meta: On Web, one optional muted line under the title, such as a date, a count, or a date span.
+  description: On iOS only, until its rewrite, an optional explanation under the title. Web has no description.
+  actions: At most one primary action at the trailing edge, such as Add to Timeline.
 
 props: {}
 
@@ -33,18 +37,26 @@ states: [default]
 tokens:
   - container:
       gap: "{space.5}"
+    back:
+      fontSize: { web: "{font.size.label}" }
+      color: { web: "{color.inkMuted}" }
     eyebrow:
-      type: "{type.pageEyebrow}"
-      color: "{color.warm}"
+      type: { ios: "{type.pageEyebrow}" }
+      color: { ios: "{color.warm}" }
     title:
-      type: { web: "{type.display}", ios: "{type.title}" }
+      type: { ios: "{type.title}" }
+      fontWeight: { web: "{font.weight.medium}" }
       color: "{color.ink}"
       minWidth: "{size.pageHeader.copyBasis}"
+    meta:
+      fontSize: { web: "{font.size.bodySmall}" }
+      lineHeight: { web: "{lineHeight.message}" }
+      color: { web: "{color.inkMuted}" }
     description:
-      fontSize: "{font.size.body}"
-      lineHeight: "{lineHeight.body}"
-      color: "{color.inkMuted}"
-      maxWidth: "{size.pageHeader.descriptionWidth}"
+      fontSize: { ios: "{font.size.body}" }
+      lineHeight: { ios: "{lineHeight.body}" }
+      color: { ios: "{color.inkMuted}" }
+      maxWidth: { ios: "{size.pageHeader.descriptionWidth}" }
     actions:
       gap: "{space.2}"
 
@@ -52,21 +64,23 @@ content:
   lines: unlimited
   overflow: wrap
   casing: asWritten
-  length: A title of one to four words, or the record's own name; a description of one or two sentences.
+  length: A title of one to four words, or the Entry's own name; a meta line of a few words.
   notes:
-    - Area titles use title case because they name a place in the app, such as Life Wiki or First Times; a record keeps its own name.
-    - The eyebrow is set in uppercase visually, so pass it in its normal case.
+    - Area titles use title case because they name a place in the app, such as Library or First Times; an Entry keeps its own name.
+    - The back link names the destination, such as Library or Timeline, not Back.
 
 accessibility:
   role: The title is the page's heading, an h1 by default on Web and a header on iOS.
-  label: The visible title; the eyebrow and description are read as text around it.
-  focus: The header itself never takes focus; its actions follow the title in the focus order.
+  label: The visible title; the meta line is read as text after it, and the back link is a link named after its destination.
+  focus: The header itself never takes focus; the back link comes first in the focus order and the action follows the title.
   minimumHitTarget: notInteractive
   dynamicType: iOS scales every text role with Dynamic Type, and the actions move below the copy when the title cannot keep its 260 pt basis beside them. Web grows with browser zoom and wraps the same way.
 
 platformDifferences:
-  - difference: Web titles use the 42 px display size above 560 px and the 28 px title size below it; iOS uses the title size on iPhone.
-    reason: The iOS app runs only on iPhone, which is always the narrow layout. MTPageHeader still switches to display in a regular width.
+  - difference: Web titles are 32 px, or 34 px on a detail page, and 26 px up to 720 px, from Web layout variables in globals.css; iOS uses the title size on iPhone.
+    reason: The Quiet ledger sizes have no type roles yet. WP0b adds them, and the iOS rewrite adopts them.
+  - difference: Web has a meta line and a back link and no eyebrow or description; iOS keeps the eyebrow and description until its rewrite.
+    reason: The Web workspace moved to the Quiet ledger header first, and the iOS app follows on its own branch.
   - difference: Web lets the caller choose an h1 or h2 title; iOS marks the title as a header without a level.
     reason: A Web page needs one h1 and a heading outline, while VoiceOver moves between headers without levels in a SwiftUI screen.
 

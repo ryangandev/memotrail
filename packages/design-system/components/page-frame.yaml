@@ -9,30 +9,36 @@ platforms:
     path: apps/ios/MemoTrail/DesignSystem/Components/MTFoundations.swift
     symbols: [MTPage]
 
-purpose: Sets a page's readable maximum width, centers it, and keeps responsive gutters and vertical rhythm around its content.
+purpose: Sets a page's readable maximum width at one fixed left edge, and keeps responsive gutters and vertical rhythm around its content.
 
 use:
-  - The outer box of every workspace page, chosen by how the page reads, such as compact for an Item page and wide for a dashboard.
+  - The outer box of every workspace page, chosen by how the page reads, such as reading for an Item page, list for Library, and full for Timeline.
 
 avoid:
   - Sections inside a page. Use the page's own grid or stack.
   - Dialogs and sheets, which size themselves. Use Dialog on Web and a sheet on iOS.
 
 anatomy:
-  container: The centered column that holds the page's content, at most the variant's width and inset by the page gutter.
+  container: The column that holds the page's content, at most the frame's width, starting at the page's fixed left edge on Web and centered on iOS.
 
 props:
   variant:
     description: The page's maximum width. Compact suits forms and focused reading, standard lists and search, wide dashboards and card grids, and canvas dense spatial views.
     values: [compact, standard, wide, canvas]
     default: standard
+    platforms: [ios]
     platformNames: { ios: width }
+  width:
+    description: The page's maximum width on Web. Reading is 720 px for an Item page, a review, Settings, Import, and Export; list is 960 px for Dashboard, Library, First Times, Tags, Trash, and Reviews; full fills the workspace for Timeline.
+    values: [reading, list, full]
+    default: list
+    platforms: [web]
 
 states: [default]
 
 tokens:
   - container:
-      paddingInline: "{layout.pageGutter.compact}"
+      paddingInline: { ios: "{layout.pageGutter.compact}" }
   - when: { variant: compact }
     container: { maxWidth: "{layout.pageWidth.compact}" }
   - when: { variant: standard }
@@ -41,6 +47,8 @@ tokens:
     container: { maxWidth: "{layout.pageWidth.wide}" }
   - when: { variant: canvas }
     container: { maxWidth: "{layout.pageWidth.canvas}" }
+  - when: { width: list }
+    container: { maxWidth: "{layout.pageWidth.standard}" }
 
 content:
   lines: unlimited
@@ -56,9 +64,13 @@ accessibility:
   dynamicType: The width and gutters stay fixed while the content scales with Dynamic Type on iOS and browser zoom on Web.
 
 platformDifferences:
-  - difference: Web insets the frame by the 32 px regular gutter above 720 px, the 16 px compact gutter up to 720 px, and the 12 px narrow gutter up to 390 px; iOS always uses the 16 pt compact gutter.
+  - difference: Web chooses among reading, list, and full widths and starts every page at the same left edge, so titles never move sideways between pages; iOS keeps the compact, standard, wide, and canvas widths and centers them.
+    reason: The Web workspace beside a sidebar reads best from one fixed edge. The iOS app runs only on iPhone, where every width fills the screen, and it moves to the Web widths in its own rewrite.
+  - difference: The Web reading width of 720 px and the fixed left edge are Web layout variables in globals.css (--frame-reading, --frame-list, --frame-start), not shared tokens.
+    reason: They apply only to the Web workspace; iOS draws no frame start, so a shared token would have no counterpart.
+  - difference: Web starts the frame 64 px from the sidebar, 24 px up to 900 px, and 16 px up to 720 px, and the full width keeps a 40 px edge, or 16 px up to 900 px; iOS always uses the 16 pt compact gutter.
     reason: The iOS app runs only on iPhone, where the compact gutter matches the safe area's own inset, so it never reaches the wider layouts.
-  - difference: Web pads the frame 48 px above and 64 px below, or 32 and 48 px up to 720 px; iOS pads 24 pt above and 48 pt below, and sets the spacing between children.
+  - difference: Web pads the frame 48 px above, or 40 px on a detail page with a back link, and 40 px below; 32 px above up to 900 px; and 20 px above and 24 px below up to 720 px. iOS pads 24 pt above and 48 pt below, and sets the spacing between children.
     reason: iOS pages start under a navigation bar that already leaves room above the content, and SwiftUI stacks space their children, where Web pages set their own grid gaps.
   - difference: MTPage is the page's scroll view and paints the canvas background; Web PageFrame sits inside the workspace's scrolling main area.
     reason: Each iOS screen scrolls on its own in a navigation stack, while every Web page scrolls in the shared workspace shell.
@@ -66,4 +78,4 @@ platformDifferences:
 specimens:
   - id: page-frame-widths
     description: Every width variant with its maximum width and the pages it suits.
-    covers: { variant: all }
+    covers: { width: all }

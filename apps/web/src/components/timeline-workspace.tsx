@@ -168,12 +168,10 @@ export function TimelineWorkspace({
   }
 
   return (
-    <PageFrame variant="canvas">
+    <PageFrame width="full">
       <PageHeader
         title={<>Timeline</>}
-        eyebrow={<>Your life in context</>}
-        description={<>See the Chapters of your life and your First Times.</>}
-        actions={
+        action={
           <Button
             variant="primary"
             onClick={() => setSelection({ type: "chooser" })}

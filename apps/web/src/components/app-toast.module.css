@@ -19,7 +19,7 @@
 }
 
 .toast[data-type="error"] {
-  border-left-color: var(--mt-color-warm);
+  border-left-color: var(--mt-color-danger);
 }
 
 .content {
@@ -47,7 +47,7 @@
 }
 
 .toast[data-type="error"] .icon {
-  color: var(--mt-color-warm);
+  color: var(--mt-color-danger);
 }
 
 .closeButton {

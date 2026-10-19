@@ -335,29 +335,21 @@ export function SharedPrimitivesGallery() {
 
       <Sample
         title="PageHeader"
-        api="eyebrow · title · description · optional actions · responsive"
+        api="title · meta · action · back · headingLevel"
       >
         <div className={styles.specimenCases}>
           <SpecimenCase id="page-header-full">
             <PageHeader
-              headingLevel={2}
-              eyebrow="Your life, remembered"
-              title="Memories"
-              description="The moments, people, and places that make up your story."
-              actions={
-                <>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setMessage("Header filter activated.")}
-                  >
-                    Filter
-                  </Button>
-                  <Button onClick={() => setActive("standard")}>
-                    <Icon name="plus" size={16} />
-                    Add memory
-                  </Button>
-                </>
+              action={
+                <Button onClick={() => setActive("standard")}>
+                  <Icon name="plus" size={16} />
+                  New Entry
+                </Button>
               }
+              back="library"
+              headingLevel={2}
+              meta="Sunday, September 18"
+              title="Tokyo, spring 2026"
             />
           </SpecimenCase>
           <SpecimenCase id="page-header-title-only">
@@ -374,13 +366,11 @@ export function SharedPrimitivesGallery() {
           <SpecimenCase id="empty-state-with-action">
             <EmptyState
               headingLevel={3}
-              icon={<Icon name="plus" size={24} />}
-              title="Your Life Wiki is empty"
-              description="Capture a memory to begin building your trail."
+              icon={<Icon name="archive" size={20} />}
+              title="Entries you save appear here"
+              description="Write one from the dock, or bring notes in with Import."
               actions={
-                <Button onClick={() => setActive("standard")}>
-                  Add your first memory
-                </Button>
+                <Button onClick={() => setActive("standard")}>New Entry</Button>
               }
             />
           </SpecimenCase>
@@ -393,7 +383,7 @@ export function SharedPrimitivesGallery() {
           </SpecimenCase>
           <SpecimenCase id="empty-state-button">
             <EmptyState
-              icon={<Icon name="star" size={24} />}
+              icon={<Icon name="star" size={20} />}
               title="Start with a first worth remembering"
               description="Add the first time you did something new."
               onClick={() => setMessage("Empty state action activated.")}

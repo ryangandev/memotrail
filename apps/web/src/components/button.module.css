@@ -1,4 +1,6 @@
-/* Values follow packages/design-system/components/button.yaml. */
+/* Values follow packages/design-system/components/button.yaml. Primary is the view's one main
+   action, secondary an alternative on a raised surface, ghost the quiet action, and danger a
+   transparent action in the danger color for what deletes or discards. */
 
 .button {
   display: inline-flex;
@@ -6,12 +8,12 @@
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  gap: var(--mt-space-2);
-  padding: var(--mt-space-2) var(--mt-space-4);
+  gap: var(--mt-space-1-5);
+  padding: var(--mt-space-2) var(--mt-space-3-5);
   border: var(--mt-size-stroke-thin) solid transparent;
-  border-radius: var(--mt-radius-control);
+  border-radius: var(--mt-radius-small);
   font-family: var(--mt-font-family-sans);
-  font-size: var(--mt-font-size-label);
+  font-size: var(--mt-font-size-body-small);
   font-weight: var(--mt-font-weight-medium);
   line-height: var(--mt-line-height-tight);
   text-align: center;
@@ -37,15 +39,15 @@
 }
 
 .button[data-variant="secondary"] {
-  border-color: var(--mt-color-border-strong);
-  color: var(--mt-color-ink-muted);
+  border-color: var(--mt-color-border);
+  color: var(--mt-color-ink);
   background: var(--mt-color-surface-raised);
 }
 
 .button[data-variant="secondary"]:not(:disabled):hover {
-  border-color: var(--mt-color-accent);
-  color: var(--mt-color-accent);
-  background: var(--mt-state-hover-accent-surface);
+  border-color: var(--mt-color-border-strong);
+  color: var(--mt-state-hover-ink);
+  background: var(--mt-state-hover-surface);
 }
 
 .button[data-variant="ghost"] {
@@ -58,21 +60,20 @@
   background: var(--mt-state-hover-surface);
 }
 
+/* TODO(WP0b): the danger token still renders the warm clay; WP0b gives it its own redder value. */
 .button[data-variant="danger"] {
-  border-color: var(--mt-color-danger-border);
   color: var(--mt-color-danger);
-  background: var(--mt-color-danger-subtle);
+  background: transparent;
 }
 
 .button[data-variant="danger"]:not(:disabled):hover {
-  border-color: var(--mt-color-danger);
+  background: var(--mt-color-danger-tint);
 }
 
 .button[data-size="small"] {
   min-height: var(--mt-size-control-small);
   padding: var(--mt-space-1) var(--mt-space-3);
-  border-radius: var(--mt-radius-control);
-  font-size: var(--mt-font-size-caption);
+  font-size: var(--mt-font-size-label);
 }
 
 .button[data-size="large"] {
@@ -86,9 +87,23 @@
   outline-offset: var(--mt-state-focus-ring-offset);
 }
 
-.button:disabled {
-  cursor: default;
-  opacity: var(--mt-state-disabled-opacity-button);
+/* Disabled is its own quiet look, not a faded copy of the variant, so a disabled primary never
+   reads as available. A loading button keeps its variant's colors. */
+.button:disabled:not([aria-busy="true"]) {
+  border-color: transparent;
+  color: var(--mt-color-ink-faint);
+  background: var(--mt-color-surface-subtle);
+  cursor: not-allowed;
+}
+
+.button[data-variant="secondary"]:disabled:not([aria-busy="true"]) {
+  border-color: var(--mt-color-border);
+  background: transparent;
+}
+
+.button[data-variant="ghost"]:disabled:not([aria-busy="true"]),
+.button[data-variant="danger"]:disabled:not([aria-busy="true"]) {
+  background: transparent;
 }
 
 .button[aria-busy="true"] {

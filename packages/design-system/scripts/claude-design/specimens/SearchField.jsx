@@ -27,7 +27,7 @@ export const specimens = {
           placeholder="Search for an address"
         />
         <SearchField
-          label="Search your Life Wiki"
+          label="Search Library"
           placeholder="A phrase, date, or question about your life..."
           size="large"
         />
@@ -40,8 +40,8 @@ export const specimens = {
       <Stack width="420px">
         <SearchField
           hideLabel
-          label="Search your archive"
-          placeholder="Search your archive or jump somewhere..."
+          label="Search MemoTrail"
+          placeholder="Search Entries or go somewhere..."
           size="large"
           trailing={
             <kbd aria-hidden="true" style={key}>

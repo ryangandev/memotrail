@@ -1,32 +1,31 @@
 import type { HTMLAttributes, ReactNode } from "react";
 import {
   pageFrameDefaults,
-  type PageFrameVariant,
+  type PageFrameWidth,
 } from "@/generated/design-system";
 import styles from "./page-frame.module.css";
 
 /**
- * The centered column that holds a page, at most its variant's width and inset by the page
- * gutter. Specified in packages/design-system/components/page-frame.yaml.
+ * The column that holds a page. It starts at the workspace's fixed left edge, so titles never
+ * move sideways between pages, and is at most its width: reading is 720 px, list 960 px, and
+ * full fills the workspace. Specified in packages/design-system/components/page-frame.yaml.
  */
 export function PageFrame({
   children,
   className,
-  variant = pageFrameDefaults.variant,
+  width = pageFrameDefaults.width,
   ...props
 }: HTMLAttributes<HTMLDivElement> & {
   children: ReactNode;
-  variant?: PageFrameVariant;
+  width?: PageFrameWidth;
 }) {
   return (
     <div
       {...props}
-      className={[styles.frame, styles[variant], className]
-        .filter(Boolean)
-        .join(" ")}
-      data-page-frame={variant}
+      className={[styles.frame, className].filter(Boolean).join(" ")}
+      data-page-frame={width}
       data-ui-page-frame
-      data-variant={variant}
+      data-width={width}
     >
       {children}
     </div>

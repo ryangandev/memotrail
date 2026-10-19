@@ -30,12 +30,11 @@ export default function GlobalError({
               <>
                 <Button onClick={() => retry()}>Try again</Button>
                 <ButtonLink href="/" variant="secondary">
-                  Go to Home
+                  Go to Dashboard
                 </ButtonLink>
               </>
             }
             description="Something went wrong while opening MemoTrail. Nothing you saved was changed."
-            icon="refresh"
             title="MemoTrail could not load"
           />
         </main>

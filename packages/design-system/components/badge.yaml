@@ -9,14 +9,16 @@ platforms:
     path: apps/ios/MemoTrail/DesignSystem/Components/MTLabels.swift
     symbols: [MTBadge]
 
-purpose: A single-line, noninteractive label for a record's kind, a status, or a tag.
+purpose: A single-line, noninteractive label for a status, such as Written by AI or On this device.
 
 use:
-  - Record kinds, statuses, Collections, and tags on cards, rows, and page headers.
-  - Short labels laid over photos and maps, in a glass or inverse tone.
+  - A status on a row, card, or page header, such as Written by AI, On this device, or Not accepted.
+  - A short status laid over a photo or map, in a glass or inverse tone.
   - A quiet marker beside a setting or heading, such as Beta or Connected.
 
 avoid:
+  - An Entry's kind. A Chapter or First Time gets a small icon beside its title, and an ordinary Entry gets nothing.
+  - "Tags on a row or page. Write them as quiet #tag text."
   - Anything people press or select. Use Button for actions and a filter chip for filters.
   - Tags people add or remove. Use EntryOrganizationEditor on Web and MTOrganizationEditor on iOS.
   - Messages or sentences. Use inline text, an empty state, or a toast.
@@ -115,7 +117,7 @@ content:
   notes:
     - Statuses use sentence case, such as Not accepted; kinds, Collections, and tags keep their own names.
     - "Write tags with a leading #, such as #travel."
-    - Use uppercase for short kinds and statuses only; it is a visual treatment, so pass the text in its normal case.
+    - Web no longer uses the uppercase treatment; it stays for iOS until its next design pass. Pass the text in its normal case either way.
 
 accessibility:
   role: Static text. Web renders a span in the surrounding text flow and iOS a Text that VoiceOver reads in place.

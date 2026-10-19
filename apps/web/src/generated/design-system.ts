@@ -726,18 +726,13 @@ export const imageDefaults = { fit: "cover" } as const;
 
 // PageFrame, from packages/design-system/components/page-frame.yaml.
 
-/** The page's maximum width. Compact suits forms and focused reading, standard lists and search, wide dashboards and card grids, and canvas dense spatial views. */
-export const pageFrameVariants = [
-  "compact",
-  "standard",
-  "wide",
-  "canvas",
-] as const;
+/** The page's maximum width on Web. Reading is 720 px for an Item page, a review, Settings, Import, and Export; list is 960 px for Dashboard, Library, First Times, Tags, Trash, and Reviews; full fills the workspace for Timeline. */
+export const pageFrameWidths = ["reading", "list", "full"] as const;
 
-export type PageFrameVariant = (typeof pageFrameVariants)[number];
+export type PageFrameWidth = (typeof pageFrameWidths)[number];
 
 /** PageFrame prop defaults. */
-export const pageFrameDefaults = { variant: "standard" } as const;
+export const pageFrameDefaults = { width: "list" } as const;
 
 // RichText, from packages/design-system/components/rich-text.yaml.
 
@@ -958,7 +953,7 @@ export const componentSpecimens = [
   {
     component: "CommandPalette",
     id: "command-palette-destinations",
-    description: "The palette as it opens, with the search field and every destination before a query is typed.",
+    description: "The palette as it opens, with the search field, New Entry, and every destination before a query is typed.",
     covers: {},
   },
   {
@@ -1079,7 +1074,7 @@ export const componentSpecimens = [
     component: "PageFrame",
     id: "page-frame-widths",
     description: "Every width variant with its maximum width and the pages it suits.",
-    covers: { variant: ["compact", "standard", "wide", "canvas"] },
+    covers: { width: ["reading", "list", "full"] },
   },
   {
     component: "PageHeader",
@@ -1164,6 +1159,12 @@ export const componentSpecimens = [
     id: "section-header-long",
     description: "A long section title and its trailing action in a narrow column.",
     covers: { variant: ["section"] },
+  },
+  {
+    component: "SegmentedControl",
+    id: "segmented-control-states",
+    description: "Three options with the first selected, a two-option control, and a disabled control.",
+    covers: {},
   },
   {
     component: "SelectField",

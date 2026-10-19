@@ -247,12 +247,8 @@ export function ExportSettings({
   const full = snapshots.length >= exportLimit;
 
   return (
-    <PageFrame className={styles.content} variant="compact">
-      <PageHeader
-        title={<>Export archive</>}
-        eyebrow={<>YOUR ARCHIVE, TO KEEP</>}
-        description={<>A portable copy of your story. No AI processing.</>}
-      />
+    <PageFrame className={styles.content} width="reading">
+      <PageHeader back="settings" title={<>Export archive</>} />
       <section aria-labelledby="export-everything" className={styles.card}>
         <h2 id="export-everything">Export everything</h2>
         <p>

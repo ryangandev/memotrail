@@ -9,11 +9,11 @@ platforms:
     path: apps/ios/MemoTrail/DesignSystem/Components/MTHeaders.swift
     symbols: [MTSectionHeader]
 
-purpose: Titles a region of a page, with an optional quiet detail, a description, and a trailing action.
+purpose: Titles a region of a page, with an optional quiet count or detail, a description, and a trailing action on the title's baseline.
 
 use:
-  - A region of a page, such as Recent Entries on the Home Dashboard or Story on a focused record, in the section variant.
-  - The heading above a list of rows or results, such as All items with its count, in the list variant.
+  - A region of a page, such as Recent Entries on the Dashboard or Story on an Entry page, in the section variant.
+  - The heading above a list of rows or results, such as All Entries with its count, in the list variant.
 
 avoid:
   - The page's own title. Use PageHeader.
@@ -21,9 +21,9 @@ avoid:
   - Labels on a card. Use Badge or the card's own title.
 
 anatomy:
-  container: The row that holds the copy and the trailing content, wrapping the trailing content below when it does not fit.
-  title: The heading text, a serif title in the section variant and small uppercase text in the list variant.
-  detail: An optional quiet count or note beside the title, or at the far edge.
+  container: The row that holds the copy and the trailing content, wrapping the trailing content below when it does not fit. On Web the section variant sits over a hairline rule.
+  title: The heading text, a serif title in the section variant and a small label in the list variant, uppercase on iOS only.
+  detail: An optional muted count or note beside the title, or at the far edge.
   description: An optional sentence under the title.
   trailing: An optional link or button at the trailing edge, after an end-aligned detail.
 
@@ -45,17 +45,23 @@ tokens:
     title:
       color: "{color.ink}"
     detail:
-      fontSize: "{font.size.caption}"
+      fontSize: { web: "{font.size.label}", ios: "{font.size.caption}" }
       fontWeight: "{font.weight.regular}"
-      color: "{color.inkFaint}"
+      color: { web: "{color.inkMuted}", ios: "{color.inkFaint}" }
     description:
       fontSize: "{font.size.caption}"
       color: "{color.inkMuted}"
   - when: { variant: section }
-    title: { type: "{type.cardTitle}" }
+    container:
+      paddingBlock: { web: "{space.2}" }
+      border: { web: "{color.border}" }
+      borderWidth: { web: "{size.stroke.thin}" }
+    title:
+      type: { ios: "{type.cardTitle}" }
+      fontWeight: { web: "{font.weight.medium}" }
   - when: { variant: list }
     container: { minHeight: { ios: "{size.control.small}" } }
-    title: { type: "{type.listHeading}" }
+    title: { type: { web: "{type.label}", ios: "{type.listHeading}" } }
     description: { color: "{color.inkFaint}" }
 
 content:
@@ -64,8 +70,8 @@ content:
   casing: sentence
   length: A title of one to four words, a detail of a count or two or three words, and a description of one sentence.
   notes:
-    - The list variant is set in uppercase visually, so pass the title in its normal case.
-    - Write counts with their noun, such as 9 items, so the detail reads on its own.
+    - On iOS the list variant is set in uppercase visually, so pass the title in its normal case; Web shows it as written.
+    - Write counts with their noun, such as 9 Entries, so the detail reads on its own.
 
 accessibility:
   role: A heading. Web renders an h2, h3, or h4 that the caller chooses for the page outline, and iOS marks the title as a header.
@@ -75,6 +81,10 @@ accessibility:
   dynamicType: iOS scales every text role with Dynamic Type and wraps the title. Web grows with browser zoom and wraps the trailing content below the copy.
 
 platformDifferences:
+  - difference: Web section titles are 20 px serif, or 18 px up to 720 px, from a Web layout variable in globals.css, over a hairline rule; iOS uses the card title role without a rule.
+    reason: The Quiet ledger section size has no type role yet. WP0b adds it, and the iOS rewrite adopts the rule.
+  - difference: The Web list variant is a sentence-case label; iOS keeps the small uppercase list heading.
+    reason: The Web workspace dropped uppercase headings first; the iOS app follows in its own rewrite.
   - difference: The list variant reserves the 34 pt small control height on iOS; Web sizes it to its text.
     reason: iOS list headers often hold a small button, and the reserved height keeps headers with and without one the same height in a scrolling list.
   - difference: On iOS the trailing action stays beside a wrapping title; on Web it wraps below the copy when the row is too narrow.

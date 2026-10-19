@@ -67,7 +67,7 @@ export function ConfirmationDialogProvider({
           size="compact"
           title={request.title}
           description={request.description}
-          eyebrow={request.eyebrow ?? <>Please confirm</>}
+          eyebrow={request.eyebrow}
           closeLabel="Close confirmation"
           onOpenChange={(open) => {
             if (!open) finish(false);

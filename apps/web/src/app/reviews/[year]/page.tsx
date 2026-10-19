@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ReviewPanel } from "@/components/review-panel";
 import { PageFrame } from "@/components/page-frame";
@@ -37,11 +36,12 @@ export default async function YearReviewPage({ params }: YearReviewPageProps) {
   ]);
 
   return (
-    <PageFrame variant="compact">
-      <Link className={styles.back} href="/reviews">
-        ← Year reviews
-      </Link>
-      <PageHeader eyebrow={<>Year in review</>} title={<>{year}</>} />
+    <PageFrame width="reading">
+      <PageHeader
+        back="reviews"
+        meta={<>Year in review</>}
+        title={<>{year}</>}
+      />
       {!data || !preferences ? (
         <p role="alert">This year could not load. Refresh to try again.</p>
       ) : data.eligibility.status === "not_over" ? (

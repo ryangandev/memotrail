@@ -90,17 +90,10 @@ export function TrashWorkspace({
   }
 
   return (
-    <PageFrame variant="standard">
+    <PageFrame width="list">
       <PageHeader
         title={<>Trash</>}
-        eyebrow={<>Recoverable by design</>}
-        description={
-          <>
-            Restore something you still need, or permanently remove it with an
-            explicit confirmation.
-          </>
-        }
-        actions={
+        action={
           <>
             <div className={styles.retentionBadge}>
               <Icon name="clock" size={18} />

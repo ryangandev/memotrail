@@ -82,14 +82,8 @@ export default async function SettingsPage() {
   );
 
   return (
-    <PageFrame className={pageStyles.content} variant="compact">
-      <PageHeader
-        title={<>Settings</>}
-        eyebrow={<>Your private space</>}
-        description={
-          <>Manage your account and the way MemoTrail works for you.</>
-        }
-      />
+    <PageFrame className={pageStyles.content} width="reading">
+      <PageHeader title={<>Settings</>} />
 
       <section aria-labelledby="account-heading">
         <SectionHeader

@@ -6,9 +6,12 @@ import styles from "./app-toast.module.css";
 
 /**
  * Where toasts appear: the bottom right, at most three at a time. The workspace renders one
- * without an id; a Toaster with an id shows only the toasts sent to it, as the design-system
- * gallery's stages do. Specified in packages/design-system/components/toast.yaml.
+ * without an id, stacked above the dock and the phone tab bar by `--toast-bottom` in globals.css;
+ * a Toaster with an id shows only the toasts sent to it, as the design-system gallery's stages do.
+ * Specified in packages/design-system/components/toast.yaml.
  */
+const workspaceOffset = { bottom: "var(--toast-bottom)" };
+
 export function AppToaster({
   expand = false,
   id,
@@ -23,6 +26,8 @@ export function AppToaster({
       duration={durations.toast}
       expand={expand}
       id={id}
+      mobileOffset={id ? undefined : workspaceOffset}
+      offset={id ? undefined : workspaceOffset}
       position="bottom-right"
       visibleToasts={3}
       toastOptions={{

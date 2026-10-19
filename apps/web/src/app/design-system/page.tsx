@@ -14,7 +14,7 @@ export default function DesignSystemPage() {
   if (process.env.NODE_ENV === "production") notFound();
 
   return (
-    <PageFrame className={styles.page} variant="canvas">
+    <PageFrame className={styles.page} width="full">
       <header className={styles.hero}>
         <p className={styles.eyebrow}>Development only</p>
         <h1>Web Design System</h1>

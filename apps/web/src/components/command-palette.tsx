@@ -14,49 +14,97 @@ import styles from "./command-palette.module.css";
 
 type Command = {
   description: string;
-  href: string;
   icon: IconName;
   keywords: string;
   label: string;
-};
+} & ({ href: string; action?: never } | { action: "new-entry"; href?: never });
 
-type PaletteItem = Omit<Command, "keywords"> & { key: string };
+type PaletteItem = {
+  action?: "new-entry";
+  description: string;
+  href?: string;
+  icon: IconName;
+  key: string;
+  label: string;
+};
 type SearchState = QuickSearchResult & { query: string };
 
 const commands: Command[] = [
   {
-    description: "Return to your recent story",
+    action: "new-entry",
+    description: "Write something down",
+    icon: "plus",
+    keywords: "new entry capture write add create note memory",
+    label: "New Entry",
+  },
+  {
+    description: "Today, and what you wrote lately",
     href: "/",
     icon: "dashboard",
-    keywords: "home recent story",
+    keywords: "home today recent",
     label: "Dashboard",
   },
   {
-    description: "Move through your story over time",
+    description: "Your Chapters and Entries across the years",
     href: "/timeline",
     icon: "timeline",
-    keywords: "life story dates moments",
+    keywords: "life chapters dates years",
     label: "Timeline",
   },
   {
-    description: "Browse every part of your archive",
+    description: "Every Entry, with search and filters",
     href: "/library",
     icon: "archive",
-    keywords: "records archive search find filter",
+    keywords: "entries search find filter",
     label: "Library",
   },
   {
-    description: "Browse groups across your archive",
+    description: "The things you did for the first time",
+    href: "/first-times",
+    icon: "star",
+    keywords: "firsts beginnings photos",
+    label: "First Times",
+  },
+  {
+    description: "Year and Chapter reviews to return to",
+    href: "/reviews",
+    icon: "quote",
+    keywords: "year review chapter return look back",
+    label: "Reviews",
+  },
+  {
+    description: "Name and tidy your tags",
     href: "/tags",
     icon: "tag",
-    keywords: "labels filter organize collections groups",
+    keywords: "labels organize groups",
     label: "Tags",
   },
   {
-    description: "Manage account and preferences",
+    description: "Bring in notes from another app",
+    href: "/settings/import",
+    icon: "inbox",
+    keywords: "import markdown day one notes bring",
+    label: "Import",
+  },
+  {
+    description: "Download a copy of everything",
+    href: "/settings/export",
+    icon: "archive",
+    keywords: "export download backup copy",
+    label: "Export",
+  },
+  {
+    description: "Restore Entries or delete them for good",
+    href: "/trash",
+    icon: "trash",
+    keywords: "deleted restore recover remove",
+    label: "Trash",
+  },
+  {
+    description: "Profile, Timeline, appearance, AI, and account",
     href: "/settings",
     icon: "settings",
-    keywords: "account preference timezone",
+    keywords: "account preferences timezone appearance theme profile",
     label: "Settings",
   },
 ];
@@ -68,14 +116,17 @@ const emptySearchState: SearchState = {
 };
 
 /**
- * The keyboard-first search over the archive and the workspace's destinations.
+ * The keyboard-first search over Entries, the workspace's destinations, and New Entry.
  * Specified in packages/design-system/components/command-palette.yaml.
  */
 export function CommandPalette({
   onClose,
+  onNewEntry,
   open,
 }: {
   onClose: () => void;
+  /** Opens Quick Capture, for the New Entry command. */
+  onNewEntry: () => void;
   open: boolean;
 }) {
   const router = useRouter();
@@ -102,10 +153,11 @@ export function CommandPalette({
     }),
   );
   const navigationItems: PaletteItem[] = filteredCommands.map((command) => ({
+    action: command.action,
     description: command.description,
     href: command.href,
     icon: command.icon,
-    key: `command:${command.href}`,
+    key: `command:${command.action ?? command.href}`,
     label: command.label,
   }));
   const fullSearchItem: PaletteItem | null = normalizedQuery
@@ -155,7 +207,7 @@ export function CommandPalette({
         if (error instanceof DOMException && error.name === "AbortError")
           return;
         setSearchState({
-          error: "MemoTrail could not search your archive. Try again.",
+          error: "MemoTrail could not search your Entries. Try again.",
           items: [],
           query: requestQuery,
         });
@@ -181,7 +233,8 @@ export function CommandPalette({
 
   function navigate(item: PaletteItem) {
     onClose();
-    router.push(item.href);
+    if (item.action === "new-entry") onNewEntry();
+    else if (item.href) router.push(item.href);
   }
 
   function handleInputKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
@@ -254,14 +307,14 @@ export function CommandPalette({
           <SearchField
             autoFocus
             hideLabel
-            label="Search your archive"
+            label="Search MemoTrail"
             maxLength={200}
             onChange={(event) => {
               setQuery(event.target.value);
               setActiveIndex(0);
             }}
             onKeyDown={handleInputKeyDown}
-            placeholder="Search your archive or jump somewhere..."
+            placeholder="Search Entries or go somewhere..."
             size="large"
             trailing={<kbd aria-hidden="true">esc</kbd>}
             value={query}
@@ -272,7 +325,7 @@ export function CommandPalette({
           {normalizedQuery ? (
             <div className={styles.section}>
               <p className={styles.sectionLabel} aria-live="polite">
-                {searching ? "Searching your trail..." : "Archive results"}
+                {searching ? "Searching..." : "Entries"}
               </p>
               {resolvedSearch?.error ? (
                 <p className={styles.notice} role="status">
@@ -290,16 +343,14 @@ export function CommandPalette({
                   <Skeleton height="44px" />
                 </div>
               ) : (
-                <p className={styles.empty}>No archive matches yet.</p>
+                <p className={styles.empty}>No Entries match yet.</p>
               )}
             </div>
           ) : null}
 
           {navigationItems.length ? (
             <div className={styles.section}>
-              <p className={styles.sectionLabel}>
-                {normalizedQuery ? "Navigation" : "Quick navigation"}
-              </p>
+              <p className={styles.sectionLabel}>Go to</p>
               <div className={styles.commandList}>
                 {navigationItems.map((item, index) =>
                   itemRow(item, searchItems.length + index),

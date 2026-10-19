@@ -15,7 +15,7 @@ type SectionHeaderProps = Omit<ComponentPropsWithoutRef<"div">, "title"> & {
   description?: ReactNode;
   /** A link or button at the trailing edge. */
   action?: ReactNode;
-  /** `section` is a serif title for a region of content; `list` is the small uppercase heading above a list. */
+  /** `section` is a serif title for a region of content; `list` is the small label above a list. */
   variant?: SectionHeaderVariant;
   /** Chosen by the caller to fit the page outline. */
   headingLevel?: 2 | 3 | 4;

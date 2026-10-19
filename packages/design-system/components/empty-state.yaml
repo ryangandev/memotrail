@@ -14,19 +14,19 @@ purpose: Explains why a region has nothing to show and, when there is one, offer
 use:
   - A list, grid, or section with no records yet, such as an empty Library or a First Times page before the first First Time.
   - A search or filter that matched nothing, with a way to widen it.
-  - A section that is itself the way to start, such as an empty Home Dashboard card, as one whole-state button.
+  - A section that is itself the way to start, such as an empty Dashboard section, as one whole-state button.
 
 avoid:
   - Content that is still loading. Use Skeleton on Web and MTLoadingSkeleton on iOS.
   - Errors and outcomes of an action. Use a toast or inline field feedback.
-  - Explaining a page. Use the PageHeader description.
+  - Explaining a page. A page explains itself through its content.
 
 anatomy:
-  container: The bordered, rounded surface that centers its content, or the whole button when the state is one action.
-  icon: An optional accent icon on a soft accent tile above the title.
-  title: The serif title that says what is missing.
+  container: On Web, an unboxed row at the content's left edge; on iOS, the bordered, rounded surface that centers its content. With one action for the whole state, the container is the button.
+  icon: An optional quiet icon, faint beside the title on Web and accent on a soft accent tile above it on iOS.
+  title: The line that says what is missing, medium body text on Web and the serif card title on iOS.
   description: An optional sentence that says why, or what will appear here.
-  actions: Optional buttons below the description, such as New entry.
+  actions: At most one button below the description, such as New Entry.
 
 props: {}
 
@@ -34,38 +34,37 @@ states: [default, hover, pressed, focus]
 
 tokens:
   - container:
-      background: "{color.surface}"
-      border: "{color.border}"
-      borderWidth: "{size.stroke.thin}"
-      radius: "{radius.large}"
+      background: { ios: "{color.surface}" }
+      border: { ios: "{color.border}" }
+      borderWidth: { ios: "{size.stroke.thin}" }
+      radius: { ios: "{radius.large}" }
       gap: "{space.3}"
-      paddingInline: { web: "{space.5}", ios: "{space.4}" }
-      paddingBlock: { web: "{space.10}", ios: "{space.6}" }
+      paddingInline: { ios: "{space.4}" }
+      paddingBlock: { web: "{space.6}", ios: "{space.6}" }
     icon:
-      size: "{size.emptyState.icon}"
-      radius: "{radius.medium}"
-      background: "{color.accentSubtle}"
-      color: "{color.accent}"
+      size: { ios: "{size.emptyState.icon}" }
+      radius: { ios: "{radius.medium}" }
+      background: { ios: "{color.accentSubtle}" }
+      color: { web: "{color.inkFaint}", ios: "{color.accent}" }
     title:
-      type: "{type.cardTitle}"
+      type: { web: "{type.body}", ios: "{type.cardTitle}" }
+      fontWeight: { web: "{font.weight.medium}" }
       color: "{color.ink}"
     description:
-      fontSize: { web: "{font.size.label}" }
-      type: { ios: "{type.supporting}" }
-      lineHeight: "{lineHeight.body}"
+      type: { web: "{type.bodySmall}", ios: "{type.supporting}" }
+      lineHeight: { ios: "{lineHeight.body}" }
       color: "{color.inkMuted}"
       maxWidth: "{size.emptyState.messageWidth}"
     actions:
       gap: "{space.2}"
   - when: { state: hover }
-    container: { border: { web: "{color.accent}" } }
+    container: { background: { web: "{state.hover.surface}" } }
   - when: { state: pressed }
     container: { border: { ios: "{color.accent}" } }
   - when: { state: focus }
     container:
       border: { web: "{state.focus.ring}" }
       borderWidth: { web: "{state.focus.ringWidth}" }
-      offset: { web: "{state.focus.ringOffset}" }
 
 content:
   lines: unlimited
@@ -73,8 +72,8 @@ content:
   casing: sentence
   length: A title of two to five words and a description of one sentence, up to about 20 words.
   notes:
-    - Say what will appear rather than that something is missing, such as Your trail starts here.
-    - Name the action after what it does, such as New entry, not Get started.
+    - Say what will appear rather than that something is missing, such as Entries you save appear here.
+    - Name the action after what it does, such as New Entry, not Get started.
 
 accessibility:
   role: A group with a heading on Web and a container with a header on iOS. With one action for the whole state, it is a single button on both.
@@ -84,11 +83,11 @@ accessibility:
   dynamicType: iOS scales the title and description with Dynamic Type and wraps them; the icon tile keeps its size. Web grows with browser zoom.
 
 platformDifferences:
-  - difference: Web pads the state 40 by 20 px above 560 px and 24 by 16 px below it; iOS always uses the 24 by 16 pt phone padding.
-    reason: The iOS app runs only on iPhone, so it never reaches the wider layout.
-  - difference: The description is 13 px label text on Web and the supporting text role on iOS, also 13 pt.
+  - difference: Web draws the state inline and unboxed at the content's left edge, with a faint icon beside a medium body title; iOS draws a bordered card with an accent icon tile above a serif title.
+    reason: The Web workspace moved to the Quiet ledger's one quiet empty style first; the iOS app follows in its own rewrite.
+  - difference: The description is 14 px body-small text on Web and the supporting text role on iOS, 13 pt.
     reason: The supporting role scales with Dynamic Type's footnote style, which a fixed size would not.
-  - difference: A whole-state button shows the accent border on hover on Web and while pressed on iOS.
+  - difference: A whole-state button shows a quiet hover surface on Web and the accent border while pressed on iOS.
     reason: Each platform's own feedback for a pointer and a touch.
   - difference: Web lets the caller choose an h2 or h3 title; iOS marks the title as a header without a level.
     reason: A Web page needs a heading outline, while VoiceOver moves between headers without levels in a SwiftUI screen.

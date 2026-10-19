@@ -390,17 +390,8 @@ export function ImportWorkspace({
       : "";
 
   return (
-    <PageFrame className={styles.content} variant="compact">
-      <PageHeader
-        title={<>Import</>}
-        eyebrow={<>BRING YOUR NOTES HERE</>}
-        description={
-          <>
-            Move a journal or notes from another app into MemoTrail as ordinary
-            Entries. No AI processing.
-          </>
-        }
-      />
+    <PageFrame className={styles.content} width="reading">
+      <PageHeader title={<>Import</>} />
       {message ? (
         <p className={styles.notice} data-tone="danger" role="alert">
           {message}

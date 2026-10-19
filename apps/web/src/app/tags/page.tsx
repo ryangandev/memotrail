@@ -28,22 +28,10 @@ export default async function TagsPage({
   if (!workspace) return null;
 
   return (
-    <PageFrame variant="standard">
+    <PageFrame width="list">
       <PageHeader
         title={<>Tags</>}
-        eyebrow={<>Group across your archive</>}
-        description={
-          <>
-            Tags group related Entries, such as travel, family, or a trip you
-            want to keep together. Use them across Entry types and filter by
-            them anywhere.
-          </>
-        }
-        actions={
-          <>
-            <TagControl items={workspace.items} />
-          </>
-        }
+        action={<TagControl items={workspace.items} />}
       />
 
       <form aria-label="Find tags" className={styles.search} role="search">
