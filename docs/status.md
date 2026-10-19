@@ -4,10 +4,9 @@ Last reviewed: 2026-10-19.
 
 ## Where things stand
 
-The branch `product/positioning-reset` implements the positioning in [positioning.md](./positioning.md) and the product in [product.md](./product.md) on Web.
-Nothing on this branch is deployed.
-The hosted Supabase project `kaivkozeyuwzqrckmyqu` has every migration through `202610180087` and no later one.
-Production runs the Web from before this branch, which calls functions this branch's migrations drop.
+Main implements the positioning in [positioning.md](./positioning.md) and the product in [product.md](./product.md) on Web, in the Quiet ledger design, and the rewritten native iOS app.
+Vercel deploys main to Production on every merge.
+The hosted Supabase project `kaivkozeyuwzqrckmyqu` has every migration through `202610190046`; `202610190046` only reorders Library and keeps every function signature.
 
 ## Implemented on Web
 
@@ -50,7 +49,7 @@ Every step needs Ryan's explicit go-ahead before it starts.
 Do the steps in this order.
 
 1. **Back up** the hosted database, schema and data, to a destination Ryan names.
-2. **Apply the migrations** in filename order: `202610190001` and `202610190002`; `202610190010` through `202610190017`; `202610190020` through `202610190023`; `202610190030` through `202610190038`; `202610190040` through `202610190046`.
+2. **Apply the migrations** in filename order: `202610190001` and `202610190002`; `202610190010` through `202610190017`; `202610190020` through `202610190023`; `202610190030` through `202610190038`; `202610190040` through `202610190046`. Done: `supabase migration list --linked` shows all of them on the hosted project.
    `202610190011` converts every Home, Vehicle, and Period and checks its own result before committing.
    Apply them before deploying this Web, because the Web in Production calls RPCs these migrations drop.
    A migration `202610190024` that drops dead columns does not exist yet, and the follow-up migration for [issue #101](https://github.com/ryangandev/memotrail/issues/101) is still pending; neither belongs in this rollout.
