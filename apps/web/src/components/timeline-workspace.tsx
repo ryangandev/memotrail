@@ -45,6 +45,7 @@ import {
   type TimelineYearGroup,
 } from "@/lib/data/timeline-presentation";
 import { wikiEntryHref } from "@/lib/data/wiki-item";
+import { countLabel } from "@/lib/count-label";
 import styles from "@/components/timeline-workspace.module.css";
 
 const NewEntryDialog = dynamic(
@@ -904,8 +905,4 @@ function useCanvasFillWidth(viewport: RefObject<HTMLDivElement | null>) {
   }, [viewport]);
 
   return width;
-}
-
-function countLabel(count: number, noun: string) {
-  return `${count} ${noun}${count === 1 ? "" : "s"}`;
 }

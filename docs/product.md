@@ -59,6 +59,8 @@ MemoTrail may also suggest one, as described in [Chapter suggestions](#chapter-s
 
 First Time is a checkbox on an Entry that marks the first time the user did something.
 The First Times view lists every Entry with the mark, and adding one there opens the Entry editor with First Time already checked.
+It lists them newest first as rows, like Library: the date, the title, a line of its writing, where it happened, its photo count and tags, and its first photo or a map of its Location.
+An untitled First Time is named by its date, so its row leaves the date column empty.
 Unchecking First Time takes the Entry out of First Times without changing anything else about it.
 
 ### Dates
@@ -241,12 +243,17 @@ Each Chapter is a bar across its span, and each First Time is a point on its dat
 Overlapping Chapters stack automatically so every bar stays readable; there are no lanes to choose, name, reorder, or hide.
 Ordinary Entries are not drawn on Timeline; opening a Chapter shows them.
 Web Timeline has one view; there is no style setting.
+It opens on today, with today in the right third and a Today line across the board, and Today brings the view back there.
+Years and Months set the scale, keeping the date in view where it was; Timeline opens in Months.
+A Chapter still going on fades out past Today.
+On narrow screens Timeline reads as a vertical list grouped by year, newest first, with a Today rule between what has happened and what is still ahead.
 An optional private birth date becomes Timeline's starting point; Set birth date on Timeline and Settings add it, and Timeline never asks for it unprompted.
 Without one, Timeline starts from the earliest dated Entry, and an empty Timeline shows the current year.
 Adding to Timeline never waits on a birth date.
 Add to Timeline asks whether the user is adding a Chapter or a First Time, and opens the Entry editor with that mark already set.
 Selecting anything on Timeline opens its Entry page.
-Unanchored Age, Approximate, and Unknown Chapters and First Times remain visible without a fabricated calendar position.
+Chapters and First Times without a calendar date, such as Age, Approximate, and Unknown, are never given a fabricated position: Timeline counts them in one line that leads to Library.
+Year reviews are reached from Reviews, not from Timeline.
 
 Dashboard is ordered around:
 

@@ -35,7 +35,7 @@ test("Timeline adds without asking for a birth date and starts from the earliest
 
   // An empty Timeline shows this year and the next, with an axis that fills the card.
   const year = new Date().getUTCFullYear();
-  const axis = page.getByTestId("timeline-axis").locator("span");
+  const axis = page.getByTestId("timeline-axis").locator('[data-tick="year"]');
   await expect(axis.first()).toHaveText(String(year));
   await expect(axis.last()).toHaveText(String(year + 1));
   await expectBandsFillTimeline(page, 0);
@@ -57,18 +57,74 @@ test("Timeline adds without asking for a birth date and starts from the earliest
       })
     ).error,
   ).toBeNull();
+  // A First Time without a calendar date stays off the Timeline and is found in Library.
+  expect(
+    (
+      await client.from("entries").insert({
+        owner_id: owner,
+        title: "First time skiing",
+        item_kind: "entry",
+        item_subtype: "entry",
+        is_first_time: true,
+        occurred_label: "Winter in middle school",
+        occurred_timezone: "UTC",
+        date_precision: "approximate",
+      })
+    ).error,
+  ).toBeNull();
   await page.reload();
   const summary = page.getByLabel("Timeline summary");
-  await expect(summary).toContainText("1 First Time");
-  await expect(summary).toContainText(new RegExp(`${year - 3} to \\d{4}`));
+  await expect(summary).toContainText("2 First Times");
+  await expect(summary).toContainText(`${year - 3} to today`);
   await expect(axis.first()).toHaveText(String(year - 2));
   await expect(
     page
       .getByRole("region", { name: "Timeline by year" })
       .getByRole("link", { name: /Moved into the studio/ }),
   ).toBeVisible();
+  await expect(
+    page.getByText(
+      "1 Entry has no calendar date and is not on the Timeline.",
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Find them in Library" }),
+  ).toHaveAttribute("href", "/library");
   await expectBandsFillTimeline(page, 1);
   await expect(prompt).toHaveCount(0);
+
+  // Timeline opens on today, in months; Years zooms out and Today scrolls back.
+  await expectTodayInView(page);
+  await expect(
+    page.getByTestId("timeline-axis").locator('[data-tick="month"]').first(),
+  ).toBeAttached();
+  await page.getByRole("radio", { name: "Years", exact: true }).check();
+  await expect(
+    page.getByTestId("timeline-axis").locator('[data-tick="month"]'),
+  ).toHaveCount(0);
+  await expectTodayInView(page);
+  await page
+    .getByTestId("timeline-viewport")
+    .evaluate((viewport) => (viewport.scrollLeft = 0));
+  await page.getByRole("radio", { name: "Months", exact: true }).check();
+  await page.getByRole("button", { name: "Today", exact: true }).click();
+  await expectTodayInView(page);
+
+  // A phone reads the Timeline as a list by year, with a Today rule.
+  await page.setViewportSize({ width: 390, height: 844 });
+  const vertical = page.getByRole("region", { name: "Timeline, newest first" });
+  await expect(vertical).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Timeline by year" }),
+  ).toBeHidden();
+  await expect(
+    vertical.getByRole("heading", { name: String(year - 3) }),
+  ).toBeVisible();
+  await expect(
+    vertical.getByRole("link", { name: /Moved into the studio/ }),
+  ).toBeVisible();
+  await expect(vertical.getByText(/^Today · /)).toBeVisible();
+  await page.setViewportSize({ width: 1440, height: 900 });
 
   // Set birth date stays the way to begin Timeline at birth.
   await summary.getByRole("button", { name: "Set birth date" }).click();
@@ -137,6 +193,21 @@ test("Timeline adds without asking for a birth date and starts from the earliest
   await expect(axis.first()).toHaveText("1995");
   await expect(prompt).toHaveCount(0);
 });
+
+// The Today line sits inside the visible part of the board.
+async function expectTodayInView(page: Page) {
+  await expect
+    .poll(() =>
+      page.getByTestId("timeline-viewport").evaluate((viewport) => {
+        const view = viewport.getBoundingClientRect();
+        const today = viewport
+          .querySelector('[data-testid="timeline-today"]')!
+          .getBoundingClientRect();
+        return today.left >= view.left && today.right <= view.right;
+      }),
+    )
+    .toBe(true);
+}
 
 // The year axis and every band reach the right edge of the Timeline card.
 async function expectBandsFillTimeline(page: Page, bands: number) {
