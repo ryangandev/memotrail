@@ -133,9 +133,8 @@ extension LocalSessionUITests {
     attach(app, "Chapter review interpretation in dark mode")
 
     // A quote opens the Entry it came from.
-    let source = app.buttons.matching(
-      NSPredicate(format: "identifier == %@", "item-review-entry-\(review.worry.uuidString.lowercased())")
-    ).firstMatch
+    // The link is a link element, not a button, so any element type will do.
+    let source = element("item-review-entry-\(review.worry.uuidString.lowercased())", in: app)
     reveal(source, in: app).tap()
     XCTAssertTrue(app.navigationBars["Entry"].waitForExistence(timeout: 10))
     XCTAssertTrue(text("First rejection", in: app).exists)
