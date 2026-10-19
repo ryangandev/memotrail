@@ -23,6 +23,7 @@ struct TagsView: View {
   /// The Entries revision this page last reacted to, so its own changes reload it only once.
   @State private var seenRevision = 0
   @Environment(AppNavigator.self) private var navigator
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   /// The tag editor: a new tag, or a saved one.
   private struct Editing: Identifiable {
@@ -81,9 +82,13 @@ struct TagsView: View {
     }
   }
 
-  /// Web's tag search: a large field beside Search.
+  /// Web's tag search: a large field beside Search, or above it at accessibility text sizes.
   private var search: some View {
-    HStack(alignment: .center, spacing: MTSpacing.s3) {
+    let layout =
+      typeSize.isAccessibilitySize
+      ? AnyLayout(VStackLayout(alignment: .leading, spacing: MTSpacing.s3))
+      : AnyLayout(HStackLayout(alignment: .center, spacing: MTSpacing.s3))
+    return layout {
       MTSearchField(
         "Find a tag", text: $query, prompt: "Search tag names", size: .large, hidesLabel: true,
         maxLength: 200

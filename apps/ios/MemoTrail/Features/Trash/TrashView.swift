@@ -66,6 +66,15 @@ struct TrashView: View {
     }
   }
 
+  private var pageCount: some View {
+    Text("1-\(controller.items.count) of \(controller.totalCount)")
+      .foregroundStyle(MTColor.inkMuted)
+  }
+
+  private var orderNote: some View {
+    Text("Newest removals first").foregroundStyle(MTColor.inkFaint)
+  }
+
   /// Web's header badge: the retention window, with each item's own dates below.
   private var retentionBadge: some View {
     HStack(spacing: MTSpacing.s3) {
@@ -110,12 +119,17 @@ struct TrashView: View {
         icon: .trash)
     } else {
       VStack(alignment: .leading, spacing: MTSpacing.s3) {
-        HStack {
-          Text("1-\(controller.items.count) of \(controller.totalCount)")
-            .foregroundStyle(MTColor.inkMuted)
-          Spacer(minLength: MTSpacing.s2)
-          Text("Newest removals first")
-            .foregroundStyle(MTColor.inkFaint)
+        // The order note goes under the count when both do not fit on one line.
+        ViewThatFits(in: .horizontal) {
+          HStack {
+            pageCount
+            Spacer(minLength: MTSpacing.s2)
+            orderNote
+          }
+          VStack(alignment: .leading, spacing: MTSpacing.s1) {
+            pageCount
+            orderNote
+          }
         }
         .font(MTFont.detail)
         ForEach(controller.items) { item in
@@ -160,6 +174,7 @@ struct TrashView: View {
 /// Web's Trash card: the photo or the item's mark, its Kind, removal date, title, detail, and
 /// how long it stays restorable, then Restore and Delete forever.
 private struct TrashItemCard: View {
+  @Environment(\.dynamicTypeSize) private var typeSize
   let item: TrashItem
   let timezone: String
   let renderedAt: Date
@@ -186,7 +201,8 @@ private struct TrashItemCard: View {
           Text(item.title)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
-            .lineLimit(1)
+            // At accessibility text sizes one line holds only a word or two.
+            .lineLimit(typeSize.isAccessibilitySize ? 3 : 1)
             .truncationMode(.tail)
             .padding(.top, MTSpacing.s3)
           if let detail = item.displayDetail {

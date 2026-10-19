@@ -41,9 +41,12 @@ struct MTButtonStyle: ButtonStyle {
   var isIconOnly = false
   var fillsWidth = MTButtonDefaults.fillsWidth
   @Environment(\.isEnabled) private var isEnabled
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   func makeBody(configuration: Configuration) -> some View {
     let pressed = configuration.isPressed && isEnabled
+    // At accessibility text sizes a label wraps instead of truncating, like Web.
+    let wraps = typeSize.isAccessibilitySize && !isIconOnly
     HStack(spacing: MTSpacing.s2) {
       if isLoading {
         ProgressView().controlSize(.small).tint(colors(pressed: pressed).foreground)
@@ -53,9 +56,11 @@ struct MTButtonStyle: ButtonStyle {
       }
     }
     .font(size.font)
-    .lineLimit(1)
+    .lineLimit(wraps ? nil : 1)
+    .multilineTextAlignment(.center)
     .foregroundStyle(colors(pressed: pressed).foreground)
     .padding(.horizontal, isIconOnly ? 0 : size.horizontalPadding)
+    .padding(.vertical, wraps ? MTSpacing.s2 : 0)
     .frame(minWidth: isIconOnly ? size.height : nil, minHeight: size.height)
     .frame(maxWidth: fillsWidth ? .infinity : nil)
     .background(

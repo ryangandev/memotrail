@@ -225,6 +225,12 @@ struct MTSheetFooter<Destructive: View, Cancel: View, Primary: View>: View {
         }
         destructive
       }
+      // At accessibility text sizes even two buttons do not fit side by side.
+      VStack(spacing: MTSpacing.s2) {
+        primary.frame(maxWidth: .infinity)
+        cancel.frame(maxWidth: .infinity)
+        destructive
+      }
     }
   }
 }

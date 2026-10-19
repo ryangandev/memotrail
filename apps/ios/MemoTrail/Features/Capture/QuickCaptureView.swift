@@ -51,7 +51,8 @@ struct QuickCaptureView: View {
         Text("What\u{2019}s on your mind?")
           .font(MTFont.cardTitle)
           .foregroundStyle(MTColor.ink)
-          .lineLimit(2)
+          // Wraps in full at accessibility text sizes, like the Dashboard composer's title.
+          .fixedSize(horizontal: false, vertical: true)
           .accessibilityAddTraits(.isHeader)
       }
       Spacer(minLength: 0)

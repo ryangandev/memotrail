@@ -113,7 +113,7 @@ accessibility:
   label: The title, with the description as its description. The close action names the dialog. While busy, Web sets aria-busy on the dialog.
   focus: Web moves focus to the first field, or to an autofocus action such as a confirmation's Cancel, keeps it inside until the dialog closes, and then returns it to the trigger. iOS follows the system sheet focus order.
   minimumHitTarget: "{size.hitTarget}"
-  dynamicType: iOS text follows Dynamic Type, and a fitted sheet grows with its content. On Web the title drops to the small title size below 560 px, and text grows with browser zoom.
+  dynamicType: iOS text follows Dynamic Type, and a fitted sheet grows with its content. The iOS footer puts its actions on one row, then Cancel and the primary action on a row above the destructive action, then each action on its own row, whichever fits first. On Web the title drops to the small title size below 560 px, and text grows with browser zoom.
 
 platformDifferences:
   - difference: Web is a centered card over a blurred scrim, sized compact, standard, or wide; iOS is a sheet from the bottom, presented as a full-height form or a fitted sheet.

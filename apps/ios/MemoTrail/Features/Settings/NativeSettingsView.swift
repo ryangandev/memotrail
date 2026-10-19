@@ -28,6 +28,7 @@ struct NativeSettingsView: View {
   @State private var birthDate = ""
   @State private var timezone = "UTC"
   @Environment(AppNavigator.self) private var navigator
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   init(
     client: SupabaseClient, user: AuthenticatedUser, isAuthenticationBusy: Bool,
@@ -119,7 +120,7 @@ struct NativeSettingsView: View {
           Text(accountName)
             .font(MTFont.cardTitle)
             .foregroundStyle(MTColor.ink)
-            .lineLimit(1)
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
           Text(user.email)
             .font(MTFont.detail)
             .foregroundStyle(MTColor.inkMuted)
@@ -288,21 +289,37 @@ private struct SettingsSectionHeading<Trailing: View>: View {
     self.trailing = trailing()
   }
 
+  @Environment(\.dynamicTypeSize) private var typeSize
+
   var body: some View {
-    HStack(alignment: .center, spacing: MTSpacing.s4) {
-      VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
-        Text(title.uppercased())
-          .mtTextRole(.settingsHeading)
-          .foregroundStyle(MTColor.ink)
-          .accessibilityAddTraits(.isHeader)
-        Text(detail)
-          .font(MTFont.detail)
-          .foregroundStyle(MTColor.inkFaint)
+    Group {
+      // At accessibility text sizes the trailing badge goes under the copy, so words stay whole.
+      if typeSize.isAccessibilitySize {
+        VStack(alignment: .leading, spacing: MTSpacing.s2) {
+          copy
+          trailing
+        }
+      } else {
+        HStack(alignment: .center, spacing: MTSpacing.s4) {
+          copy
+          Spacer(minLength: 0)
+          trailing
+        }
       }
-      Spacer(minLength: 0)
-      trailing
     }
     .padding(.top, MTSpacing.s4)
+  }
+
+  private var copy: some View {
+    VStack(alignment: .leading, spacing: MTSpacing.s0_75) {
+      Text(title.uppercased())
+        .mtTextRole(.settingsHeading)
+        .foregroundStyle(MTColor.ink)
+        .accessibilityAddTraits(.isHeader)
+      Text(detail)
+        .font(MTFont.detail)
+        .foregroundStyle(MTColor.inkFaint)
+    }
   }
 }
 

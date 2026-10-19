@@ -81,10 +81,12 @@ struct MoreView: View {
   }
 }
 
-/// Web `mobileMoreGroup`: an uppercase label above two columns of destinations.
+/// Web `mobileMoreGroup`: an uppercase label above two columns of destinations, or one column
+/// at accessibility text sizes so each name keeps whole words.
 private struct MoreGroup<Content: View>: View {
   let title: String
   @ViewBuilder let content: Content
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
@@ -93,7 +95,9 @@ private struct MoreGroup<Content: View>: View {
         .foregroundStyle(MTColor.inkFaint)
         .accessibilityAddTraits(.isHeader)
       LazyVGrid(
-        columns: Array(repeating: GridItem(.flexible(), spacing: MTSpacing.s2), count: 2),
+        columns: Array(
+          repeating: GridItem(.flexible(), spacing: MTSpacing.s2),
+          count: typeSize.isAccessibilitySize ? 1 : 2),
         spacing: MTSpacing.s2
       ) {
         content
@@ -117,8 +121,8 @@ private struct MoreTile: View {
       Text(title)
         .font(MTFont.caption)
         .foregroundStyle(MTColor.ink)
-        .lineLimit(2)
         .multilineTextAlignment(.leading)
+        .fixedSize(horizontal: false, vertical: true)
       Spacer(minLength: 0)
     }
     .padding(MTSpacing.s3)

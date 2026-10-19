@@ -72,12 +72,12 @@ accessibility:
   label: The title; the detail and description are read as text after it.
   focus: The header never takes focus; its trailing action follows the title in the focus order.
   minimumHitTarget: notInteractive
-  dynamicType: iOS scales every text role with Dynamic Type and wraps the title. Web grows with browser zoom and wraps the trailing content below the copy.
+  dynamicType: iOS scales every text role with Dynamic Type and wraps the title; at accessibility sizes it stacks the detail and trailing content under the title. Web grows with browser zoom and wraps the trailing content below the copy.
 
 platformDifferences:
   - difference: The list variant reserves the 34 pt small control height on iOS; Web sizes it to its text.
     reason: iOS list headers often hold a small button, and the reserved height keeps headers with and without one the same height in a scrolling list.
-  - difference: On iOS the trailing action stays beside a wrapping title; on Web it wraps below the copy when the row is too narrow.
+  - difference: On iOS the trailing action stays beside a wrapping title until accessibility text sizes, where it stacks under the title; on Web it wraps below the copy when the row is too narrow.
     reason: SwiftUI wraps the title inside the row instead of moving the action, which keeps a phone's row compact. Web follows flex wrapping.
   - difference: Web lets the caller choose the heading level and an id for aria-labelledby; iOS marks the title as a header without a level.
     reason: A Web page needs a heading outline, while VoiceOver moves between headers without levels in a SwiftUI screen.

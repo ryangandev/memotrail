@@ -130,15 +130,15 @@ accessibility:
   label: The visible label. A leading icon is decorative. While loading, Web sets aria-busy and iOS adds the value In progress.
   focus: Web buttons follow document order, show the accent focus ring on keyboard focus, and leave the tab order while disabled or loading. iOS draws the system focus effect for keyboard and Switch Control focus.
   minimumHitTarget: "{size.hitTarget}"
-  dynamicType: iOS labels follow Dynamic Type through the label, caption, and body text roles and keep one line, so the control grows taller with the text. Web uses fixed pixel sizes that grow with browser zoom.
+  dynamicType: iOS labels follow Dynamic Type through the label, caption, and body text roles and keep one line, so the control grows taller with the text; at accessibility sizes a label wraps onto more lines with vertical padding, like Web. Web uses fixed pixel sizes that grow with browser zoom.
 
 platformDifferences:
   - difference: Controls are 32, 36, and 44 px tall with 6 px corners on Web, and 34, 44, and 52 pt tall with 12 and 8 pt corners on iOS.
     reason: The size.control tokens raise iOS toward the 44 pt touch target while keeping the Web proportions. The Web radius.control token tightens pointer-sized controls; native work is paused, so iOS keeps its radii until its next design pass.
   - difference: Web shows hover colors on pointer hover; iOS shows the same colors while pressed.
     reason: Touch has no hover, so iOS gives the hover colors to the press; Web has no separate pressed style.
-  - difference: A label that does not fit wraps onto more lines on Web and truncates at the tail on iOS, which also has no vertical padding.
-    reason: SwiftUI centers one line in the control height, so footers and toolbars keep their height; Web buttons grow so a long translated label stays readable. Keep labels short enough for neither to happen.
+  - difference: A label that does not fit wraps onto more lines on Web and truncates at the tail on iOS, which also has no vertical padding, except at accessibility text sizes, where iOS wraps like Web.
+    reason: SwiftUI centers one line in the control height, so footers and toolbars keep their height; Web buttons grow so a long translated label stays readable, and at accessibility sizes a truncated label would hide the action. Keep labels short enough for neither to happen.
   - difference: Web draws the spinner and the focus ring from tokens; iOS uses the system ProgressView and focus effect.
     reason: Native progress and focus indicators match the rest of each platform.
   - difference: iOS has a fillsWidth parameter; Web stretches a button from its container's layout CSS.
