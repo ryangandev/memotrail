@@ -116,6 +116,29 @@ describe("parseQuickSearchResult", () => {
     ).not.toBeNull();
   });
 
+  it("keeps how a result matched and treats a missing value as words", () => {
+    const item = {
+      href: "/items/123",
+      id: "123",
+      label: "Entry",
+      subtitle: "A saved note",
+      title: "Remember this",
+    };
+
+    expect(
+      parseQuickSearchResult({
+        error: null,
+        items: [{ ...item, matchedBy: "meaning" }, item],
+      })?.items.map((result) => result.matchedBy),
+    ).toEqual(["meaning", "words"]);
+    expect(
+      parseQuickSearchResult({
+        error: null,
+        items: [{ ...item, matchedBy: "vibes" }],
+      }),
+    ).toBeNull();
+  });
+
   it("rejects malformed and external result links", () => {
     expect(
       parseQuickSearchResult({

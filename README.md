@@ -63,6 +63,9 @@ The Web app is available at `http://localhost:3000`.
 It remains buildable before credentials exist.
 Set the server-only `GEOAPIFY_API_KEY` to enable address search and static maps in Web Entry and Home Location fields.
 Without it, existing Entry Locations and coordinates remain accessible, but provider search and map imagery are unavailable.
+Set the server-only `SEMANTIC_SEARCH_URL` and `SEMANTIC_SEARCH_API_KEY` to enable search by meaning.
+Without them, Library and the Command Palette search by keywords only.
+[`services/embeddings`](./services/embeddings/README.md) defines the embedding service, and `apps/web/scripts/fake-embedding-server.mjs` is a deterministic stand-in for tests.
 
 ## iOS setup
 

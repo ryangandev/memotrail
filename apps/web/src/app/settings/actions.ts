@@ -32,6 +32,52 @@ export type PreferredNameActionResult = {
   status: "error" | "saved";
 };
 
+export type SemanticSearchActionResult = {
+  enabled?: boolean;
+  message: string;
+  status: "error" | "saved";
+};
+
+export async function saveSemanticSearchPreference(
+  enabled: boolean,
+): Promise<SemanticSearchActionResult> {
+  if (typeof enabled !== "boolean") {
+    return { message: "Choose on or off.", status: "error" };
+  }
+
+  const context = await getAuthenticatedContext();
+  if (!context) {
+    return {
+      message: "Your session expired. Sign in again before saving.",
+      status: "error",
+    };
+  }
+
+  const { data, error } = await context.client
+    .from("profiles")
+    .update({ semantic_search_enabled: enabled })
+    .eq("user_id", context.userId)
+    .select("semantic_search_enabled")
+    .single();
+
+  if (error || data?.semantic_search_enabled !== enabled) {
+    return {
+      message: "MemoTrail could not save Search by meaning. Try again.",
+      status: "error",
+    };
+  }
+
+  revalidatePath("/library");
+  revalidatePath("/settings");
+  return {
+    enabled,
+    message: enabled
+      ? "Search by meaning is on."
+      : "Search by meaning is off, and its index is deleted.",
+    status: "saved",
+  };
+}
+
 export async function savePreferredName(
   value: string,
 ): Promise<PreferredNameActionResult> {
