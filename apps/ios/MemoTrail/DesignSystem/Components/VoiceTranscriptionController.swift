@@ -21,6 +21,19 @@ enum VoiceTranscriptText {
       : "\n"
     return String("\(existingText)\(separator)\(spokenText)".prefix(limit))
   }
+
+  /// The note with dictated text: the note as it was when dictation began, formatting
+  /// included, followed by the newly spoken words as plain text. `mergedText` comes from
+  /// `merging`, so it starts with the note's text unless the limit cut into it.
+  static func applying(_ mergedText: String, to note: NSAttributedString) -> NSAttributedString {
+    let existingText = note.string
+    guard mergedText.hasPrefix(existingText) else {
+      return NSAttributedString(string: mergedText)
+    }
+    let result = NSMutableAttributedString(attributedString: note)
+    result.append(NSAttributedString(string: String(mergedText.dropFirst(existingText.count))))
+    return result
+  }
 }
 
 @MainActor

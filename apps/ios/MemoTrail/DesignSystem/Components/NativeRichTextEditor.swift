@@ -13,6 +13,8 @@ struct MTRichTextEditor: View {
   var minimumHeight = MTLayout.RichText.minHeight
   /// Each increase moves keyboard focus into the editor; a positive start focuses on appear.
   var focusRequest = 0
+  /// Runs on Command-Return from a hardware keyboard, like Web's form shortcut.
+  var onSubmit: (@MainActor () -> Void)? = nil
   @State private var session = NativeRichTextSession()
   @State private var showsFormatting = false
   @ScaledMetric private var scale = 1.0
@@ -23,7 +25,7 @@ struct MTRichTextEditor: View {
       ZStack(alignment: .topLeading) {
         NativeAttributedTextView(
           text: $text, session: session, identifier: accessibilityIdentifier,
-          focusRequest: focusRequest
+          focusRequest: focusRequest, onSubmit: onSubmit
         )
         .frame(height: min(editorHeight, MTLayout.RichText.maxHeight))
         if text.length == 0 {
@@ -262,10 +264,11 @@ private struct NativeAttributedTextView: UIViewRepresentable {
   let session: NativeRichTextSession
   let identifier: String
   let focusRequest: Int
+  let onSubmit: (@MainActor () -> Void)?
   @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
-  func makeUIView(context: Context) -> UITextView {
-    let view = UITextView()
+  func makeUIView(context: Context) -> NativeRichTextView {
+    let view = NativeRichTextView()
     view.backgroundColor = .clear
     view.textContainerInset = UIEdgeInsets(
       top: MTLayout.RichText.verticalInset, left: MTLayout.RichText.horizontalInset,
@@ -282,12 +285,15 @@ private struct NativeAttributedTextView: UIViewRepresentable {
     context.coordinator.parent = self
     session.onChange = { text = $0 }
     context.coordinator.focusRequest = focusRequest
-    if focusRequest > 0 { DispatchQueue.main.async { view.becomeFirstResponder() } }
+    view.submit = { [weak coordinator = context.coordinator] in coordinator?.parent.onSubmit?() }
+    // A view made for a presentation is not in a window yet, so it takes focus once it is.
+    view.focusesInWindow = focusRequest > 0
     return view
   }
 
-  func updateUIView(_ view: UITextView, context: Context) {
+  func updateUIView(_ view: NativeRichTextView, context: Context) {
     context.coordinator.parent = self
+    view.hasSubmit = onSubmit != nil
     session.onChange = { text = $0 }
     if focusRequest != context.coordinator.focusRequest {
       context.coordinator.focusRequest = focusRequest
@@ -364,5 +370,49 @@ private struct NativeAttributedTextView: UIViewRepresentable {
       }
       return result
     }
+  }
+}
+
+/// The editor's text view: takes focus as soon as it reaches a window, and offers Command-Return
+/// to the composer that hosts it.
+final class NativeRichTextView: UITextView {
+  /// Whether the view should take keyboard focus once it is in a window.
+  var focusesInWindow = false
+  var hasSubmit = false
+  var submit: @MainActor () -> Void = {}
+  private var focusAttempts = 0
+
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    guard window != nil, focusesInWindow else { return }
+    focusAttempts = 0
+    takeFocus()
+  }
+
+  /// A presentation still moving in can refuse first responder, so a refused focus tries again
+  /// briefly, the way a person would tap the field once it settles.
+  private func takeFocus() {
+    guard focusesInWindow, window != nil else { return }
+    if isFirstResponder || becomeFirstResponder() {
+      focusesInWindow = false
+      return
+    }
+    focusAttempts += 1
+    guard focusAttempts < 10 else { return }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in self?.takeFocus() }
+  }
+
+  override var keyCommands: [UIKeyCommand]? {
+    guard hasSubmit else { return super.keyCommands }
+    let save = UIKeyCommand(
+      title: "Save", action: #selector(submitFromKeyboard), input: "\r", modifierFlags: .command)
+    save.wantsPriorityOverSystemBehavior = true
+    return (super.keyCommands ?? []) + [save]
+  }
+
+  @objc private func submitFromKeyboard() {
+    // Like Web, a composition in progress is never saved half-typed.
+    guard markedTextRange == nil else { return }
+    submit()
   }
 }
