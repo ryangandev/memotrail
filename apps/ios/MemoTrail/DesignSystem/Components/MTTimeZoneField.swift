@@ -9,6 +9,9 @@ struct MTTimeZoneField: View {
   @Binding var selection: String
   var referenceDate = ""
   var note: String?
+  /// Opens the list as the field appears, as when a summary's Change action replaces itself
+  /// with this field.
+  var startsChoosing = false
   @State private var isChoosing = false
 
   var body: some View {
@@ -37,6 +40,7 @@ struct MTTimeZoneField: View {
         MTTimeZonePicker(title: label, selection: $selection, referenceDate: referenceDate)
       }
     }
+    .onAppear { if startsChoosing { isChoosing = true } }
   }
 }
 

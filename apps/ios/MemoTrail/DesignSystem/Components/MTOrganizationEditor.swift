@@ -1,25 +1,31 @@
 import SwiftUI
 
-/// Shows a record's tags like the Web EntryOrganizationEditor: tag pills with remove buttons.
-/// Adding opens a picker sheet that finds existing names or creates new ones, so suggestions
-/// stay visible above the keyboard.
+/// Shows a record's tags like the Web EntryOrganizationEditor: tag pills with remove buttons,
+/// the most used tags as one-tap suggestions while none is added, and the count only once it
+/// nears the limit. Adding opens a picker sheet that finds existing names, reusing a tag that
+/// differs only by case, or creates new ones, so suggestions stay visible above the keyboard.
 struct MTOrganizationEditor: View {
   enum Kind: Sendable {
     case tag
 
     var title: String { "Tags" }
     var singular: String { "tag" }
-    var countLimit: Int { 50 }
-    var lengthLimit: Int { 60 }
+    var countLimit: Int { EntryLimits.tagCount }
+    var lengthLimit: Int { EntryLimits.tagName }
     fileprivate var icon: MTIcon { .tag }
     fileprivate var identifier: String { "tag" }
   }
 
   let kind: Kind
   @Binding var names: [String]
+  /// The person's names, most used first.
   let options: [String]
   @State private var isPicking = false
   @Environment(\.isEnabled) private var isEnabled
+
+  private var suggestions: [String] {
+    names.isEmpty ? EntryTagField.suggestions(names, options: options) : []
+  }
 
   var body: some View {
     VStack(alignment: .leading, spacing: MTSpacing.s2) {
@@ -28,11 +34,24 @@ struct MTOrganizationEditor: View {
         ForEach(names, id: \.self) { name in tagChip(name) }
         if names.count < kind.countLimit { addButton }
       }
-      Text("\(names.count) of \(kind.countLimit)")
-        .font(MTFont.note)
-        .foregroundStyle(MTColor.inkFaint)
-        .frame(maxWidth: .infinity, alignment: .trailing)
-        .accessibilityLabel("\(names.count) of \(kind.countLimit) \(kind.title)")
+      if !suggestions.isEmpty {
+        MTFlowLayout(spacing: MTSpacing.s2, lineSpacing: MTSpacing.s2) {
+          Text("Most used")
+            .font(MTFont.note)
+            .foregroundStyle(MTColor.inkFaint)
+            .frame(minHeight: MTLayout.InlineAction.height)
+            .accessibilityHidden(true)
+          ForEach(suggestions, id: \.self) { suggestion($0) }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Most used tags")
+      }
+      if EntryTagField.showsLimit(names) {
+        Text("\(names.count) of \(kind.countLimit) \(kind.title.lowercased())")
+          .font(MTFont.note)
+          .foregroundStyle(MTColor.inkFaint)
+          .frame(maxWidth: .infinity, alignment: .trailing)
+      }
     }
     .opacity(isEnabled ? 1 : MTState.Disabled.Opacity.choice)
     .sheet(isPresented: $isPicking) {
@@ -89,6 +108,29 @@ struct MTOrganizationEditor: View {
     }
     .buttonStyle(.plain)
     .accessibilityIdentifier("organization-add-\(kind.identifier)")
+  }
+
+  /// A most used name that one tap adds, written the way it already is.
+  private func suggestion(_ name: String) -> some View {
+    Button {
+      if names.count < kind.countLimit, !names.contains(where: { $0.lowercased() == name.lowercased() }) {
+        names.append(name)
+      }
+    } label: {
+      Label(name, icon: .plus)
+        .labelStyle(MTInlineIconLabelStyle())
+        .lineLimit(1)
+        .font(MTFont.caption)
+        .foregroundStyle(MTColor.inkMuted)
+        .padding(.leading, MTSpacing.s2)
+        .padding(.trailing, MTSpacing.s3)
+        .frame(minHeight: MTLayout.InlineAction.height)
+        .background(MTColor.surfaceSubtle, in: Capsule())
+        .overlay { Capsule().strokeBorder(MTColor.border, lineWidth: MTSize.Stroke.thin) }
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel("Add \(kind.singular) \(name)")
   }
 
   private func remove(_ name: String) {
@@ -196,6 +238,8 @@ private struct MTOrganizationPicker: View {
     // above the keyboard and leave room for only one row.
     .presentationDetents([.large])
     .onAppear { isSearching = true }
+    // A name left in the search field stays, as on Web, even when the sheet is swiped away.
+    .onDisappear { addText() }
   }
 
   private var searchField: some View {
