@@ -1191,7 +1191,7 @@ export const componentSpecimens = [
   {
     component: "SelectField",
     id: "select-field-groups",
-    description: "A required choice whose options sit in titled groups, after an All records option outside any group.",
+    description: "A required choice whose options sit in titled groups, after an All option outside any group.",
     covers: { size: ["medium"] },
   },
   {

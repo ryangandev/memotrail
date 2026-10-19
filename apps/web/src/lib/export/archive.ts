@@ -46,7 +46,7 @@ export function exportDatabaseError(message?: string): never {
   throw new ExportError(
     "unavailable",
     503,
-    "Could not read the export snapshot. Retry without changing your records.",
+    "Could not read the export snapshot. Retry without changing your Entries.",
   );
 }
 type Row = Record<string, unknown>;
@@ -160,7 +160,7 @@ async function* entryTableRows(rows: AsyncIterable<Row>) {
 }
 const readme = `# MemoTrail complete export
 
-This is a private, unencrypted copy of your archive. Keep it somewhere safe.
+This is a private, unencrypted copy of your MemoTrail Entries. Keep it somewhere safe.
 It includes Trash, histories, relationships, AI conversations and usage, and original attachments.
 
 manifest.json identifies the immutable snapshot and every canonical dataset.
@@ -221,7 +221,7 @@ export function createExportArchive(
     // An abort ends the response without a complete archive, and the server logs
     // the cause below rather than a stream error.
     const error = new DOMException(
-      "Export interrupted. No complete archive was produced.",
+      "Export interrupted. No complete export was produced.",
       "AbortError",
     );
     current?.destroy(error);

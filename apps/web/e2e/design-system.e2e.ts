@@ -697,7 +697,7 @@ test("TextField previews the shared form typography and focus surface", async ({
     .filter({
       has: page.getByRole("heading", { name: "SelectField", exact: true }),
     })
-    .getByLabel("Show records");
+    .getByLabel("Show", { exact: true });
 
   await expect(input).toHaveValue("Alex Morgan");
   await specimen.screenshot({
@@ -1090,11 +1090,11 @@ test("SectionHeader renders section and list headings at the level the caller pi
   // Detail sits beside the title by default and at the trailing edge on request.
   const start = header("list");
   const startTitle = await start.getByRole("heading").boundingBox();
-  const startDetail = await start.getByText("12 items").boundingBox();
+  const startDetail = await start.getByText("12 Entries").boundingBox();
   expect(startDetail!.x).toBeGreaterThan(startTitle!.x + startTitle!.width);
   expect(startDetail!.x).toBeLessThan(startTitle!.x + startTitle!.width + 24);
   const end = header("list-end");
-  const endDetail = await end.getByText("12 items").boundingBox();
+  const endDetail = await end.getByText("12 Entries").boundingBox();
   const endAction = await end
     .getByRole("link", { name: "Show all" })
     .boundingBox();

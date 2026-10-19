@@ -80,7 +80,7 @@ export function RecordCardSpecimen() {
   return (
     <Specimen
       api="ariaLabel · onClick · className; composable RecordCardVisual and RecordCardBody"
-      description="Each record view lays out its own body inside the shared shell. The visual prefers a photo, then a map of the Location, then the record's mark."
+      description="Each page lays out its own body inside the shared shell. The visual prefers a photo, then a map of the Location, then the Entry mark."
       id="record-card"
       title="RecordCard"
     >
@@ -291,9 +291,9 @@ export function SectionHeaderSpecimen() {
           <div className={styles.headerStack}>
             <div data-header="list">
               <SectionHeader
-                detail="12 items"
+                detail="12 Entries"
                 headingLevel={4}
-                title="All items"
+                title="All Entries"
                 variant="list"
               />
             </div>
@@ -304,10 +304,10 @@ export function SectionHeaderSpecimen() {
                     Show all
                   </a>
                 }
-                detail="12 items"
+                detail="12 Entries"
                 detailAlign="end"
                 headingLevel={4}
-                title="All items"
+                title="All Entries"
                 variant="list"
               />
             </div>

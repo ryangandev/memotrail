@@ -113,7 +113,7 @@ extension LocalSessionUITests {
     XCTAssertTrue(text("Written by AI", in: app).exists)
     XCTAssertTrue(text("Read all 5 Entries", in: app).exists)
     attach(app, "Chapter review top")
-    XCTAssertTrue(reveal(anyText("From your records", in: app), in: app).exists)
+    XCTAssertTrue(reveal(anyText("From your Entries", in: app), in: app).exists)
     XCTAssertTrue(reveal(text("Most writing: March 1989 (2 Entries)", in: app), in: app).exists)
     XCTAssertFalse(app.buttons["Make a new review"].exists)
     attach(app, "Chapter review records")

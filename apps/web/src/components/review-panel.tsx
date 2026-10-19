@@ -858,7 +858,7 @@ function Records({
   return (
     <section aria-labelledby="review-records" className={styles.section}>
       <Heading className={styles.sectionTitle} id="review-records">
-        From your records
+        From your Entries
       </Heading>
       <p className={styles.facts}>
         <SeparatedList>{stats}</SeparatedList>

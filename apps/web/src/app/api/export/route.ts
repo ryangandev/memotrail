@@ -99,7 +99,7 @@ export async function POST(request: Request) {
           code: error.code,
           error:
             error.status === 401
-              ? "Sign in again to export your archive."
+              ? "Sign in again to export your Entries."
               : error.message,
         },
         { status: error.status, headers },
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
     return Response.json(
       {
         code: "unavailable",
-        error: "Export is temporarily unavailable. Your records are unchanged.",
+        error: "Export is temporarily unavailable. Your Entries are unchanged.",
       },
       { status: 503, headers },
     );

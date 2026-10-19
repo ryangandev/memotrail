@@ -96,9 +96,9 @@ content:
   lines: 2
   overflow: perPlatform
   casing: sentence
-  length: Labels name the choice in one to three words, such as Show records. Option titles are a few words each, and group titles name what their options share, such as Marks.
+  length: Labels name the choice in one to three words, such as Show. Option titles are a few words each, and group titles name what their options share, such as Marks.
   notes:
-    - Put an option that applies to everything, such as All records, first and outside any group.
+    - Put an option that applies to everything, such as All, first and outside any group.
 
 accessibility:
   role: A pop-up button. Web renders a native select, so each browser draws its own list; iOS renders a Menu of checkable items in titled sections.
@@ -124,7 +124,7 @@ specimens:
     description: Every size, from a compact sort order to a standalone default view.
     covers: { size: all }
   - id: select-field-groups
-    description: A required choice whose options sit in titled groups, after an All records option outside any group.
+    description: A required choice whose options sit in titled groups, after an All option outside any group.
     covers: { size: [medium] }
   - id: select-field-disabled
     description: A disabled small select, faded to the field opacity.

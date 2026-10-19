@@ -321,8 +321,8 @@ test("Asking for a Chapter review shows the disclosure, then a labeled review wh
   await reread.getByRole("button", { name: "Close" }).first().click();
   await page.goto(`/items/${chapterId}`);
 
-  // From your records: facts counted from the person's own Entries, not written by Claude.
-  const records = panel.getByRole("region", { name: "From your records" });
+  // From your Entries: facts counted from the person's own Entries, not written by Claude.
+  const records = panel.getByRole("region", { name: "From your Entries" });
   await expect(records).toContainText("6 Entries");
   await expect(records).toContainText("1 First Time");
   await expect(
@@ -691,7 +691,7 @@ test("A year review is made from Reviews, and a quiet notice offers a Chapter th
   await expect(header.getByText("Written by AI")).toBeVisible(generated);
   await expect(header).toContainText("From 6 Entries");
   await expect(
-    panel.getByRole("region", { name: "From your records" }),
+    panel.getByRole("region", { name: "From your Entries" }),
   ).toContainText("6 Entries");
   await expect(
     panel.getByRole("button", { name: "Write again" }),

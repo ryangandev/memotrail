@@ -445,7 +445,7 @@
   outline-offset: var(--mt-state-focus-ring-offset-snug);
 }
 
-/* From your records. */
+/* From your Entries. */
 .panel .facts {
   margin: var(--mt-space-4) 0 0;
   color: var(--mt-color-ink-muted);

@@ -173,8 +173,8 @@ function SelectFieldSpecimen() {
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
             </SelectField>
-            <SelectField defaultValue="all" label="Show records">
-              <option value="all">All records</option>
+            <SelectField defaultValue="all" label="Show">
+              <option value="all">All</option>
               <option value="entries">Entries</option>
               <option value="chapters">Chapters</option>
             </SelectField>
@@ -191,9 +191,9 @@ function SelectFieldSpecimen() {
         </SpecimenCase>
         <SpecimenCase id="select-field-groups">
           <div className={controls.fields}>
-            <SelectField defaultValue="all" label="Record" required>
-              <option value="all">All records</option>
-              <optgroup label="Records">
+            <SelectField defaultValue="all" label="Kind" required>
+              <option value="all">All</option>
+              <optgroup label="Entry kinds">
                 <option value="entries">Entries</option>
                 <option value="chapters">Chapters</option>
               </optgroup>

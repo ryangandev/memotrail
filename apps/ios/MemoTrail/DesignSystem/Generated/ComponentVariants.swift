@@ -590,10 +590,7 @@ enum MTComponentSpecimen: String, CaseIterable, Sendable {
     case .sectionHeaderLong: "A long section title and its trailing action in a narrow column."
     case .selectFieldSizes: "Every size, from a compact sort order to a standalone default view."
     case .selectFieldGroups:
-      """
-      A required choice whose options sit in titled groups, after an All records option outside \
-      any group.
-      """
+      "A required choice whose options sit in titled groups, after an All option outside any group."
     case .selectFieldDisabled: "A disabled small select, faded to the field opacity."
     case .separatedListDefault:
       """
